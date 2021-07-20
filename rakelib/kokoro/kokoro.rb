@@ -163,6 +163,31 @@ class Kokoro < Command
     end
   end
 
+  def one_cloudrad_docs gem
+    # assumes you've run `gcloud auth application-default login`
+
+    @gem = gem
+    v = version
+    run_ci @gem, true do
+      header "Building Devsite Docs"
+      FileUtils.remove_dir "doc", true
+      run "bundle exec rake yard", 1800
+      metadata = RepoMetadata.from_source(".repo-metadata.json")
+      metadata["version"] = v
+      metadata.build "."
+      header "Uploading Devsite Docs"
+      gac = ENV["GOOGLE_APPLICATION_CREDENTIALS"]
+      ENV.delete "GOOGLE_APPLICATION_CREDENTIALS"
+      opts = [
+        "--credentials=''",
+        "--staging-bucket=#{ENV.fetch 'STAGING_BUCKET', 'docs-staging'}",
+        "--metadata-file=./docs.metadata"
+      ]
+      run "python3 -m docuploader upload doc #{opts.join ' '}"
+      ENV["GOOGLE_APPLICATION_CREDENTIALS"] = gac
+    end
+  end
+
   def one_local_docs_test gem
     run_ci gem, true do
       local_docs_test gem
