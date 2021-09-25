@@ -1,5 +1,17 @@
 # Release History
 
+### 0.4.0 / 2021-09-22
+
+#### Features
+
+* Added security level to the https trigger
+
+### 0.3.3 / 2021-08-19
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.3.2 / 2021-07-12
 
 #### Documentation

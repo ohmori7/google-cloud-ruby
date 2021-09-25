@@ -20,9 +20,9 @@ describe Google::Cloud::Bigquery::Job, :mock_bigquery do
   # Create a job object with the project's mocked connection object
   let(:region) { "US" }
   let(:labels) { { "foo" => "bar" } }
-  let(:job_hash) { random_job_hash }
+  let(:job_hash) { random_job_hash location: region, transaction_id: "123456789" }
   let(:job_gapi) do
-    job_gapi = Google::Apis::BigqueryV2::Job.from_json random_job_hash(location: region).to_json
+    job_gapi = Google::Apis::BigqueryV2::Job.from_json job_hash.to_json
     job_gapi.configuration.labels = labels
     job_gapi
   end
@@ -148,6 +148,10 @@ describe Google::Cloud::Bigquery::Job, :mock_bigquery do
     _(job.reservation_usage[0].slot_ms).must_equal 12345
   end
 
+  it "knows its transaction_info transaction ID" do
+    _(job.transaction_id).must_equal "123456789"
+  end
+
   it "knows its statistics config" do
     _(job.statistics).must_be_kind_of Hash
     _(job.statistics["creationTime"]).wont_be :nil?
@@ -241,6 +245,15 @@ describe Google::Cloud::Bigquery::Job, :mock_bigquery do
     bigquery.service.mocked_service = mock
 
     job.cancel
+    mock.verify
+  end
+
+  it "can delete itself" do
+    mock = Minitest::Mock.new
+    mock.expect :delete_job, nil, [project, job_id, location: region]
+    bigquery.service.mocked_service = mock
+
+    job.delete
     mock.verify
   end
 

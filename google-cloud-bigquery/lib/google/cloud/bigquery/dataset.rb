@@ -69,8 +69,8 @@ module Google
         ##
         # A unique ID for this dataset, without the project name.
         #
-        # @return [String] The ID must contain only letters (a-z, A-Z), numbers
-        #   (0-9), or underscores (_). The maximum length is 1,024 characters.
+        # @return [String] The ID must contain only letters (`[A-Za-z]`), numbers
+        #   (`[0-9]`), or underscores (`_`). The maximum length is 1,024 characters.
         #
         # @!group Attributes
         #
@@ -501,7 +501,7 @@ module Google
         # you can pass the table's schema as a hash (see example.)
         #
         # @param [String] table_id The ID of the table. The ID must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`). The maximum
         #   length is 1,024 characters.
         # @param [String] name A descriptive name for the table.
         # @param [String] description A user-friendly description of the table.
@@ -630,7 +630,7 @@ module Google
         # @see https://cloud.google.com/bigquery/docs/views Creating views
         #
         # @param [String] table_id The ID of the view table. The ID must contain
-        #   only letters (a-z, A-Z), numbers (0-9), or underscores (_). The
+        #   only letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`). The
         #   maximum length is 1,024 characters.
         # @param [String] query The query that BigQuery executes when the view
         #   is referenced.
@@ -726,8 +726,8 @@ module Google
         #
         # @see https://cloud.google.com/bigquery/docs/materialized-views-intro Introduction to materialized views
         #
-        # @param [String] table_id The ID of the materialized view table. The ID must contain only letters (a-z, A-Z),
-        #   numbers (0-9), or underscores (_). The maximum length is 1,024 characters.
+        # @param [String] table_id The ID of the materialized view table. The ID must contain only letters (`[A-Za-z]`),
+        #   numbers (`[0-9]`), or underscores (`_`). The maximum length is 1,024 characters.
         # @param [String] query The query that BigQuery executes when the materialized view is referenced.
         # @param [String] name A descriptive name for the table.
         # @param [String] description A user-friendly description of the table.
@@ -954,7 +954,7 @@ module Google
         # {Routine::Updater#description=}.
         #
         # @param [String] routine_id The ID of the routine. The ID must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_). The maximum length
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`). The maximum length
         #   is 256 characters.
         # @yield [routine] A block for setting properties on the routine.
         # @yieldparam [Google::Cloud::Bigquery::Routine::Updater] routine An updater to set additional properties on the
@@ -1138,7 +1138,7 @@ module Google
         #   use named query parameters. When set, `legacy_sql` will automatically be set to false and `standard_sql` to
         #   true.
         #
-        #   Ruby types are mapped to BigQuery types as follows:
+        #   BigQuery types are converted from Ruby types as follows:
         #
         #   | BigQuery     | Ruby                                 | Notes                                              |
         #   |--------------|--------------------------------------|----------------------------------------------------|
@@ -1146,10 +1146,11 @@ module Google
         #   | `INT64`      | `Integer`                            |                                                    |
         #   | `FLOAT64`    | `Float`                              |                                                    |
         #   | `NUMERIC`    | `BigDecimal`                         | `BigDecimal` values will be rounded to scale 9.    |
-        #   | `BIGNUMERIC` |                                      | Query param values must be mapped in `types`.      |
+        #   | `BIGNUMERIC` | `BigDecimal`                         | NOT AUTOMATIC: Must be mapped using `types`, below.|
         #   | `STRING`     | `String`                             |                                                    |
         #   | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
         #   | `DATE`       | `Date`                               |                                                    |
+        #   | `GEOGRAPHY`  | `String` (WKT or GeoJSON)            | NOT AUTOMATIC: Must be mapped using `types`, below.|
         #   | `TIMESTAMP`  | `Time`                               |                                                    |
         #   | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
         #   | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |
@@ -1157,7 +1158,8 @@ module Google
         #   | `STRUCT`     | `Hash`                               | Hash keys may be strings or symbols.               |
         #
         #   See [Data Types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types) for an overview
-        #   of each BigQuery data type, including allowed values.
+        #   of each BigQuery data type, including allowed values. For the `GEOGRAPHY` type, see [Working with BigQuery
+        #   GIS data](https://cloud.google.com/bigquery/docs/gis-data).
         # @param [Array, Hash] types Standard SQL only. Types of the SQL parameters in `params`. It is not always
         #   possible to infer the right SQL type from a value in `params`. In these cases, `types` must be used to
         #   specify the SQL type for these values.
@@ -1174,6 +1176,7 @@ module Google
         #   * `:STRING`
         #   * `:DATETIME`
         #   * `:DATE`
+        #   * `:GEOGRAPHY`
         #   * `:TIMESTAMP`
         #   * `:TIME`
         #   * `:BYTES`
@@ -1246,8 +1249,8 @@ module Google
         #   (without incurring a charge). Optional. If unspecified, this will be
         #   set to your project default.
         # @param [String] job_id A user-defined ID for the query job. The ID
-        #   must contain only letters (a-z, A-Z), numbers (0-9), underscores
-        #   (_), or dashes (-). The maximum length is 1,024 characters. If
+        #   must contain only letters (`[A-Za-z]`), numbers (`[0-9]`), underscores
+        #   (`_`), or dashes (`-`). The maximum length is 1,024 characters. If
         #   `job_id` is provided, then `prefix` will not be used.
         #
         #   See [Generating a job
@@ -1256,8 +1259,8 @@ module Google
         #   prepended to a generated value to produce a unique job ID. For
         #   example, the prefix `daily_import_job_` can be given to generate a
         #   job ID such as `daily_import_job_12vEDtMQ0mbp1Mo5Z7mzAFQJZazh`. The
-        #   prefix must contain only letters (a-z, A-Z), numbers (0-9),
-        #   underscores (_), or dashes (-). The maximum length of the entire ID
+        #   prefix must contain only letters (`[A-Za-z]`), numbers (`[0-9]`),
+        #   underscores (`_`), or dashes (`-`). The maximum length of the entire ID
         #   is 1,024 characters. If `job_id` is provided, then `prefix` will not
         #   be used.
         # @param [Hash] labels A hash of user-provided labels associated with
@@ -1481,7 +1484,7 @@ module Google
         #   use named query parameters. When set, `legacy_sql` will automatically be set to false and `standard_sql` to
         #   true.
         #
-        #   Ruby types are mapped to BigQuery types as follows:
+        #   BigQuery types are converted from Ruby types as follows:
         #
         #   | BigQuery     | Ruby                                 | Notes                                              |
         #   |--------------|--------------------------------------|----------------------------------------------------|
@@ -1489,10 +1492,11 @@ module Google
         #   | `INT64`      | `Integer`                            |                                                    |
         #   | `FLOAT64`    | `Float`                              |                                                    |
         #   | `NUMERIC`    | `BigDecimal`                         | `BigDecimal` values will be rounded to scale 9.    |
-        #   | `BIGNUMERIC` |                                      | Query param values must be mapped in `types`.      |
+        #   | `BIGNUMERIC` | `BigDecimal`                         | NOT AUTOMATIC: Must be mapped using `types`, below.|
         #   | `STRING`     | `String`                             |                                                    |
         #   | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
         #   | `DATE`       | `Date`                               |                                                    |
+        #   | `GEOGRAPHY`  | `String` (WKT or GeoJSON)            | NOT AUTOMATIC: Must be mapped using `types`, below.|
         #   | `TIMESTAMP`  | `Time`                               |                                                    |
         #   | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
         #   | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |
@@ -1500,7 +1504,8 @@ module Google
         #   | `STRUCT`     | `Hash`                               | Hash keys may be strings or symbols.               |
         #
         #   See [Data Types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types) for an overview
-        #   of each BigQuery data type, including allowed values.
+        #   of each BigQuery data type, including allowed values. For the `GEOGRAPHY` type, see [Working with BigQuery
+        #   GIS data](https://cloud.google.com/bigquery/docs/gis-data).
         # @param [Array, Hash] types Standard SQL only. Types of the SQL parameters in `params`. It is not always
         #   possible to infer the right SQL type from a value in `params`. In these cases, `types` must be used to
         #   specify the SQL type for these values.
@@ -1517,6 +1522,7 @@ module Google
         #   * `:STRING`
         #   * `:DATETIME`
         #   * `:DATE`
+        #   * `:GEOGRAPHY`
         #   * `:TIMESTAMP`
         #   * `:TIME`
         #   * `:BYTES`
@@ -1877,8 +1883,8 @@ module Google
         #   this option. Also note that for most use cases, the block yielded by
         #   this method is a more convenient way to configure the schema.
         # @param [String] job_id A user-defined ID for the load job. The ID
-        #   must contain only letters (a-z, A-Z), numbers (0-9), underscores
-        #   (_), or dashes (-). The maximum length is 1,024 characters. If
+        #   must contain only letters (`[A-Za-z]`), numbers (`[0-9]`), underscores
+        #   (`_`), or dashes (`-`). The maximum length is 1,024 characters. If
         #   `job_id` is provided, then `prefix` will not be used.
         #
         #   See [Generating a job
@@ -1887,8 +1893,8 @@ module Google
         #   prepended to a generated value to produce a unique job ID. For
         #   example, the prefix `daily_import_job_` can be given to generate a
         #   job ID such as `daily_import_job_12vEDtMQ0mbp1Mo5Z7mzAFQJZazh`. The
-        #   prefix must contain only letters (a-z, A-Z), numbers (0-9),
-        #   underscores (_), or dashes (-). The maximum length of the entire ID
+        #   prefix must contain only letters (`[A-Za-z]`), numbers (`[0-9]`),
+        #   underscores (`_`), or dashes (`-`). The maximum length of the entire ID
         #   is 1,024 characters. If `job_id` is provided, then `prefix` will not
         #   be used.
         # @param [Hash] labels A hash of user-provided labels associated with
@@ -2421,6 +2427,7 @@ module Google
         # | `BIGNUMERIC` | `String`                             | Pass as `String` to avoid rounding to scale 9.     |
         # | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
         # | `DATE`       | `Date`                               |                                                    |
+        # | `GEOGRAPHY`  | `String`                             |                                                    |
         # | `TIMESTAMP`  | `Time`                               |                                                    |
         # | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
         # | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |

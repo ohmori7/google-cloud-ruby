@@ -40,14 +40,31 @@ module Google
           MODES = ["NULLABLE", "REQUIRED", "REPEATED"].freeze
 
           # @private
-          TYPES = ["STRING", "INTEGER", "INT64", "FLOAT", "FLOAT64", "NUMERIC", "BIGNUMERIC", "BOOLEAN", "BOOL",
-                   "BYTES", "TIMESTAMP", "TIME", "DATETIME", "DATE", "RECORD", "STRUCT"].freeze
+          TYPES = [
+            "BIGNUMERIC",
+            "BOOL",
+            "BOOLEAN",
+            "BYTES",
+            "DATE",
+            "DATETIME",
+            "FLOAT",
+            "FLOAT64",
+            "GEOGRAPHY",
+            "INTEGER",
+            "INT64",
+            "NUMERIC",
+            "RECORD",
+            "STRING",
+            "STRUCT",
+            "TIME",
+            "TIMESTAMP"
+          ].freeze
 
           ##
           # The name of the field.
           #
           # @return [String] The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           #
@@ -59,7 +76,7 @@ module Google
           # Updates the name of the field.
           #
           # @param [String] new_name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           #
@@ -70,12 +87,25 @@ module Google
           ##
           # The data type of the field.
           #
-          # @return [String] The field data type. Possible values include
-          #   `STRING`, `BYTES`, `INTEGER`, `INT64` (same as `INTEGER`),
-          #   `FLOAT`, `FLOAT64` (same as `FLOAT`), `NUMERIC`, `BIGNUMERIC`,
-          #   `BOOLEAN`, `BOOL` (same as `BOOLEAN`), `TIMESTAMP`, `DATE`,
-          #   `TIME`, `DATETIME`, `RECORD` (where `RECORD` indicates that the
-          #   field contains a nested schema) or `STRUCT` (same as `RECORD`).
+          # @return [String] The field data type. Possible values include:
+          #
+          #   * `BIGNUMERIC`
+          #   * `BOOL`
+          #   * `BOOLEAN` (same as `BOOL`)
+          #   * `BYTES`
+          #   * `DATE`
+          #   * `DATETIME`
+          #   * `FLOAT`
+          #   * `FLOAT64` (same as `FLOAT`)
+          #   * `GEOGRAPHY`
+          #   * `INTEGER`
+          #   * `INT64` (same as `INTEGER`)
+          #   * `NUMERIC`
+          #   * `RECORD` (where `RECORD` indicates that the field contains a nested schema)
+          #   * `STRING`
+          #   * `STRUCT` (same as `RECORD`)
+          #   * `TIME`
+          #   * `TIMESTAMP`
           #
           def type
             @gapi.type
@@ -84,12 +114,25 @@ module Google
           ##
           # Updates the data type of the field.
           #
-          # @param [String] new_type The data type. Possible values include
-          #   `STRING`, `BYTES`, `INTEGER`, `INT64` (same as `INTEGER`),
-          #   `FLOAT`, `FLOAT64` (same as `FLOAT`), `NUMERIC`, `BIGNUMERIC`,
-          #   `BOOLEAN`, `BOOL` (same as `BOOLEAN`), `TIMESTAMP`, `DATE`,
-          #   `TIME`, `DATETIME`, `RECORD` (where `RECORD` indicates that the
-          #   field contains a nested schema) or `STRUCT` (same as `RECORD`).
+          # @param [String] new_type The data type. Possible values include:
+          #
+          #   * `BIGNUMERIC`
+          #   * `BOOL`
+          #   * `BOOLEAN` (same as `BOOL`)
+          #   * `BYTES`
+          #   * `DATE`
+          #   * `DATETIME`
+          #   * `FLOAT`
+          #   * `FLOAT64` (same as `FLOAT`)
+          #   * `GEOGRAPHY`
+          #   * `INTEGER`
+          #   * `INT64` (same as `INTEGER`)
+          #   * `NUMERIC`
+          #   * `RECORD` (where `RECORD` indicates that the field contains a nested schema)
+          #   * `STRING`
+          #   * `STRUCT` (same as `RECORD`)
+          #   * `TIME`
+          #   * `TIMESTAMP`
           #
           def type= new_type
             @gapi.update! type: verify_type(new_type)
@@ -358,6 +401,15 @@ module Google
           end
 
           ##
+          # Checks if the type of the field is `GEOGRAPHY`.
+          #
+          # @return [Boolean] `true` when `GEOGRAPHY`, `false` otherwise.
+          #
+          def geography?
+            type == "GEOGRAPHY"
+          end
+
+          ##
           # Checks if the type of the field is `RECORD`.
           #
           # @return [Boolean] `true` when `RECORD`, `false` otherwise.
@@ -443,7 +495,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -474,7 +526,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -499,7 +551,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -534,7 +586,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -585,7 +637,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -625,7 +677,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -649,7 +701,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -680,7 +732,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -704,7 +756,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -728,7 +780,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -752,7 +804,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -771,6 +823,30 @@ module Google
           end
 
           ##
+          # Adds a geography field to the nested schema of a record field.
+          #
+          # @see https://cloud.google.com/bigquery/docs/gis-data Working with BigQuery GIS data
+          #
+          # @param [String] name The field name. The name must contain only
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
+          #   start with a letter or underscore. The maximum length is 128
+          #   characters.
+          # @param [String] description A description of the field.
+          # @param [Symbol] mode The field's mode. The possible values are
+          #   `:nullable`, `:required`, and `:repeated`. The default value is
+          #   `:nullable`.
+          # @param [Array<String>, String] policy_tags The policy tag list or
+          #   single policy tag for the field. Policy tag identifiers are of
+          #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
+          #   At most 1 policy tag is currently allowed.
+          #
+          def geography name, description: nil, mode: :nullable, policy_tags: nil
+            record_check!
+
+            add_field name, :geography, description: description, mode: mode, policy_tags: policy_tags
+          end
+
+          ##
           # Adds a record field to the nested schema of a record field. A block
           # must be passed describing the nested fields of the record. For more
           # information about nested and repeated records, see [Preparing Data
@@ -779,7 +855,7 @@ module Google
           # This can only be called on fields that are of type `RECORD`.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -863,7 +939,14 @@ module Google
                   "Cannot add fields to a non-RECORD field (#{type})"
           end
 
-          def add_field name, type, description: nil, mode: :nullable, policy_tags: nil, max_length: nil
+          def add_field name,
+                        type,
+                        description: nil,
+                        mode: :nullable,
+                        policy_tags: nil,
+                        max_length: nil,
+                        precision: nil,
+                        scale: nil
             frozen_check!
 
             new_gapi = Google::Apis::BigqueryV2::TableFieldSchema.new(
@@ -878,6 +961,8 @@ module Google
               new_gapi.policy_tags = Google::Apis::BigqueryV2::TableFieldSchema::PolicyTags.new names: policy_tags
             end
             new_gapi.max_length = max_length if max_length
+            new_gapi.precision = precision if precision
+            new_gapi.scale = scale if scale
             # Remove any existing field of this name
             @gapi.fields ||= []
             @gapi.fields.reject! { |f| f.name == new_gapi.name }

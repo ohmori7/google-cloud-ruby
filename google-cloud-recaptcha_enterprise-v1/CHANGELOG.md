@@ -1,5 +1,17 @@
 # Release History
 
+### 0.5.0 / 2021-09-21
+
+#### Features
+
+* Support migrate_key and get_metrics calls
+
+### 0.4.3 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.4.2 / 2021-07-12
 
 #### Documentation

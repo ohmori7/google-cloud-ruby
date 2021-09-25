@@ -1,5 +1,23 @@
 # Release History
 
+### 0.6.1 / 2021-08-30
+
+#### Documentation
+
+* Fix the links to the corresponding main client library
+
+### 0.6.0 / 2021-08-20
+
+#### Features
+
+* Add MultiClusterRoutingUseAny#cluster_ids field
+
+### 0.5.4 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.5.3 / 2021-07-12
 
 #### Documentation

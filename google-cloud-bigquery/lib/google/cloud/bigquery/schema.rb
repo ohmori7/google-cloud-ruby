@@ -287,7 +287,7 @@ module Google
         # Adds a string field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -314,7 +314,7 @@ module Google
         # Adds an integer field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -334,7 +334,7 @@ module Google
         # Adds a floating-point number field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -365,7 +365,7 @@ module Google
         # for financial calculations.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -412,7 +412,7 @@ module Google
         # for financial calculations.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -448,7 +448,7 @@ module Google
         # Adds a boolean field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -468,7 +468,7 @@ module Google
         # Adds a bytes field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -490,7 +490,7 @@ module Google
         # Adds a timestamp field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -510,7 +510,7 @@ module Google
         # Adds a time field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -530,7 +530,7 @@ module Google
         # Adds a datetime field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -550,7 +550,7 @@ module Google
         # Adds a date field to the schema.
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.
@@ -567,6 +567,28 @@ module Google
         end
 
         ##
+        # Adds a geography field to the schema.
+        #
+        # @see https://cloud.google.com/bigquery/docs/gis-data Working with BigQuery GIS data
+        #
+        # @param [String] name The field name. The name must contain only
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
+        #   start with a letter or underscore. The maximum length is 128
+        #   characters.
+        # @param [String] description A description of the field.
+        # @param [Symbol] mode The field's mode. The possible values are
+        #   `:nullable`, `:required`, and `:repeated`. The default value is
+        #   `:nullable`.
+        # @param [Array<String>, String] policy_tags The policy tag list or
+        #   single policy tag for the field. Policy tag identifiers are of
+        #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
+        #   At most 1 policy tag is currently allowed.
+        #
+        def geography name, description: nil, mode: :nullable, policy_tags: nil
+          add_field name, :geography, description: description, mode: mode, policy_tags: policy_tags
+        end
+
+        ##
         # Adds a record field to the schema. A block must be passed describing
         # the nested fields of the record. For more information about nested
         # and repeated records, see [Loading denormalized, nested, and repeated
@@ -574,7 +596,7 @@ module Google
         # ](https://cloud.google.com/bigquery/docs/loading-data#loading_denormalized_nested_and_repeated_data).
         #
         # @param [String] name The field name. The name must contain only
-        #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
         #   start with a letter or underscore. The maximum length is 128
         #   characters.
         # @param [String] description A description of the field.

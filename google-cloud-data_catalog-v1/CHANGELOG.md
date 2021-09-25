@@ -1,5 +1,23 @@
 # Release History
 
+### 0.8.2 / 2021-08-23
+
+#### Documentation
+
+* Fix links to the search syntax reference
+
+### 0.8.1 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
+### 0.8.0 / 2021-07-29
+
+#### Features
+
+* Support for the replace_taxonomy call
+
 ### 0.7.3 / 2021-07-12
 
 #### Documentation

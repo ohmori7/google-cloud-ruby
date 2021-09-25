@@ -41,13 +41,12 @@ module Google
             # See {::Google::Cloud::Talent::V4::JobService::Client::Configuration}
             # for a description of the configuration fields.
             #
-            # ## Example
+            # @example
             #
-            # To modify the configuration for all JobService clients:
-            #
-            #     ::Google::Cloud::Talent::V4::JobService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Modify the configuration for all JobService clients
+            #   ::Google::Cloud::Talent::V4::JobService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the Client client.
             # @yieldparam config [Client::Configuration]
@@ -123,19 +122,15 @@ module Google
             ##
             # Create a new JobService client object.
             #
-            # ## Examples
+            # @example
             #
-            # To create a new JobService client with the default
-            # configuration:
+            #   # Create a client using the default configuration
+            #   client = ::Google::Cloud::Talent::V4::JobService::Client.new
             #
-            #     client = ::Google::Cloud::Talent::V4::JobService::Client.new
-            #
-            # To create a new JobService client with a custom
-            # configuration:
-            #
-            #     client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Create a client using a custom configuration
+            #   client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the JobService client.
             # @yieldparam config [Client::Configuration]
@@ -155,10 +150,9 @@ module Google
 
               # Create credentials
               credentials = @config.credentials
-              # Use self-signed JWT if the scope and endpoint are unchanged from default,
+              # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.scope == Client.configure.scope &&
-                                       @config.endpoint == Client.configure.endpoint &&
+              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
                                        !@config.endpoint.split(".").first.include?("-")
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
@@ -254,7 +248,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.create_job.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.create_job.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :create_job, request, options: options do |response, operation|
@@ -326,7 +322,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_create_jobs.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_create_jobs.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :batch_create_jobs, request, options: options do |response, operation|
@@ -398,7 +396,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.get_job.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.get_job.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :get_job, request, options: options do |response, operation|
@@ -475,7 +475,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.update_job.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.update_job.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :update_job, request, options: options do |response, operation|
@@ -562,7 +564,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_update_jobs.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_update_jobs.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :batch_update_jobs, request, options: options do |response, operation|
@@ -636,7 +640,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.delete_job.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.delete_job.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :delete_job, request, options: options do |response, operation|
@@ -714,7 +720,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_delete_jobs.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_delete_jobs.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :batch_delete_jobs, request, options: options do |response, operation|
@@ -756,10 +764,13 @@ module Google
             #
             #     The fields eligible for filtering are:
             #
-            #     * `companyName` (Required)
+            #     * `companyName`
             #     * `requisitionId`
             #     * `status` Available values: OPEN, EXPIRED, ALL. Defaults to
             #     OPEN if no value is specified.
+            #
+            #     At least one of `companyName` and `requisitionId` must present or an
+            #     INVALID_ARGUMENT error is thrown.
             #
             #     Sample Query:
             #
@@ -768,6 +779,8 @@ module Google
             #     requisitionId = "req-1"
             #     * companyName = "projects/foo/tenants/bar/companies/baz" AND
             #     status = "EXPIRED"
+            #     * requisitionId = "req-1"
+            #     * requisitionId = "req-1" AND status = "EXPIRED"
             #   @param page_token [::String]
             #     The starting point of a query result.
             #   @param page_size [::Integer]
@@ -816,7 +829,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.list_jobs.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.list_jobs.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :list_jobs, request, options: options do |response, operation|
@@ -845,7 +860,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_jobs(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil)
+            # @overload search_jobs(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil)
             #   Pass arguments to `search_jobs` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -909,6 +924,9 @@ module Google
             #       "FULL_TIME", "PART_TIME".
             #     * company_size: histogram by {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
             #     "MEDIUM", "BIG".
+            #     * publish_time_in_day: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #       in days.
+            #       Must specify list of numeric buckets in spec.
             #     * publish_time_in_month: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in months.
             #       Must specify list of numeric buckets in spec.
@@ -962,7 +980,7 @@ module Google
             #     bucket(100000, MAX)])`
             #     * `count(string_custom_attribute["some-string-custom-attribute"])`
             #     * `count(numeric_custom_attribute["some-numeric-custom-attribute"],
-            #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative"])`
+            #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative")])`
             #   @param job_view [::Google::Cloud::Talent::V4::JobView]
             #     The desired job attributes returned for jobs in the search response.
             #     Defaults to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if no value is specified.
@@ -1050,6 +1068,14 @@ module Google
             #     Controls over how job documents get ranked on top of existing relevance
             #     score (determined by API algorithm).
             #   @param disable_keyword_match [::Boolean]
+            #     This field is deprecated. Please use
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} going forward.
+            #
+            #     To migrate, disable_keyword_match set to false maps to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}, and disable_keyword_match set to
+            #     true maps to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}. If
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} is set, this field is ignored.
+            #
             #     Controls whether to disable exact keyword match on {::Google::Cloud::Talent::V4::Job#title Job.title},
             #     {::Google::Cloud::Talent::V4::Job#description Job.description}, {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}, {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
             #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When disable keyword match is turned off, a
@@ -1069,6 +1095,12 @@ module Google
             #     requests.
             #
             #     Defaults to false.
+            #   @param keyword_match_mode [::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode]
+            #     Controls what keyword match options to use. If both keyword_match_mode and
+            #     disable_keyword_match are set, keyword_match_mode will take precedence.
+            #
+            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL} if no value
+            #     is specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Talent::V4::SearchJobsResponse]
@@ -1104,7 +1136,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.search_jobs.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.search_jobs.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :search_jobs, request, options: options do |response, operation|
@@ -1137,7 +1171,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_jobs_for_alert(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil)
+            # @overload search_jobs_for_alert(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil)
             #   Pass arguments to `search_jobs_for_alert` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1201,6 +1235,9 @@ module Google
             #       "FULL_TIME", "PART_TIME".
             #     * company_size: histogram by {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
             #     "MEDIUM", "BIG".
+            #     * publish_time_in_day: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #       in days.
+            #       Must specify list of numeric buckets in spec.
             #     * publish_time_in_month: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in months.
             #       Must specify list of numeric buckets in spec.
@@ -1254,7 +1291,7 @@ module Google
             #     bucket(100000, MAX)])`
             #     * `count(string_custom_attribute["some-string-custom-attribute"])`
             #     * `count(numeric_custom_attribute["some-numeric-custom-attribute"],
-            #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative"])`
+            #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative")])`
             #   @param job_view [::Google::Cloud::Talent::V4::JobView]
             #     The desired job attributes returned for jobs in the search response.
             #     Defaults to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if no value is specified.
@@ -1342,6 +1379,14 @@ module Google
             #     Controls over how job documents get ranked on top of existing relevance
             #     score (determined by API algorithm).
             #   @param disable_keyword_match [::Boolean]
+            #     This field is deprecated. Please use
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} going forward.
+            #
+            #     To migrate, disable_keyword_match set to false maps to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}, and disable_keyword_match set to
+            #     true maps to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}. If
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} is set, this field is ignored.
+            #
             #     Controls whether to disable exact keyword match on {::Google::Cloud::Talent::V4::Job#title Job.title},
             #     {::Google::Cloud::Talent::V4::Job#description Job.description}, {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}, {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
             #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When disable keyword match is turned off, a
@@ -1361,6 +1406,12 @@ module Google
             #     requests.
             #
             #     Defaults to false.
+            #   @param keyword_match_mode [::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode]
+            #     Controls what keyword match options to use. If both keyword_match_mode and
+            #     disable_keyword_match are set, keyword_match_mode will take precedence.
+            #
+            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL} if no value
+            #     is specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Talent::V4::SearchJobsResponse]
@@ -1396,7 +1447,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.search_jobs_for_alert.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.search_jobs_for_alert.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @job_service_stub.call_rpc :search_jobs_for_alert, request, options: options do |response, operation|
@@ -1420,22 +1473,21 @@ module Google
             # Configuration can be applied globally to all clients, or to a single client
             # on construction.
             #
-            # # Examples
+            # @example
             #
-            # To modify the global config, setting the timeout for create_job
-            # to 20 seconds, and all remaining timeouts to 10 seconds:
+            #   # Modify the global config, setting the timeout for
+            #   # create_job to 20 seconds,
+            #   # and all remaining timeouts to 10 seconds.
+            #   ::Google::Cloud::Talent::V4::JobService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.create_job.timeout = 20.0
+            #   end
             #
-            #     ::Google::Cloud::Talent::V4::JobService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.create_job.timeout = 20.0
-            #     end
-            #
-            # To apply the above configuration only to a new client:
-            #
-            #     client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.create_job.timeout = 20.0
-            #     end
+            #   # Apply the above configuration only to a new client.
+            #   client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.create_job.timeout = 20.0
+            #   end
             #
             # @!attribute [rw] endpoint
             #   The hostname or hostname:port of the service endpoint.

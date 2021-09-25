@@ -119,8 +119,8 @@ module Google
         ##
         # A unique ID for this table.
         #
-        # @return [String] The ID must contain only letters (a-z, A-Z), numbers
-        #   (0-9), or underscores (_). The maximum length is 1,024 characters.
+        # @return [String] The ID must contain only letters (`[A-Za-z]`), numbers
+        #   (`[0-9]`), or underscores (`_`). The maximum length is 1,024 characters.
         #
         # @!group Attributes
         #
@@ -132,8 +132,8 @@ module Google
         ##
         # The ID of the `Dataset` containing this table.
         #
-        # @return [String] The ID must contain only letters (a-z, A-Z), numbers
-        #   (0-9), or underscores (_). The maximum length is 1,024 characters.
+        # @return [String] The ID must contain only letters (`[A-Za-z]`), numbers
+        #   (`[0-9]`), or underscores (`_`). The maximum length is 1,024 characters.
         #
         # @!group Attributes
         #
@@ -1633,8 +1633,8 @@ module Google
         #   * `empty` - An error will be returned if the destination table
         #     already contains data.
         # @param [String] job_id A user-defined ID for the copy job. The ID
-        #   must contain only letters (a-z, A-Z), numbers (0-9), underscores
-        #   (_), or dashes (-). The maximum length is 1,024 characters. If
+        #   must contain only letters (`[A-Za-z]`), numbers (`[0-9]`), underscores
+        #   (`_`), or dashes (`-`). The maximum length is 1,024 characters. If
         #   `job_id` is provided, then `prefix` will not be used.
         #
         #   See [Generating a job
@@ -1643,8 +1643,8 @@ module Google
         #   prepended to a generated value to produce a unique job ID. For
         #   example, the prefix `daily_import_job_` can be given to generate a
         #   job ID such as `daily_import_job_12vEDtMQ0mbp1Mo5Z7mzAFQJZazh`. The
-        #   prefix must contain only letters (a-z, A-Z), numbers (0-9),
-        #   underscores (_), or dashes (-). The maximum length of the entire ID
+        #   prefix must contain only letters (`[A-Za-z]`), numbers (`[0-9]`),
+        #   underscores (`_`), or dashes (`-`). The maximum length of the entire ID
         #   is 1,024 characters. If `job_id` is provided, then `prefix` will not
         #   be used.
         # @param [Hash] labels A hash of user-provided labels associated with
@@ -1822,8 +1822,8 @@ module Google
         # @param [Boolean] header Whether to print out a header row in the
         #   results. Default is `true`.
         # @param [String] job_id A user-defined ID for the extract job. The ID
-        #   must contain only letters (a-z, A-Z), numbers (0-9), underscores
-        #   (_), or dashes (-). The maximum length is 1,024 characters. If
+        #   must contain only letters (`[A-Za-z]`), numbers (`[0-9]`), underscores
+        #   (`_`), or dashes (`-`). The maximum length is 1,024 characters. If
         #   `job_id` is provided, then `prefix` will not be used.
         #
         #   See [Generating a job
@@ -1832,8 +1832,8 @@ module Google
         #   prepended to a generated value to produce a unique job ID. For
         #   example, the prefix `daily_import_job_` can be given to generate a
         #   job ID such as `daily_import_job_12vEDtMQ0mbp1Mo5Z7mzAFQJZazh`. The
-        #   prefix must contain only letters (a-z, A-Z), numbers (0-9),
-        #   underscores (_), or dashes (-). The maximum length of the entire ID
+        #   prefix must contain only letters (`[A-Za-z]`), numbers (`[0-9]`),
+        #   underscores (`_`), or dashes (`-`). The maximum length of the entire ID
         #   is 1,024 characters. If `job_id` is provided, then `prefix` will not
         #   be used.
         # @param [Hash] labels A hash of user-provided labels associated with
@@ -2070,8 +2070,8 @@ module Google
         #   value is `0`. This property is useful if you have header rows in the
         #   file that should be skipped.
         # @param [String] job_id A user-defined ID for the load job. The ID
-        #   must contain only letters (a-z, A-Z), numbers (0-9), underscores
-        #   (_), or dashes (-). The maximum length is 1,024 characters. If
+        #   must contain only letters (`[A-Za-z]`), numbers (`[0-9]`), underscores
+        #   (`_`), or dashes (`-`). The maximum length is 1,024 characters. If
         #   `job_id` is provided, then `prefix` will not be used.
         #
         #   See [Generating a job
@@ -2080,8 +2080,8 @@ module Google
         #   prepended to a generated value to produce a unique job ID. For
         #   example, the prefix `daily_import_job_` can be given to generate a
         #   job ID such as `daily_import_job_12vEDtMQ0mbp1Mo5Z7mzAFQJZazh`. The
-        #   prefix must contain only letters (a-z, A-Z), numbers (0-9),
-        #   underscores (_), or dashes (-). The maximum length of the entire ID
+        #   prefix must contain only letters (`[A-Za-z]`), numbers (`[0-9]`),
+        #   underscores (`_`), or dashes (`-`). The maximum length of the entire ID
         #   is 1,024 characters. If `job_id` is provided, then `prefix` will not
         #   be used.
         # @param [Hash] labels A hash of user-provided labels associated with
@@ -2369,11 +2369,14 @@ module Google
         # | `BIGNUMERIC` | `String`                             | Pass as `String` to avoid rounding to scale 9.     |
         # | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
         # | `DATE`       | `Date`                               |                                                    |
+        # | `GEOGRAPHY`  | `String`                             | Well-known text (WKT) or GeoJSON.                  |
         # | `TIMESTAMP`  | `Time`                               |                                                    |
         # | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
         # | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |
         # | `ARRAY`      | `Array`                              | Nested arrays, `nil` values are not supported.     |
         # | `STRUCT`     | `Hash`                               | Hash keys may be strings or symbols.               |
+        #
+        # For `GEOGRAPHY` data, see [Working with BigQuery GIS data](https://cloud.google.com/bigquery/docs/gis-data).
         #
         # Because BigQuery's streaming API is designed for high insertion rates,
         # modifications to the underlying table metadata are eventually
@@ -3231,7 +3234,7 @@ module Google
           # See {Schema#string}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3265,7 +3268,7 @@ module Google
           # See {Schema#integer}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3297,7 +3300,7 @@ module Google
           # See {Schema#float}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3340,7 +3343,7 @@ module Google
           # See {Schema#numeric}
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3398,7 +3401,7 @@ module Google
           # See {Schema#bignumeric}
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3445,7 +3448,7 @@ module Google
           # See {Schema#boolean}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3477,7 +3480,7 @@ module Google
           # See {Schema#bytes}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3511,7 +3514,7 @@ module Google
           # See {Schema#timestamp}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3543,7 +3546,7 @@ module Google
           # See {Schema#time}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3575,7 +3578,7 @@ module Google
           # See {Schema#datetime}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3607,7 +3610,7 @@ module Google
           # See {Schema#date}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.
@@ -3634,6 +3637,37 @@ module Google
           end
 
           ##
+          # Adds a geography field to the schema.
+          #
+          # @see https://cloud.google.com/bigquery/docs/gis-data Working with BigQuery GIS data
+          #
+          # @param [String] name The field name. The name must contain only
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
+          #   start with a letter or underscore. The maximum length is 128
+          #   characters.
+          # @param [String] description A description of the field.
+          # @param [Symbol] mode The field's mode. The possible values are
+          #   `:nullable`, `:required`, and `:repeated`. The default value is
+          #   `:nullable`.
+          # @param [Array<String>, String] policy_tags The policy tag list or
+          #   single policy tag for the field. Policy tag identifiers are of
+          #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
+          #   At most 1 policy tag is currently allowed.
+          #
+          # @example
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.geography "home", mode: :required
+          #   end
+          #
+          def geography name, description: nil, mode: :nullable, policy_tags: nil
+            schema.geography name, description: description, mode: mode, policy_tags: policy_tags
+          end
+
+          ##
           # Adds a record field to the schema. A block must be passed describing
           # the nested fields of the record. For more information about nested
           # and repeated records, see [Loading denormalized, nested, and
@@ -3643,7 +3677,7 @@ module Google
           # See {Schema#record}.
           #
           # @param [String] name The field name. The name must contain only
-          #   letters (a-z, A-Z), numbers (0-9), or underscores (_), and must
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
           #   start with a letter or underscore. The maximum length is 128
           #   characters.
           # @param [String] description A description of the field.

@@ -60,6 +60,7 @@ CONFIGS = {
 }
 
 REPO = "googleapis/google-cloud-ruby"
+BOT_USERS = ["yoshi-code-bot", "yoshi-automation"]
 
 desc "Interactive mass code review"
 
@@ -120,7 +121,8 @@ def find_prs
   paged_api("repos/#{REPO}/pulls")
     .find_all do |pr_resource|
       title_regexp =~ pr_resource["title"] &&
-        pr_resource["labels"].all? { |label| label["name"] != "do not merge" }  
+        pr_resource["labels"].all? { |label| label["name"] != "do not merge" } &&
+        BOT_USERS.include?(pr_resource["user"]["login"])
     end
     .map { |pr_resource| PrData.new self, pr_resource }
 end
@@ -304,16 +306,14 @@ def display_all_diffs pr_data, force_all: false
   diff_text = disp_files.map(&:text).join
   return if diff_text.empty?
   exec ["ydiff", "--width=0", "-s", "--wrap"],
-       in: [:string, diff_text],
-       e: true
+       in: [:string, diff_text]
 end
 
 def display_file pr_data, index
   diff_text = pr_data.diff_files[index].text
   return if diff_text.empty?
   exec ["ydiff", "--width=0", "-s", "--wrap"],
-       in: [:string, diff_text],
-       e: true
+       in: [:string, diff_text]
 end
 
 def get_commit_message pr_data

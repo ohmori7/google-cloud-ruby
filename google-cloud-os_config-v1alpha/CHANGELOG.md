@@ -1,5 +1,17 @@
 # Changelog
 
+### 0.2.0 / 2021-08-31
+
+#### Features
+
+* Support Windows applications in the software package inventory
+
+### 0.1.2 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.1.1 / 2021-07-12
 
 #### Documentation

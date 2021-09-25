@@ -1,5 +1,23 @@
 # Release History
 
+### 0.8.0 / 2021-08-30
+
+#### Features
+
+* Support resource display names and additional resource types
+
+### 0.7.1 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
+### 0.7.0 / 2021-07-29
+
+#### Features
+
+* Support the EU_REGIONS_AND_SUPPORT compliance regime
+
 ### 0.6.2 / 2021-07-12
 
 #### Documentation

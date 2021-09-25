@@ -140,6 +140,10 @@ module Google
         #     A representation of runtime OS Inventory information. See [this
         #     topic](https://cloud.google.com/compute/docs/instances/os-inventory-management)
         #     for more information.
+        # @!attribute [rw] related_assets
+        #   @return [::Google::Cloud::Asset::V1::RelatedAssets]
+        #     The related assets of the asset of one relationship type.
+        #     One asset only represents one type of relationship.
         # @!attribute [rw] ancestors
         #   @return [::Array<::String>]
         #     The ancestry path of an asset in Google Cloud [resource
@@ -204,6 +208,74 @@ module Google
         #     The location of the resource in Google Cloud, such as its zone and region.
         #     For more information, see https://cloud.google.com/about/locations/.
         class Resource
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The detailed related assets with the `relationship_type`.
+        # @!attribute [rw] relationship_attributes
+        #   @return [::Google::Cloud::Asset::V1::RelationshipAttributes]
+        #     The detailed relationship attributes.
+        # @!attribute [rw] assets
+        #   @return [::Array<::Google::Cloud::Asset::V1::RelatedAsset>]
+        #     The peer resources of the relationship.
+        class RelatedAssets
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The relationship attributes which include  `type`, `source_resource_type`,
+        # `target_resource_type` and `action`.
+        # @!attribute [rw] type
+        #   @return [::String]
+        #     The unique identifier of the relationship type. Example:
+        #     `INSTANCE_TO_INSTANCEGROUP`
+        # @!attribute [rw] source_resource_type
+        #   @return [::String]
+        #     The source asset type. Example: `compute.googleapis.com/Instance`
+        # @!attribute [rw] target_resource_type
+        #   @return [::String]
+        #     The target asset type. Example: `compute.googleapis.com/Disk`
+        # @!attribute [rw] action
+        #   @return [::String]
+        #     The detail of the relationship, e.g. `contains`, `attaches`
+        class RelationshipAttributes
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # An asset identify in Google Cloud which contains its name, type and
+        # ancestors. An asset can be any resource in the Google Cloud [resource
+        # hierarchy](https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy),
+        # a resource outside the Google Cloud resource hierarchy (such as Google
+        # Kubernetes Engine clusters and objects), or a policy (e.g. Cloud IAM policy).
+        # See [Supported asset
+        # types](https://cloud.google.com/asset-inventory/docs/supported-asset-types)
+        # for more information.
+        # @!attribute [rw] asset
+        #   @return [::String]
+        #     The full name of the asset. Example:
+        #     `//compute.googleapis.com/projects/my_project_123/zones/zone1/instances/instance1`
+        #
+        #     See [Resource
+        #     names](https://cloud.google.com/apis/design/resource_names#full_resource_name)
+        #     for more information.
+        # @!attribute [rw] asset_type
+        #   @return [::String]
+        #     The type of the asset. Example: `compute.googleapis.com/Disk`
+        #
+        #     See [Supported asset
+        #     types](https://cloud.google.com/asset-inventory/docs/supported-asset-types)
+        #     for more information.
+        # @!attribute [rw] ancestors
+        #   @return [::Array<::String>]
+        #     The ancestors of an asset in Google Cloud [resource
+        #     hierarchy](https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy),
+        #     represented as a list of relative resource names. An ancestry path starts
+        #     with the closest ancestor in the hierarchy and ends at root.
+        #
+        #     Example: `["projects/123456789", "folders/5432", "organizations/1234"]`
+        class RelatedAsset
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -424,6 +496,14 @@ module Google
         #     This `attached_resources` field is not searchable. Some attributes
         #     of the attached resources are exposed in `additional_attributes` field, so
         #     as to allow users to search on them.
+        # @!attribute [rw] relationships
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Asset::V1::RelatedResources}]
+        #     A map of related resources of this resource, keyed by the
+        #     relationship type. A relationship type is in the format of
+        #     \\{SourceType}_\\{ACTION}_\\{DestType}. Example: `DISK_TO_INSTANCE`,
+        #     `DISK_TO_NETWORK`, `INSTANCE_TO_INSTANCEGROUP`.
+        #     See [supported relationship
+        #     types](https://cloud.google.com/asset-inventory/docs/supported-asset-types#supported_relationship_types).
         # @!attribute [rw] parent_asset_type
         #   @return [::String]
         #     The type of this resource's immediate parent, if there is one.
@@ -443,6 +523,15 @@ module Google
           # @!attribute [rw] value
           #   @return [::String]
           class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::Asset::V1::RelatedResources]
+          class RelationshipsEntry
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -494,6 +583,28 @@ module Google
         #     repeated because there could be multiple versions of the attached resource
         #     representations during version migration.
         class AttachedResource
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The related resources of the primary resource.
+        # @!attribute [rw] related_resources
+        #   @return [::Array<::Google::Cloud::Asset::V1::RelatedResource>]
+        #     The detailed related resources of the primary resource.
+        class RelatedResources
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The detailed related resource.
+        # @!attribute [rw] asset_type
+        #   @return [::String]
+        #     The type of the asset. Example: `compute.googleapis.com/Instance`
+        # @!attribute [rw] full_resource_name
+        #   @return [::String]
+        #     The full resource name of the related resource. Example:
+        #     `//compute.googleapis.com/projects/my_proj_123/zones/instance/instance123`
+        class RelatedResource
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

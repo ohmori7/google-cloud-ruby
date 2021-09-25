@@ -1,5 +1,17 @@
 # Release History
 
+### 0.8.1 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
+### 0.8.0 / 2021-07-29
+
+#### Features
+
+* Added class and indicator fields to security findings
+
 ### 0.7.2 / 2021-07-12
 
 #### Documentation

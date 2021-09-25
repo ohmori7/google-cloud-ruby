@@ -38,7 +38,7 @@ module Google
           # [Using gRPC with Cloud KMS](https://cloud.google.com/kms/docs/grpc).
           class Service
 
-            include GRPC::GenericService
+            include ::GRPC::GenericService
 
             self.marshal_class_method = :encode
             self.unmarshal_class_method = :decode
@@ -80,11 +80,12 @@ module Google
             # [state][google.cloud.kms.v1.CryptoKeyVersion.state] will be set to
             # [ENABLED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.ENABLED].
             rpc :CreateCryptoKeyVersion, ::Google::Cloud::Kms::V1::CreateCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
-            # Imports a new [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] into an existing [CryptoKey][google.cloud.kms.v1.CryptoKey] using the
-            # wrapped key material provided in the request.
+            # Import wrapped key material into a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion].
             #
-            # The version ID will be assigned the next sequential id within the
-            # [CryptoKey][google.cloud.kms.v1.CryptoKey].
+            # All requests must specify a [CryptoKey][google.cloud.kms.v1.CryptoKey]. If a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] is
+            # additionally specified in the request, key material will be reimported into
+            # that version. Otherwise, a new version will be created, and will be
+            # assigned the next sequential id within the [CryptoKey][google.cloud.kms.v1.CryptoKey].
             rpc :ImportCryptoKeyVersion, ::Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
             # Create a new [ImportJob][google.cloud.kms.v1.ImportJob] within a [KeyRing][google.cloud.kms.v1.KeyRing].
             #
@@ -100,6 +101,33 @@ module Google
             # method. See [DestroyCryptoKeyVersion][google.cloud.kms.v1.KeyManagementService.DestroyCryptoKeyVersion] and [RestoreCryptoKeyVersion][google.cloud.kms.v1.KeyManagementService.RestoreCryptoKeyVersion] to
             # move between other states.
             rpc :UpdateCryptoKeyVersion, ::Google::Cloud::Kms::V1::UpdateCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
+            # Update the version of a [CryptoKey][google.cloud.kms.v1.CryptoKey] that will be used in [Encrypt][google.cloud.kms.v1.KeyManagementService.Encrypt].
+            #
+            # Returns an error if called on a key whose purpose is not
+            # [ENCRYPT_DECRYPT][google.cloud.kms.v1.CryptoKey.CryptoKeyPurpose.ENCRYPT_DECRYPT].
+            rpc :UpdateCryptoKeyPrimaryVersion, ::Google::Cloud::Kms::V1::UpdateCryptoKeyPrimaryVersionRequest, ::Google::Cloud::Kms::V1::CryptoKey
+            # Schedule a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] for destruction.
+            #
+            # Upon calling this method, [CryptoKeyVersion.state][google.cloud.kms.v1.CryptoKeyVersion.state] will be set to
+            # [DESTROY_SCHEDULED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROY_SCHEDULED],
+            # and [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] will be set to the time
+            # [destroy_scheduled_duration][google.cloud.kms.v1.CryptoKey.destroy_scheduled_duration] in the
+            # future. At that time, the [state][google.cloud.kms.v1.CryptoKeyVersion.state] will
+            # automatically change to
+            # [DESTROYED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROYED], and the key
+            # material will be irrevocably destroyed.
+            #
+            # Before the [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] is reached,
+            # [RestoreCryptoKeyVersion][google.cloud.kms.v1.KeyManagementService.RestoreCryptoKeyVersion] may be called to reverse the process.
+            rpc :DestroyCryptoKeyVersion, ::Google::Cloud::Kms::V1::DestroyCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
+            # Restore a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] in the
+            # [DESTROY_SCHEDULED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROY_SCHEDULED]
+            # state.
+            #
+            # Upon restoration of the CryptoKeyVersion, [state][google.cloud.kms.v1.CryptoKeyVersion.state]
+            # will be set to [DISABLED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DISABLED],
+            # and [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] will be cleared.
+            rpc :RestoreCryptoKeyVersion, ::Google::Cloud::Kms::V1::RestoreCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
             # Encrypts data, so that it can only be recovered by a call to [Decrypt][google.cloud.kms.v1.KeyManagementService.Decrypt].
             # The [CryptoKey.purpose][google.cloud.kms.v1.CryptoKey.purpose] must be
             # [ENCRYPT_DECRYPT][google.cloud.kms.v1.CryptoKey.CryptoKeyPurpose.ENCRYPT_DECRYPT].
@@ -115,32 +143,17 @@ module Google
             # [GetPublicKey][google.cloud.kms.v1.KeyManagementService.GetPublicKey] corresponding to a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] with
             # [CryptoKey.purpose][google.cloud.kms.v1.CryptoKey.purpose] ASYMMETRIC_DECRYPT.
             rpc :AsymmetricDecrypt, ::Google::Cloud::Kms::V1::AsymmetricDecryptRequest, ::Google::Cloud::Kms::V1::AsymmetricDecryptResponse
-            # Update the version of a [CryptoKey][google.cloud.kms.v1.CryptoKey] that will be used in [Encrypt][google.cloud.kms.v1.KeyManagementService.Encrypt].
-            #
-            # Returns an error if called on a key whose purpose is not
-            # [ENCRYPT_DECRYPT][google.cloud.kms.v1.CryptoKey.CryptoKeyPurpose.ENCRYPT_DECRYPT].
-            rpc :UpdateCryptoKeyPrimaryVersion, ::Google::Cloud::Kms::V1::UpdateCryptoKeyPrimaryVersionRequest, ::Google::Cloud::Kms::V1::CryptoKey
-            # Schedule a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] for destruction.
-            #
-            # Upon calling this method, [CryptoKeyVersion.state][google.cloud.kms.v1.CryptoKeyVersion.state] will be set to
-            # [DESTROY_SCHEDULED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROY_SCHEDULED]
-            # and [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] will be set to a time 24
-            # hours in the future, at which point the [state][google.cloud.kms.v1.CryptoKeyVersion.state]
-            # will be changed to
-            # [DESTROYED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROYED], and the key
-            # material will be irrevocably destroyed.
-            #
-            # Before the [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] is reached,
-            # [RestoreCryptoKeyVersion][google.cloud.kms.v1.KeyManagementService.RestoreCryptoKeyVersion] may be called to reverse the process.
-            rpc :DestroyCryptoKeyVersion, ::Google::Cloud::Kms::V1::DestroyCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
-            # Restore a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] in the
-            # [DESTROY_SCHEDULED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DESTROY_SCHEDULED]
-            # state.
-            #
-            # Upon restoration of the CryptoKeyVersion, [state][google.cloud.kms.v1.CryptoKeyVersion.state]
-            # will be set to [DISABLED][google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionState.DISABLED],
-            # and [destroy_time][google.cloud.kms.v1.CryptoKeyVersion.destroy_time] will be cleared.
-            rpc :RestoreCryptoKeyVersion, ::Google::Cloud::Kms::V1::RestoreCryptoKeyVersionRequest, ::Google::Cloud::Kms::V1::CryptoKeyVersion
+            # Signs data using a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] with [CryptoKey.purpose][google.cloud.kms.v1.CryptoKey.purpose]
+            # MAC, producing a tag that can be verified by another source with the
+            # same key.
+            rpc :MacSign, ::Google::Cloud::Kms::V1::MacSignRequest, ::Google::Cloud::Kms::V1::MacSignResponse
+            # Verifies MAC tag using a [CryptoKeyVersion][google.cloud.kms.v1.CryptoKeyVersion] with [CryptoKey.purpose][google.cloud.kms.v1.CryptoKey.purpose]
+            # MAC, and returns a response that indicates whether or not the verification
+            # was successful.
+            rpc :MacVerify, ::Google::Cloud::Kms::V1::MacVerifyRequest, ::Google::Cloud::Kms::V1::MacVerifyResponse
+            # Generate random bytes using the Cloud KMS randomness source in the provided
+            # location.
+            rpc :GenerateRandomBytes, ::Google::Cloud::Kms::V1::GenerateRandomBytesRequest, ::Google::Cloud::Kms::V1::GenerateRandomBytesResponse
           end
 
           Stub = Service.rpc_stub_class

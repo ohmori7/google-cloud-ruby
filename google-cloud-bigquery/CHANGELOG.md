@@ -1,5 +1,34 @@
 # Release History
 
+### 1.36.0 / 2021-09-22
+
+#### Features
+
+* Add Job#delete
+
+#### Bug Fixes
+
+* Add precision and scale to Field#add_field
+
+### 1.35.1 / 2021-09-14
+
+#### Documentation
+
+* Wrap character class regex in backticks
+
+### 1.35.0 / 2021-08-12
+
+#### Features
+
+* Add GEOGRAPHY schema helpers
+  * Add LoadJob#geography
+  * Add Schema::Field#geography
+  * Add Table::Updater#geography
+* Add support for GEOGRAPHY type
+  * Add Schema#geography
+* Add support for multistatement transaction statistics in jobs
+  * Add Job#transaction_id
+
 ### 1.34.0 / 2021-07-20
 
 #### Features

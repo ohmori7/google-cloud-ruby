@@ -43,13 +43,12 @@ module Google
             # See {::Google::Cloud::Vision::V1::ImageAnnotator::Client::Configuration}
             # for a description of the configuration fields.
             #
-            # ## Example
+            # @example
             #
-            # To modify the configuration for all ImageAnnotator clients:
-            #
-            #     ::Google::Cloud::Vision::V1::ImageAnnotator::Client.configure do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Modify the configuration for all ImageAnnotator clients
+            #   ::Google::Cloud::Vision::V1::ImageAnnotator::Client.configure do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the Client client.
             # @yieldparam config [Client::Configuration]
@@ -116,19 +115,15 @@ module Google
             ##
             # Create a new ImageAnnotator client object.
             #
-            # ## Examples
+            # @example
             #
-            # To create a new ImageAnnotator client with the default
-            # configuration:
+            #   # Create a client using the default configuration
+            #   client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new
             #
-            #     client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new
-            #
-            # To create a new ImageAnnotator client with a custom
-            # configuration:
-            #
-            #     client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Create a client using a custom configuration
+            #   client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the ImageAnnotator client.
             # @yieldparam config [Client::Configuration]
@@ -148,10 +143,9 @@ module Google
 
               # Create credentials
               credentials = @config.credentials
-              # Use self-signed JWT if the scope and endpoint are unchanged from default,
+              # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.scope == Client.configure.scope &&
-                                       @config.endpoint == Client.configure.endpoint &&
+              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
                                        !@config.endpoint.split(".").first.include?("-")
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
@@ -226,6 +220,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/vision/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Vision::V1::ImageAnnotator::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Vision::V1::BatchAnnotateImagesRequest.new
+            #
+            #   # Call the batch_annotate_images method.
+            #   result = client.batch_annotate_images request
+            #
+            #   # The returned object is of type Google::Cloud::Vision::V1::BatchAnnotateImagesResponse.
+            #   p result
+            #
             def batch_annotate_images request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -246,7 +255,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_annotate_images.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_annotate_images.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @image_annotator_stub.call_rpc :batch_annotate_images, request, options: options do |response, operation|
@@ -306,6 +317,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/vision/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Vision::V1::ImageAnnotator::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Vision::V1::BatchAnnotateFilesRequest.new
+            #
+            #   # Call the batch_annotate_files method.
+            #   result = client.batch_annotate_files request
+            #
+            #   # The returned object is of type Google::Cloud::Vision::V1::BatchAnnotateFilesResponse.
+            #   p result
+            #
             def batch_annotate_files request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -326,7 +352,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_annotate_files.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_annotate_files.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @image_annotator_stub.call_rpc :batch_annotate_files, request, options: options do |response, operation|
@@ -389,6 +417,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/vision/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Vision::V1::ImageAnnotator::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Vision::V1::AsyncBatchAnnotateImagesRequest.new
+            #
+            #   # Call the async_batch_annotate_images method.
+            #   result = client.async_batch_annotate_images request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def async_batch_annotate_images request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -409,7 +459,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.async_batch_annotate_images.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.async_batch_annotate_images.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @image_annotator_stub.call_rpc :async_batch_annotate_images, request, options: options do |response, operation|
@@ -468,6 +520,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/vision/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Vision::V1::ImageAnnotator::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Vision::V1::AsyncBatchAnnotateFilesRequest.new
+            #
+            #   # Call the async_batch_annotate_files method.
+            #   result = client.async_batch_annotate_files request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def async_batch_annotate_files request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -488,7 +562,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.async_batch_annotate_files.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.async_batch_annotate_files.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @image_annotator_stub.call_rpc :async_batch_annotate_files, request, options: options do |response, operation|
@@ -513,22 +589,21 @@ module Google
             # Configuration can be applied globally to all clients, or to a single client
             # on construction.
             #
-            # # Examples
+            # @example
             #
-            # To modify the global config, setting the timeout for batch_annotate_images
-            # to 20 seconds, and all remaining timeouts to 10 seconds:
+            #   # Modify the global config, setting the timeout for
+            #   # batch_annotate_images to 20 seconds,
+            #   # and all remaining timeouts to 10 seconds.
+            #   ::Google::Cloud::Vision::V1::ImageAnnotator::Client.configure do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.batch_annotate_images.timeout = 20.0
+            #   end
             #
-            #     ::Google::Cloud::Vision::V1::ImageAnnotator::Client.configure do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.batch_annotate_images.timeout = 20.0
-            #     end
-            #
-            # To apply the above configuration only to a new client:
-            #
-            #     client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.batch_annotate_images.timeout = 20.0
-            #     end
+            #   # Apply the above configuration only to a new client.
+            #   client = ::Google::Cloud::Vision::V1::ImageAnnotator::Client.new do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.batch_annotate_images.timeout = 20.0
+            #   end
             #
             # @!attribute [rw] endpoint
             #   The hostname or hostname:port of the service endpoint.

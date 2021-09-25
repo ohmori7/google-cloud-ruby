@@ -42,13 +42,12 @@ module Google
             # See {::Google::Cloud::Monitoring::V3::NotificationChannelService::Client::Configuration}
             # for a description of the configuration fields.
             #
-            # ## Example
+            # @example
             #
-            # To modify the configuration for all NotificationChannelService clients:
-            #
-            #     ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Modify the configuration for all NotificationChannelService clients
+            #   ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the Client client.
             # @yieldparam config [Client::Configuration]
@@ -68,22 +67,22 @@ module Google
 
                 default_config.rpcs.list_notification_channel_descriptors.timeout = 30.0
                 default_config.rpcs.list_notification_channel_descriptors.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.get_notification_channel_descriptor.timeout = 30.0
                 default_config.rpcs.get_notification_channel_descriptor.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.list_notification_channels.timeout = 30.0
                 default_config.rpcs.list_notification_channels.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.get_notification_channel.timeout = 30.0
                 default_config.rpcs.get_notification_channel.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.create_notification_channel.timeout = 30.0
@@ -92,19 +91,19 @@ module Google
 
                 default_config.rpcs.delete_notification_channel.timeout = 30.0
                 default_config.rpcs.delete_notification_channel.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.send_notification_channel_verification_code.timeout = 30.0
 
                 default_config.rpcs.get_notification_channel_verification_code.timeout = 30.0
                 default_config.rpcs.get_notification_channel_verification_code.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config.rpcs.verify_notification_channel.timeout = 30.0
                 default_config.rpcs.verify_notification_channel.retry_policy = {
-                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [4, 14]
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 1.3, retry_codes: [14]
                 }
 
                 default_config
@@ -136,19 +135,15 @@ module Google
             ##
             # Create a new NotificationChannelService client object.
             #
-            # ## Examples
+            # @example
             #
-            # To create a new NotificationChannelService client with the default
-            # configuration:
+            #   # Create a client using the default configuration
+            #   client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
             #
-            #     client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
-            #
-            # To create a new NotificationChannelService client with a custom
-            # configuration:
-            #
-            #     client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Create a client using a custom configuration
+            #   client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the NotificationChannelService client.
             # @yieldparam config [Client::Configuration]
@@ -168,10 +163,9 @@ module Google
 
               # Create credentials
               credentials = @config.credentials
-              # Use self-signed JWT if the scope and endpoint are unchanged from default,
+              # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.scope == Client.configure.scope &&
-                                       @config.endpoint == Client.configure.endpoint &&
+              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
                                        !@config.endpoint.split(".").first.include?("-")
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
@@ -217,8 +211,10 @@ module Google
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
-            #     Note that this names the parent container in which to look for the
-            #     descriptors; to retrieve a single descriptor by name, use the
+            #     Note that this
+            #     [names](https://cloud.google.com/monitoring/api/v3#project_name) the parent
+            #     container in which to look for the descriptors; to retrieve a single
+            #     descriptor by name, use the
             #     {::Google::Cloud::Monitoring::V3::NotificationChannelService::Client#get_notification_channel_descriptor GetNotificationChannelDescriptor}
             #     operation, instead.
             #   @param page_size [::Integer]
@@ -264,7 +260,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.list_notification_channel_descriptors.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.list_notification_channel_descriptors.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :list_notification_channel_descriptors, request, options: options do |response, operation|
@@ -334,7 +332,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.get_notification_channel_descriptor.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.get_notification_channel_descriptor.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :get_notification_channel_descriptor, request, options: options do |response, operation|
@@ -364,7 +364,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The project on which to execute the request. The format is:
+            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
+            #     which to execute the request. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
@@ -430,7 +431,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.list_notification_channels.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.list_notification_channels.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :list_notification_channels, request, options: options do |response, operation|
@@ -503,7 +506,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.get_notification_channel.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.get_notification_channel.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :get_notification_channel, request, options: options do |response, operation|
@@ -534,7 +539,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The project on which to execute the request. The format is:
+            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
+            #     which to execute the request. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
@@ -579,7 +585,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.create_notification_channel.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.create_notification_channel.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :create_notification_channel, request, options: options do |response, operation|
@@ -651,7 +659,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.update_notification_channel.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.update_notification_channel.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :update_notification_channel, request, options: options do |response, operation|
@@ -724,7 +734,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.delete_notification_channel.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.delete_notification_channel.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :delete_notification_channel, request, options: options do |response, operation|
@@ -791,7 +803,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.send_notification_channel_verification_code.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.send_notification_channel_verification_code.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :send_notification_channel_verification_code, request, options: options do |response, operation|
@@ -889,7 +903,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.get_notification_channel_verification_code.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.get_notification_channel_verification_code.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :get_notification_channel_verification_code, request, options: options do |response, operation|
@@ -965,7 +981,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.verify_notification_channel.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.verify_notification_channel.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @notification_channel_service_stub.call_rpc :verify_notification_channel, request, options: options do |response, operation|
@@ -989,22 +1007,21 @@ module Google
             # Configuration can be applied globally to all clients, or to a single client
             # on construction.
             #
-            # # Examples
+            # @example
             #
-            # To modify the global config, setting the timeout for list_notification_channel_descriptors
-            # to 20 seconds, and all remaining timeouts to 10 seconds:
+            #   # Modify the global config, setting the timeout for
+            #   # list_notification_channel_descriptors to 20 seconds,
+            #   # and all remaining timeouts to 10 seconds.
+            #   ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.list_notification_channel_descriptors.timeout = 20.0
+            #   end
             #
-            #     ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.list_notification_channel_descriptors.timeout = 20.0
-            #     end
-            #
-            # To apply the above configuration only to a new client:
-            #
-            #     client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.list_notification_channel_descriptors.timeout = 20.0
-            #     end
+            #   # Apply the above configuration only to a new client.
+            #   client = ::Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.list_notification_channel_descriptors.timeout = 20.0
+            #   end
             #
             # @!attribute [rw] endpoint
             #   The hostname or hostname:port of the service endpoint.

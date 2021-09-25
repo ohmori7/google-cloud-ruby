@@ -41,13 +41,12 @@ module Google
             # See {::Google::Cloud::Asset::V1::AssetService::Client::Configuration}
             # for a description of the configuration fields.
             #
-            # ## Example
+            # @example
             #
-            # To modify the configuration for all AssetService clients:
-            #
-            #     ::Google::Cloud::Asset::V1::AssetService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Modify the configuration for all AssetService clients
+            #   ::Google::Cloud::Asset::V1::AssetService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the Client client.
             # @yieldparam config [Client::Configuration]
@@ -142,19 +141,15 @@ module Google
             ##
             # Create a new AssetService client object.
             #
-            # ## Examples
+            # @example
             #
-            # To create a new AssetService client with the default
-            # configuration:
+            #   # Create a client using the default configuration
+            #   client = ::Google::Cloud::Asset::V1::AssetService::Client.new
             #
-            #     client = ::Google::Cloud::Asset::V1::AssetService::Client.new
-            #
-            # To create a new AssetService client with a custom
-            # configuration:
-            #
-            #     client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
-            #       config.timeout = 10.0
-            #     end
+            #   # Create a client using a custom configuration
+            #   client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+            #     config.timeout = 10.0
+            #   end
             #
             # @yield [config] Configure the AssetService client.
             # @yieldparam config [Client::Configuration]
@@ -174,10 +169,9 @@ module Google
 
               # Create credentials
               credentials = @config.credentials
-              # Use self-signed JWT if the scope and endpoint are unchanged from default,
+              # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.scope == Client.configure.scope &&
-                                       @config.endpoint == Client.configure.endpoint &&
+              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
                                        !@config.endpoint.split(".").first.include?("-")
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
@@ -232,7 +226,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload export_assets(parent: nil, read_time: nil, asset_types: nil, content_type: nil, output_config: nil)
+            # @overload export_assets(parent: nil, read_time: nil, asset_types: nil, content_type: nil, output_config: nil, relationship_types: nil)
             #   Pass arguments to `export_assets` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -272,6 +266,22 @@ module Google
             #     returned.
             #   @param output_config [::Google::Cloud::Asset::V1::OutputConfig, ::Hash]
             #     Required. Output configuration indicating where the results will be output to.
+            #   @param relationship_types [::Array<::String>]
+            #     A list of relationship types to export, for example:
+            #     `INSTANCE_TO_INSTANCEGROUP`. This field should only be specified if
+            #     content_type=RELATIONSHIP.
+            #     * If specified:
+            #     it snapshots specified relationships. It returns an error if
+            #     any of the [relationship_types] doesn't belong to the supported
+            #     relationship types of the [asset_types] or if any of the [asset_types]
+            #     doesn't belong to the source types of the [relationship_types].
+            #     * Otherwise:
+            #     it snapshots the supported relationships for all [asset_types] or returns
+            #     an error if any of the [asset_types] has no relationship support.
+            #     An unspecified asset types field means all supported asset_types.
+            #     See [Introduction to Cloud Asset
+            #     Inventory](https://cloud.google.com/asset-inventory/docs/overview) for all
+            #     supported asset types and relationship types.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -307,7 +317,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.export_assets.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.export_assets.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :export_assets, request, options: options do |response, operation|
@@ -333,7 +345,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_assets(parent: nil, read_time: nil, asset_types: nil, content_type: nil, page_size: nil, page_token: nil)
+            # @overload list_assets(parent: nil, read_time: nil, asset_types: nil, content_type: nil, page_size: nil, page_token: nil, relationship_types: nil)
             #   Pass arguments to `list_assets` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -378,6 +390,22 @@ module Google
             #     The `next_page_token` returned from the previous `ListAssetsResponse`, or
             #     unspecified for the first `ListAssetsRequest`. It is a continuation of a
             #     prior `ListAssets` call, and the API should return the next page of assets.
+            #   @param relationship_types [::Array<::String>]
+            #     A list of relationship types to output, for example:
+            #     `INSTANCE_TO_INSTANCEGROUP`. This field should only be specified if
+            #     content_type=RELATIONSHIP.
+            #     * If specified:
+            #     it snapshots specified relationships. It returns an error if
+            #     any of the [relationship_types] doesn't belong to the supported
+            #     relationship types of the [asset_types] or if any of the [asset_types]
+            #     doesn't belong to the source types of the [relationship_types].
+            #     * Otherwise:
+            #     it snapshots the supported relationships for all [asset_types] or returns
+            #     an error if any of the [asset_types] has no relationship support.
+            #     An unspecified asset types field means all supported asset_types.
+            #     See [Introduction to Cloud Asset
+            #     Inventory](https://cloud.google.com/asset-inventory/docs/overview)
+            #     for all supported asset types and relationship types.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Asset::V1::Asset>]
@@ -413,7 +441,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.list_assets.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.list_assets.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :list_assets, request, options: options do |response, operation|
@@ -444,7 +474,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload batch_get_assets_history(parent: nil, asset_names: nil, content_type: nil, read_time_window: nil)
+            # @overload batch_get_assets_history(parent: nil, asset_names: nil, content_type: nil, read_time_window: nil, relationship_types: nil)
             #   Pass arguments to `batch_get_assets_history` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -471,6 +501,23 @@ module Google
             #     If start_time is not set, the snapshot of the assets at end_time will be
             #     returned. The returned results contain all temporal assets whose time
             #     window overlap with read_time_window.
+            #   @param relationship_types [::Array<::String>]
+            #     Optional. A list of relationship types to output, for example:
+            #     `INSTANCE_TO_INSTANCEGROUP`. This field should only be specified if
+            #     content_type=RELATIONSHIP.
+            #     * If specified:
+            #     it outputs specified relationships' history on the [asset_names]. It
+            #     returns an error if any of the [relationship_types] doesn't belong to the
+            #     supported relationship types of the [asset_names] or if any of the
+            #     [asset_names]'s types doesn't belong to the source types of the
+            #     [relationship_types].
+            #     * Otherwise:
+            #     it outputs the supported relationships' history on the [asset_names] or
+            #     returns an error if any of the [asset_names]'s types has no relationship
+            #     support.
+            #     See [Introduction to Cloud Asset
+            #     Inventory](https://cloud.google.com/asset-inventory/docs/overview) for all
+            #     supported asset types and relationship types.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Asset::V1::BatchGetAssetsHistoryResponse]
@@ -506,7 +553,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.batch_get_assets_history.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.batch_get_assets_history.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :batch_get_assets_history, request, options: options do |response, operation|
@@ -586,7 +635,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.create_feed.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.create_feed.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :create_feed, request, options: options do |response, operation|
@@ -655,7 +706,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.get_feed.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.get_feed.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :get_feed, request, options: options do |response, operation|
@@ -723,7 +776,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.list_feeds.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.list_feeds.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :list_feeds, request, options: options do |response, operation|
@@ -797,7 +852,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.update_feed.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.update_feed.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :update_feed, request, options: options do |response, operation|
@@ -866,7 +923,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.delete_feed.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.delete_feed.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :delete_feed, request, options: options do |response, operation|
@@ -1063,7 +1122,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.search_all_resources.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.search_all_resources.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :search_all_resources, request, options: options do |response, operation|
@@ -1225,7 +1286,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.search_all_iam_policies.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.search_all_iam_policies.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :search_all_iam_policies, request, options: options do |response, operation|
@@ -1304,7 +1367,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.analyze_iam_policy.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.analyze_iam_policy.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :analyze_iam_policy, request, options: options do |response, operation|
@@ -1380,7 +1445,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.analyze_iam_policy_longrunning.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.analyze_iam_policy_longrunning.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :analyze_iam_policy_longrunning, request, options: options do |response, operation|
@@ -1463,7 +1530,9 @@ module Google
               options.apply_defaults timeout:      @config.rpcs.analyze_move.timeout,
                                      metadata:     metadata,
                                      retry_policy: @config.rpcs.analyze_move.retry_policy
-              options.apply_defaults metadata:     @config.metadata,
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
                                      retry_policy: @config.retry_policy
 
               @asset_service_stub.call_rpc :analyze_move, request, options: options do |response, operation|
@@ -1487,22 +1556,21 @@ module Google
             # Configuration can be applied globally to all clients, or to a single client
             # on construction.
             #
-            # # Examples
+            # @example
             #
-            # To modify the global config, setting the timeout for export_assets
-            # to 20 seconds, and all remaining timeouts to 10 seconds:
+            #   # Modify the global config, setting the timeout for
+            #   # export_assets to 20 seconds,
+            #   # and all remaining timeouts to 10 seconds.
+            #   ::Google::Cloud::Asset::V1::AssetService::Client.configure do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.export_assets.timeout = 20.0
+            #   end
             #
-            #     ::Google::Cloud::Asset::V1::AssetService::Client.configure do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.export_assets.timeout = 20.0
-            #     end
-            #
-            # To apply the above configuration only to a new client:
-            #
-            #     client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
-            #       config.timeout = 10.0
-            #       config.rpcs.export_assets.timeout = 20.0
-            #     end
+            #   # Apply the above configuration only to a new client.
+            #   client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+            #     config.timeout = 10.0
+            #     config.rpcs.export_assets.timeout = 20.0
+            #   end
             #
             # @!attribute [rw] endpoint
             #   The hostname or hostname:port of the service endpoint.

@@ -1,5 +1,17 @@
 # Release History
 
+### 0.4.4 / 2021-08-30
+
+#### Documentation
+
+* Fix the links to the corresponding main client library
+
+### 0.4.3 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.4.2 / 2021-07-12
 
 #### Documentation

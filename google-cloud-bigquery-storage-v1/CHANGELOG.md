@@ -1,5 +1,17 @@
 # Release History
 
+### 0.7.0 / 2021-09-23
+
+#### Features
+
+* Return estimated total bytes scanned for a ReadSession
+
+### 0.6.3 / 2021-08-11
+
+#### Bug Fixes
+
+* Honor client-level timeout configuration
+
 ### 0.6.2 / 2021-07-12
 
 #### Documentation
