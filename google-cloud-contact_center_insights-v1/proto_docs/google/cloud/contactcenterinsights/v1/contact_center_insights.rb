@@ -57,8 +57,13 @@ module Google
         #   @return [::Google::Protobuf::Map{::String => ::Integer}]
         #     A map associating each issue resource name with its respective number of
         #     matches in the set of conversations. Key has the format:
-        #     `projects/<Project ID>/locations/<Location ID>/issueModels/<Issue Model
-        #     ID>/issues/<Issue ID>`
+        #     `projects/<Project-ID>/locations/<Location-ID>/issueModels/<Issue-Model-ID>/issues/<Issue-ID>`
+        #     Deprecated, use `issue_matches_stats` field instead.
+        # @!attribute [rw] issue_matches_stats
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::ContactCenterInsights::V1::IssueModelLabelStats::IssueStats}]
+        #     A map associating each issue resource name with its respective number of
+        #     matches in the set of conversations. Key has the format:
+        #     `projects/<Project-ID>/locations/<Location-ID>/issueModels/<Issue-Model-ID>/issues/<Issue-ID>`
         # @!attribute [rw] conversation_count_time_series
         #   @return [::Google::Cloud::ContactCenterInsights::V1::CalculateStatsResponse::TimeSeries]
         #     A time series representing the count of conversations created over time
@@ -119,6 +124,15 @@ module Google
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueModelLabelStats::IssueStats]
+          class IssueMatchesStatsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
         # Metadata for a create analysis operation.
@@ -149,8 +163,8 @@ module Google
         #     component of the conversation's resource name. If no ID is specified, a
         #     server-generated ID will be used.
         #
-        #     This value should be 4-32 characters and must match the regular
-        #     expression /^[a-z0-9-]\\{4,32}$/. Valid characters are /[a-z][0-9]-/
+        #     This value should be 4-64 characters and must match the regular
+        #     expression `^[a-z0-9-]{4,64}$`. Valid characters are `[a-z][0-9]-`
         class CreateConversationRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -318,6 +332,9 @@ module Google
         #     A fully qualified KMS key name for BigQuery tables protected by CMEK.
         #     Format:
         #     projects/\\{project}/locations/\\{location}/keyRings/\\{keyring}/cryptoKeys/\\{key}/cryptoKeyVersions/\\{version}
+        # @!attribute [rw] write_disposition
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::ExportInsightsDataRequest::WriteDisposition]
+        #     Options for what to do if the destination table already exists.
         class ExportInsightsDataRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -341,6 +358,19 @@ module Google
           class BigQueryDestination
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Specifies the action that occurs if the destination table already exists.
+          module WriteDisposition
+            # Write disposition is not specified. Defaults to WRITE_TRUNCATE.
+            WRITE_DISPOSITION_UNSPECIFIED = 0
+
+            # If the table already exists, BigQuery will overwrite the table data and
+            # use the schema from the load.
+            WRITE_TRUNCATE = 1
+
+            # If the table already exists, BigQuery will append data to the table.
+            WRITE_APPEND = 2
           end
         end
 
@@ -647,6 +677,18 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # The request to update a phrase matcher.
+        # @!attribute [rw] phrase_matcher
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::PhraseMatcher]
+        #     Required. The new values for the phrase matcher.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     The list of fields to be updated.
+        class UpdatePhraseMatcherRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # The request to get project-level settings.
         # @!attribute [rw] name
         #   @return [::String]
@@ -668,17 +710,97 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Represents the options for views of a conversation.
+        # The request to create a view.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The parent resource of the view. Required. The location to create
+        #     a view for.
+        #     Format: `projects/<Project ID>/locations/<Location ID>` or
+        #     `projects/<Project Number>/locations/<Location ID>`
+        # @!attribute [rw] view
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::View]
+        #     Required. The view resource to create.
+        class CreateViewRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to get a view.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The name of the view to get.
+        class GetViewRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to list views.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The parent resource of the views.
+        # @!attribute [rw] page_size
+        #   @return [::Integer]
+        #     The maximum number of views to return in the response. If this
+        #     value is zero, the service will select a default size. A call may return
+        #     fewer objects than requested. A non-empty `next_page_token` in the response
+        #     indicates that more data is available.
+        # @!attribute [rw] page_token
+        #   @return [::String]
+        #     The value returned by the last `ListViewsResponse`; indicates
+        #     that this is a continuation of a prior `ListViews` call and
+        #     the system should return the next page of data.
+        class ListViewsRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The response of listing views.
+        # @!attribute [rw] views
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::View>]
+        #     The views that match the request.
+        # @!attribute [rw] next_page_token
+        #   @return [::String]
+        #     A token, which can be sent as `page_token` to retrieve the next page.
+        #     If this field is omitted, there are no subsequent pages.
+        class ListViewsResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to update a view.
+        # @!attribute [rw] view
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::View]
+        #     Required. The new view.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     The list of fields to be updated.
+        class UpdateViewRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to delete a view.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The name of the view to delete.
+        class DeleteViewRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Represents the options for viewing a conversation.
         module ConversationView
-          # Not specified. Defaults to FULL on GetConversationRequest and BASIC for
-          # ListConversationsRequest.
+          # The conversation view is not specified.
+          #
+          # * Defaults to `FULL` in `GetConversationRequest`.
+          # * Defaults to `BASIC` in `ListConversationsRequest`.
           CONVERSATION_VIEW_UNSPECIFIED = 0
 
-          # Transcript field is not populated in the response.
-          BASIC = 1
-
-          # All fields are populated.
+          # Populates all fields in the conversation.
           FULL = 2
+
+          # Populates all fields in the conversation except the transcript.
+          BASIC = 1
         end
       end
     end

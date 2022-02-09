@@ -2,7 +2,7 @@
 
 API Client library for the Workflows API
 
-Workflows link series of serverless tasks together in an order you define. Combine the power of Google Cloud's APIs, serverless products like Cloud Functions and Cloud Run, and calls to external APIs to create flexible serverless applications. Workflows requires no infrastructure management and scales seamlessly with demand, including scaling down to zero..
+Workflows link series of serverless tasks together in an order you define. Combine the power of Google Cloud's APIs, serverless products like Cloud Functions and Cloud Run, and calls to external APIs to create flexible serverless applications. Workflows requires no infrastructure management and scales seamlessly with demand, including scaling down to zero.
 
 Actual client classes for the various versions of this API are defined in
 _versioned_ client gems, with names of the form `google-cloud-workflows-v*`.
@@ -11,7 +11,7 @@ verisoned gems in as dependencies, and provides high-level methods for
 constructing clients. More information on versioned clients can be found below
 in the section titled *Which client should I use?*.
 
-View the [Client Library Documentation](https://googleapis.dev/ruby/google-cloud-workflows/latest)
+View the [Client Library Documentation](https://cloud.google.com/ruby/docs/reference/google-cloud-workflows/latest)
 for this library, google-cloud-workflows, to see the convenience methods for
 constructing client objects. Reference documentation for the client objects
 themselves can be found in the client library documentation for the versioned
@@ -19,7 +19,7 @@ client gems:
 [google-cloud-workflows-v1](https://googleapis.dev/ruby/google-cloud-workflows-v1/latest),
 [google-cloud-workflows-v1beta](https://googleapis.dev/ruby/google-cloud-workflows-v1beta/latest).
 
-See also the [Product Documentation](https://cloud.google.com/workflows)
+See also the [Product Documentation](https://cloud.google.com/workflows/)
 for more usage information.
 
 ## Quick Start

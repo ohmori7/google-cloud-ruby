@@ -1,5 +1,34 @@
 # Release History
 
+### 0.7.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.7.0 / 2021-12-07
+
+#### Features
+
+* Support for auto-closing incidents
+
+### 0.6.1 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
+### 0.6.0 / 2021-10-18
+
+#### Features
+
+* Support create_service_time_series RPC
+
+#### Documentation
+
+* Fix several broken links
+
 ### 0.5.0 / 2021-08-30
 
 #### Features

@@ -1,5 +1,28 @@
 # Release History
 
+### 0.7.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.7.0 / 2021-12-07
+
+#### Features
+
+* Support the CHARGEBACK_FRAUD and CHARGEBACK_DISPUTE annotation reasons
+
+### 0.6.0 / 2021-11-08
+
+#### Features
+
+* Support related account groups and account defender assessments
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.5.0 / 2021-09-21
 
 #### Features

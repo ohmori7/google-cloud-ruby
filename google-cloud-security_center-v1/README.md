@@ -33,11 +33,11 @@ In order to use this library, you first need to go through the following steps:
 require "google/cloud/security_center/v1"
 
 client = ::Google::Cloud::SecurityCenter::V1::SecurityCenter::Client.new
-request = ::Google::Cloud::SecurityCenter::V1::CreateSourceRequest.new # (request fields as keyword arguments...)
-response = client.create_source request
+request = ::Google::Cloud::SecurityCenter::V1::BulkMuteFindingsRequest.new # (request fields as keyword arguments...)
+response = client.bulk_mute_findings request
 ```
 
-View the [Client Library Documentation](https://googleapis.dev/ruby/google-cloud-security_center-v1/latest)
+View the [Client Library Documentation](https://cloud.google.com/ruby/docs/reference/google-cloud-security_center-v1/latest)
 for class and method documentation.
 
 See also the [Product Documentation](https://cloud.google.com/security-command-center)

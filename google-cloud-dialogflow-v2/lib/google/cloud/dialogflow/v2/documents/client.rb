@@ -140,6 +140,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -174,7 +175,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_documents(parent: nil, page_size: nil, page_token: nil)
+            # @overload list_documents(parent: nil, page_size: nil, page_token: nil, filter: nil)
             #   Pass arguments to `list_documents` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -188,6 +189,28 @@ module Google
             #     default 10 and at most 100.
             #   @param page_token [::String]
             #     The next_page_token value returned from a previous list request.
+            #   @param filter [::String]
+            #     The filter expression used to filter documents returned by the list method.
+            #     The expression has the following syntax:
+            #
+            #       <field> <operator> <value> [AND <field> <operator> <value>] ...
+            #
+            #     The following fields and operators are supported:
+            #
+            #     * knowledge_types with has(:) operator
+            #     * display_name with has(:) operator
+            #     * state with equals(=) operator
+            #
+            #     Examples:
+            #
+            #     * "knowledge_types:FAQ" matches documents with FAQ knowledge type.
+            #     * "display_name:customer" matches documents whose display name contains
+            #       "customer".
+            #     * "state=ACTIVE" matches documents with ACTIVE state.
+            #     * "knowledge_types:FAQ AND state=ACTIVE" matches all active FAQ documents.
+            #
+            #     For more information about filtering, see
+            #     [API Filtering](https://aip.dev/160).
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Dialogflow::V2::Document>]
@@ -196,6 +219,27 @@ module Google
             # @return [::Gapic::PagedEnumerable<::Google::Cloud::Dialogflow::V2::Document>]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::ListDocumentsRequest.new
+            #
+            #   # Call the list_documents method.
+            #   result = client.list_documents request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Dialogflow::V2::Document.
+            #     p response
+            #   end
             #
             def list_documents request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -214,9 +258,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -268,6 +314,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::GetDocumentRequest.new
+            #
+            #   # Call the get_document method.
+            #   result = client.get_document request
+            #
+            #   # The returned object is of type Google::Cloud::Dialogflow::V2::Document.
+            #   p result
+            #
             def get_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -285,9 +346,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -347,6 +410,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::CreateDocumentRequest.new
+            #
+            #   # Call the create_document method.
+            #   result = client.create_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -364,9 +449,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -379,6 +466,122 @@ module Google
                                      retry_policy: @config.retry_policy
 
               @documents_stub.call_rpc :create_document, request, options: options do |response, operation|
+                response = ::Gapic::Operation.new response, @operations_client, options: options
+                yield response, operation if block_given?
+                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Creates documents by importing data from external sources.
+            # Dialogflow supports up to 350 documents in each request. If you try to
+            # import more, Dialogflow will return an error.
+            #
+            # This method is a [long-running
+            # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
+            # The returned `Operation` type has the following method-specific fields:
+            #
+            # - `metadata`: {::Google::Cloud::Dialogflow::V2::KnowledgeOperationMetadata KnowledgeOperationMetadata}
+            # - `response`: {::Google::Cloud::Dialogflow::V2::ImportDocumentsResponse ImportDocumentsResponse}
+            #
+            # @overload import_documents(request, options = nil)
+            #   Pass arguments to `import_documents` via a request object, either of type
+            #   {::Google::Cloud::Dialogflow::V2::ImportDocumentsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Dialogflow::V2::ImportDocumentsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload import_documents(parent: nil, gcs_source: nil, document_template: nil, import_gcs_custom_metadata: nil)
+            #   Pass arguments to `import_documents` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The knowledge base to import documents into.
+            #     Format: `projects/<Project ID>/locations/<Location
+            #     ID>/knowledgeBases/<Knowledge Base ID>`.
+            #   @param gcs_source [::Google::Cloud::Dialogflow::V2::GcsSources, ::Hash]
+            #     The Google Cloud Storage location for the documents.
+            #     The path can include a wildcard.
+            #
+            #     These URIs may have the forms
+            #     `gs://<bucket-name>/<object-name>`.
+            #     `gs://<bucket-name>/<object-path>/*.<extension>`.
+            #   @param document_template [::Google::Cloud::Dialogflow::V2::ImportDocumentTemplate, ::Hash]
+            #     Required. Document template used for importing all the documents.
+            #   @param import_gcs_custom_metadata [::Boolean]
+            #     Whether to import custom metadata from Google Cloud Storage.
+            #     Only valid when the document source is Google Cloud Storage URI.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::Operation]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::Operation]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::ImportDocumentsRequest.new
+            #
+            #   # Call the import_documents method.
+            #   result = client.import_documents request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
+            def import_documents request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Dialogflow::V2::ImportDocumentsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.import_documents.metadata.to_h
+
+              # Set x-goog-api-client and x-goog-user-project headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.import_documents.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.import_documents.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @documents_stub.call_rpc :import_documents, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
                 return response
@@ -426,6 +629,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::DeleteDocumentRequest.new
+            #
+            #   # Call the delete_document method.
+            #   result = client.delete_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -443,9 +668,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -506,6 +733,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::UpdateDocumentRequest.new
+            #
+            #   # Call the update_document method.
+            #   result = client.update_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -523,9 +772,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "document.name" => request.document.name
-              }
+              header_params = {}
+              if request.document&.name
+                header_params["document.name"] = request.document.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -572,7 +823,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload reload_document(name: nil, content_uri: nil)
+            # @overload reload_document(name: nil, content_uri: nil, import_gcs_custom_metadata: nil, smart_messaging_partial_update: nil)
             #   Pass arguments to `reload_document` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -587,6 +838,12 @@ module Google
             #
             #     For documents stored in Google Cloud Storage, these URIs must have
             #     the form `gs://<bucket-name>/<object-name>`.
+            #   @param import_gcs_custom_metadata [::Boolean]
+            #     Optional. Whether to import custom metadata from Google Cloud Storage.
+            #     Only valid when the document source is Google Cloud Storage URI.
+            #   @param smart_messaging_partial_update [::Boolean]
+            #     Optional. When enabled, the reload request is to apply partial update to the smart
+            #     messaging allowlist.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -595,6 +852,28 @@ module Google
             # @return [::Gapic::Operation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::ReloadDocumentRequest.new
+            #
+            #   # Call the reload_document method.
+            #   result = client.reload_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
             #
             def reload_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -613,9 +892,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -628,6 +909,117 @@ module Google
                                      retry_policy: @config.retry_policy
 
               @documents_stub.call_rpc :reload_document, request, options: options do |response, operation|
+                response = ::Gapic::Operation.new response, @operations_client, options: options
+                yield response, operation if block_given?
+                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Exports a smart messaging candidate document into the specified
+            # destination.
+            #
+            # This method is a [long-running
+            # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
+            # The returned `Operation` type has the following method-specific fields:
+            #
+            # - `metadata`: {::Google::Cloud::Dialogflow::V2::KnowledgeOperationMetadata KnowledgeOperationMetadata}
+            # - `response`: {::Google::Cloud::Dialogflow::V2::Document Document}
+            #
+            # @overload export_document(request, options = nil)
+            #   Pass arguments to `export_document` via a request object, either of type
+            #   {::Google::Cloud::Dialogflow::V2::ExportDocumentRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Dialogflow::V2::ExportDocumentRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload export_document(name: nil, gcs_destination: nil, export_full_content: nil, smart_messaging_partial_update: nil)
+            #   Pass arguments to `export_document` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the document to export.
+            #     Format: `projects/<Project ID>/locations/<Location
+            #     ID>/knowledgeBases/<Knowledge Base ID>/documents/<Document ID>`.
+            #   @param gcs_destination [::Google::Cloud::Dialogflow::V2::GcsDestination, ::Hash]
+            #     Cloud Storage file path to export the document.
+            #   @param export_full_content [::Boolean]
+            #     When enabled, export the full content of the document including empirical
+            #     probability.
+            #   @param smart_messaging_partial_update [::Boolean]
+            #     When enabled, export the smart messaging allowlist document for partial
+            #     update.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::Operation]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::Operation]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::Documents::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::ExportDocumentRequest.new
+            #
+            #   # Call the export_document method.
+            #   result = client.export_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
+            def export_document request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Dialogflow::V2::ExportDocumentRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.export_document.metadata.to_h
+
+              # Set x-goog-api-client and x-goog-user-project headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.export_document.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.export_document.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @documents_stub.call_rpc :export_document, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
                 return response
@@ -787,6 +1179,11 @@ module Google
                 #
                 attr_reader :create_document
                 ##
+                # RPC-specific configuration for `import_documents`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :import_documents
+                ##
                 # RPC-specific configuration for `delete_document`
                 # @return [::Gapic::Config::Method]
                 #
@@ -801,6 +1198,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :reload_document
+                ##
+                # RPC-specific configuration for `export_document`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :export_document
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -810,12 +1212,16 @@ module Google
                   @get_document = ::Gapic::Config::Method.new get_document_config
                   create_document_config = parent_rpcs.create_document if parent_rpcs.respond_to? :create_document
                   @create_document = ::Gapic::Config::Method.new create_document_config
+                  import_documents_config = parent_rpcs.import_documents if parent_rpcs.respond_to? :import_documents
+                  @import_documents = ::Gapic::Config::Method.new import_documents_config
                   delete_document_config = parent_rpcs.delete_document if parent_rpcs.respond_to? :delete_document
                   @delete_document = ::Gapic::Config::Method.new delete_document_config
                   update_document_config = parent_rpcs.update_document if parent_rpcs.respond_to? :update_document
                   @update_document = ::Gapic::Config::Method.new update_document_config
                   reload_document_config = parent_rpcs.reload_document if parent_rpcs.respond_to? :reload_document
                   @reload_document = ::Gapic::Config::Method.new reload_document_config
+                  export_document_config = parent_rpcs.export_document if parent_rpcs.respond_to? :export_document
+                  @export_document = ::Gapic::Config::Method.new export_document_config
 
                   yield self if block_given?
                 end

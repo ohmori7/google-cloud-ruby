@@ -153,6 +153,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -236,6 +237,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::ListMembershipsRequest.new
+            #
+            #   # Call the list_memberships method.
+            #   result = client.list_memberships request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::GkeHub::V1::Membership.
+            #     p response
+            #   end
+            #
             def list_memberships request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -253,9 +275,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -295,7 +319,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     The parent (project and location) where the Features will be listed.
+            #     Required. The parent (project and location) where the Features will be listed.
             #     Specified in the format `projects/*/locations/*`.
             #   @param page_size [::Integer]
             #     When requesting a 'page' of resources, `page_size` specifies number of
@@ -334,6 +358,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::ListFeaturesRequest.new
+            #
+            #   # Call the list_features method.
+            #   result = client.list_features request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::GkeHub::V1::Feature.
+            #     p response
+            #   end
+            #
             def list_features request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -351,9 +396,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -404,6 +451,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::GetMembershipRequest.new
+            #
+            #   # Call the get_membership method.
+            #   result = client.get_membership request
+            #
+            #   # The returned object is of type Google::Cloud::GkeHub::V1::Membership.
+            #   p result
+            #
             def get_membership request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -421,9 +483,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -462,7 +526,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     The Feature resource name in the format
+            #     Required. The Feature resource name in the format
             #     `projects/*/locations/*/features/*`
             #
             # @yield [response, operation] Access the result along with the RPC operation
@@ -472,6 +536,21 @@ module Google
             # @return [::Google::Cloud::GkeHub::V1::Feature]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::GetFeatureRequest.new
+            #
+            #   # Call the get_feature method.
+            #   result = client.get_feature request
+            #
+            #   # The returned object is of type Google::Cloud::GkeHub::V1::Feature.
+            #   p result
             #
             def get_feature request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -490,9 +569,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -572,6 +653,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::CreateMembershipRequest.new
+            #
+            #   # Call the create_membership method.
+            #   result = client.create_membership request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_membership request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -589,9 +692,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -631,7 +736,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     The parent (project and location) where the Feature will be created.
+            #     Required. The parent (project and location) where the Feature will be created.
             #     Specified in the format `projects/*/locations/*`.
             #   @param feature_id [::String]
             #     The ID of the feature to create.
@@ -660,6 +765,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::CreateFeatureRequest.new
+            #
+            #   # Call the create_feature method.
+            #   result = client.create_feature request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_feature request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -677,9 +804,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -748,6 +877,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::DeleteMembershipRequest.new
+            #
+            #   # Call the delete_membership method.
+            #   result = client.delete_membership request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_membership request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -765,9 +916,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -807,7 +960,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     The Feature resource name in the format
+            #     Required. The Feature resource name in the format
             #     `projects/*/locations/*/features/*`.
             #   @param force [::Boolean]
             #     If set to true, the delete will ignore any outstanding resources for
@@ -836,6 +989,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::DeleteFeatureRequest.new
+            #
+            #   # Call the delete_feature method.
+            #   result = client.delete_feature request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_feature request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -853,9 +1028,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -931,6 +1108,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::UpdateMembershipRequest.new
+            #
+            #   # Call the update_membership method.
+            #   result = client.update_membership request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_membership request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -948,9 +1147,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -990,7 +1191,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     The Feature resource name in the format
+            #     Required. The Feature resource name in the format
             #     `projects/*/locations/*/features/*`.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Mask of fields to update.
@@ -1026,6 +1227,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::UpdateFeatureRequest.new
+            #
+            #   # Call the update_feature method.
+            #   result = client.update_feature request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_feature request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1043,9 +1266,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1121,6 +1346,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gke_hub/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::GkeHub::V1::GenerateConnectManifestRequest.new
+            #
+            #   # Call the generate_connect_manifest method.
+            #   result = client.generate_connect_manifest request
+            #
+            #   # The returned object is of type Google::Cloud::GkeHub::V1::GenerateConnectManifestResponse.
+            #   p result
+            #
             def generate_connect_manifest request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1138,9 +1378,11 @@ module Google
                 gapic_version: ::Google::Cloud::GkeHub::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

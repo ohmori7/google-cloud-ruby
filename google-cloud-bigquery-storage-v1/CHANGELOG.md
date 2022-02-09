@@ -1,5 +1,30 @@
 # Release History
 
+### 0.9.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.9.0 / 2021-12-08
+
+#### Features
+
+* Added write mode support
+
+### 0.8.1 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
+### 0.8.0 / 2021-10-18
+
+#### Features
+
+* Support for the BigQuery Write service
+
 ### 0.7.0 / 2021-09-23
 
 #### Features

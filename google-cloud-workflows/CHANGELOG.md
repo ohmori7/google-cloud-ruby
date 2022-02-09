@@ -1,5 +1,18 @@
 # Release History
 
+### 2.1.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 2.1.0 / 2021-09-28
+
+#### Features
+
+* Use workflows-executions v1 by default instead of v1beta
+
 ### 2.0.2 / 2021-07-12
 
 #### Documentation

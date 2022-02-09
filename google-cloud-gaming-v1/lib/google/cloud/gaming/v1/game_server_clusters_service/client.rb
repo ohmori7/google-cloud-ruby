@@ -167,6 +167,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -238,6 +239,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::ListGameServerClustersRequest.new
+            #
+            #   # Call the list_game_server_clusters method.
+            #   result = client.list_game_server_clusters request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Gaming::V1::GameServerCluster.
+            #     p response
+            #   end
+            #
             def list_game_server_clusters request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -255,9 +277,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -315,6 +339,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::GetGameServerClusterRequest.new
+            #
+            #   # Call the get_game_server_cluster method.
+            #   result = client.get_game_server_cluster request
+            #
+            #   # The returned object is of type Google::Cloud::Gaming::V1::GameServerCluster.
+            #   p result
+            #
             def get_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -332,9 +371,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -388,6 +429,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::CreateGameServerClusterRequest.new
+            #
+            #   # Call the create_game_server_cluster method.
+            #   result = client.create_game_server_cluster request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -405,9 +468,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -468,6 +533,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::PreviewCreateGameServerClusterRequest.new
+            #
+            #   # Call the preview_create_game_server_cluster method.
+            #   result = client.preview_create_game_server_cluster request
+            #
+            #   # The returned object is of type Google::Cloud::Gaming::V1::PreviewCreateGameServerClusterResponse.
+            #   p result
+            #
             def preview_create_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -485,9 +565,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -537,6 +619,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::DeleteGameServerClusterRequest.new
+            #
+            #   # Call the delete_game_server_cluster method.
+            #   result = client.delete_game_server_cluster request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -554,9 +658,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -609,6 +715,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::PreviewDeleteGameServerClusterRequest.new
+            #
+            #   # Call the preview_delete_game_server_cluster method.
+            #   result = client.preview_delete_game_server_cluster request
+            #
+            #   # The returned object is of type Google::Cloud::Gaming::V1::PreviewDeleteGameServerClusterResponse.
+            #   p result
+            #
             def preview_delete_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -626,9 +747,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -682,6 +805,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::UpdateGameServerClusterRequest.new
+            #
+            #   # Call the update_game_server_cluster method.
+            #   result = client.update_game_server_cluster request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -699,9 +844,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "game_server_cluster.name" => request.game_server_cluster.name
-              }
+              header_params = {}
+              if request.game_server_cluster&.name
+                header_params["game_server_cluster.name"] = request.game_server_cluster.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -758,6 +905,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/gaming/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Gaming::V1::GameServerClustersService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Gaming::V1::PreviewUpdateGameServerClusterRequest.new
+            #
+            #   # Call the preview_update_game_server_cluster method.
+            #   result = client.preview_update_game_server_cluster request
+            #
+            #   # The returned object is of type Google::Cloud::Gaming::V1::PreviewUpdateGameServerClusterResponse.
+            #   p result
+            #
             def preview_update_game_server_cluster request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -775,9 +937,11 @@ module Google
                 gapic_version: ::Google::Cloud::Gaming::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "game_server_cluster.name" => request.game_server_cluster.name
-              }
+              header_params = {}
+              if request.game_server_cluster&.name
+                header_params["game_server_cluster.name"] = request.game_server_cluster.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

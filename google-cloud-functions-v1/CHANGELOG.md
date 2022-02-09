@@ -1,5 +1,26 @@
 # Release History
 
+### 0.5.1 / 2022-01-11
+
+#### Bug Fixes
+
+* Honor quota project in auxiliary operations clients
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.5.0 / 2021-11-08
+
+#### Features
+
+* Support for build environment variables, min instances, and secret manager and CMEK integration
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.4.0 / 2021-09-22
 
 #### Features

@@ -1,5 +1,24 @@
 # Release History
 
+### 0.8.6 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.8.5 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
+### 0.8.4 / 2021-11-02
+
+#### Documentation
+
+* Formatting fixes for reference documentation
+
 ### 0.8.3 / 2021-08-11
 
 #### Bug Fixes

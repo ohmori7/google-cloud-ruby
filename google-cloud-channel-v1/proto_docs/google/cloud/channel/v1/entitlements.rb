@@ -64,15 +64,23 @@ module Google
         # @!attribute [rw] parameters
         #   @return [::Array<::Google::Cloud::Channel::V1::Parameter>]
         #     Extended entitlement parameters. When creating an entitlement, valid
-        #     parameters' names and values are defined in the offer's parameter
-        #     definitions.
+        #     parameter names and values are defined in the
+        #     {::Google::Cloud::Channel::V1::Offer#parameter_definitions Offer.parameter_definitions}.
+        #
+        #     The response may include the following output-only Parameters:
+        #
+        #     - assigned_units: The number of licenses assigned to users.
+        #
+        #     - max_units: The maximum assignable units for a flexible offer.
+        #
+        #     - num_units: The total commitment for commitment-based offers.
         class Entitlement
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # Indicates the current provisioning state of the entitlement.
           module ProvisioningState
-            # Default value. This state doesn't show unless an error occurs.
+            # Not used.
             PROVISIONING_STATE_UNSPECIFIED = 0
 
             # The entitlement is currently active.
@@ -84,7 +92,7 @@ module Google
 
           # Suspension reason for an entitlement if {::Google::Cloud::Channel::V1::Entitlement#provisioning_state provisioning_state} = SUSPENDED.
           module SuspensionReason
-            # Default value. This state doesn't show unless an error occurs.
+            # Not used.
             SUSPENSION_REASON_UNSPECIFIED = 0
 
             # Entitlement was manually suspended by the Reseller.
@@ -135,7 +143,8 @@ module Google
         # @!attribute [r] provisioning_id
         #   @return [::String]
         #     Output only. Provisioning ID of the entitlement. For Google Workspace, this would be the
-        #     underlying Subscription ID.
+        #     underlying Subscription ID. For Google Cloud Platform, this would be the
+        #     Billing Account ID of the billing subaccount."
         # @!attribute [r] product_id
         #   @return [::String]
         #     Output only. The product pertaining to the provisioning resource as specified in the
@@ -233,7 +242,7 @@ module Google
 
           # Reason of ineligibility.
           module Reason
-            # Reason is not available.
+            # Not used.
             REASON_UNSPECIFIED = 0
 
             # Reseller needs to accept TOS before transferring the SKU.

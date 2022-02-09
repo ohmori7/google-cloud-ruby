@@ -1,5 +1,18 @@
 # Release History
 
+### 1.2.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 1.2.0 / 2021-11-09
+
+#### Features
+
+* Support the BigQuery Storage Write API
+
 ### 1.1.2 / 2021-07-12
 
 #### Documentation

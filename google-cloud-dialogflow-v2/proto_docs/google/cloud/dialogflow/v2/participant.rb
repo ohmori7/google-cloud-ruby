@@ -36,9 +36,36 @@ module Google
         #     Optional. Label applied to streams representing this participant in SIPREC
         #     XML metadata and SDP. This is used to assign transcriptions from that
         #     media stream to this participant. This field can be updated.
+        # @!attribute [rw] documents_metadata_filters
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. Key-value filters on the metadata of documents returned by article
+        #     suggestion. If specified, article suggestion only returns suggested
+        #     documents that match all filters in their {::Google::Cloud::Dialogflow::V2::Document#metadata Document.metadata}. Multiple
+        #     values for a metadata key should be concatenated by comma. For example,
+        #     filters to match all documents that have 'US' or 'CA' in their market
+        #     metadata values and 'agent' in their user metadata values will be
+        #     ```
+        #     documents_metadata_filters {
+        #       key: "market"
+        #       value: "US,CA"
+        #     }
+        #     documents_metadata_filters {
+        #       key: "user"
+        #       value: "agent"
+        #     }
+        #     ```
         class Participant
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class DocumentsMetadataFiltersEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
 
           # Enumeration of the roles a participant can play in a conversation.
           module Role
@@ -60,7 +87,7 @@ module Google
         # Represents a message posted into a conversation.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The unique identifier of the message.
+        #     Optional. The unique identifier of the message.
         #     Format: `projects/<Project ID>/locations/<Location
         #     ID>/conversations/<Conversation ID>/messages/<Message ID>`.
         # @!attribute [rw] content
@@ -79,10 +106,16 @@ module Google
         #     Output only. The role of the participant.
         # @!attribute [r] create_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     Output only. The time when the message was created.
+        #     Output only. The time when the message was created in Contact Center AI.
+        # @!attribute [rw] send_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Optional. The time when the message was sent.
         # @!attribute [r] message_annotation
         #   @return [::Google::Cloud::Dialogflow::V2::MessageAnnotation]
         #     Output only. The annotation for the message.
+        # @!attribute [r] sentiment_analysis
+        #   @return [::Google::Cloud::Dialogflow::V2::SentimentAnalysisResult]
+        #     Output only. The sentiment analysis result for the message.
         class Message
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -179,6 +212,9 @@ module Google
         # @!attribute [rw] query_params
         #   @return [::Google::Cloud::Dialogflow::V2::QueryParameters]
         #     Parameters for a Dialogflow virtual-agent query.
+        # @!attribute [rw] assist_query_params
+        #   @return [::Google::Cloud::Dialogflow::V2::AssistQueryParameters]
+        #     Parameters for a human assist query.
         # @!attribute [rw] request_id
         #   @return [::String]
         #     A unique identifier for this request. Restricted to 36 ASCII characters.
@@ -252,16 +288,19 @@ module Google
         #     ID>/conversations/<Conversation ID>/participants/<Participant ID>`.
         # @!attribute [rw] latest_message
         #   @return [::String]
-        #     The name of the latest conversation message to compile suggestion
+        #     Optional. The name of the latest conversation message to compile suggestion
         #     for. If empty, it will be the latest message of the conversation.
         #
         #     Format: `projects/<Project ID>/locations/<Location
         #     ID>/conversations/<Conversation ID>/messages/<Message ID>`.
         # @!attribute [rw] context_size
         #   @return [::Integer]
-        #     Max number of messages prior to and including
+        #     Optional. Max number of messages prior to and including
         #     {::Google::Cloud::Dialogflow::V2::SuggestArticlesRequest#latest_message latest_message} to use as context
         #     when compiling the suggestion. By default 20 and at most 50.
+        # @!attribute [rw] assist_query_params
+        #   @return [::Google::Cloud::Dialogflow::V2::AssistQueryParameters]
+        #     Parameters for a human assist query.
         class SuggestArticlesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -298,16 +337,19 @@ module Google
         #     ID>/conversations/<Conversation ID>/participants/<Participant ID>`.
         # @!attribute [rw] latest_message
         #   @return [::String]
-        #     The name of the latest conversation message to compile suggestion
+        #     Optional. The name of the latest conversation message to compile suggestion
         #     for. If empty, it will be the latest message of the conversation.
         #
         #     Format: `projects/<Project ID>/locations/<Location
         #     ID>/conversations/<Conversation ID>/messages/<Message ID>`.
         # @!attribute [rw] context_size
         #   @return [::Integer]
-        #     Max number of messages prior to and including
+        #     Optional. Max number of messages prior to and including
         #     [latest_message] to use as context when compiling the
         #     suggestion. By default 20 and at most 50.
+        # @!attribute [rw] assist_query_params
+        #   @return [::Google::Cloud::Dialogflow::V2::AssistQueryParameters]
+        #     Parameters for a human assist query.
         class SuggestFaqAnswersRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -332,6 +374,59 @@ module Google
         #     {::Google::Cloud::Dialogflow::V2::SuggestFaqAnswersRequest#context_size SuggestFaqAnswersRequest.context_size} field in the request if there
         #     aren't that many messages in the conversation.
         class SuggestFaqAnswersResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request message for {::Google::Cloud::Dialogflow::V2::Participants::Client#suggest_smart_replies Participants.SuggestSmartReplies}.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The name of the participant to fetch suggestion for.
+        #     Format: `projects/<Project ID>/locations/<Location
+        #     ID>/conversations/<Conversation ID>/participants/<Participant ID>`.
+        # @!attribute [rw] current_text_input
+        #   @return [::Google::Cloud::Dialogflow::V2::TextInput]
+        #     The current natural language text segment to compile suggestion
+        #     for. This provides a way for user to get follow up smart reply suggestion
+        #     after a smart reply selection, without sending a text message.
+        # @!attribute [rw] latest_message
+        #   @return [::String]
+        #     The name of the latest conversation message to compile suggestion
+        #     for. If empty, it will be the latest message of the conversation.
+        #
+        #     Format: `projects/<Project ID>/locations/<Location
+        #     ID>/conversations/<Conversation ID>/messages/<Message ID>`.
+        # @!attribute [rw] context_size
+        #   @return [::Integer]
+        #     Max number of messages prior to and including
+        #     [latest_message] to use as context when compiling the
+        #     suggestion. By default 20 and at most 50.
+        class SuggestSmartRepliesRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The response message for {::Google::Cloud::Dialogflow::V2::Participants::Client#suggest_smart_replies Participants.SuggestSmartReplies}.
+        # @!attribute [r] smart_reply_answers
+        #   @return [::Array<::Google::Cloud::Dialogflow::V2::SmartReplyAnswer>]
+        #     Output only. Multiple reply options provided by smart reply service. The
+        #     order is based on the rank of the model prediction.
+        #     The maximum number of the returned replies is set in SmartReplyConfig.
+        # @!attribute [rw] latest_message
+        #   @return [::String]
+        #     The name of the latest conversation message used to compile
+        #     suggestion for.
+        #
+        #     Format: `projects/<Project ID>/locations/<Location
+        #     ID>/conversations/<Conversation ID>/messages/<Message ID>`.
+        # @!attribute [rw] context_size
+        #   @return [::Integer]
+        #     Number of messages prior to and including
+        #     {::Google::Cloud::Dialogflow::V2::SuggestSmartRepliesResponse#latest_message latest_message} to compile the
+        #     suggestion. It may be smaller than the
+        #     {::Google::Cloud::Dialogflow::V2::SuggestSmartRepliesRequest#context_size SuggestSmartRepliesRequest.context_size} field in the request if there
+        #     aren't that many messages in the conversation.
+        class SuggestSmartRepliesResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -460,6 +555,26 @@ module Google
           end
         end
 
+        # Represents a smart reply answer.
+        # @!attribute [rw] reply
+        #   @return [::String]
+        #     The content of the reply.
+        # @!attribute [rw] confidence
+        #   @return [::Float]
+        #     Smart reply confidence.
+        #     The system's confidence score that this reply is a good match for
+        #     this conversation, as a value from 0.0 (completely uncertain) to 1.0
+        #     (completely certain).
+        # @!attribute [rw] answer_record
+        #   @return [::String]
+        #     The name of answer record, in the format of
+        #     "projects/<Project ID>/locations/<Location ID>/answerRecords/<Answer Record
+        #     ID>"
+        class SmartReplyAnswer
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # One response of different type of suggestion response which is used in
         # the response of {::Google::Cloud::Dialogflow::V2::Participants::Client#analyze_content Participants.AnalyzeContent} and
         # {::Google::Cloud::Dialogflow::V2::Participants::Client#analyze_content Participants.AnalyzeContent}, as well as {::Google::Cloud::Dialogflow::V2::HumanAgentAssistantEvent HumanAgentAssistantEvent}.
@@ -472,6 +587,9 @@ module Google
         # @!attribute [rw] suggest_faq_answers_response
         #   @return [::Google::Cloud::Dialogflow::V2::SuggestFaqAnswersResponse]
         #     SuggestFaqAnswersResponse if request is for FAQ_ANSWER.
+        # @!attribute [rw] suggest_smart_replies_response
+        #   @return [::Google::Cloud::Dialogflow::V2::SuggestSmartRepliesResponse]
+        #     SuggestSmartRepliesResponse if request is for SMART_REPLY.
         class SuggestionResult
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -518,6 +636,39 @@ module Google
         class MessageAnnotation
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Represents the parameters of human assist query.
+        # @!attribute [rw] documents_metadata_filters
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Key-value filters on the metadata of documents returned by article
+        #     suggestion. If specified, article suggestion only returns suggested
+        #     documents that match all filters in their {::Google::Cloud::Dialogflow::V2::Document#metadata Document.metadata}. Multiple
+        #     values for a metadata key should be concatenated by comma. For example,
+        #     filters to match all documents that have 'US' or 'CA' in their market
+        #     metadata values and 'agent' in their user metadata values will be
+        #     ```
+        #     documents_metadata_filters {
+        #       key: "market"
+        #       value: "US,CA"
+        #     }
+        #     documents_metadata_filters {
+        #       key: "user"
+        #       value: "agent"
+        #     }
+        #     ```
+        class AssistQueryParameters
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class DocumentsMetadataFiltersEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
       end
     end

@@ -4,7 +4,6 @@
     ".repo-metadata.json",
     ".rubocop.yml",
     ".yardopts",
-    ".yardopts-cloudrad",
     "AUTHENTICATION.md",
     "CHANGELOG.md",
     "Gemfile",
@@ -27,6 +26,8 @@
     "proto_docs/google/cloud/mediatranslation/v1beta1/media_translation.rb",
     "proto_docs/google/protobuf/any.rb",
     "proto_docs/google/rpc/status.rb",
+    "snippets/Gemfile",
+    "snippets/speech_translation_service/streaming_translate_speech.rb",
     "test/google/cloud/media_translation/v1beta1/speech_translation_service_test.rb",
     "test/helper.rb"
   ],

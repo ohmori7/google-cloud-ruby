@@ -162,7 +162,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_knowledge_bases(parent: nil, page_size: nil, page_token: nil)
+            # @overload list_knowledge_bases(parent: nil, page_size: nil, page_token: nil, filter: nil)
             #   Pass arguments to `list_knowledge_bases` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -175,6 +175,33 @@ module Google
             #     default 10 and at most 100.
             #   @param page_token [::String]
             #     The next_page_token value returned from a previous list request.
+            #   @param filter [::String]
+            #     The filter expression used to filter knowledge bases returned by the list
+            #     method. The expression has the following syntax:
+            #
+            #       <field> <operator> <value> [AND <field> <operator> <value>] ...
+            #
+            #     The following fields and operators are supported:
+            #
+            #     * display_name with has(:) operator
+            #     * language_code with equals(=) operator
+            #
+            #     Examples:
+            #
+            #     * 'language_code=en-us' matches knowledge bases with en-us language code.
+            #     * 'display_name:articles' matches knowledge bases whose display name
+            #       contains "articles".
+            #     * 'display_name:"Best Articles"' matches knowledge bases whose display
+            #       name contains "Best Articles".
+            #     * 'language_code=en-gb AND display_name=articles' matches all knowledge
+            #       bases whose display name contains "articles" and whose language code is
+            #       "en-gb".
+            #
+            #     Note: An empty filter string (i.e. "") is a no-op and will result in no
+            #     filtering.
+            #
+            #     For more information about filtering, see
+            #     [API Filtering](https://aip.dev/160).
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Dialogflow::V2::KnowledgeBase>]
@@ -183,6 +210,27 @@ module Google
             # @return [::Gapic::PagedEnumerable<::Google::Cloud::Dialogflow::V2::KnowledgeBase>]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::KnowledgeBases::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::ListKnowledgeBasesRequest.new
+            #
+            #   # Call the list_knowledge_bases method.
+            #   result = client.list_knowledge_bases request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Dialogflow::V2::KnowledgeBase.
+            #     p response
+            #   end
             #
             def list_knowledge_bases request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -201,9 +249,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -255,6 +305,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::KnowledgeBases::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::GetKnowledgeBaseRequest.new
+            #
+            #   # Call the get_knowledge_base method.
+            #   result = client.get_knowledge_base request
+            #
+            #   # The returned object is of type Google::Cloud::Dialogflow::V2::KnowledgeBase.
+            #   p result
+            #
             def get_knowledge_base request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -272,9 +337,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -326,6 +393,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::KnowledgeBases::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::CreateKnowledgeBaseRequest.new
+            #
+            #   # Call the create_knowledge_base method.
+            #   result = client.create_knowledge_base request
+            #
+            #   # The returned object is of type Google::Cloud::Dialogflow::V2::KnowledgeBase.
+            #   p result
+            #
             def create_knowledge_base request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -343,9 +425,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -399,6 +483,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::KnowledgeBases::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::DeleteKnowledgeBaseRequest.new
+            #
+            #   # Call the delete_knowledge_base method.
+            #   result = client.delete_knowledge_base request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
             def delete_knowledge_base request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -416,9 +515,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -471,6 +572,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dialogflow/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dialogflow::V2::KnowledgeBases::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dialogflow::V2::UpdateKnowledgeBaseRequest.new
+            #
+            #   # Call the update_knowledge_base method.
+            #   result = client.update_knowledge_base request
+            #
+            #   # The returned object is of type Google::Cloud::Dialogflow::V2::KnowledgeBase.
+            #   p result
+            #
             def update_knowledge_base request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -488,9 +604,11 @@ module Google
                 gapic_version: ::Google::Cloud::Dialogflow::V2::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "knowledge_base.name" => request.knowledge_base.name
-              }
+              header_params = {}
+              if request.knowledge_base&.name
+                header_params["knowledge_base.name"] = request.knowledge_base.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

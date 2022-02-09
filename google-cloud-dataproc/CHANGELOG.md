@@ -1,5 +1,18 @@
 # Release History
 
+### 1.3.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 1.3.0 / 2021-10-25
+
+#### Features
+
+* Add support for batch workloads
+
 ### 1.2.2 / 2021-07-12
 
 #### Documentation

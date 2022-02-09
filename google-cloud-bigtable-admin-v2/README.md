@@ -24,7 +24,7 @@ In order to use this library, you first need to go through the following steps:
 
 1. [Select or create a Cloud Platform project.](https://console.cloud.google.com/project)
 1. [Enable billing for your project.](https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_a_project)
-1. [Enable the API.](https://console.cloud.google.com/apis/library/bigtable.googleapis.com)
+1. [Enable the API.](https://console.cloud.google.com/apis/library/bigtableadmin.googleapis.com)
 1. [Set up authentication.](AUTHENTICATION.md)
 
 ## Quick Start
@@ -37,7 +37,7 @@ request = ::Google::Cloud::Bigtable::Admin::V2::CreateInstanceRequest.new # (req
 response = client.create_instance request
 ```
 
-View the [Client Library Documentation](https://googleapis.dev/ruby/google-cloud-bigtable-admin-v2/latest)
+View the [Client Library Documentation](https://cloud.google.com/ruby/docs/reference/google-cloud-bigtable-admin-v2/latest)
 for class and method documentation.
 
 See also the [Product Documentation](https://cloud.google.com/bigtable)

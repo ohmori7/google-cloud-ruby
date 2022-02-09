@@ -1,5 +1,33 @@
 # Release History
 
+### 0.7.1 / 2022-01-11
+
+#### Bug Fixes
+
+* Honor quota project in auxiliary operations clients
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.7.0 / 2021-12-07
+
+#### Features
+
+* Support for alternative language codes
+* Support for speech adaptation
+* Support for word confidence
+* Support for spoken punctuation and spoken emojis
+* Support for the WEBM_OPUS encoding
+* Support for hint boosts
+
+### 0.6.1 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.6.0 / 2021-09-21
 
 #### Features

@@ -139,6 +139,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -180,8 +181,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The project and location for which to retrieve instance
-            #     information in the format projects/\\{project}/locations/\\{location}.
+            #     Required. The project and location for which to retrieve instance information
+            #     in the format projects/\\{project}/locations/\\{location}.
             #   @param page_size [::Integer]
             #     The maximum number of items to return.
             #   @param page_token [::String]
@@ -200,6 +201,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::ListAvailableVersionsRequest.new
+            #
+            #   # Call the list_available_versions method.
+            #   result = client.list_available_versions request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::DataFusion::V1::Version.
+            #     p response
+            #   end
+            #
             def list_available_versions request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -217,9 +239,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -259,7 +283,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     The project and location for which to retrieve instance information
+            #     Required. The project and location for which to retrieve instance information
             #     in the format projects/\\{project}/locations/\\{location}. If the location is
             #     specified as '-' (wildcard), then all regions available to the project
             #     are queried, and the results are aggregated.
@@ -281,6 +305,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::ListInstancesRequest.new
+            #
+            #   # Call the list_instances method.
+            #   result = client.list_instances request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::DataFusion::V1::Instance.
+            #     p response
+            #   end
+            #
             def list_instances request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -298,9 +343,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -340,7 +387,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     The instance resource name in the format
+            #     Required. The instance resource name in the format
             #     projects/\\{project}/locations/\\{location}/instances/\\{instance}.
             #
             # @yield [response, operation] Access the result along with the RPC operation
@@ -350,6 +397,21 @@ module Google
             # @return [::Google::Cloud::DataFusion::V1::Instance]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::GetInstanceRequest.new
+            #
+            #   # Call the get_instance method.
+            #   result = client.get_instance request
+            #
+            #   # The returned object is of type Google::Cloud::DataFusion::V1::Instance.
+            #   p result
             #
             def get_instance request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -368,9 +430,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -409,10 +473,10 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     The instance's project and location in the format
+            #     Required. The instance's project and location in the format
             #     projects/\\{project}/locations/\\{location}.
             #   @param instance_id [::String]
-            #     The name of the instance to create.
+            #     Required. The name of the instance to create.
             #   @param instance [::Google::Cloud::DataFusion::V1::Instance, ::Hash]
             #     An instance resource.
             #
@@ -423,6 +487,28 @@ module Google
             # @return [::Gapic::Operation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::CreateInstanceRequest.new
+            #
+            #   # Call the create_instance method.
+            #   result = client.create_instance request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
             #
             def create_instance request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -441,9 +527,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -483,7 +571,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     The instance resource name in the format
+            #     Required. The instance resource name in the format
             #     projects/\\{project}/locations/\\{location}/instances/\\{instance}
             #
             # @yield [response, operation] Access the result along with the RPC operation
@@ -493,6 +581,28 @@ module Google
             # @return [::Gapic::Operation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::DeleteInstanceRequest.new
+            #
+            #   # Call the delete_instance method.
+            #   result = client.delete_instance request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
             #
             def delete_instance request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -511,9 +621,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -553,7 +665,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param instance [::Google::Cloud::DataFusion::V1::Instance, ::Hash]
-            #     The instance resource that replaces the resource on the server. Currently,
+            #     Required. The instance resource that replaces the resource on the server. Currently,
             #     Data Fusion only allows replacing labels, options, and stack driver
             #     settings. All other fields will be ignored.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
@@ -572,6 +684,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::UpdateInstanceRequest.new
+            #
+            #   # Call the update_instance method.
+            #   result = client.update_instance request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_instance request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -589,9 +723,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "instance.name" => request.instance.name
-              }
+              header_params = {}
+              if request.instance&.name
+                header_params["instance.name"] = request.instance.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -632,7 +768,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Name of the Data Fusion instance which need to be restarted in the form of
+            #     Required. Name of the Data Fusion instance which need to be restarted in the form of
             #     projects/\\{project}/locations/\\{location}/instances/\\{instance}
             #
             # @yield [response, operation] Access the result along with the RPC operation
@@ -642,6 +778,28 @@ module Google
             # @return [::Gapic::Operation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_fusion/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataFusion::V1::DataFusion::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataFusion::V1::RestartInstanceRequest.new
+            #
+            #   # Call the restart_instance method.
+            #   result = client.restart_instance request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
             #
             def restart_instance request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -660,9 +818,11 @@ module Google
                 gapic_version: ::Google::Cloud::DataFusion::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

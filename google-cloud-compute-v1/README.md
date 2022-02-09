@@ -1,8 +1,8 @@
-# Ruby Client for the Google Cloud Compute V1 (BETA) API
+# Ruby Client for the Google Cloud Compute V1 API
 
-API Client library for the Google Cloud Compute V1 (BETA) API
+API Client library for the Google Cloud Compute V1 API
 
-google-cloud-compute-v1 is the official client library for the Google Cloud Compute V1 API. This library is considered to be in beta. This means while stable it is still a work-in-progress and under active development, and might get backwards-incompatible changes at any time.
+google-cloud-compute-v1 is the official client library for the Google Cloud Compute V1 API.
 
 https://github.com/googleapis/google-cloud-ruby
 
@@ -31,7 +31,7 @@ request = ::Google::Cloud::Compute::V1::AggregatedListAcceleratorTypesRequest.ne
 response = client.aggregated_list request
 ```
 
-View the [Client Library Documentation](https://googleapis.dev/ruby/google-cloud-compute-v1/latest)
+View the [Client Library Documentation](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest)
 for class and method documentation.
 
 See also the [Product Documentation](https://cloud.google.com/compute/)

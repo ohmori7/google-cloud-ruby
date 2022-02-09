@@ -27,6 +27,10 @@ module Google
           ##
           # Client for the NetworkSecurity service.
           #
+          # Network Security API provides resources to configure authentication and
+          # authorization policies. Refer to per API resource documentation for more
+          # information.
+          #
           class Client
             include Paths
 
@@ -135,6 +139,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -194,6 +199,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::ListAuthorizationPoliciesRequest.new
+            #
+            #   # Call the list_authorization_policies method.
+            #   result = client.list_authorization_policies request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::NetworkSecurity::V1beta1::AuthorizationPolicy.
+            #     p response
+            #   end
+            #
             def list_authorization_policies request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -211,9 +237,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -264,6 +292,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::GetAuthorizationPolicyRequest.new
+            #
+            #   # Call the get_authorization_policy method.
+            #   result = client.get_authorization_policy request
+            #
+            #   # The returned object is of type Google::Cloud::NetworkSecurity::V1beta1::AuthorizationPolicy.
+            #   p result
+            #
             def get_authorization_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -281,9 +324,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -340,6 +385,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::CreateAuthorizationPolicyRequest.new
+            #
+            #   # Call the create_authorization_policy method.
+            #   result = client.create_authorization_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_authorization_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -357,9 +424,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -415,6 +484,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::UpdateAuthorizationPolicyRequest.new
+            #
+            #   # Call the update_authorization_policy method.
+            #   result = client.update_authorization_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_authorization_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -432,9 +523,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "authorization_policy.name" => request.authorization_policy.name
-              }
+              header_params = {}
+              if request.authorization_policy&.name
+                header_params["authorization_policy.name"] = request.authorization_policy.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -485,6 +578,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::DeleteAuthorizationPolicyRequest.new
+            #
+            #   # Call the delete_authorization_policy method.
+            #   result = client.delete_authorization_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_authorization_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -502,9 +617,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -562,6 +679,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::ListServerTlsPoliciesRequest.new
+            #
+            #   # Call the list_server_tls_policies method.
+            #   result = client.list_server_tls_policies request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::NetworkSecurity::V1beta1::ServerTlsPolicy.
+            #     p response
+            #   end
+            #
             def list_server_tls_policies request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -579,9 +717,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -632,6 +772,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::GetServerTlsPolicyRequest.new
+            #
+            #   # Call the get_server_tls_policy method.
+            #   result = client.get_server_tls_policy request
+            #
+            #   # The returned object is of type Google::Cloud::NetworkSecurity::V1beta1::ServerTlsPolicy.
+            #   p result
+            #
             def get_server_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -649,9 +804,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -707,6 +864,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::CreateServerTlsPolicyRequest.new
+            #
+            #   # Call the create_server_tls_policy method.
+            #   result = client.create_server_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_server_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -724,9 +903,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -783,6 +964,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::UpdateServerTlsPolicyRequest.new
+            #
+            #   # Call the update_server_tls_policy method.
+            #   result = client.update_server_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_server_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -800,9 +1003,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "server_tls_policy.name" => request.server_tls_policy.name
-              }
+              header_params = {}
+              if request.server_tls_policy&.name
+                header_params["server_tls_policy.name"] = request.server_tls_policy.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -853,6 +1058,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::DeleteServerTlsPolicyRequest.new
+            #
+            #   # Call the delete_server_tls_policy method.
+            #   result = client.delete_server_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_server_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -870,9 +1097,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -930,6 +1159,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::ListClientTlsPoliciesRequest.new
+            #
+            #   # Call the list_client_tls_policies method.
+            #   result = client.list_client_tls_policies request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::NetworkSecurity::V1beta1::ClientTlsPolicy.
+            #     p response
+            #   end
+            #
             def list_client_tls_policies request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -947,9 +1197,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1000,6 +1252,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::GetClientTlsPolicyRequest.new
+            #
+            #   # Call the get_client_tls_policy method.
+            #   result = client.get_client_tls_policy request
+            #
+            #   # The returned object is of type Google::Cloud::NetworkSecurity::V1beta1::ClientTlsPolicy.
+            #   p result
+            #
             def get_client_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1017,9 +1284,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1075,6 +1344,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::CreateClientTlsPolicyRequest.new
+            #
+            #   # Call the create_client_tls_policy method.
+            #   result = client.create_client_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_client_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1092,9 +1383,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1151,6 +1444,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::UpdateClientTlsPolicyRequest.new
+            #
+            #   # Call the update_client_tls_policy method.
+            #   result = client.update_client_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def update_client_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1168,9 +1483,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "client_tls_policy.name" => request.client_tls_policy.name
-              }
+              header_params = {}
+              if request.client_tls_policy&.name
+                header_params["client_tls_policy.name"] = request.client_tls_policy.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1221,6 +1538,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/network_security/v1beta1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::NetworkSecurity::V1beta1::DeleteClientTlsPolicyRequest.new
+            #
+            #   # Call the delete_client_tls_policy method.
+            #   result = client.delete_client_tls_policy request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_client_tls_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1238,9 +1577,11 @@ module Google
                 gapic_version: ::Google::Cloud::NetworkSecurity::V1beta1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

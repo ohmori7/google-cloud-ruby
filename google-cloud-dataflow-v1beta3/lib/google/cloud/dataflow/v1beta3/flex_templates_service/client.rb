@@ -180,6 +180,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dataflow/v1beta3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dataflow::V1beta3::FlexTemplatesService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dataflow::V1beta3::LaunchFlexTemplateRequest.new
+            #
+            #   # Call the launch_flex_template method.
+            #   result = client.launch_flex_template request
+            #
+            #   # The returned object is of type Google::Cloud::Dataflow::V1beta3::LaunchFlexTemplateResponse.
+            #   p result
+            #
             def launch_flex_template request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -196,6 +211,17 @@ module Google
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataflow::V1beta3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.project_id
+                header_params["project_id"] = request.project_id
+              end
+              if request.location
+                header_params["location"] = request.location
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
 
               options.apply_defaults timeout:      @config.rpcs.launch_flex_template.timeout,
                                      metadata:     metadata,

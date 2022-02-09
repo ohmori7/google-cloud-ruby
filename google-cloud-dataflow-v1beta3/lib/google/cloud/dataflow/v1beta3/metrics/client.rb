@@ -189,6 +189,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dataflow/v1beta3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dataflow::V1beta3::Metrics::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dataflow::V1beta3::GetJobMetricsRequest.new
+            #
+            #   # Call the get_job_metrics method.
+            #   result = client.get_job_metrics request
+            #
+            #   # The returned object is of type Google::Cloud::Dataflow::V1beta3::JobMetrics.
+            #   p result
+            #
             def get_job_metrics request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -205,6 +220,17 @@ module Google
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataflow::V1beta3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.project_id
+                header_params["project_id"] = request.project_id
+              end
+              if request.job_id
+                header_params["job_id"] = request.job_id
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
 
               options.apply_defaults timeout:      @config.rpcs.get_job_metrics.timeout,
                                      metadata:     metadata,
@@ -267,6 +293,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dataflow/v1beta3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dataflow::V1beta3::Metrics::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dataflow::V1beta3::GetJobExecutionDetailsRequest.new
+            #
+            #   # Call the get_job_execution_details method.
+            #   result = client.get_job_execution_details request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Dataflow::V1beta3::StageSummary.
+            #     p response
+            #   end
+            #
             def get_job_execution_details request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -283,6 +330,20 @@ module Google
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataflow::V1beta3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.project_id
+                header_params["project_id"] = request.project_id
+              end
+              if request.location
+                header_params["location"] = request.location
+              end
+              if request.job_id
+                header_params["job_id"] = request.job_id
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
 
               options.apply_defaults timeout:      @config.rpcs.get_job_execution_details.timeout,
                                      metadata:     metadata,
@@ -353,6 +414,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/dataflow/v1beta3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Dataflow::V1beta3::Metrics::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Dataflow::V1beta3::GetStageExecutionDetailsRequest.new
+            #
+            #   # Call the get_stage_execution_details method.
+            #   result = client.get_stage_execution_details request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Dataflow::V1beta3::WorkerDetails.
+            #     p response
+            #   end
+            #
             def get_stage_execution_details request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -369,6 +451,23 @@ module Google
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataflow::V1beta3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.project_id
+                header_params["project_id"] = request.project_id
+              end
+              if request.location
+                header_params["location"] = request.location
+              end
+              if request.job_id
+                header_params["job_id"] = request.job_id
+              end
+              if request.stage_id
+                header_params["stage_id"] = request.stage_id
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
 
               options.apply_defaults timeout:      @config.rpcs.get_stage_execution_details.timeout,
                                      metadata:     metadata,

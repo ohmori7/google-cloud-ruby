@@ -1,5 +1,24 @@
 # Release History
 
+### 0.5.0 / 2022-01-20
+
+#### Features
+
+* Support for allowing customer to enroll a datasource.
+
+### 0.4.6 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.4.5 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.4.4 / 2021-08-20
 
 #### Documentation

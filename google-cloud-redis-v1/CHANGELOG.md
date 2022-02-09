@@ -1,5 +1,26 @@
 # Release History
 
+### 0.6.1 / 2022-01-11
+
+#### Bug Fixes
+
+* Honor quota project in auxiliary operations clients
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.6.0 / 2021-11-08
+
+#### Features
+
+* Support multiple read replicas when creating an instance
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.5.3 / 2021-08-11
 
 #### Bug Fixes

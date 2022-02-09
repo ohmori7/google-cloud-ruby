@@ -1,5 +1,28 @@
 # Release History
 
+### 0.4.0 / 2022-01-13
+
+#### Features
+
+* BREAKING CHANGE: Changed the type of VulnerabilityOccurrence#cvssv3 to a generalized CVSS Score data type that can cover multiple CVSS versions.
+* Added DiscoveryOccurrence#archive_time, providing the time when occurrences were archived.
+
+### 0.3.1 / 2022-01-11
+
+#### Documentation
+
+* Fix titles of documentation pages
+
+### 0.3.0 / 2021-11-08
+
+#### Features
+
+* Support compliance and in-toto attestation
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.2.2 / 2021-08-11
 
 #### Bug Fixes

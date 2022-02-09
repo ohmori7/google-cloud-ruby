@@ -184,6 +184,21 @@ module Google
                   initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14, 4]
                 }
 
+                default_config.rpcs.mac_sign.timeout = 60.0
+                default_config.rpcs.mac_sign.retry_policy = {
+                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14, 4]
+                }
+
+                default_config.rpcs.mac_verify.timeout = 60.0
+                default_config.rpcs.mac_verify.retry_policy = {
+                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14, 4]
+                }
+
+                default_config.rpcs.generate_random_bytes.timeout = 60.0
+                default_config.rpcs.generate_random_bytes.retry_policy = {
+                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14, 4]
+                }
+
                 default_config
               end
               yield @configure if block_given?
@@ -284,12 +299,16 @@ module Google
             #
             #   @param parent [::String]
             #     Required. The resource name of the location associated with the
-            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings}, in the format `projects/*/locations/*`.
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings}, in the format
+            #     `projects/*/locations/*`.
             #   @param page_size [::Integer]
-            #     Optional. Optional limit on the number of {::Google::Cloud::Kms::V1::KeyRing KeyRings} to include in the
-            #     response.  Further {::Google::Cloud::Kms::V1::KeyRing KeyRings} can subsequently be obtained by
-            #     including the {::Google::Cloud::Kms::V1::ListKeyRingsResponse#next_page_token ListKeyRingsResponse.next_page_token} in a subsequent
-            #     request.  If unspecified, the server will pick an appropriate default.
+            #     Optional. Optional limit on the number of
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings} to include in the response. Further
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings} can subsequently be obtained by
+            #     including the
+            #     {::Google::Cloud::Kms::V1::ListKeyRingsResponse#next_page_token ListKeyRingsResponse.next_page_token}
+            #     in a subsequent request.  If unspecified, the server will pick an
+            #     appropriate default.
             #   @param page_token [::String]
             #     Optional. Optional pagination token, returned earlier via
             #     {::Google::Cloud::Kms::V1::ListKeyRingsResponse#next_page_token ListKeyRingsResponse.next_page_token}.
@@ -312,6 +331,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::ListKeyRingsRequest.new
+            #
+            #   # Call the list_key_rings method.
+            #   result = client.list_key_rings request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Kms::V1::KeyRing.
+            #     p response
+            #   end
+            #
             def list_key_rings request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -329,9 +369,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -371,13 +413,16 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::KeyRing KeyRing} to list, in the format
-            #     `projects/*/locations/*/keyRings/*`.
+            #     Required. The resource name of the {::Google::Cloud::Kms::V1::KeyRing KeyRing}
+            #     to list, in the format `projects/*/locations/*/keyRings/*`.
             #   @param page_size [::Integer]
-            #     Optional. Optional limit on the number of {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} to include in the
-            #     response.  Further {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} can subsequently be obtained by
-            #     including the {::Google::Cloud::Kms::V1::ListCryptoKeysResponse#next_page_token ListCryptoKeysResponse.next_page_token} in a subsequent
-            #     request.  If unspecified, the server will pick an appropriate default.
+            #     Optional. Optional limit on the number of
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} to include in the response.
+            #     Further {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} can subsequently be
+            #     obtained by including the
+            #     {::Google::Cloud::Kms::V1::ListCryptoKeysResponse#next_page_token ListCryptoKeysResponse.next_page_token}
+            #     in a subsequent request.  If unspecified, the server will pick an
+            #     appropriate default.
             #   @param page_token [::String]
             #     Optional. Optional pagination token, returned earlier via
             #     {::Google::Cloud::Kms::V1::ListCryptoKeysResponse#next_page_token ListCryptoKeysResponse.next_page_token}.
@@ -402,6 +447,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::ListCryptoKeysRequest.new
+            #
+            #   # Call the list_crypto_keys method.
+            #   result = client.list_crypto_keys request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Kms::V1::CryptoKey.
+            #     p response
+            #   end
+            #
             def list_crypto_keys request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -419,9 +485,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -461,14 +529,17 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to list, in the format
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to list, in the format
             #     `projects/*/locations/*/keyRings/*/cryptoKeys/*`.
             #   @param page_size [::Integer]
-            #     Optional. Optional limit on the number of {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions} to
-            #     include in the response. Further {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions} can
-            #     subsequently be obtained by including the
-            #     {::Google::Cloud::Kms::V1::ListCryptoKeyVersionsResponse#next_page_token ListCryptoKeyVersionsResponse.next_page_token} in a subsequent request.
-            #     If unspecified, the server will pick an appropriate default.
+            #     Optional. Optional limit on the number of
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions} to include in the
+            #     response. Further {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions}
+            #     can subsequently be obtained by including the
+            #     {::Google::Cloud::Kms::V1::ListCryptoKeyVersionsResponse#next_page_token ListCryptoKeyVersionsResponse.next_page_token}
+            #     in a subsequent request. If unspecified, the server will pick an
+            #     appropriate default.
             #   @param page_token [::String]
             #     Optional. Optional pagination token, returned earlier via
             #     {::Google::Cloud::Kms::V1::ListCryptoKeyVersionsResponse#next_page_token ListCryptoKeyVersionsResponse.next_page_token}.
@@ -493,6 +564,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::ListCryptoKeyVersionsRequest.new
+            #
+            #   # Call the list_crypto_key_versions method.
+            #   result = client.list_crypto_key_versions request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #     p response
+            #   end
+            #
             def list_crypto_key_versions request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -510,9 +602,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -552,13 +646,16 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::KeyRing KeyRing} to list, in the format
-            #     `projects/*/locations/*/keyRings/*`.
+            #     Required. The resource name of the {::Google::Cloud::Kms::V1::KeyRing KeyRing}
+            #     to list, in the format `projects/*/locations/*/keyRings/*`.
             #   @param page_size [::Integer]
-            #     Optional. Optional limit on the number of {::Google::Cloud::Kms::V1::ImportJob ImportJobs} to include in the
-            #     response. Further {::Google::Cloud::Kms::V1::ImportJob ImportJobs} can subsequently be obtained by
-            #     including the {::Google::Cloud::Kms::V1::ListImportJobsResponse#next_page_token ListImportJobsResponse.next_page_token} in a subsequent
-            #     request. If unspecified, the server will pick an appropriate default.
+            #     Optional. Optional limit on the number of
+            #     {::Google::Cloud::Kms::V1::ImportJob ImportJobs} to include in the response.
+            #     Further {::Google::Cloud::Kms::V1::ImportJob ImportJobs} can subsequently be
+            #     obtained by including the
+            #     {::Google::Cloud::Kms::V1::ListImportJobsResponse#next_page_token ListImportJobsResponse.next_page_token}
+            #     in a subsequent request. If unspecified, the server will pick an
+            #     appropriate default.
             #   @param page_token [::String]
             #     Optional. Optional pagination token, returned earlier via
             #     {::Google::Cloud::Kms::V1::ListImportJobsResponse#next_page_token ListImportJobsResponse.next_page_token}.
@@ -581,6 +678,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::ListImportJobsRequest.new
+            #
+            #   # Call the list_import_jobs method.
+            #   result = client.list_import_jobs request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Kms::V1::ImportJob.
+            #     p response
+            #   end
+            #
             def list_import_jobs request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -598,9 +716,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -640,7 +760,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the {::Google::Cloud::Kms::V1::KeyRing KeyRing} to get.
+            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRing} to get.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::KeyRing]
@@ -649,6 +770,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::KeyRing]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetKeyRingRequest.new
+            #
+            #   # Call the get_key_ring method.
+            #   result = client.get_key_ring request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::KeyRing.
+            #   p result
             #
             def get_key_ring request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -667,9 +803,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -690,8 +828,9 @@ module Google
             end
 
             ##
-            # Returns metadata for a given {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}, as well as its
-            # {::Google::Cloud::Kms::V1::CryptoKey#primary primary} {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
+            # Returns metadata for a given {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}, as
+            # well as its {::Google::Cloud::Kms::V1::CryptoKey#primary primary}
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
             #
             # @overload get_crypto_key(request, options = nil)
             #   Pass arguments to `get_crypto_key` via a request object, either of type
@@ -709,7 +848,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to get.
+            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to get.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKey]
@@ -718,6 +858,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKey]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetCryptoKeyRequest.new
+            #
+            #   # Call the get_crypto_key method.
+            #   result = client.get_crypto_key request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+            #   p result
             #
             def get_crypto_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -736,9 +891,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -759,7 +916,8 @@ module Google
             end
 
             ##
-            # Returns metadata for a given {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
+            # Returns metadata for a given
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
             #
             # @overload get_crypto_key_version(request, options = nil)
             #   Pass arguments to `get_crypto_key_version` via a request object, either of type
@@ -777,7 +935,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to get.
+            #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to get.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKeyVersion]
@@ -786,6 +945,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKeyVersion]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetCryptoKeyVersionRequest.new
+            #
+            #   # Call the get_crypto_key_version method.
+            #   result = client.get_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
             #
             def get_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -804,9 +978,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -827,9 +1003,11 @@ module Google
             end
 
             ##
-            # Returns the public key for the given {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}. The
+            # Returns the public key for the given
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}. The
             # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} must be
-            # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_SIGN ASYMMETRIC_SIGN} or
+            # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_SIGN ASYMMETRIC_SIGN}
+            # or
             # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_DECRYPT ASYMMETRIC_DECRYPT}.
             #
             # @overload get_public_key(request, options = nil)
@@ -848,8 +1026,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} public key to
-            #     get.
+            #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} public key to get.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::PublicKey]
@@ -858,6 +1036,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::PublicKey]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetPublicKeyRequest.new
+            #
+            #   # Call the get_public_key method.
+            #   result = client.get_public_key request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::PublicKey.
+            #   p result
             #
             def get_public_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -876,9 +1069,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -917,7 +1112,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::ImportJob#name name} of the {::Google::Cloud::Kms::V1::ImportJob ImportJob} to get.
+            #     Required. The {::Google::Cloud::Kms::V1::ImportJob#name name} of the
+            #     {::Google::Cloud::Kms::V1::ImportJob ImportJob} to get.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::ImportJob]
@@ -926,6 +1122,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::ImportJob]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetImportJobRequest.new
+            #
+            #   # Call the get_import_job method.
+            #   result = client.get_import_job request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::ImportJob.
+            #   p result
             #
             def get_import_job request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -944,9 +1155,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -967,7 +1180,8 @@ module Google
             end
 
             ##
-            # Create a new {::Google::Cloud::Kms::V1::KeyRing KeyRing} in a given Project and Location.
+            # Create a new {::Google::Cloud::Kms::V1::KeyRing KeyRing} in a given Project and
+            # Location.
             #
             # @overload create_key_ring(request, options = nil)
             #   Pass arguments to `create_key_ring` via a request object, either of type
@@ -986,12 +1200,14 @@ module Google
             #
             #   @param parent [::String]
             #     Required. The resource name of the location associated with the
-            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings}, in the format `projects/*/locations/*`.
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRings}, in the format
+            #     `projects/*/locations/*`.
             #   @param key_ring_id [::String]
             #     Required. It must be unique within a location and match the regular
             #     expression `[a-zA-Z0-9_-]{1,63}`
             #   @param key_ring [::Google::Cloud::Kms::V1::KeyRing, ::Hash]
-            #     Required. A {::Google::Cloud::Kms::V1::KeyRing KeyRing} with initial field values.
+            #     Required. A {::Google::Cloud::Kms::V1::KeyRing KeyRing} with initial field
+            #     values.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::KeyRing]
@@ -1000,6 +1216,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::KeyRing]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::CreateKeyRingRequest.new
+            #
+            #   # Call the create_key_ring method.
+            #   result = client.create_key_ring request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::KeyRing.
+            #   p result
             #
             def create_key_ring request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1018,9 +1249,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1041,7 +1274,8 @@ module Google
             end
 
             ##
-            # Create a new {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} within a {::Google::Cloud::Kms::V1::KeyRing KeyRing}.
+            # Create a new {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} within a
+            # {::Google::Cloud::Kms::V1::KeyRing KeyRing}.
             #
             # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} and
             # {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#algorithm CryptoKey.version_template.algorithm}
@@ -1063,17 +1297,21 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the KeyRing associated with the
-            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys}.
+            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the KeyRing
+            #     associated with the {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys}.
             #   @param crypto_key_id [::String]
             #     Required. It must be unique within a KeyRing and match the regular
             #     expression `[a-zA-Z0-9_-]{1,63}`
             #   @param crypto_key [::Google::Cloud::Kms::V1::CryptoKey, ::Hash]
-            #     Required. A {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} with initial field values.
+            #     Required. A {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} with initial field
+            #     values.
             #   @param skip_initial_version_creation [::Boolean]
-            #     If set to true, the request will create a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} without any
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions}. You must manually call
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client#create_crypto_key_version CreateCryptoKeyVersion} or
+            #     If set to true, the request will create a
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} without any
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions}. You must
+            #     manually call
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client#create_crypto_key_version CreateCryptoKeyVersion}
+            #     or
             #     {::Google::Cloud::Kms::V1::KeyManagementService::Client#import_crypto_key_version ImportCryptoKeyVersion}
             #     before you can use this {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
             #
@@ -1084,6 +1322,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKey]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::CreateCryptoKeyRequest.new
+            #
+            #   # Call the create_crypto_key method.
+            #   result = client.create_crypto_key request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+            #   p result
             #
             def create_crypto_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1102,9 +1355,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1125,7 +1380,8 @@ module Google
             end
 
             ##
-            # Create a new {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} in a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
+            # Create a new {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} in a
+            # {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
             #
             # The server will assign the next sequential id. If unset,
             # {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} will be set to
@@ -1147,10 +1403,12 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} associated with
-            #     the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions}.
+            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} associated with the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions}.
             #   @param crypto_key_version [::Google::Cloud::Kms::V1::CryptoKeyVersion, ::Hash]
-            #     Required. A {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with initial field values.
+            #     Required. A {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with
+            #     initial field values.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKeyVersion]
@@ -1159,6 +1417,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKeyVersion]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::CreateCryptoKeyVersionRequest.new
+            #
+            #   # Call the create_crypto_key_version method.
+            #   result = client.create_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
             #
             def create_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1177,9 +1450,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1200,12 +1475,14 @@ module Google
             end
 
             ##
-            # Import wrapped key material into a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
+            # Import wrapped key material into a
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
             #
-            # All requests must specify a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}. If a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} is
-            # additionally specified in the request, key material will be reimported into
-            # that version. Otherwise, a new version will be created, and will be
-            # assigned the next sequential id within the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
+            # All requests must specify a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}. If
+            # a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} is additionally
+            # specified in the request, key material will be reimported into that
+            # version. Otherwise, a new version will be created, and will be assigned the
+            # next sequential id within the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
             #
             # @overload import_crypto_key_version(request, options = nil)
             #   Pass arguments to `import_crypto_key_version` via a request object, either of type
@@ -1223,34 +1500,42 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to be imported into.
+            #     Required. The {::Google::Cloud::Kms::V1::CryptoKey#name name} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to be imported into.
             #
             #     The create permission is only required on this key when creating a new
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}.
             #   @param crypto_key_version [::String]
-            #     Optional. The optional {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of an existing
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to target for an import operation.
-            #     If this field is not present, a new {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} containing the
+            #     Optional. The optional {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of
+            #     an existing {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to
+            #     target for an import operation. If this field is not present, a new
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} containing the
             #     supplied key material is created.
             #
             #     If this field is present, the supplied key material is imported into
-            #     the existing {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}. To import into an existing
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}, the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} must be a child of
-            #     {::Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest#parent ImportCryptoKeyVersionRequest.parent}, have been previously created via
-            #     [ImportCryptoKeyVersion][], and be in
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED} or
+            #     the existing {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}. To
+            #     import into an existing
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}, the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} must be a child of
+            #     {::Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest#parent ImportCryptoKeyVersionRequest.parent},
+            #     have been previously created via [ImportCryptoKeyVersion][], and be in
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED}
+            #     or
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::IMPORT_FAILED IMPORT_FAILED}
             #     state. The key material and algorithm must match the previous
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} exactly if the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} has ever contained
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} exactly if the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} has ever contained
             #     key material.
             #   @param algorithm [::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionAlgorithm]
-            #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionAlgorithm algorithm} of
-            #     the key being imported. This does not need to match the
-            #     {::Google::Cloud::Kms::V1::CryptoKey#version_template version_template} of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} this
-            #     version imports into.
+            #     Required. The
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionAlgorithm algorithm}
+            #     of the key being imported. This does not need to match the
+            #     {::Google::Cloud::Kms::V1::CryptoKey#version_template version_template} of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} this version imports into.
             #   @param import_job [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::ImportJob#name name} of the {::Google::Cloud::Kms::V1::ImportJob ImportJob} that was used to
-            #     wrap this key material.
+            #     Required. The {::Google::Cloud::Kms::V1::ImportJob#name name} of the
+            #     {::Google::Cloud::Kms::V1::ImportJob ImportJob} that was used to wrap this key
+            #     material.
             #   @param rsa_aes_wrapped_key [::String]
             #     Wrapped key material produced with
             #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_3072_SHA1_AES_256 RSA_OAEP_3072_SHA1_AES_256}
@@ -1260,8 +1545,9 @@ module Google
             #     This field contains the concatenation of two wrapped keys:
             #     <ol>
             #       <li>An ephemeral AES-256 wrapping key wrapped with the
-            #           {::Google::Cloud::Kms::V1::ImportJob#public_key public_key} using RSAES-OAEP with SHA-1,
-            #           MGF1 with SHA-1, and an empty label.
+            #           {::Google::Cloud::Kms::V1::ImportJob#public_key public_key} using
+            #           RSAES-OAEP with SHA-1/SHA-256, MGF1 with SHA-1/SHA-256, and an
+            #           empty label.
             #       </li>
             #       <li>The key to be imported, wrapped with the ephemeral AES-256 key
             #           using AES-KWP (RFC 5649).
@@ -1284,6 +1570,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest.new
+            #
+            #   # Call the import_crypto_key_version method.
+            #   result = client.import_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
+            #
             def import_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1301,9 +1602,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1324,9 +1627,11 @@ module Google
             end
 
             ##
-            # Create a new {::Google::Cloud::Kms::V1::ImportJob ImportJob} within a {::Google::Cloud::Kms::V1::KeyRing KeyRing}.
+            # Create a new {::Google::Cloud::Kms::V1::ImportJob ImportJob} within a
+            # {::Google::Cloud::Kms::V1::KeyRing KeyRing}.
             #
-            # {::Google::Cloud::Kms::V1::ImportJob#import_method ImportJob.import_method} is required.
+            # {::Google::Cloud::Kms::V1::ImportJob#import_method ImportJob.import_method} is
+            # required.
             #
             # @overload create_import_job(request, options = nil)
             #   Pass arguments to `create_import_job` via a request object, either of type
@@ -1344,13 +1649,15 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the {::Google::Cloud::Kms::V1::KeyRing KeyRing} associated with the
+            #     Required. The {::Google::Cloud::Kms::V1::KeyRing#name name} of the
+            #     {::Google::Cloud::Kms::V1::KeyRing KeyRing} associated with the
             #     {::Google::Cloud::Kms::V1::ImportJob ImportJobs}.
             #   @param import_job_id [::String]
             #     Required. It must be unique within a KeyRing and match the regular
             #     expression `[a-zA-Z0-9_-]{1,63}`
             #   @param import_job [::Google::Cloud::Kms::V1::ImportJob, ::Hash]
-            #     Required. An {::Google::Cloud::Kms::V1::ImportJob ImportJob} with initial field values.
+            #     Required. An {::Google::Cloud::Kms::V1::ImportJob ImportJob} with initial field
+            #     values.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::ImportJob]
@@ -1359,6 +1666,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::ImportJob]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::CreateImportJobRequest.new
+            #
+            #   # Call the create_import_job method.
+            #   result = client.create_import_job request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::ImportJob.
+            #   p result
             #
             def create_import_job request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1377,9 +1699,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1430,6 +1754,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::UpdateCryptoKeyRequest.new
+            #
+            #   # Call the update_crypto_key method.
+            #   result = client.update_crypto_key request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+            #   p result
+            #
             def update_crypto_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1447,9 +1786,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "crypto_key.name" => request.crypto_key.name
-              }
+              header_params = {}
+              if request.crypto_key&.name
+                header_params["crypto_key.name"] = request.crypto_key.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1470,13 +1811,18 @@ module Google
             end
 
             ##
-            # Update a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}'s metadata.
+            # Update a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}'s
+            # metadata.
             #
             # {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} may be changed between
-            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::ENABLED ENABLED} and
-            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DISABLED DISABLED} using this
-            # method. See {::Google::Cloud::Kms::V1::KeyManagementService::Client#destroy_crypto_key_version DestroyCryptoKeyVersion} and {::Google::Cloud::Kms::V1::KeyManagementService::Client#restore_crypto_key_version RestoreCryptoKeyVersion} to
-            # move between other states.
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::ENABLED ENABLED}
+            # and
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DISABLED DISABLED}
+            # using this method. See
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#destroy_crypto_key_version DestroyCryptoKeyVersion}
+            # and
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#restore_crypto_key_version RestoreCryptoKeyVersion}
+            # to move between other states.
             #
             # @overload update_crypto_key_version(request, options = nil)
             #   Pass arguments to `update_crypto_key_version` via a request object, either of type
@@ -1494,7 +1840,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param crypto_key_version [::Google::Cloud::Kms::V1::CryptoKeyVersion, ::Hash]
-            #     Required. {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with updated values.
+            #     Required. {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with
+            #     updated values.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Required. List of fields to be updated in this request.
             #
@@ -1505,6 +1852,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKeyVersion]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::UpdateCryptoKeyVersionRequest.new
+            #
+            #   # Call the update_crypto_key_version method.
+            #   result = client.update_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
             #
             def update_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1523,9 +1885,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "crypto_key_version.name" => request.crypto_key_version.name
-              }
+              header_params = {}
+              if request.crypto_key_version&.name
+                header_params["crypto_key_version.name"] = request.crypto_key_version.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1546,7 +1910,9 @@ module Google
             end
 
             ##
-            # Update the version of a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} that will be used in {::Google::Cloud::Kms::V1::KeyManagementService::Client#encrypt Encrypt}.
+            # Update the version of a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} that
+            # will be used in
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#encrypt Encrypt}.
             #
             # Returns an error if called on a key whose purpose is not
             # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ENCRYPT_DECRYPT ENCRYPT_DECRYPT}.
@@ -1567,9 +1933,11 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to update.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to update.
             #   @param crypto_key_version_id [::String]
-            #     Required. The id of the child {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use as primary.
+            #     Required. The id of the child
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use as primary.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKey]
@@ -1578,6 +1946,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKey]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::UpdateCryptoKeyPrimaryVersionRequest.new
+            #
+            #   # Call the update_crypto_key_primary_version method.
+            #   result = client.update_crypto_key_primary_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+            #   p result
             #
             def update_crypto_key_primary_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1596,9 +1979,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1619,19 +2004,27 @@ module Google
             end
 
             ##
-            # Schedule a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} for destruction.
+            # Schedule a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} for
+            # destruction.
             #
-            # Upon calling this method, {::Google::Cloud::Kms::V1::CryptoKeyVersion#state CryptoKeyVersion.state} will be set to
+            # Upon calling this method,
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#state CryptoKeyVersion.state} will
+            # be set to
             # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROY_SCHEDULED DESTROY_SCHEDULED},
-            # and {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} will be set to the time
-            # {::Google::Cloud::Kms::V1::CryptoKey#destroy_scheduled_duration destroy_scheduled_duration} in the
-            # future. At that time, the {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} will
-            # automatically change to
-            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED}, and the key
-            # material will be irrevocably destroyed.
+            # and {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} will
+            # be set to the time
+            # {::Google::Cloud::Kms::V1::CryptoKey#destroy_scheduled_duration destroy_scheduled_duration}
+            # in the future. At that time, the
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} will automatically
+            # change to
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED},
+            # and the key material will be irrevocably destroyed.
             #
-            # Before the {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} is reached,
-            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#restore_crypto_key_version RestoreCryptoKeyVersion} may be called to reverse the process.
+            # Before the
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} is
+            # reached,
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#restore_crypto_key_version RestoreCryptoKeyVersion}
+            # may be called to reverse the process.
             #
             # @overload destroy_crypto_key_version(request, options = nil)
             #   Pass arguments to `destroy_crypto_key_version` via a request object, either of type
@@ -1649,7 +2042,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to destroy.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to destroy.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKeyVersion]
@@ -1658,6 +2052,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKeyVersion]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::DestroyCryptoKeyVersionRequest.new
+            #
+            #   # Call the destroy_crypto_key_version method.
+            #   result = client.destroy_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
             #
             def destroy_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1676,9 +2085,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1703,9 +2114,11 @@ module Google
             # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROY_SCHEDULED DESTROY_SCHEDULED}
             # state.
             #
-            # Upon restoration of the CryptoKeyVersion, {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state}
-            # will be set to {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DISABLED DISABLED},
-            # and {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} will be cleared.
+            # Upon restoration of the CryptoKeyVersion,
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} will be set to
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DISABLED DISABLED},
+            # and {::Google::Cloud::Kms::V1::CryptoKeyVersion#destroy_time destroy_time} will
+            # be cleared.
             #
             # @overload restore_crypto_key_version(request, options = nil)
             #   Pass arguments to `restore_crypto_key_version` via a request object, either of type
@@ -1723,7 +2136,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to restore.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to restore.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKeyVersion]
@@ -1732,6 +2146,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::CryptoKeyVersion]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::RestoreCryptoKeyVersionRequest.new
+            #
+            #   # Call the restore_crypto_key_version method.
+            #   result = client.restore_crypto_key_version request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::CryptoKeyVersion.
+            #   p result
             #
             def restore_crypto_key_version request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1750,9 +2179,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1773,8 +2204,9 @@ module Google
             end
 
             ##
-            # Encrypts data, so that it can only be recovered by a call to {::Google::Cloud::Kms::V1::KeyManagementService::Client#decrypt Decrypt}.
-            # The {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} must be
+            # Encrypts data, so that it can only be recovered by a call to
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#decrypt Decrypt}. The
+            # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} must be
             # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ENCRYPT_DECRYPT ENCRYPT_DECRYPT}.
             #
             # @overload encrypt(request, options = nil)
@@ -1793,59 +2225,75 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} or {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}
-            #     to use for encryption.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} or
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     encryption.
             #
-            #     If a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} is specified, the server will use its
-            #     {::Google::Cloud::Kms::V1::CryptoKey#primary primary version}.
+            #     If a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} is specified, the server
+            #     will use its {::Google::Cloud::Kms::V1::CryptoKey#primary primary version}.
             #   @param plaintext [::String]
             #     Required. The data to encrypt. Must be no larger than 64KiB.
             #
             #     The maximum size depends on the key version's
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}. For
-            #     {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the plaintext must be no larger
-            #     than 64KiB. For {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of the
-            #     plaintext and additional_authenticated_data fields must be no larger than
-            #     8KiB.
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the
+            #     plaintext must be no larger than 64KiB. For
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
+            #     the plaintext and additional_authenticated_data fields must be no larger
+            #     than 8KiB.
             #   @param additional_authenticated_data [::String]
-            #     Optional. Optional data that, if specified, must also be provided during decryption
-            #     through {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}.
+            #     Optional. Optional data that, if specified, must also be provided during
+            #     decryption through
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}.
             #
             #     The maximum size depends on the key version's
-            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}. For
-            #     {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the AAD must be no larger than
-            #     64KiB. For {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of the
-            #     plaintext and additional_authenticated_data fields must be no larger than
-            #     8KiB.
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the AAD
+            #     must be no larger than 64KiB. For
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
+            #     the plaintext and additional_authenticated_data fields must be no larger
+            #     than 8KiB.
             #   @param plaintext_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext}) is equal to
-            #     {::Google::Cloud::Kms::V1::EncryptRequest#plaintext_crc32c EncryptRequest.plaintext_crc32c}, and if so, perform a limited number of
-            #     retries. A persistent mismatch may indicate an issue in your computation of
-            #     the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::EncryptRequest#plaintext EncryptRequest.plaintext})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#plaintext_crc32c EncryptRequest.plaintext_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #   @param additional_authenticated_data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
             #     Optional. An optional CRC32C checksum of the
-            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data}. If specified,
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the received
-            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data}) is equal to
-            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data_crc32c EncryptRequest.additional_authenticated_data_crc32c}, and if so, perform
-            #     a limited number of retries. A persistent mismatch may indicate an issue in
-            #     your computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data_crc32c EncryptRequest.additional_authenticated_data_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::EncryptResponse]
@@ -1854,6 +2302,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::EncryptResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::EncryptRequest.new
+            #
+            #   # Call the encrypt method.
+            #   result = client.encrypt request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::EncryptResponse.
+            #   p result
             #
             def encrypt request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1872,9 +2335,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1895,8 +2360,10 @@ module Google
             end
 
             ##
-            # Decrypts data that was protected by {::Google::Cloud::Kms::V1::KeyManagementService::Client#encrypt Encrypt}. The {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
-            # must be {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ENCRYPT_DECRYPT ENCRYPT_DECRYPT}.
+            # Decrypts data that was protected by
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#encrypt Encrypt}. The
+            # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} must be
+            # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ENCRYPT_DECRYPT ENCRYPT_DECRYPT}.
             #
             # @overload decrypt(request, options = nil)
             #   Pass arguments to `decrypt` via a request object, either of type
@@ -1914,8 +2381,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to use for decryption.
-            #     The server will choose the appropriate version.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} to use for decryption. The
+            #     server will choose the appropriate version.
             #   @param ciphertext [::String]
             #     Required. The encrypted data originally returned in
             #     {::Google::Cloud::Kms::V1::EncryptResponse#ciphertext EncryptResponse.ciphertext}.
@@ -1923,34 +2391,45 @@ module Google
             #     Optional. Optional data that must match the data originally supplied in
             #     {::Google::Cloud::Kms::V1::EncryptRequest#additional_authenticated_data EncryptRequest.additional_authenticated_data}.
             #   @param ciphertext_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext}) is equal to
-            #     {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext_crc32c DecryptRequest.ciphertext_crc32c}, and if so, perform a limited number
-            #     of retries. A persistent mismatch may indicate an issue in your computation
-            #     of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::DecryptRequest#ciphertext DecryptRequest.ciphertext})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#ciphertext_crc32c DecryptRequest.ciphertext_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #   @param additional_authenticated_data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
             #     Optional. An optional CRC32C checksum of the
-            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}. If specified,
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the received
-            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}) is equal to
-            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data_crc32c DecryptRequest.additional_authenticated_data_crc32c}, and if so, perform
-            #     a limited number of retries. A persistent mismatch may indicate an issue in
-            #     your computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data DecryptRequest.additional_authenticated_data})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::DecryptRequest#additional_authenticated_data_crc32c DecryptRequest.additional_authenticated_data_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::DecryptResponse]
@@ -1959,6 +2438,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::DecryptResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::DecryptRequest.new
+            #
+            #   # Call the decrypt method.
+            #   result = client.decrypt request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::DecryptResponse.
+            #   p result
             #
             def decrypt request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -1977,9 +2471,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -2000,9 +2496,11 @@ module Google
             end
 
             ##
-            # Signs data using a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
+            # Signs data using a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}
+            # with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
             # ASYMMETRIC_SIGN, producing a signature that can be verified with the public
-            # key retrieved from {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey}.
+            # key retrieved from
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey}.
             #
             # @overload asymmetric_sign(request, options = nil)
             #   Pass arguments to `asymmetric_sign` via a request object, either of type
@@ -2014,31 +2512,68 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload asymmetric_sign(name: nil, digest: nil, digest_crc32c: nil)
+            # @overload asymmetric_sign(name: nil, digest: nil, digest_crc32c: nil, data: nil, data_crc32c: nil)
             #   Pass arguments to `asymmetric_sign` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for signing.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     signing.
             #   @param digest [::Google::Cloud::Kms::V1::Digest, ::Hash]
-            #     Required. The digest of the data to sign. The digest must be produced with
+            #     Optional. The digest of the data to sign. The digest must be produced with
             #     the same digest algorithm as specified by the key version's
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion#algorithm algorithm}.
+            #
+            #     This field may not be supplied if
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#data AsymmetricSignRequest.data}
+            #     is supplied.
             #   @param digest_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest}) is equal to
-            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest_crc32c AsymmetricSignRequest.digest_crc32c}, and if so, perform a limited
-            #     number of retries. A persistent mismatch may indicate an issue in your
-            #     computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest_crc32c AsymmetricSignRequest.digest_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
+            #   @param data [::String]
+            #     Optional. The data to sign.
+            #     It can't be supplied if
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#digest AsymmetricSignRequest.digest}
+            #     is supplied.
+            #   @param data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#data AsymmetricSignRequest.data}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#data AsymmetricSignRequest.data}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::AsymmetricSignRequest#data AsymmetricSignRequest.data})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::AsymmetricSignRequest#data_crc32c AsymmetricSignRequest.data_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::AsymmetricSignResponse]
@@ -2047,6 +2582,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::AsymmetricSignResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::AsymmetricSignRequest.new
+            #
+            #   # Call the asymmetric_sign method.
+            #   result = client.asymmetric_sign request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::AsymmetricSignResponse.
+            #   p result
             #
             def asymmetric_sign request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -2065,9 +2615,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -2089,8 +2641,10 @@ module Google
 
             ##
             # Decrypts data that was encrypted with a public key retrieved from
-            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey} corresponding to a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with
-            # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} ASYMMETRIC_DECRYPT.
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey}
+            # corresponding to a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}
+            # with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
+            # ASYMMETRIC_DECRYPT.
             #
             # @overload asymmetric_decrypt(request, options = nil)
             #   Pass arguments to `asymmetric_decrypt` via a request object, either of type
@@ -2108,25 +2662,33 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
             #     decryption.
             #   @param ciphertext [::String]
-            #     Required. The data encrypted with the named {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}'s public
-            #     key using OAEP.
+            #     Required. The data encrypted with the named
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}'s public key using
+            #     OAEP.
             #   @param ciphertext_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext}.
-            #     If specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext}) is equal to
-            #     {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext_crc32c AsymmetricDecryptRequest.ciphertext_crc32c}, and if so, perform a
-            #     limited number of retries. A persistent mismatch may indicate an issue in
-            #     your computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext}
+            #     using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext AsymmetricDecryptRequest.ciphertext})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::AsymmetricDecryptRequest#ciphertext_crc32c AsymmetricDecryptRequest.ciphertext_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::AsymmetricDecryptResponse]
@@ -2135,6 +2697,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::AsymmetricDecryptResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::AsymmetricDecryptRequest.new
+            #
+            #   # Call the asymmetric_decrypt method.
+            #   result = client.asymmetric_decrypt request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::AsymmetricDecryptResponse.
+            #   p result
             #
             def asymmetric_decrypt request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -2153,9 +2730,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -2176,9 +2755,9 @@ module Google
             end
 
             ##
-            # Signs data using a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
-            # MAC, producing a tag that can be verified by another source with the
-            # same key.
+            # Signs data using a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}
+            # with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} MAC,
+            # producing a tag that can be verified by another source with the same key.
             #
             # @overload mac_sign(request, options = nil)
             #   Pass arguments to `mac_sign` via a request object, either of type
@@ -2196,24 +2775,30 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for signing.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     signing.
             #   @param data [::String]
-            #     Required. The data to sign. The MAC tag is computed over this data field based on
-            #     the specific algorithm.
+            #     Required. The data to sign. The MAC tag is computed over this data field
+            #     based on the specific algorithm.
             #   @param data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data}) is equal to
-            #     {::Google::Cloud::Kms::V1::MacSignRequest#data_crc32c MacSignRequest.data_crc32c}, and if so, perform a limited
-            #     number of retries. A persistent mismatch may indicate an issue in your
-            #     computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data}. If
+            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data} using this
+            #     checksum. {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data}) is
+            #     equal to
+            #     {::Google::Cloud::Kms::V1::MacSignRequest#data_crc32c MacSignRequest.data_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::MacSignResponse]
@@ -2222,6 +2807,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::MacSignResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::MacSignRequest.new
+            #
+            #   # Call the mac_sign method.
+            #   result = client.mac_sign request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::MacSignResponse.
+            #   p result
             #
             def mac_sign request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -2240,9 +2840,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -2263,9 +2865,10 @@ module Google
             end
 
             ##
-            # Verifies MAC tag using a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
-            # MAC, and returns a response that indicates whether or not the verification
-            # was successful.
+            # Verifies MAC tag using a
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} with
+            # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} MAC, and returns
+            # a response that indicates whether or not the verification was successful.
             #
             # @overload mac_verify(request, options = nil)
             #   Pass arguments to `mac_verify` via a request object, either of type
@@ -2283,40 +2886,51 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of the {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for verification.
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     verification.
             #   @param data [::String]
-            #     Required. The data used previously as a {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data} to generate the MAC
-            #     tag.
+            #     Required. The data used previously as a
+            #     {::Google::Cloud::Kms::V1::MacSignRequest#data MacSignRequest.data} to generate
+            #     the MAC tag.
             #   @param data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
-            #     CRC32C({::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data}) is equal to
-            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#data_crc32c MacVerifyRequest.data_crc32c}, and if so, perform a limited
-            #     number of retries. A persistent mismatch may indicate an issue in your
-            #     computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data}. If
+            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data} using
+            #     this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C({::Google::Cloud::Kms::V1::MacVerifyRequest#data MacVerifyRequest.data})
+            #     is equal to
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#data_crc32c MacVerifyRequest.data_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #   @param mac [::String]
             #     Required. The signature to verify.
             #   @param mac_crc32c [::Google::Protobuf::Int64Value, ::Hash]
-            #     Optional. An optional CRC32C checksum of the {::Google::Cloud::Kms::V1::MacVerifyRequest#mac MacVerifyRequest.mac}. If
-            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will verify the integrity of the
-            #     received {::Google::Cloud::Kms::V1::MacVerifyRequest#mac MacVerifyRequest.mac} using this checksum.
-            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will report an error if the checksum verification
-            #     fails. If you receive a checksum error, your client should verify that
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#mac MacVerifyRequest.mac}. If
+            #     specified, {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will verify the integrity of the received
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#mac MacVerifyRequest.mac} using this
+            #     checksum. {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
             #     CRC32C([MacVerifyRequest.tag][]) is equal to
-            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#mac_crc32c MacVerifyRequest.mac_crc32c}, and if so, perform a limited
-            #     number of retries. A persistent mismatch may indicate an issue in your
-            #     computation of the CRC32C checksum.
-            #     Note: This field is defined as int64 for reasons of compatibility across
-            #     different languages. However, it is a non-negative integer, which will
-            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-            #     that support this type.
+            #     {::Google::Cloud::Kms::V1::MacVerifyRequest#mac_crc32c MacVerifyRequest.mac_crc32c},
+            #     and if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum. Note: This
+            #     field is defined as int64 for reasons of compatibility across different
+            #     languages. However, it is a non-negative integer, which will never exceed
+            #     2^32-1, and can be safely downconverted to uint32 in languages that support
+            #     this type.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::MacVerifyResponse]
@@ -2325,6 +2939,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::MacVerifyResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::MacVerifyRequest.new
+            #
+            #   # Call the mac_verify method.
+            #   result = client.mac_verify request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::MacVerifyResponse.
+            #   p result
             #
             def mac_verify request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -2343,9 +2972,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -2391,8 +3022,10 @@ module Google
             #     The length in bytes of the amount of randomness to retrieve.  Minimum 8
             #     bytes, maximum 1024 bytes.
             #   @param protection_level [::Google::Cloud::Kms::V1::ProtectionLevel]
-            #     The {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevel} to use when generating the random data. Defaults to
-            #     {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE}.
+            #     The {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevel} to use when
+            #     generating the random data. Currently, only
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} protection level is
+            #     supported.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::GenerateRandomBytesResponse]
@@ -2401,6 +3034,21 @@ module Google
             # @return [::Google::Cloud::Kms::V1::GenerateRandomBytesResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GenerateRandomBytesRequest.new
+            #
+            #   # Call the generate_random_bytes method.
+            #   result = client.generate_random_bytes request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::GenerateRandomBytesResponse.
+            #   p result
             #
             def generate_random_bytes request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -2419,9 +3067,11 @@ module Google
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "location" => request.location
-              }
+              header_params = {}
+              if request.location
+                header_params["location"] = request.location
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

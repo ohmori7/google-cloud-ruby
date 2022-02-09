@@ -27,7 +27,7 @@ export KMS_CREDENTIALS=path/to/keyfile.json
 ```ruby
 require "google/cloud/kms/v1"
 
-client = ::Google::Cloud::Kms::V1::KeyManagementService::Client.new
+client = ::Google::Cloud::Kms::V1::EkmService::Client.new
 ```
 
 ## Credential Lookup
@@ -64,7 +64,7 @@ containers where writing files is difficult or not encouraged.
 
 The environment variables that google-cloud-kms-v1
 checks for credentials are configured on the service Credentials class (such as
-{::Google::Cloud::Kms::V1::KeyManagementService::Credentials}):
+{::Google::Cloud::Kms::V1::EkmService::Credentials}):
 
 * `KMS_CREDENTIALS` - Path to JSON file, or JSON contents
 * `KMS_KEYFILE` - Path to JSON file, or JSON contents
@@ -77,7 +77,7 @@ require "google/cloud/kms/v1"
 
 ENV["KMS_CREDENTIALS"] = "path/to/keyfile.json"
 
-client = ::Google::Cloud::Kms::V1::KeyManagementService::Client.new
+client = ::Google::Cloud::Kms::V1::EkmService::Client.new
 ```
 
 ### Configuration
@@ -88,7 +88,7 @@ it in an environment variable. Either on an individual client initialization:
 ```ruby
 require "google/cloud/kms/v1"
 
-client = ::Google::Cloud::Kms::V1::KeyManagementService::Client.new do |config|
+client = ::Google::Cloud::Kms::V1::EkmService::Client.new do |config|
   config.credentials = "path/to/keyfile.json"
 end
 ```
@@ -98,11 +98,11 @@ Or globally for all clients:
 ```ruby
 require "google/cloud/kms/v1"
 
-::Google::Cloud::Kms::V1::KeyManagementService::Client.configure do |config|
+::Google::Cloud::Kms::V1::EkmService::Client.configure do |config|
   config.credentials = "path/to/keyfile.json"
 end
 
-client = ::Google::Cloud::Kms::V1::KeyManagementService::Client.new
+client = ::Google::Cloud::Kms::V1::EkmService::Client.new
 ```
 
 ### Cloud SDK
@@ -120,15 +120,6 @@ To configure your system for this, simply:
 **NOTE:** This is _not_ recommended for running in production. The Cloud SDK
 *should* only be used during development.
 
-[gce-how-to]: https://cloud.google.com/compute/docs/authentication#using
-[dev-console]: https://console.cloud.google.com/project
-
-[enable-apis]: https://raw.githubusercontent.com/GoogleCloudPlatform/gcloud-common/master/authentication/enable-apis.png
-
-[create-new-service-account]: https://raw.githubusercontent.com/GoogleCloudPlatform/gcloud-common/master/authentication/create-new-service-account.png
-[create-new-service-account-existing-keys]: https://raw.githubusercontent.com/GoogleCloudPlatform/gcloud-common/master/authentication/create-new-service-account-existing-keys.png
-[reuse-service-account]: https://raw.githubusercontent.com/GoogleCloudPlatform/gcloud-common/master/authentication/reuse-service-account.png
-
 ## Creating a Service Account
 
 Google Cloud requires **Service Account Credentials** to
@@ -139,31 +130,22 @@ If you are not running this client within
 [Google Cloud Platform environments](#google-cloud-platform-environments), you
 need a Google Developers service account.
 
-1. Visit the [Google Developers Console][dev-console].
+1. Visit the [Google Cloud Console](https://console.cloud.google.com/project).
 2. Create a new project or click on an existing project.
-3. Activate the slide-out navigation tray and select **API Manager**. From
+3. Activate the menu in the upper left and select **APIs & Services**. From
    here, you will enable the APIs that your application requires.
-
-   ![Enable the APIs that your application requires][enable-apis]
 
    *Note: You may need to enable billing in order to use these services.*
 
 4. Select **Credentials** from the side navigation.
 
-   You should see a screen like one of the following.
-
-   ![Create a new service account][create-new-service-account]
-
-   ![Create a new service account With Existing Keys][create-new-service-account-existing-keys]
-
-   Find the "Add credentials" drop down and select "Service account" to be
-   guided through downloading a new JSON key file.
+   Find the "Create credentials" drop down near the top of the page, and select
+   "Service account" to be guided through downloading a new JSON key file.
 
    If you want to re-use an existing service account, you can easily generate a
-   new key file. Just select the account you wish to re-use, and click "Generate
-   new JSON key":
-
-   ![Re-use an existing service account][reuse-service-account]
+   new key file. Just select the account you wish to re-use, click the pencil
+   tool on the right side to edit the service account, select the **Keys** tab,
+   and then select **Add Key**.
 
    The key file you download will be used by this library to authenticate API
    requests and should be stored in a secure location.

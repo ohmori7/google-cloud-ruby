@@ -86,12 +86,24 @@ module Google
             rpc :ListPhraseMatchers, ::Google::Cloud::ContactCenterInsights::V1::ListPhraseMatchersRequest, ::Google::Cloud::ContactCenterInsights::V1::ListPhraseMatchersResponse
             # Deletes a phrase matcher.
             rpc :DeletePhraseMatcher, ::Google::Cloud::ContactCenterInsights::V1::DeletePhraseMatcherRequest, ::Google::Protobuf::Empty
+            # Updates a phrase matcher.
+            rpc :UpdatePhraseMatcher, ::Google::Cloud::ContactCenterInsights::V1::UpdatePhraseMatcherRequest, ::Google::Cloud::ContactCenterInsights::V1::PhraseMatcher
             # Gets conversation statistics.
             rpc :CalculateStats, ::Google::Cloud::ContactCenterInsights::V1::CalculateStatsRequest, ::Google::Cloud::ContactCenterInsights::V1::CalculateStatsResponse
             # Gets project-level settings.
             rpc :GetSettings, ::Google::Cloud::ContactCenterInsights::V1::GetSettingsRequest, ::Google::Cloud::ContactCenterInsights::V1::Settings
             # Updates project-level settings.
             rpc :UpdateSettings, ::Google::Cloud::ContactCenterInsights::V1::UpdateSettingsRequest, ::Google::Cloud::ContactCenterInsights::V1::Settings
+            # Creates a view.
+            rpc :CreateView, ::Google::Cloud::ContactCenterInsights::V1::CreateViewRequest, ::Google::Cloud::ContactCenterInsights::V1::View
+            # Gets a view.
+            rpc :GetView, ::Google::Cloud::ContactCenterInsights::V1::GetViewRequest, ::Google::Cloud::ContactCenterInsights::V1::View
+            # Lists views.
+            rpc :ListViews, ::Google::Cloud::ContactCenterInsights::V1::ListViewsRequest, ::Google::Cloud::ContactCenterInsights::V1::ListViewsResponse
+            # Updates a view.
+            rpc :UpdateView, ::Google::Cloud::ContactCenterInsights::V1::UpdateViewRequest, ::Google::Cloud::ContactCenterInsights::V1::View
+            # Deletes a view.
+            rpc :DeleteView, ::Google::Cloud::ContactCenterInsights::V1::DeleteViewRequest, ::Google::Protobuf::Empty
           end
 
           Stub = Service.rpc_stub_class

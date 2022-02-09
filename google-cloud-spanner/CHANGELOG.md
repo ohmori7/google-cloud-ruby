@@ -1,5 +1,24 @@
 # Release History
 
+### 2.12.0 / 2022-01-11
+
+No significant changes.
+
+### 2.11.0 / 2021-12-10
+
+#### Features
+
+* add admin instance wrapper.
+* Updated benchwrapper and proto for spanner.
+* use gRPC clients for instance/database management.
+* wrapper to create generated admin database client.
+
+### 2.10.1 / 2021-11-09
+
+#### Documentation
+
+* Add documentation for quota_project Configuration attribute
+
 ### 2.10.0 / 2021-08-24
 
 #### Features

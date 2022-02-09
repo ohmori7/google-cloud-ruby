@@ -1,5 +1,34 @@
 # Release History
 
+### 0.4.7 / 2022-01-13
+
+#### Documentation
+
+* Various updates to the reference documentation
+
+### 0.4.6 / 2022-01-11
+
+#### Bug Fixes
+
+* Honor quota project in auxiliary operations clients
+
+#### Documentation
+
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.4.5 / 2021-12-07
+
+#### Documentation
+
+* Formatting fixes in the reference docs
+
+### 0.4.4 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
 ### 0.4.3 / 2021-08-11
 
 #### Bug Fixes

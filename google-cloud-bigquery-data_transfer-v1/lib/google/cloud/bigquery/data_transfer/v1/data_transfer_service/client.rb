@@ -28,10 +28,7 @@ module Google
             ##
             # Client for the DataTransferService service.
             #
-            # The Google BigQuery Data Transfer Service API enables BigQuery users to
-            # configure the transfer of their data from other Google Products into
-            # BigQuery. This service contains methods that are end user exposed. It backs
-            # up the frontend.
+            # This API allows users to manage their data transfers into BigQuery.
             #
             class Client
               include Paths
@@ -205,8 +202,7 @@ module Google
               # Service calls
 
               ##
-              # Retrieves a supported data source and returns its settings,
-              # which can be used for UI rendering.
+              # Retrieves a supported data source and returns its settings.
               #
               # @overload get_data_source(request, options = nil)
               #   Pass arguments to `get_data_source` via a request object, either of type
@@ -236,6 +232,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::GetDataSourceRequest.new
+              #
+              #   # Call the get_data_source method.
+              #   result = client.get_data_source request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::DataSource.
+              #   p result
+              #
               def get_data_source request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -253,9 +264,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -276,8 +289,7 @@ module Google
               end
 
               ##
-              # Lists supported data sources and returns their settings,
-              # which can be used for UI rendering.
+              # Lists supported data sources and returns their settings.
               #
               # @overload list_data_sources(request, options = nil)
               #   Pass arguments to `list_data_sources` via a request object, either of type
@@ -315,6 +327,27 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::ListDataSourcesRequest.new
+              #
+              #   # Call the list_data_sources method.
+              #   result = client.list_data_sources request
+              #
+              #   # The returned object is of type Gapic::PagedEnumerable. You can
+              #   # iterate over all elements by calling #each, and the enumerable
+              #   # will lazily make API calls to fetch subsequent pages. Other
+              #   # methods are also available for managing paging directly.
+              #   result.each do |response|
+              #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::DataSource.
+              #     p response
+              #   end
+              #
               def list_data_sources request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -332,9 +365,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -418,6 +453,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::CreateTransferConfigRequest.new
+              #
+              #   # Call the create_transfer_config method.
+              #   result = client.create_transfer_config request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig.
+              #   p result
+              #
               def create_transfer_config request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -435,9 +485,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -519,6 +571,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::UpdateTransferConfigRequest.new
+              #
+              #   # Call the update_transfer_config method.
+              #   result = client.update_transfer_config request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig.
+              #   p result
+              #
               def update_transfer_config request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -536,9 +603,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "transfer_config.name" => request.transfer_config.name
-                }
+                header_params = {}
+                if request.transfer_config&.name
+                  header_params["transfer_config.name"] = request.transfer_config.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -559,8 +628,8 @@ module Google
               end
 
               ##
-              # Deletes a data transfer configuration,
-              # including any associated transfer runs and logs.
+              # Deletes a data transfer configuration, including any associated transfer
+              # runs and logs.
               #
               # @overload delete_transfer_config(request, options = nil)
               #   Pass arguments to `delete_transfer_config` via a request object, either of type
@@ -590,6 +659,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::DeleteTransferConfigRequest.new
+              #
+              #   # Call the delete_transfer_config method.
+              #   result = client.delete_transfer_config request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
               def delete_transfer_config request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -607,9 +691,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -660,6 +746,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::GetTransferConfigRequest.new
+              #
+              #   # Call the get_transfer_config method.
+              #   result = client.get_transfer_config request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig.
+              #   p result
+              #
               def get_transfer_config request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -677,9 +778,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -741,6 +844,27 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::ListTransferConfigsRequest.new
+              #
+              #   # Call the list_transfer_configs method.
+              #   result = client.list_transfer_configs request
+              #
+              #   # The returned object is of type Gapic::PagedEnumerable. You can
+              #   # iterate over all elements by calling #each, and the enumerable
+              #   # will lazily make API calls to fetch subsequent pages. Other
+              #   # methods are also available for managing paging directly.
+              #   result.each do |response|
+              #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig.
+              #     p response
+              #   end
+              #
               def list_transfer_configs request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -758,9 +882,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -824,6 +950,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::ScheduleTransferRunsRequest.new
+              #
+              #   # Call the schedule_transfer_runs method.
+              #   result = client.schedule_transfer_runs request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::ScheduleTransferRunsResponse.
+              #   p result
+              #
               def schedule_transfer_runs request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -841,9 +982,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -902,6 +1045,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::StartManualTransferRunsRequest.new
+              #
+              #   # Call the start_manual_transfer_runs method.
+              #   result = client.start_manual_transfer_runs request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::StartManualTransferRunsResponse.
+              #   p result
+              #
               def start_manual_transfer_runs request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -919,9 +1077,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -972,6 +1132,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::GetTransferRunRequest.new
+              #
+              #   # Call the get_transfer_run method.
+              #   result = client.get_transfer_run request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::TransferRun.
+              #   p result
+              #
               def get_transfer_run request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -989,9 +1164,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1042,6 +1219,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::DeleteTransferRunRequest.new
+              #
+              #   # Call the delete_transfer_run method.
+              #   result = client.delete_transfer_run request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
               def delete_transfer_run request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1059,9 +1251,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1082,7 +1276,7 @@ module Google
               end
 
               ##
-              # Returns information about running and completed jobs.
+              # Returns information about running and completed transfer runs.
               #
               # @overload list_transfer_runs(request, options = nil)
               #   Pass arguments to `list_transfer_runs` via a request object, either of type
@@ -1125,6 +1319,27 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::ListTransferRunsRequest.new
+              #
+              #   # Call the list_transfer_runs method.
+              #   result = client.list_transfer_runs request
+              #
+              #   # The returned object is of type Gapic::PagedEnumerable. You can
+              #   # iterate over all elements by calling #each, and the enumerable
+              #   # will lazily make API calls to fetch subsequent pages. Other
+              #   # methods are also available for managing paging directly.
+              #   result.each do |response|
+              #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferRun.
+              #     p response
+              #   end
+              #
               def list_transfer_runs request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1142,9 +1357,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1166,7 +1383,7 @@ module Google
               end
 
               ##
-              # Returns user facing log messages for the data transfer run.
+              # Returns log messages for the transfer run.
               #
               # @overload list_transfer_logs(request, options = nil)
               #   Pass arguments to `list_transfer_logs` via a request object, either of type
@@ -1207,6 +1424,27 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::ListTransferLogsRequest.new
+              #
+              #   # Call the list_transfer_logs method.
+              #   result = client.list_transfer_logs request
+              #
+              #   # The returned object is of type Gapic::PagedEnumerable. You can
+              #   # iterate over all elements by calling #each, and the enumerable
+              #   # will lazily make API calls to fetch subsequent pages. Other
+              #   # methods are also available for managing paging directly.
+              #   result.each do |response|
+              #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferMessage.
+              #     p response
+              #   end
+              #
               def list_transfer_logs request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1224,9 +1462,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "parent" => request.parent
-                }
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1250,10 +1490,6 @@ module Google
               ##
               # Returns true if valid credentials exist for the given data source and
               # requesting user.
-              # Some data sources doesn't support service account, so we need to talk to
-              # them on behalf of the end user. This API just checks whether we have OAuth
-              # token for the particular user, which is a pre-requisite before user can
-              # create a transfer config.
               #
               # @overload check_valid_creds(request, options = nil)
               #   Pass arguments to `check_valid_creds` via a request object, either of type
@@ -1283,6 +1519,21 @@ module Google
               #
               # @raise [::Google::Cloud::Error] if the RPC is aborted.
               #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::CheckValidCredsRequest.new
+              #
+              #   # Call the check_valid_creds method.
+              #   result = client.check_valid_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::DataTransfer::V1::CheckValidCredsResponse.
+              #   p result
+              #
               def check_valid_creds request, options = nil
                 raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1300,9 +1551,11 @@ module Google
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-                header_params = {
-                  "name" => request.name
-                }
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
                 request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
                 metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1315,6 +1568,100 @@ module Google
                                        retry_policy: @config.retry_policy
 
                 @data_transfer_service_stub.call_rpc :check_valid_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                  return response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Enroll data sources in a user project. This allows users to create transfer
+              # configurations for these data sources. They will also appear in the
+              # ListDataSources RPC and as such, will appear in the BigQuery UI
+              # 'https://bigquery.cloud.google.com' (and the documents can be found at
+              # https://cloud.google.com/bigquery/bigquery-web-ui and
+              # https://cloud.google.com/bigquery/docs/working-with-transfers).
+              #
+              # @overload enroll_data_sources(request, options = nil)
+              #   Pass arguments to `enroll_data_sources` via a request object, either of type
+              #   {::Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload enroll_data_sources(name: nil, data_source_ids: nil)
+              #   Pass arguments to `enroll_data_sources` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     The name of the project resource in the form:
+              #     `projects/{project_id}`
+              #   @param data_source_ids [::Array<::String>]
+              #     Data sources that are enrolled. It is required to provide at least one
+              #     data source id.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Protobuf::Empty]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Protobuf::Empty]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest.new
+              #
+              #   # Call the enroll_data_sources method.
+              #   result = client.enroll_data_sources request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
+              def enroll_data_sources request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.enroll_data_sources.metadata.to_h
+
+                # Set x-goog-api-client and x-goog-user-project headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.enroll_data_sources.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.enroll_data_sources.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @data_transfer_service_stub.call_rpc :enroll_data_sources, request, options: options do |response, operation|
                   yield response, operation if block_given?
                   return response
                 end
@@ -1527,6 +1874,11 @@ module Google
                   # @return [::Gapic::Config::Method]
                   #
                   attr_reader :check_valid_creds
+                  ##
+                  # RPC-specific configuration for `enroll_data_sources`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :enroll_data_sources
 
                   # @private
                   def initialize parent_rpcs = nil
@@ -1558,6 +1910,8 @@ module Google
                     @list_transfer_logs = ::Gapic::Config::Method.new list_transfer_logs_config
                     check_valid_creds_config = parent_rpcs.check_valid_creds if parent_rpcs.respond_to? :check_valid_creds
                     @check_valid_creds = ::Gapic::Config::Method.new check_valid_creds_config
+                    enroll_data_sources_config = parent_rpcs.enroll_data_sources if parent_rpcs.respond_to? :enroll_data_sources
+                    @enroll_data_sources = ::Gapic::Config::Method.new enroll_data_sources_config
 
                     yield self if block_given?
                   end

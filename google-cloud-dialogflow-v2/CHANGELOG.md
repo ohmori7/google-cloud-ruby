@@ -1,5 +1,54 @@
 # Release History
 
+### 0.14.0 / 2022-01-21
+
+#### Features
+
+* Add support for ConversationProcessConfig, ImportDocument and SuggestSmarReplies.
+
+### 0.13.0 / 2022-01-11
+
+#### Features
+
+* Added support for the export_document call
+* Added support for passing filters to the list_documents and list_knowledge_bases calls
+* Added support for importing custom metadata from Google Cloud Storage in the reload_document call
+* Added support for applying partial update to the smart messaging allowlist in the reload_document call
+
+#### Bug Fixes
+
+* Honor quota project in auxiliary operations clients
+
+#### Documentation
+
+* Clarifications and formatting fixes in the reference documentation
+* Fix titles of documentation pages
+* Remove some broken images and fix outdated content in authentication documentation
+
+### 0.12.0 / 2021-12-07
+
+#### Features
+
+* Support for document metadata filters and human assist query parameters
+
+### 0.11.5 / 2021-11-08
+
+#### Documentation
+
+* Added simple code snippets to RPC method documentation
+
+### 0.11.4 / 2021-10-28
+
+#### Documentation
+
+* Clarify some of the reference documentation
+
+### 0.11.3 / 2021-10-18
+
+#### Documentation
+
+* Recommend use of the analyze_content call over detect_intent
+
 ### 0.11.2 / 2021-09-07
 
 #### Documentation

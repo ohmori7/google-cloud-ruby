@@ -176,8 +176,8 @@ module Google
             # Service calls
 
             ##
-            # Lists insights for a Cloud project. Requires the recommender.*.list IAM
-            # permission for the specified insight type.
+            # Lists insights for the specified Cloud Resource. Requires the
+            # recommender.*.list IAM permission for the specified insight type.
             #
             # @overload list_insights(request, options = nil)
             #   Pass arguments to `list_insights` via a request object, either of type
@@ -198,13 +198,20 @@ module Google
             #     Required. The container resource on which to execute the request.
             #     Acceptable formats:
             #
-            #     1.
-            #     "projects/[PROJECT_NUMBER]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]",
+            #     * `projects/[PROJECT_NUMBER]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]`
+            #
+            #     * `projects/[PROJECT_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]`
+            #
+            #     * `billingAccounts/[BILLING_ACCOUNT_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]`
+            #
+            #     * `folders/[FOLDER_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]`
+            #
+            #     * `organizations/[ORGANIZATION_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]`
             #
             #     LOCATION here refers to GCP Locations:
             #     https://cloud.google.com/about/locations/
             #     INSIGHT_TYPE_ID refers to supported insight types:
-            #     https://cloud.google.com/recommender/docs/insights/insight-types.)
+            #     https://cloud.google.com/recommender/docs/insights/insight-types.
             #   @param page_size [::Integer]
             #     Optional. The maximum number of results to return from this request.  Non-positive
             #     values are ignored. If not specified, the server will determine the number
@@ -216,8 +223,26 @@ module Google
             #     to those in the previous call.
             #   @param filter [::String]
             #     Optional. Filter expression to restrict the insights returned. Supported
-            #     filter fields: state
-            #     Eg: `state:"DISMISSED" or state:"ACTIVE"
+            #     filter fields:
+            #
+            #     * `stateInfo.state`
+            #
+            #     * `insightSubtype`
+            #
+            #     * `severity`
+            #
+            #     Examples:
+            #
+            #     * `stateInfo.state = ACTIVE OR stateInfo.state = DISMISSED`
+            #
+            #     * `insightSubtype = PERMISSIONS_USAGE`
+            #
+            #     * `severity = CRITICAL OR severity = HIGH`
+            #
+            #     * `stateInfo.state = ACTIVE AND (severity = CRITICAL OR severity = HIGH)`
+            #
+            #     (These expressions are based on the filter language described at
+            #     https://google.aip.dev/160)
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Recommender::V1::Insight>]
@@ -226,6 +251,27 @@ module Google
             # @return [::Gapic::PagedEnumerable<::Google::Cloud::Recommender::V1::Insight>]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::ListInsightsRequest.new
+            #
+            #   # Call the list_insights method.
+            #   result = client.list_insights request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Recommender::V1::Insight.
+            #     p response
+            #   end
             #
             def list_insights request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -244,9 +290,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -297,6 +345,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::GetInsightRequest.new
+            #
+            #   # Call the get_insight method.
+            #   result = client.get_insight request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Insight.
+            #   p result
+            #
             def get_insight request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -314,9 +377,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -375,6 +440,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::MarkInsightAcceptedRequest.new
+            #
+            #   # Call the mark_insight_accepted method.
+            #   result = client.mark_insight_accepted request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Insight.
+            #   p result
+            #
             def mark_insight_accepted request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -392,9 +472,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -415,8 +497,8 @@ module Google
             end
 
             ##
-            # Lists recommendations for a Cloud project. Requires the recommender.*.list
-            # IAM permission for the specified recommender.
+            # Lists recommendations for the specified Cloud Resource. Requires the
+            # recommender.*.list IAM permission for the specified recommender.
             #
             # @overload list_recommendations(request, options = nil)
             #   Pass arguments to `list_recommendations` via a request object, either of type
@@ -437,8 +519,15 @@ module Google
             #     Required. The container resource on which to execute the request.
             #     Acceptable formats:
             #
-            #     1.
-            #     "projects/[PROJECT_NUMBER]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]",
+            #     * `projects/[PROJECT_NUMBER]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]`
+            #
+            #     * `projects/[PROJECT_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]`
+            #
+            #     * `billingAccounts/[BILLING_ACCOUNT_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]`
+            #
+            #     * `folders/[FOLDER_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]`
+            #
+            #     * `organizations/[ORGANIZATION_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]`
             #
             #     LOCATION here refers to GCP Locations:
             #     https://cloud.google.com/about/locations/
@@ -455,8 +544,26 @@ module Google
             #     to those in the previous call.
             #   @param filter [::String]
             #     Filter expression to restrict the recommendations returned. Supported
-            #     filter fields: state_info.state
-            #     Eg: `state_info.state:"DISMISSED" or state_info.state:"FAILED"
+            #     filter fields:
+            #
+            #     * `state_info.state`
+            #
+            #     * `recommenderSubtype`
+            #
+            #     * `priority`
+            #
+            #     Examples:
+            #
+            #     * `stateInfo.state = ACTIVE OR stateInfo.state = DISMISSED`
+            #
+            #     * `recommenderSubtype = REMOVE_ROLE OR recommenderSubtype = REPLACE_ROLE`
+            #
+            #     * `priority = P1 OR priority = P2`
+            #
+            #     * `stateInfo.state = ACTIVE AND (priority = P1 OR priority = P2)`
+            #
+            #     (These expressions are based on the filter language described at
+            #     https://google.aip.dev/160)
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Recommender::V1::Recommendation>]
@@ -465,6 +572,27 @@ module Google
             # @return [::Gapic::PagedEnumerable<::Google::Cloud::Recommender::V1::Recommendation>]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::ListRecommendationsRequest.new
+            #
+            #   # Call the list_recommendations method.
+            #   result = client.list_recommendations request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Recommender::V1::Recommendation.
+            #     p response
+            #   end
             #
             def list_recommendations request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -483,9 +611,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -536,6 +666,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::GetRecommendationRequest.new
+            #
+            #   # Call the get_recommendation method.
+            #   result = client.get_recommendation request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
+            #   p result
+            #
             def get_recommendation request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -553,9 +698,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -607,8 +754,8 @@ module Google
             #   @param state_metadata [::Hash{::String => ::String}]
             #     State properties to include with this state. Overwrites any existing
             #     `state_metadata`.
-            #     Keys must match the regex /^[a-z0-9][a-z0-9_.-]\\{0,62}$/.
-            #     Values must match the regex /^[a-zA-Z0-9_./-]\\{0,255}$/.
+            #     Keys must match the regex `/^[a-z0-9][a-z0-9_.-]{0,62}$/`.
+            #     Values must match the regex `/^[a-zA-Z0-9_./-]{0,255}$/`.
             #   @param etag [::String]
             #     Required. Fingerprint of the Recommendation. Provides optimistic locking.
             #
@@ -619,6 +766,21 @@ module Google
             # @return [::Google::Cloud::Recommender::V1::Recommendation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::MarkRecommendationClaimedRequest.new
+            #
+            #   # Call the mark_recommendation_claimed method.
+            #   result = client.mark_recommendation_claimed request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
+            #   p result
             #
             def mark_recommendation_claimed request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -637,9 +799,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -692,8 +856,8 @@ module Google
             #   @param state_metadata [::Hash{::String => ::String}]
             #     State properties to include with this state. Overwrites any existing
             #     `state_metadata`.
-            #     Keys must match the regex /^[a-z0-9][a-z0-9_.-]\\{0,62}$/.
-            #     Values must match the regex /^[a-zA-Z0-9_./-]\\{0,255}$/.
+            #     Keys must match the regex `/^[a-z0-9][a-z0-9_.-]{0,62}$/`.
+            #     Values must match the regex `/^[a-zA-Z0-9_./-]{0,255}$/`.
             #   @param etag [::String]
             #     Required. Fingerprint of the Recommendation. Provides optimistic locking.
             #
@@ -704,6 +868,21 @@ module Google
             # @return [::Google::Cloud::Recommender::V1::Recommendation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::MarkRecommendationSucceededRequest.new
+            #
+            #   # Call the mark_recommendation_succeeded method.
+            #   result = client.mark_recommendation_succeeded request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
+            #   p result
             #
             def mark_recommendation_succeeded request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -722,9 +901,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -777,8 +958,8 @@ module Google
             #   @param state_metadata [::Hash{::String => ::String}]
             #     State properties to include with this state. Overwrites any existing
             #     `state_metadata`.
-            #     Keys must match the regex /^[a-z0-9][a-z0-9_.-]\\{0,62}$/.
-            #     Values must match the regex /^[a-zA-Z0-9_./-]\\{0,255}$/.
+            #     Keys must match the regex `/^[a-z0-9][a-z0-9_.-]{0,62}$/`.
+            #     Values must match the regex `/^[a-zA-Z0-9_./-]{0,255}$/`.
             #   @param etag [::String]
             #     Required. Fingerprint of the Recommendation. Provides optimistic locking.
             #
@@ -789,6 +970,21 @@ module Google
             # @return [::Google::Cloud::Recommender::V1::Recommendation]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recommender/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Recommender::V1::Recommender::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Recommender::V1::MarkRecommendationFailedRequest.new
+            #
+            #   # Call the mark_recommendation_failed method.
+            #   result = client.mark_recommendation_failed request
+            #
+            #   # The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
+            #   p result
             #
             def mark_recommendation_failed request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -807,9 +1003,11 @@ module Google
                 gapic_version: ::Google::Cloud::Recommender::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

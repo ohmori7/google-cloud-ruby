@@ -66,7 +66,7 @@ module Google
         #     Output only. The conversation transcript.
         # @!attribute [rw] medium
         #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::Medium]
-        #     Immutable. The conversation medium.
+        #     Immutable. The conversation medium, if unspecified will default to PHONE_CALL.
         # @!attribute [r] duration
         #   @return [::Google::Protobuf::Duration]
         #     Output only. The duration of the conversation.
@@ -85,6 +85,9 @@ module Google
         #     Output only. All the matched Dialogflow intents in the call. The key corresponds to a
         #     Dialogflow intent, format:
         #     projects/\\{project}/agent/\\{agent}/intents/\\{intent}
+        # @!attribute [rw] obfuscated_user_id
+        #   @return [::String]
+        #     Obfuscated user ID which the customer sent to us.
         class Conversation
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -110,6 +113,9 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
             # A segment of a full transcript.
+            # @!attribute [rw] message_time
+            #   @return [::Google::Protobuf::Timestamp]
+            #     The time that the message occurred, if provided.
             # @!attribute [rw] text
             #   @return [::String]
             #     The text of this segment.
@@ -134,6 +140,12 @@ module Google
             # @!attribute [rw] segment_participant
             #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationParticipant]
             #     The participant of this segment.
+            # @!attribute [rw] dialogflow_segment_metadata
+            #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::Transcript::TranscriptSegment::DialogflowSegmentMetadata]
+            #     CCAI metadata relating to the current transcript segment.
+            # @!attribute [rw] sentiment
+            #   @return [::Google::Cloud::ContactCenterInsights::V1::SentimentData]
+            #     The sentiment for this transcript segment.
             class TranscriptSegment
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -155,6 +167,16 @@ module Google
               #     A confidence estimate between 0.0 and 1.0 of the fidelity of this
               #     word. A default value of 0.0 indicates that the value is unset.
               class WordInfo
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # Metadata from Dialogflow relating to the current transcript segment.
+              # @!attribute [rw] smart_reply_allowlist_covered
+              #   @return [::Boolean]
+              #     Whether the transcript segment was covered under the configured smart
+              #     reply allowlist in Agent Assist.
+              class DialogflowSegmentMetadata
                 include ::Google::Protobuf::MessageExts
                 extend ::Google::Protobuf::MessageExts::ClassMethods
               end
@@ -181,7 +203,7 @@ module Google
 
           # Possible media for the conversation.
           module Medium
-            # Default value.
+            # Default value, if unspecified will default to PHONE_CALL.
             MEDIUM_UNSPECIFIED = 0
 
             # The format for conversations that took place over the phone.
@@ -322,6 +344,7 @@ module Google
         # @!attribute [rw] issue_model
         #   @return [::String]
         #     Issue model that generates the result.
+        #     Format: projects/\\{project}/locations/\\{location}/issueModels/\\{issue_model}
         # @!attribute [rw] issues
         #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::IssueAssignment>]
         #     All the matched issues.
@@ -752,6 +775,9 @@ module Google
           # @!attribute [rw] labeled_conversations_count
           #   @return [::Integer]
           #     Number of conversations attached to the issue at this point in time.
+          # @!attribute [rw] display_name
+          #   @return [::String]
+          #     Display name of the issue.
           class IssueStats
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -1196,6 +1222,9 @@ module Google
         #     Deprecated. Use `dialogflow_participant_name` instead.
         #     The name of the Dialogflow participant. Format:
         #     projects/\\{project}/locations/\\{location}/conversations/\\{conversation}/participants/\\{participant}
+        # @!attribute [rw] obfuscated_external_user_id
+        #   @return [::String]
+        #     Obfuscated user ID from Dialogflow.
         # @!attribute [rw] role
         #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationParticipant::Role]
         #     The role of the participant.
@@ -1220,6 +1249,29 @@ module Google
             # Participant is either a human or automated agent.
             ANY_AGENT = 4
           end
+        end
+
+        # The View resource.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Immutable. The resource name of the view.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/views/\\{view}
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     The human-readable display name of the view.
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The time at which this view was created.
+        # @!attribute [r] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The most recent time at which the view was updated.
+        # @!attribute [rw] value
+        #   @return [::String]
+        #     String with specific view properties.
+        class View
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
       end
     end

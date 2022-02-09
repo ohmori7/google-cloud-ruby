@@ -48,11 +48,20 @@ class MockStorage < Minitest::Spec
     addl.include? :mock_storage
   end
 
-  def random_bucket_hash(name=random_bucket_name,
-    url_root="https://www.googleapis.com/storage/v1", location="US",
-    storage_class="STANDARD", versioning=nil, logging_bucket=nil,
-    logging_prefix=nil, website_main=nil, website_404=nil, cors=[], requester_pays=nil,
-    lifecycle=nil, location_type="multi-region")
+  def random_bucket_hash name: random_bucket_name,
+                         url_root: "https://www.googleapis.com/storage/v1",
+                         location: "US",
+                         storage_class: "STANDARD",
+                         versioning: nil,
+                         logging_bucket: nil,
+                         logging_prefix: nil,
+                         website_main: nil,
+                         website_404: nil,
+                         cors: [],
+                         requester_pays: nil,
+                         lifecycle: nil,
+                         location_type: "multi-region",
+                         rpo: "DEFAULT"
     versioning_config = { "enabled" => versioning } if versioning
     { "kind" => "storage#bucket",
       "id" => name,
@@ -64,6 +73,7 @@ class MockStorage < Minitest::Spec
       "owner" => { "entity" => "project-owners-1234567890" },
       "location" => location,
       "locationType" => location_type,
+      "rpo" => rpo,
       "cors" => cors,
       "lifecycle" => lifecycle,
       "logging" => logging_hash(logging_bucket, logging_prefix),

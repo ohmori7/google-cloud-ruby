@@ -218,6 +218,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::GetPolicyRequest.new
+            #
+            #   # Call the get_policy method.
+            #   result = client.get_policy request
+            #
+            #   # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Policy.
+            #   p result
+            #
             def get_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -235,9 +250,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -292,6 +309,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::UpdatePolicyRequest.new
+            #
+            #   # Call the update_policy method.
+            #   result = client.update_policy request
+            #
+            #   # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Policy.
+            #   p result
+            #
             def update_policy request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -309,9 +341,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "policy.name" => request.policy.name
-              }
+              header_params = {}
+              if request.policy&.name
+                header_params["policy.name"] = request.policy.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -369,6 +403,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::CreateAttestorRequest.new
+            #
+            #   # Call the create_attestor method.
+            #   result = client.create_attestor request
+            #
+            #   # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Attestor.
+            #   p result
+            #
             def create_attestor request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -386,9 +435,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -439,6 +490,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::GetAttestorRequest.new
+            #
+            #   # Call the get_attestor method.
+            #   result = client.get_attestor request
+            #
+            #   # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Attestor.
+            #   p result
+            #
             def get_attestor request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -456,9 +522,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -510,6 +578,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::UpdateAttestorRequest.new
+            #
+            #   # Call the update_attestor method.
+            #   result = client.update_attestor request
+            #
+            #   # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Attestor.
+            #   p result
+            #
             def update_attestor request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -527,9 +610,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "attestor.name" => request.attestor.name
-              }
+              header_params = {}
+              if request.attestor&.name
+                header_params["attestor.name"] = request.attestor.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -587,6 +672,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::ListAttestorsRequest.new
+            #
+            #   # Call the list_attestors method.
+            #   result = client.list_attestors request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::BinaryAuthorization::V1::Attestor.
+            #     p response
+            #   end
+            #
             def list_attestors request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -604,9 +710,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -658,6 +766,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/binary_authorization/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::BinaryAuthorization::V1::DeleteAttestorRequest.new
+            #
+            #   # Call the delete_attestor method.
+            #   result = client.delete_attestor request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
             def delete_attestor request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -675,9 +798,11 @@ module Google
                 gapic_version: ::Google::Cloud::BinaryAuthorization::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 

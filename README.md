@@ -2,7 +2,7 @@
 
 Idiomatic Ruby client for [Google Cloud Platform](https://cloud.google.com/) services.
 
-[![Coverage Status](https://codecov.io/gh/googleapis/google-cloud-ruby/branch/master/graph/badge.svg)](https://codecov.io/gh/googleapis/google-cloud-ruby)
+[![Coverage Status](https://codecov.io/gh/googleapis/google-cloud-ruby/branch/main/graph/badge.svg)](https://codecov.io/gh/googleapis/google-cloud-ruby)
 [![Gem Version](https://badge.fury.io/rb/google-cloud.svg)](http://badge.fury.io/rb/google-cloud)
 
 * [Homepage](https://googleapis.github.io/google-cloud-ruby/)
@@ -48,6 +48,7 @@ This client supports the following Google Cloud Platform services:
 * [Cloud Text-To-Speech](#cloud-text-to-speech)
 * [Cloud Trace](#cloud-trace)
 * [Cloud Translation API](#cloud-translation-api)
+* [Transcoder API](#transcoder-api)
 * [Video Intelligence API](#video-intelligence-api)
 * [Cloud Vision API](#cloud-vision-api)
 * [Web Risk API](#web-risk-api)
@@ -367,6 +368,13 @@ linked from the README documents listed below for each service.
 - [google-cloud-trace instrumentation documentation](./google-cloud-trace/INSTRUMENTATION.md)
 - [google-cloud-trace on RubyGems](https://rubygems.org/gems/google-cloud-trace)
 - [Google Cloud Trace documentation](https://cloud.google.com/trace/docs/)
+
+### Transcoder API
+
+- `gem install google-cloud-video-transcoder`
+- [google-cloud-video-transcoder README](google-cloud-video-transcoder/README.md)
+- [google-cloud-video-transcoder on RubyGems](https://rubygems.org/gems/google-cloud-video-transcoder)
+- [Google Cloud Transcoder API documentation](https://cloud.google.com/transcoder/docs/)
 
 ### Cloud Translation API
 

@@ -190,6 +190,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::CreateAssessmentRequest.new
+            #
+            #   # Call the create_assessment method.
+            #   result = client.create_assessment request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Assessment.
+            #   p result
+            #
             def create_assessment request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -207,9 +222,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -243,7 +260,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload annotate_assessment(name: nil, annotation: nil, reasons: nil)
+            # @overload annotate_assessment(name: nil, annotation: nil, reasons: nil, hashed_account_id: nil)
             #   Pass arguments to `annotate_assessment` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -257,6 +274,12 @@ module Google
             #     the event is legitimate or fraudulent.
             #   @param reasons [::Array<::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest::Reason>]
             #     Optional. Optional reasons for the annotation that will be assigned to the Event.
+            #   @param hashed_account_id [::String]
+            #     Optional. Optional unique stable hashed user identifier to apply to the assessment.
+            #     This is an alternative to setting the hashed_account_id in
+            #     CreateAssessment, for example when the account identifier is not yet known
+            #     in the initial request. It is recommended that the identifier is hashed
+            #     using hmac-sha256 with stable secret.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentResponse]
@@ -265,6 +288,21 @@ module Google
             # @return [::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentResponse]
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest.new
+            #
+            #   # Call the annotate_assessment method.
+            #   result = client.annotate_assessment request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentResponse.
+            #   p result
             #
             def annotate_assessment request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
@@ -283,9 +321,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -337,6 +377,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::CreateKeyRequest.new
+            #
+            #   # Call the create_key method.
+            #   result = client.create_key request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Key.
+            #   p result
+            #
             def create_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -354,9 +409,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -412,6 +469,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ListKeysRequest.new
+            #
+            #   # Call the list_keys method.
+            #   result = client.list_keys request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::Key.
+            #     p response
+            #   end
+            #
             def list_keys request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -429,9 +507,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -482,6 +562,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::GetKeyRequest.new
+            #
+            #   # Call the get_key method.
+            #   result = client.get_key request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Key.
+            #   p result
+            #
             def get_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -499,9 +594,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -553,6 +650,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::UpdateKeyRequest.new
+            #
+            #   # Call the update_key method.
+            #   result = client.update_key request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Key.
+            #   p result
+            #
             def update_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -570,9 +682,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "key.name" => request.key.name
-              }
+              header_params = {}
+              if request.key&.name
+                header_params["key.name"] = request.key.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -622,6 +736,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::DeleteKeyRequest.new
+            #
+            #   # Call the delete_key method.
+            #   result = client.delete_key request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
             def delete_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -639,9 +768,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -696,6 +827,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest.new
+            #
+            #   # Call the migrate_key method.
+            #   result = client.migrate_key request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Key.
+            #   p result
+            #
             def migrate_key request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -713,9 +859,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -766,6 +914,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::GetMetricsRequest.new
+            #
+            #   # Call the get_metrics method.
+            #   result = client.get_metrics request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::Metrics.
+            #   p result
+            #
             def get_metrics request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -783,9 +946,11 @@ module Google
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -798,6 +963,326 @@ module Google
                                      retry_policy: @config.retry_policy
 
               @recaptcha_enterprise_service_stub.call_rpc :get_metrics, request, options: options do |response, operation|
+                yield response, operation if block_given?
+                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # List groups of related accounts.
+            #
+            # @overload list_related_account_groups(request, options = nil)
+            #   Pass arguments to `list_related_account_groups` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_related_account_groups(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_related_account_groups` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project to list related account groups from, in the format
+            #     "projects/\\{project}".
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of groups to return. The service may return fewer than
+            #     this value.
+            #     If unspecified, at most 50 groups will be returned.
+            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #   @param page_token [::String]
+            #     Optional. A page token, received from a previous `ListRelatedAccountGroups` call.
+            #     Provide this to retrieve the subsequent page.
+            #
+            #     When paginating, all other parameters provided to
+            #     `ListRelatedAccountGroups` must match the call that provided the page
+            #     token.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroup>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroup>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupsRequest.new
+            #
+            #   # Call the list_related_account_groups method.
+            #   result = client.list_related_account_groups request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroup.
+            #     p response
+            #   end
+            #
+            def list_related_account_groups request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_related_account_groups.metadata.to_h
+
+              # Set x-goog-api-client and x-goog-user-project headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_related_account_groups.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_related_account_groups.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :list_related_account_groups, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_related_account_groups, request, response, operation, options
+                yield response, operation if block_given?
+                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Get the memberships in a group of related accounts.
+            #
+            # @overload list_related_account_group_memberships(request, options = nil)
+            #   Pass arguments to `list_related_account_group_memberships` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupMembershipsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupMembershipsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_related_account_group_memberships(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_related_account_group_memberships` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name for the related account group in the format
+            #     `projects/{project}/relatedaccountgroups/{relatedaccountgroup}`.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of accounts to return. The service may return fewer than
+            #     this value.
+            #     If unspecified, at most 50 accounts will be returned.
+            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #   @param page_token [::String]
+            #     Optional. A page token, received from a previous `ListRelatedAccountGroupMemberships`
+            #     call.
+            #
+            #     When paginating, all other parameters provided to
+            #     `ListRelatedAccountGroupMemberships` must match the call that provided the
+            #     page token.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupMembershipsRequest.new
+            #
+            #   # Call the list_related_account_group_memberships method.
+            #   result = client.list_related_account_group_memberships request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership.
+            #     p response
+            #   end
+            #
+            def list_related_account_group_memberships request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::ListRelatedAccountGroupMembershipsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_related_account_group_memberships.metadata.to_h
+
+              # Set x-goog-api-client and x-goog-user-project headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_related_account_group_memberships.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_related_account_group_memberships.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :list_related_account_group_memberships, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_related_account_group_memberships, request, response, operation, options
+                yield response, operation if block_given?
+                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Search group memberships related to a given account.
+            #
+            # @overload search_related_account_group_memberships(request, options = nil)
+            #   Pass arguments to `search_related_account_group_memberships` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload search_related_account_group_memberships(parent: nil, hashed_account_id: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `search_related_account_group_memberships` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project to search related account group memberships from,
+            #     in the format "projects/\\{project}".
+            #   @param hashed_account_id [::String]
+            #     Optional. The unique stable hashed user identifier we should search connections to.
+            #     The identifier should correspond to a `hashed_account_id` provided in a
+            #     previous CreateAssessment or AnnotateAssessment call.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of groups to return. The service may return fewer than
+            #     this value.
+            #     If unspecified, at most 50 groups will be returned.
+            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #   @param page_token [::String]
+            #     Optional. A page token, received from a previous
+            #     `SearchRelatedAccountGroupMemberships` call. Provide this to retrieve the
+            #     subsequent page.
+            #
+            #     When paginating, all other parameters provided to
+            #     `SearchRelatedAccountGroupMemberships` must match the call that provided
+            #     the page token.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest.new
+            #
+            #   # Call the search_related_account_group_memberships method.
+            #   result = client.search_related_account_group_memberships request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership.
+            #     p response
+            #   end
+            #
+            def search_related_account_group_memberships request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.search_related_account_group_memberships.metadata.to_h
+
+              # Set x-goog-api-client and x-goog-user-project headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.search_related_account_group_memberships.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.search_related_account_group_memberships.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :search_related_account_group_memberships, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :search_related_account_group_memberships, request, response, operation, options
                 yield response, operation if block_given?
                 return response
               end
@@ -985,6 +1470,21 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :get_metrics
+                ##
+                # RPC-specific configuration for `list_related_account_groups`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_related_account_groups
+                ##
+                # RPC-specific configuration for `list_related_account_group_memberships`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_related_account_group_memberships
+                ##
+                # RPC-specific configuration for `search_related_account_group_memberships`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :search_related_account_group_memberships
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -1006,6 +1506,12 @@ module Google
                   @migrate_key = ::Gapic::Config::Method.new migrate_key_config
                   get_metrics_config = parent_rpcs.get_metrics if parent_rpcs.respond_to? :get_metrics
                   @get_metrics = ::Gapic::Config::Method.new get_metrics_config
+                  list_related_account_groups_config = parent_rpcs.list_related_account_groups if parent_rpcs.respond_to? :list_related_account_groups
+                  @list_related_account_groups = ::Gapic::Config::Method.new list_related_account_groups_config
+                  list_related_account_group_memberships_config = parent_rpcs.list_related_account_group_memberships if parent_rpcs.respond_to? :list_related_account_group_memberships
+                  @list_related_account_group_memberships = ::Gapic::Config::Method.new list_related_account_group_memberships_config
+                  search_related_account_group_memberships_config = parent_rpcs.search_related_account_group_memberships if parent_rpcs.respond_to? :search_related_account_group_memberships
+                  @search_related_account_group_memberships = ::Gapic::Config::Method.new search_related_account_group_memberships_config
 
                   yield self if block_given?
                 end

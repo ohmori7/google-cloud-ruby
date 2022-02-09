@@ -167,6 +167,7 @@ module Google
 
               @operations_client = Operations.new do |config|
                 config.credentials = credentials
+                config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
               end
 
@@ -278,6 +279,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::TranslateTextRequest.new
+            #
+            #   # Call the translate_text method.
+            #   result = client.translate_text request
+            #
+            #   # The returned object is of type Google::Cloud::Translate::V3::TranslateTextResponse.
+            #   p result
+            #
             def translate_text request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -295,9 +311,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -381,6 +399,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::DetectLanguageRequest.new
+            #
+            #   # Call the detect_language method.
+            #   result = client.detect_language request
+            #
+            #   # The returned object is of type Google::Cloud::Translate::V3::DetectLanguageResponse.
+            #   p result
+            #
             def detect_language request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -398,9 +431,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -479,6 +514,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::GetSupportedLanguagesRequest.new
+            #
+            #   # Call the get_supported_languages method.
+            #   result = client.get_supported_languages request
+            #
+            #   # The returned object is of type Google::Cloud::Translate::V3::SupportedLanguages.
+            #   p result
+            #
             def get_supported_languages request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -496,9 +546,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -604,6 +656,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::TranslateDocumentRequest.new
+            #
+            #   # Call the translate_document method.
+            #   result = client.translate_document request
+            #
+            #   # The returned object is of type Google::Cloud::Translate::V3::TranslateDocumentResponse.
+            #   p result
+            #
             def translate_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -621,9 +688,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -728,6 +797,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::BatchTranslateTextRequest.new
+            #
+            #   # Call the batch_translate_text method.
+            #   result = client.batch_translate_text request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def batch_translate_text request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -745,9 +836,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -856,6 +949,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::BatchTranslateDocumentRequest.new
+            #
+            #   # Call the batch_translate_document method.
+            #   result = client.batch_translate_document request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def batch_translate_document request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -873,9 +988,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -928,6 +1045,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::CreateGlossaryRequest.new
+            #
+            #   # Call the create_glossary method.
+            #   result = client.create_glossary request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def create_glossary request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -945,9 +1084,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1023,6 +1164,27 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::ListGlossariesRequest.new
+            #
+            #   # Call the list_glossaries method.
+            #   result = client.list_glossaries request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can
+            #   # iterate over all elements by calling #each, and the enumerable
+            #   # will lazily make API calls to fetch subsequent pages. Other
+            #   # methods are also available for managing paging directly.
+            #   result.each do |response|
+            #     # Each element is of type ::Google::Cloud::Translate::V3::Glossary.
+            #     p response
+            #   end
+            #
             def list_glossaries request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1040,9 +1202,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "parent" => request.parent
-              }
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1093,6 +1257,21 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::GetGlossaryRequest.new
+            #
+            #   # Call the get_glossary method.
+            #   result = client.get_glossary request
+            #
+            #   # The returned object is of type Google::Cloud::Translate::V3::Glossary.
+            #   p result
+            #
             def get_glossary request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1110,9 +1289,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
@@ -1163,6 +1344,28 @@ module Google
             #
             # @raise [::Google::Cloud::Error] if the RPC is aborted.
             #
+            # @example Basic example
+            #   require "google/cloud/translate/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Translate::V3::TranslationService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Translate::V3::DeleteGlossaryRequest.new
+            #
+            #   # Call the delete_glossary method.
+            #   result = client.delete_glossary request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use this
+            #   # object to check the status of an operation, cancel it, or wait
+            #   # for results. Here is how to block until completion:
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "Error!"
+            #   end
+            #
             def delete_glossary request, options = nil
               raise ::ArgumentError, "request must be provided" if request.nil?
 
@@ -1180,9 +1383,11 @@ module Google
                 gapic_version: ::Google::Cloud::Translate::V3::VERSION
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
-              header_params = {
-                "name" => request.name
-              }
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
               metadata[:"x-goog-request-params"] ||= request_params_header
 
