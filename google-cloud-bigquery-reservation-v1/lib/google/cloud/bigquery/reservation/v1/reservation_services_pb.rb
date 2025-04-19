@@ -25,7 +25,7 @@ module Google
       module Reservation
         module V1
           module ReservationService
-            # This API allows users to manage their flat-rate BigQuery reservations.
+            # This API allows users to manage their BigQuery reservations.
             #
             # A reservation provides computational resource guarantees, in the form of
             # [slots](https://cloud.google.com/bigquery/docs/slots), to users. A slot is a
@@ -60,6 +60,12 @@ module Google
               rpc :DeleteReservation, ::Google::Cloud::Bigquery::Reservation::V1::DeleteReservationRequest, ::Google::Protobuf::Empty
               # Updates an existing reservation resource.
               rpc :UpdateReservation, ::Google::Cloud::Bigquery::Reservation::V1::UpdateReservationRequest, ::Google::Cloud::Bigquery::Reservation::V1::Reservation
+              # Fail over a reservation to the secondary location. The operation should be
+              # done in the current secondary location, which will be promoted to the
+              # new primary location for the reservation.
+              # Attempting to failover a reservation in the current primary location will
+              # fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.
+              rpc :FailoverReservation, ::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest, ::Google::Cloud::Bigquery::Reservation::V1::Reservation
               # Creates a new capacity commitment resource.
               rpc :CreateCapacityCommitment, ::Google::Cloud::Bigquery::Reservation::V1::CreateCapacityCommitmentRequest, ::Google::Cloud::Bigquery::Reservation::V1::CapacityCommitment
               # Lists all the capacity commitments for the admin project.
@@ -85,7 +91,7 @@ module Google
               #
               # For example, in order to downgrade from 10000 slots to 8000, you might
               # split a 10000 capacity commitment into commitments of 2000 and 8000. Then,
-              # you would change the plan of the first one to `FLEX` and then delete it.
+              # you delete the first one after the commitment end time passes.
               rpc :SplitCapacityCommitment, ::Google::Cloud::Bigquery::Reservation::V1::SplitCapacityCommitmentRequest, ::Google::Cloud::Bigquery::Reservation::V1::SplitCapacityCommitmentResponse
               # Merges capacity commitments of the same plan into a single commitment.
               #
@@ -169,8 +175,8 @@ module Google
               # queries from `project1` will still use `res1` while queries from
               # `project2` will switch to use on-demand mode.
               rpc :DeleteAssignment, ::Google::Cloud::Bigquery::Reservation::V1::DeleteAssignmentRequest, ::Google::Protobuf::Empty
-              # Deprecated: Looks up assignments for a specified resource for a particular region.
-              # If the request is about a project:
+              # Deprecated: Looks up assignments for a specified resource for a particular
+              # region. If the request is about a project:
               #
               # 1. Assignments created on the project will be returned if they exist.
               # 2. Otherwise assignments created on the closest ancestor will be
@@ -220,6 +226,10 @@ module Google
               # by providing a transactional change that ensures an assignee always has an
               # associated reservation.
               rpc :MoveAssignment, ::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest, ::Google::Cloud::Bigquery::Reservation::V1::Assignment
+              # Updates an existing assignment.
+              #
+              # Only the `priority` field can be updated.
+              rpc :UpdateAssignment, ::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest, ::Google::Cloud::Bigquery::Reservation::V1::Assignment
               # Retrieves a BI reservation.
               rpc :GetBiReservation, ::Google::Cloud::Bigquery::Reservation::V1::GetBiReservationRequest, ::Google::Cloud::Bigquery::Reservation::V1::BiReservation
               # Updates a BI reservation.

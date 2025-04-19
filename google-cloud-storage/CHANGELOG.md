@@ -1,5 +1,152 @@
 # Release History
 
+### 1.55.0 (2025-02-13)
+
+#### Features
+
+* Soft deleted Bucket Restore ([#28138](https://github.com/googleapis/google-cloud-ruby/issues/28138)) 
+#### Documentation
+
+* updating the encryption key GCS sample ([#28815](https://github.com/googleapis/google-cloud-ruby/issues/28815)) 
+
+### 1.54.0 (2024-12-11)
+
+#### Features
+
+* Updated required Ruby version to 3.0 or later ([#27599](https://github.com/googleapis/google-cloud-ruby/issues/27599)) 
+
+### 1.53.0 (2024-12-04)
+
+#### Features
+
+* add integration test for universe domain ([#27384](https://github.com/googleapis/google-cloud-ruby/issues/27384)) 
+* fetch file and bucket details from url ([#27322](https://github.com/googleapis/google-cloud-ruby/issues/27322)) 
+
+### 1.52.0 (2024-05-31)
+
+#### Features
+
+* support for hierarchical namespace (folders) ([#25967](https://github.com/googleapis/google-cloud-ruby/issues/25967)) 
+
+### 1.51.0 (2024-04-25)
+
+#### Features
+
+* Respect custom endpoint for signed_url ([#25469](https://github.com/googleapis/google-cloud-ruby/issues/25469)) 
+
+### 1.50.0 (2024-04-19)
+
+#### Features
+
+* Add support for soft deletion ([#25340](https://github.com/googleapis/google-cloud-ruby/issues/25340)) 
+#### Bug Fixes
+
+* Set configured univer_domain and endpoint when initializing through Service ([#25665](https://github.com/googleapis/google-cloud-ruby/issues/25665)) 
+
+### 1.49.0 (2024-02-21)
+
+#### Features
+
+* Support of Managed Folders ([#24809](https://github.com/googleapis/google-cloud-ruby/issues/24809)) 
+
+### 1.48.1 (2024-01-26)
+
+#### Bug Fixes
+
+* Raise an error on mismatching universe domain ([#24486](https://github.com/googleapis/google-cloud-ruby/issues/24486)) 
+
+### 1.48.0 (2024-01-25)
+
+#### Features
+
+* Support for universe_domain ([#24449](https://github.com/googleapis/google-cloud-ruby/issues/24449)) 
+
+### 1.47.0 (2024-01-09)
+
+#### Features
+
+* support for object lock / retention ([#23732](https://github.com/googleapis/google-cloud-ruby/issues/23732)) 
+
+### 1.46.0 (2024-01-08)
+
+#### Features
+
+* support match_glob for Object.list 
+
+### 1.45.0 (2023-11-06)
+
+#### Features
+
+* added autoclass v2.1 features ([#23483](https://github.com/googleapis/google-cloud-ruby/issues/23483)) 
+
+### 1.44.0 (2022-11-02)
+
+#### Features
+
+* support autoclass 
+
+### 1.43.0 (2022-09-30)
+
+#### Features
+
+* Add retry conformance test ([#18230](https://github.com/googleapis/google-cloud-ruby/issues/18230)) 
+
+### 1.42.0 (2022-09-21)
+
+#### Features
+
+* send invocation_id header in all requests ([#19161](https://github.com/googleapis/google-cloud-ruby/issues/19161)) 
+
+### 1.41.0 (2022-09-16)
+
+#### Features
+
+* add retry support for non-idempotent operations ([#19134](https://github.com/googleapis/google-cloud-ruby/issues/19134)) 
+#### Bug Fixes
+
+* Correct options checks in retry operations ([#19135](https://github.com/googleapis/google-cloud-ruby/issues/19135)) 
+* Update api for bucket update ([#19110](https://github.com/googleapis/google-cloud-ruby/issues/19110)) 
+
+### 1.40.0 (2022-09-13)
+
+#### Features
+
+* Update all patch bucket helper methods to accept preconditions ([#19117](https://github.com/googleapis/google-cloud-ruby/issues/19117)) 
+
+### 1.39.0 (2022-08-24)
+
+#### Features
+
+* add support for conditional idempotent operations ([#18834](https://github.com/googleapis/google-cloud-ruby/issues/18834)) 
+
+### 1.38.0 (2022-07-31)
+
+#### Features
+
+* Add support for dual region gcs buckets ([#18862](https://github.com/googleapis/google-cloud-ruby/issues/18862)) 
+
+### 1.37.0 (2022-06-30)
+
+#### Features
+
+* support OLM Prefix/Suffix ([#18190](https://github.com/googleapis/google-cloud-ruby/issues/18190)) 
+* allow retry options to be configurable on client initialization ([#18332](https://github.com/googleapis/google-cloud-ruby/issues/18332)) 
+#### Bug Fixes
+
+* update object path parsing to handle hashes in them 
+
+### 1.36.2 (2022-04-20)
+
+#### Documentation
+
+* Document support for dual region buckets
+
+### 1.36.1 / 2022-02-08
+
+#### Documentation
+
+* Update the RPO sample output. ([#17277](https://www.github.com/googleapis/google-cloud-ruby/issues/17277))
+
 ### 1.36.0 / 2022-01-12
 
 #### Features

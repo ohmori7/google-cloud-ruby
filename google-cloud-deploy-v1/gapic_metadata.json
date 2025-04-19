@@ -40,6 +40,11 @@
                 "list_targets"
               ]
             },
+            "RollbackTarget": {
+              "methods": [
+                "rollback_target"
+              ]
+            },
             "GetTarget": {
               "methods": [
                 "get_target"
@@ -60,6 +65,31 @@
                 "delete_target"
               ]
             },
+            "ListCustomTargetTypes": {
+              "methods": [
+                "list_custom_target_types"
+              ]
+            },
+            "GetCustomTargetType": {
+              "methods": [
+                "get_custom_target_type"
+              ]
+            },
+            "CreateCustomTargetType": {
+              "methods": [
+                "create_custom_target_type"
+              ]
+            },
+            "UpdateCustomTargetType": {
+              "methods": [
+                "update_custom_target_type"
+              ]
+            },
+            "DeleteCustomTargetType": {
+              "methods": [
+                "delete_custom_target_type"
+              ]
+            },
             "ListReleases": {
               "methods": [
                 "list_releases"
@@ -75,9 +105,49 @@
                 "create_release"
               ]
             },
+            "AbandonRelease": {
+              "methods": [
+                "abandon_release"
+              ]
+            },
+            "CreateDeployPolicy": {
+              "methods": [
+                "create_deploy_policy"
+              ]
+            },
+            "UpdateDeployPolicy": {
+              "methods": [
+                "update_deploy_policy"
+              ]
+            },
+            "DeleteDeployPolicy": {
+              "methods": [
+                "delete_deploy_policy"
+              ]
+            },
+            "ListDeployPolicies": {
+              "methods": [
+                "list_deploy_policies"
+              ]
+            },
+            "GetDeployPolicy": {
+              "methods": [
+                "get_deploy_policy"
+              ]
+            },
             "ApproveRollout": {
               "methods": [
                 "approve_rollout"
+              ]
+            },
+            "AdvanceRollout": {
+              "methods": [
+                "advance_rollout"
+              ]
+            },
+            "CancelRollout": {
+              "methods": [
+                "cancel_rollout"
               ]
             },
             "ListRollouts": {
@@ -95,9 +165,74 @@
                 "create_rollout"
               ]
             },
+            "IgnoreJob": {
+              "methods": [
+                "ignore_job"
+              ]
+            },
+            "RetryJob": {
+              "methods": [
+                "retry_job"
+              ]
+            },
+            "ListJobRuns": {
+              "methods": [
+                "list_job_runs"
+              ]
+            },
+            "GetJobRun": {
+              "methods": [
+                "get_job_run"
+              ]
+            },
+            "TerminateJobRun": {
+              "methods": [
+                "terminate_job_run"
+              ]
+            },
             "GetConfig": {
               "methods": [
                 "get_config"
+              ]
+            },
+            "CreateAutomation": {
+              "methods": [
+                "create_automation"
+              ]
+            },
+            "UpdateAutomation": {
+              "methods": [
+                "update_automation"
+              ]
+            },
+            "DeleteAutomation": {
+              "methods": [
+                "delete_automation"
+              ]
+            },
+            "GetAutomation": {
+              "methods": [
+                "get_automation"
+              ]
+            },
+            "ListAutomations": {
+              "methods": [
+                "list_automations"
+              ]
+            },
+            "GetAutomationRun": {
+              "methods": [
+                "get_automation_run"
+              ]
+            },
+            "ListAutomationRuns": {
+              "methods": [
+                "list_automation_runs"
+              ]
+            },
+            "CancelAutomationRun": {
+              "methods": [
+                "cancel_automation_run"
               ]
             }
           }

@@ -80,8 +80,9 @@ module Google
         # The `CreateNotificationChannel` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         #
@@ -100,8 +101,9 @@ module Google
         # The `ListNotificationChannels` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         #
@@ -113,27 +115,27 @@ module Google
         #     operation.
         # @!attribute [rw] filter
         #   @return [::String]
-        #     If provided, this field specifies the criteria that must be met by
-        #     notification channels to be included in the response.
+        #     Optional. If provided, this field specifies the criteria that must be met
+        #     by notification channels to be included in the response.
         #
         #     For more details, see [sorting and
         #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
         # @!attribute [rw] order_by
         #   @return [::String]
-        #     A comma-separated list of fields by which to sort the result. Supports
-        #     the same set of fields as in `filter`. Entries can be prefixed with
-        #     a minus sign to sort in descending rather than ascending order.
+        #     Optional. A comma-separated list of fields by which to sort the result.
+        #     Supports the same set of fields as in `filter`. Entries can be prefixed
+        #     with a minus sign to sort in descending rather than ascending order.
         #
         #     For more details, see [sorting and
         #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     The maximum number of results to return in a single response. If
+        #     Optional. The maximum number of results to return in a single response. If
         #     not set to a positive number, a reasonable value will be chosen by the
         #     service.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     If non-empty, `page_token` must contain a value returned as the
+        #     Optional. If non-empty, `page_token` must contain a value returned as the
         #     `next_page_token` in a previous response to request the next set
         #     of results.
         class ListNotificationChannelsRequest
@@ -174,7 +176,7 @@ module Google
         # The `UpdateNotificationChannel` request.
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
-        #     The fields to update.
+        #     Optional. The fields to update.
         # @!attribute [rw] notification_channel
         #   @return [::Google::Cloud::Monitoring::V3::NotificationChannel]
         #     Required. A description of the changes to be applied to the specified
@@ -196,8 +198,8 @@ module Google
         #   @return [::Boolean]
         #     If true, the notification channel will be deleted regardless of its
         #     use in alert policies (the policies will be updated to remove the
-        #     channel). If false, channels that are still referenced by an existing
-        #     alerting policy will fail to be deleted in a delete operation.
+        #     channel). If false, this operation will fail if the notification channel
+        #     is referenced by existing alerting policies.
         class DeleteNotificationChannelRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -215,9 +217,9 @@ module Google
         # The `GetNotificationChannelVerificationCode` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The notification channel for which a verification code is to be generated
-        #     and retrieved. This must name a channel that is already verified; if
-        #     the specified channel is not verified, the request will fail.
+        #     Required. The notification channel for which a verification code is to be
+        #     generated and retrieved. This must name a channel that is already verified;
+        #     if the specified channel is not verified, the request will fail.
         # @!attribute [rw] expire_time
         #   @return [::Google::Protobuf::Timestamp]
         #     The desired expiration time. If specified, the API will guarantee that

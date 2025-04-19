@@ -23,10 +23,17 @@ module Google
   module Cloud
     module Filestore
       ##
-      # To load this package, including all its services, and instantiate a client:
+      # API client module.
+      #
+      # @example Load this package, including all its services, and instantiate a gRPC client
       #
       #     require "google/cloud/filestore/v1"
       #     client = ::Google::Cloud::Filestore::V1::CloudFilestoreManager::Client.new
+      #
+      # @example Load this package, including all its services, and instantiate a REST client
+      #
+      #     require "google/cloud/filestore/v1"
+      #     client = ::Google::Cloud::Filestore::V1::CloudFilestoreManager::Rest::Client.new
       #
       module V1
       end

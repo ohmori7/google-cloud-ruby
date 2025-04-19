@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/retail/v2/user_event_service_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -30,6 +31,12 @@ module Google
           # Service for ingesting end user actions on the customer website.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "retail.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -64,7 +71,7 @@ module Google
                                 end
                 default_config = Client::Configuration.new parent_config
 
-                default_config.timeout = 5.0
+                default_config.timeout = 10.0
                 default_config.retry_policy = {
                   initial_delay: 0.1, max_delay: 5.0, multiplier: 1.3, retry_codes: [14, 4]
                 }
@@ -106,6 +113,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @user_event_service_stub.universe_domain
+            end
+
+            ##
             # Create a new UserEventService client object.
             #
             # @example
@@ -138,8 +154,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -152,15 +169,38 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @user_event_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Retail::V2::UserEventService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @user_event_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @user_event_service_stub.endpoint
+                config.universe_domain = @user_event_service_stub.universe_domain
+                config.logger = @user_event_service_stub.logger if config.respond_to? :logger=
+              end
             end
 
             ##
@@ -169,6 +209,22 @@ module Google
             # @return [::Google::Cloud::Retail::V2::UserEventService::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @user_event_service_stub.logger
+            end
 
             # Service calls
 
@@ -185,7 +241,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload write_user_event(parent: nil, user_event: nil)
+            # @overload write_user_event(parent: nil, user_event: nil, write_async: nil)
             #   Pass arguments to `write_user_event` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -195,6 +251,11 @@ module Google
             #     `projects/1234/locations/global/catalogs/default_catalog`.
             #   @param user_event [::Google::Cloud::Retail::V2::UserEvent, ::Hash]
             #     Required. User event to write.
+            #   @param write_async [::Boolean]
+            #     If set to true, the user event will be written asynchronously after
+            #     validation, and the API will respond without waiting for the write.
+            #     Therefore, silent failures can occur even if the API returns success. In
+            #     case of silent failures, error messages can be found in Stackdriver logs.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Retail::V2::UserEvent]
@@ -230,10 +291,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.write_user_event.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -254,7 +316,6 @@ module Google
 
               @user_event_service_stub.call_rpc :write_user_event, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -277,11 +338,14 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload collect_user_event(parent: nil, user_event: nil, uri: nil, ets: nil)
+            # @overload collect_user_event(prebuilt_rule: nil, parent: nil, user_event: nil, uri: nil, ets: nil, raw_json: nil)
             #   Pass arguments to `collect_user_event` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
+            #   @param prebuilt_rule [::String]
+            #     The prebuilt rule name that can convert a specific type of raw_json.
+            #     For example: "ga4_bq" rule for the GA4 user event schema.
             #   @param parent [::String]
             #     Required. The parent catalog name, such as
             #     `projects/1234/locations/global/catalogs/default_catalog`.
@@ -297,6 +361,11 @@ module Google
             #     The event timestamp in milliseconds. This prevents browser caching of
             #     otherwise identical get requests. The name is abbreviated to reduce the
             #     payload bytes.
+            #   @param raw_json [::String]
+            #     An arbitrary serialized JSON string that contains necessary information
+            #     that can comprise a user event. When this field is specified, the
+            #     user_event field will be ignored. Note: line-delimited JSON is not
+            #     supported, a single JSON only.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Api::HttpBody]
@@ -332,10 +401,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.collect_user_event.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -356,7 +426,6 @@ module Google
 
               @user_event_service_stub.call_rpc :collect_user_event, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -436,14 +505,14 @@ module Google
             #   # Call the purge_user_events method.
             #   result = client.purge_user_events request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def purge_user_events request, options = nil
@@ -457,10 +526,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.purge_user_events.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -482,7 +552,7 @@ module Google
               @user_event_service_stub.call_rpc :purge_user_events, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -493,9 +563,9 @@ module Google
             # synchronous. Events that already exist are skipped.
             # Use this method for backfilling historical user events.
             #
-            # Operation.response is of type ImportResponse. Note that it is
+            # `Operation.response` is of type `ImportResponse`. Note that it is
             # possible for a subset of the items to be successfully inserted.
-            # Operation.metadata is of type ImportMetadata.
+            # `Operation.metadata` is of type `ImportMetadata`.
             #
             # @overload import_user_events(request, options = nil)
             #   Pass arguments to `import_user_events` via a request object, either of type
@@ -540,14 +610,14 @@ module Google
             #   # Call the import_user_events method.
             #   result = client.import_user_events request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def import_user_events request, options = nil
@@ -561,10 +631,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.import_user_events.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -586,20 +657,21 @@ module Google
               @user_event_service_stub.call_rpc :import_user_events, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Triggers a user event rejoin operation with latest product catalog. Events
-            # will not be annotated with detailed product information if product is
-            # missing from the catalog at the time the user event is ingested, and these
-            # events are stored as unjoined events with a limited usage on training and
-            # serving. This API can be used to trigger a 'join' operation on specified
-            # events with latest version of product catalog. It can also be used to
-            # correct events joined with wrong product catalog.
+            # Starts a user-event rejoin operation with latest product catalog. Events
+            # are not annotated with detailed product information for products that are
+            # missing from the catalog when the user event is ingested. These
+            # events are stored as unjoined events with limited usage on training and
+            # serving. You can use this method to start a join operation on specified
+            # events with the latest version of product catalog. You can also use this
+            # method to correct events joined with the wrong product catalog. A rejoin
+            # operation can take hours or days to complete.
             #
             # @overload rejoin_user_events(request, options = nil)
             #   Pass arguments to `rejoin_user_events` via a request object, either of type
@@ -622,8 +694,8 @@ module Google
             #   @param user_event_rejoin_scope [::Google::Cloud::Retail::V2::RejoinUserEventsRequest::UserEventRejoinScope]
             #     The type of the user event rejoin to define the scope and range of the user
             #     events to be rejoined with the latest product catalog. Defaults to
-            #     USER_EVENT_REJOIN_SCOPE_UNSPECIFIED if this field is not set, or set to an
-            #     invalid integer value.
+            #     `USER_EVENT_REJOIN_SCOPE_UNSPECIFIED` if this field is not set, or set to
+            #     an invalid integer value.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -645,14 +717,14 @@ module Google
             #   # Call the rejoin_user_events method.
             #   result = client.rejoin_user_events request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def rejoin_user_events request, options = nil
@@ -666,10 +738,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.rejoin_user_events.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -691,7 +764,7 @@ module Google
               @user_event_service_stub.call_rpc :rejoin_user_events, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -727,20 +800,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"retail.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -775,11 +855,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "retail.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "retail.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -794,6 +888,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -812,6 +908,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

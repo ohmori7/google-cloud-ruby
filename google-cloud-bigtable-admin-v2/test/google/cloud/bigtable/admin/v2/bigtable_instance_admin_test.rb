@@ -41,9 +41,26 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -248,6 +265,8 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
     type = :TYPE_UNSPECIFIED
     labels = {}
     create_time = {}
+    satisfies_pzs = true
+    satisfies_pzi = true
 
     update_instance_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :update_instance, name
@@ -258,6 +277,10 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
       assert_equal :TYPE_UNSPECIFIED, request["type"]
       assert_equal({}, request["labels"].to_h)
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Timestamp), request["create_time"]
+      assert_equal true, request["satisfies_pzs"]
+      assert request.has_satisfies_pzs?
+      assert_equal true, request["satisfies_pzi"]
+      assert request.has_satisfies_pzi?
       refute_nil options
     end
 
@@ -268,31 +291,31 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
       end
 
       # Use hash object
-      client.update_instance({ name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time }) do |response, operation|
+      client.update_instance({ name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time, satisfies_pzs: satisfies_pzs, satisfies_pzi: satisfies_pzi }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.update_instance name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time do |response, operation|
+      client.update_instance name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time, satisfies_pzs: satisfies_pzs, satisfies_pzi: satisfies_pzi do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.update_instance ::Google::Cloud::Bigtable::Admin::V2::Instance.new(name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time) do |response, operation|
+      client.update_instance ::Google::Cloud::Bigtable::Admin::V2::Instance.new(name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time, satisfies_pzs: satisfies_pzs, satisfies_pzi: satisfies_pzi) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.update_instance({ name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time }, grpc_options) do |response, operation|
+      client.update_instance({ name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time, satisfies_pzs: satisfies_pzs, satisfies_pzi: satisfies_pzi }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.update_instance(::Google::Cloud::Bigtable::Admin::V2::Instance.new(name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time), grpc_options) do |response, operation|
+      client.update_instance(::Google::Cloud::Bigtable::Admin::V2::Instance.new(name: name, display_name: display_name, state: state, type: type, labels: labels, create_time: create_time, satisfies_pzs: satisfies_pzs, satisfies_pzi: satisfies_pzi), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -622,6 +645,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
     location = "hello world"
     state = :STATE_NOT_KNOWN
     serve_nodes = 42
+    node_scaling_factor = :NODE_SCALING_FACTOR_UNSPECIFIED
     cluster_config = {}
     default_storage_type = :STORAGE_TYPE_UNSPECIFIED
     encryption_config = {}
@@ -633,6 +657,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
       assert_equal "hello world", request["location"]
       assert_equal :STATE_NOT_KNOWN, request["state"]
       assert_equal 42, request["serve_nodes"]
+      assert_equal :NODE_SCALING_FACTOR_UNSPECIFIED, request["node_scaling_factor"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigtable::Admin::V2::Cluster::ClusterConfig), request["cluster_config"]
       assert_equal :cluster_config, request.config
       assert_equal :STORAGE_TYPE_UNSPECIFIED, request["default_storage_type"]
@@ -647,35 +672,35 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
       end
 
       # Use hash object
-      client.update_cluster({ name: name, location: location, state: state, serve_nodes: serve_nodes, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config }) do |response, operation|
+      client.update_cluster({ name: name, location: location, state: state, serve_nodes: serve_nodes, node_scaling_factor: node_scaling_factor, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.update_cluster name: name, location: location, state: state, serve_nodes: serve_nodes, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config do |response, operation|
+      client.update_cluster name: name, location: location, state: state, serve_nodes: serve_nodes, node_scaling_factor: node_scaling_factor, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.update_cluster ::Google::Cloud::Bigtable::Admin::V2::Cluster.new(name: name, location: location, state: state, serve_nodes: serve_nodes, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config) do |response, operation|
+      client.update_cluster ::Google::Cloud::Bigtable::Admin::V2::Cluster.new(name: name, location: location, state: state, serve_nodes: serve_nodes, node_scaling_factor: node_scaling_factor, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.update_cluster({ name: name, location: location, state: state, serve_nodes: serve_nodes, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config }, grpc_options) do |response, operation|
+      client.update_cluster({ name: name, location: location, state: state, serve_nodes: serve_nodes, node_scaling_factor: node_scaling_factor, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.update_cluster(::Google::Cloud::Bigtable::Admin::V2::Cluster.new(name: name, location: location, state: state, serve_nodes: serve_nodes, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config), grpc_options) do |response, operation|
+      client.update_cluster(::Google::Cloud::Bigtable::Admin::V2::Cluster.new(name: name, location: location, state: state, serve_nodes: serve_nodes, node_scaling_factor: node_scaling_factor, cluster_config: cluster_config, default_storage_type: default_storage_type, encryption_config: encryption_config), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -1195,12 +1220,14 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
     # Create request parameters for a unary method.
     resource = "hello world"
     policy = {}
+    update_mask = {}
 
     set_iam_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :set_iam_policy, name
       assert_kind_of ::Google::Iam::V1::SetIamPolicyRequest, request
       assert_equal "hello world", request["resource"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Iam::V1::Policy), request["policy"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
       refute_nil options
     end
 
@@ -1211,31 +1238,31 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
       end
 
       # Use hash object
-      client.set_iam_policy({ resource: resource, policy: policy }) do |response, operation|
+      client.set_iam_policy({ resource: resource, policy: policy, update_mask: update_mask }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.set_iam_policy resource: resource, policy: policy do |response, operation|
+      client.set_iam_policy resource: resource, policy: policy, update_mask: update_mask do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.set_iam_policy ::Google::Iam::V1::SetIamPolicyRequest.new(resource: resource, policy: policy) do |response, operation|
+      client.set_iam_policy ::Google::Iam::V1::SetIamPolicyRequest.new(resource: resource, policy: policy, update_mask: update_mask) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.set_iam_policy({ resource: resource, policy: policy }, grpc_options) do |response, operation|
+      client.set_iam_policy({ resource: resource, policy: policy, update_mask: update_mask }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.set_iam_policy(::Google::Iam::V1::SetIamPolicyRequest.new(resource: resource, policy: policy), grpc_options) do |response, operation|
+      client.set_iam_policy(::Google::Iam::V1::SetIamPolicyRequest.new(resource: resource, policy: policy, update_mask: update_mask), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -1305,11 +1332,717 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
     end
   end
 
+  def test_list_hot_tablets
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigtable::Admin::V2::ListHotTabletsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    start_time = {}
+    end_time = {}
+    page_size = 42
+    page_token = "hello world"
+
+    list_hot_tablets_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_hot_tablets, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::ListHotTabletsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Timestamp), request["start_time"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Timestamp), request["end_time"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_hot_tablets_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_hot_tablets({ parent: parent, start_time: start_time, end_time: end_time, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_hot_tablets parent: parent, start_time: start_time, end_time: end_time, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_hot_tablets ::Google::Cloud::Bigtable::Admin::V2::ListHotTabletsRequest.new(parent: parent, start_time: start_time, end_time: end_time, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_hot_tablets({ parent: parent, start_time: start_time, end_time: end_time, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_hot_tablets(::Google::Cloud::Bigtable::Admin::V2::ListHotTabletsRequest.new(parent: parent, start_time: start_time, end_time: end_time, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_hot_tablets_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_logical_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    logical_view_id = "hello world"
+    logical_view = {}
+
+    create_logical_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_logical_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::CreateLogicalViewRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["logical_view_id"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigtable::Admin::V2::LogicalView), request["logical_view"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_logical_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_logical_view({ parent: parent, logical_view_id: logical_view_id, logical_view: logical_view }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_logical_view parent: parent, logical_view_id: logical_view_id, logical_view: logical_view do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_logical_view ::Google::Cloud::Bigtable::Admin::V2::CreateLogicalViewRequest.new(parent: parent, logical_view_id: logical_view_id, logical_view: logical_view) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_logical_view({ parent: parent, logical_view_id: logical_view_id, logical_view: logical_view }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_logical_view(::Google::Cloud::Bigtable::Admin::V2::CreateLogicalViewRequest.new(parent: parent, logical_view_id: logical_view_id, logical_view: logical_view), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_logical_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_logical_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigtable::Admin::V2::LogicalView.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_logical_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_logical_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::GetLogicalViewRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_logical_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_logical_view({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_logical_view name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_logical_view ::Google::Cloud::Bigtable::Admin::V2::GetLogicalViewRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_logical_view({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_logical_view(::Google::Cloud::Bigtable::Admin::V2::GetLogicalViewRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_logical_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_logical_views
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigtable::Admin::V2::ListLogicalViewsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_logical_views_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_logical_views, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::ListLogicalViewsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_logical_views_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_logical_views({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_logical_views parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_logical_views ::Google::Cloud::Bigtable::Admin::V2::ListLogicalViewsRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_logical_views({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_logical_views(::Google::Cloud::Bigtable::Admin::V2::ListLogicalViewsRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_logical_views_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_logical_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    logical_view = {}
+    update_mask = {}
+
+    update_logical_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_logical_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::UpdateLogicalViewRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigtable::Admin::V2::LogicalView), request["logical_view"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_logical_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_logical_view({ logical_view: logical_view, update_mask: update_mask }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_logical_view logical_view: logical_view, update_mask: update_mask do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_logical_view ::Google::Cloud::Bigtable::Admin::V2::UpdateLogicalViewRequest.new(logical_view: logical_view, update_mask: update_mask) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_logical_view({ logical_view: logical_view, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_logical_view(::Google::Cloud::Bigtable::Admin::V2::UpdateLogicalViewRequest.new(logical_view: logical_view, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_logical_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_logical_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    etag = "hello world"
+
+    delete_logical_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_logical_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::DeleteLogicalViewRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal "hello world", request["etag"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_logical_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_logical_view({ name: name, etag: etag }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_logical_view name: name, etag: etag do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_logical_view ::Google::Cloud::Bigtable::Admin::V2::DeleteLogicalViewRequest.new(name: name, etag: etag) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_logical_view({ name: name, etag: etag }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_logical_view(::Google::Cloud::Bigtable::Admin::V2::DeleteLogicalViewRequest.new(name: name, etag: etag), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_logical_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_materialized_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    materialized_view_id = "hello world"
+    materialized_view = {}
+
+    create_materialized_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_materialized_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::CreateMaterializedViewRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["materialized_view_id"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigtable::Admin::V2::MaterializedView), request["materialized_view"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_materialized_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_materialized_view({ parent: parent, materialized_view_id: materialized_view_id, materialized_view: materialized_view }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_materialized_view parent: parent, materialized_view_id: materialized_view_id, materialized_view: materialized_view do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_materialized_view ::Google::Cloud::Bigtable::Admin::V2::CreateMaterializedViewRequest.new(parent: parent, materialized_view_id: materialized_view_id, materialized_view: materialized_view) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_materialized_view({ parent: parent, materialized_view_id: materialized_view_id, materialized_view: materialized_view }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_materialized_view(::Google::Cloud::Bigtable::Admin::V2::CreateMaterializedViewRequest.new(parent: parent, materialized_view_id: materialized_view_id, materialized_view: materialized_view), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_materialized_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_materialized_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigtable::Admin::V2::MaterializedView.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_materialized_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_materialized_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::GetMaterializedViewRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_materialized_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_materialized_view({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_materialized_view name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_materialized_view ::Google::Cloud::Bigtable::Admin::V2::GetMaterializedViewRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_materialized_view({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_materialized_view(::Google::Cloud::Bigtable::Admin::V2::GetMaterializedViewRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_materialized_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_materialized_views
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigtable::Admin::V2::ListMaterializedViewsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_materialized_views_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_materialized_views, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::ListMaterializedViewsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_materialized_views_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_materialized_views({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_materialized_views parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_materialized_views ::Google::Cloud::Bigtable::Admin::V2::ListMaterializedViewsRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_materialized_views({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_materialized_views(::Google::Cloud::Bigtable::Admin::V2::ListMaterializedViewsRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_materialized_views_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_materialized_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    materialized_view = {}
+    update_mask = {}
+
+    update_materialized_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_materialized_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::UpdateMaterializedViewRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigtable::Admin::V2::MaterializedView), request["materialized_view"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_materialized_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_materialized_view({ materialized_view: materialized_view, update_mask: update_mask }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_materialized_view materialized_view: materialized_view, update_mask: update_mask do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_materialized_view ::Google::Cloud::Bigtable::Admin::V2::UpdateMaterializedViewRequest.new(materialized_view: materialized_view, update_mask: update_mask) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_materialized_view({ materialized_view: materialized_view, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_materialized_view(::Google::Cloud::Bigtable::Admin::V2::UpdateMaterializedViewRequest.new(materialized_view: materialized_view, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_materialized_view_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_materialized_view
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    etag = "hello world"
+
+    delete_materialized_view_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_materialized_view, name
+      assert_kind_of ::Google::Cloud::Bigtable::Admin::V2::DeleteMaterializedViewRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal "hello world", request["etag"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_materialized_view_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_materialized_view({ name: name, etag: etag }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_materialized_view name: name, etag: etag do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_materialized_view ::Google::Cloud::Bigtable::Admin::V2::DeleteMaterializedViewRequest.new(name: name, etag: etag) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_materialized_view({ name: name, etag: etag }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_materialized_view(::Google::Cloud::Bigtable::Admin::V2::DeleteMaterializedViewRequest.new(name: name, etag: etag), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_materialized_view_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -1327,7 +2060,8 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::ClientTest < 
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableInstanceAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end

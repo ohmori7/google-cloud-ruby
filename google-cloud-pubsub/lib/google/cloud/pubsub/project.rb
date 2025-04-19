@@ -24,6 +24,9 @@ require "google/cloud/pubsub/snapshot"
 module Google
   module Cloud
     module PubSub
+      DEFAULT_COMPRESS = false
+      DEFAULT_COMPRESSION_BYTES_THRESHOLD = 240
+
       ##
       # # Project
       #
@@ -74,6 +77,15 @@ module Google
         alias project project_id
 
         ##
+        # The universe domain the client is connected to
+        #
+        # @return [String]
+        #
+        def universe_domain
+          service.universe_domain
+        end
+
+        ##
         # Retrieves topic by name.
         #
         # @param [String] topic_name Name of a topic. The value can be a simple
@@ -103,6 +115,9 @@ module Google
         #   * `:threads` (Hash) The number of threads to create to handle concurrent calls by the publisher:
         #     * `:publish` (Integer) The number of threads used to publish messages. Default is 2.
         #     * `:callback` (Integer) The number of threads to handle the published messages' callbacks. Default is 4.
+        #   * `:compress` (Boolean) The flag that enables publisher compression. Default is false
+        #   * `:compression_bytes_threshold` (Integer) The number of bytes above which compress should be enabled.
+        #       Default is 240.
         #   * `:flow_control` (Hash) The client flow control settings for message publishing:
         #     * `:message_limit` (Integer) The maximum number of messages allowed to wait to be published. Default is
         #       `10 * max_messages`.
@@ -160,7 +175,7 @@ module Google
         #
         def topic topic_name, project: nil, skip_lookup: nil, async: nil
           ensure_service!
-          options = { project: project }
+          options = { project: project, async: async }
           return Topic.from_name topic_name, service, options if skip_lookup
           grpc = service.get_topic topic_name, options
           Topic.from_grpc grpc, service, async: async
@@ -211,11 +226,13 @@ module Google
         #     the batch is published. Default is 0.01.
         #   * `:threads` (Hash) The number of threads to create to handle concurrent
         #     calls by the publisher:
-        #
         #     * `:publish` (Integer) The number of threads used to publish messages.
         #       Default is 2.
         #     * `:callback` (Integer) The number of threads to handle the published
         #       messages' callbacks. Default is 4.
+        #   * `:compress` (Boolean) The flag that enables publisher compression. Default is false
+        #   * `:compression_bytes_threshold` (Integer) The number of bytes above which compress should be enabled.
+        #       Default is 240.
         #   * `:flow_control` (Hash) The client flow control settings for message publishing:
         #     * `:message_limit` (Integer) The maximum number of messages allowed to wait to be published. Default is
         #       `10 * max_messages`.
@@ -246,6 +263,8 @@ module Google
         #   that is up to `retention` number of seconds in the past. If this field is
         #   not set, message retention is controlled by settings on individual
         #   subscriptions. Cannot be less than 600 (10 minutes) or more than 604,800 (7 days).
+        #   @param ingestion_data_source_settings [::Google::Cloud::PubSub::V1::IngestionDataSourceSettings, ::Hash]
+        #     Optional. Settings for ingestion from a data source into this topic.
         #
         # @return [Google::Cloud::PubSub::Topic]
         #
@@ -262,15 +281,17 @@ module Google
                          async: nil,
                          schema_name: nil,
                          message_encoding: nil,
-                         retention: nil
+                         retention: nil,
+                         ingestion_data_source_settings: nil
           ensure_service!
           grpc = service.create_topic topic_name,
-                                      labels:              labels,
-                                      kms_key_name:        kms_key,
+                                      labels: labels,
+                                      kms_key_name: kms_key,
                                       persistence_regions: persistence_regions,
-                                      schema_name:         schema_name,
-                                      message_encoding:    message_encoding,
-                                      retention:           retention
+                                      schema_name: schema_name,
+                                      message_encoding: message_encoding,
+                                      retention: retention,
+                                      ingestion_data_source_settings: ingestion_data_source_settings
           Topic.from_grpc grpc, service, async: async
         end
         alias new_topic create_topic
@@ -641,13 +662,6 @@ module Google
         # available.
         def ensure_service!
           raise "Must have active connection to service" unless service
-        end
-
-        ##
-        # Call the publish API with arrays of data data and attrs.
-        def publish_batch_messages topic_name, batch
-          grpc = service.publish topic_name, batch.messages
-          batch.to_gcloud_messages Array(grpc.message_ids)
         end
       end
     end

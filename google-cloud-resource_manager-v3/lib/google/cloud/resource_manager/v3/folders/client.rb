@@ -32,6 +32,12 @@ module Google
           # organization and to control the policies applied to groups of resources.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudresourcemanager.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -122,6 +128,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @folders_stub.universe_domain
+            end
+
+            ##
             # Create a new Folders client object.
             #
             # @example
@@ -154,8 +169,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -168,15 +184,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @folders_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::ResourceManager::V3::Folders::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @folders_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -185,6 +216,15 @@ module Google
             # @return [::Google::Cloud::ResourceManager::V3::Folders::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @folders_stub.logger
+            end
 
             # Service calls
 
@@ -248,10 +288,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -272,7 +313,6 @@ module Google
 
               @folders_stub.call_rpc :get_folder, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -303,14 +343,19 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the organization or folder whose folders are
-            #     being listed.
-            #     Must be of the form `folders/{folder_id}` or `organizations/{org_id}`.
+            #     Required. The name of the parent resource whose folders are being listed.
+            #     Only children of this parent resource are listed; descendants are not
+            #     listed.
+            #
+            #     If the parent is a folder, use the value `folders/{folder_id}`. If the
+            #     parent is an organization, use the value `organizations/{org_id}`.
+            #
             #     Access to this method is controlled by checking the
             #     `resourcemanager.folders.list` permission on the `parent`.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of folders to return in the response.
-            #     If unspecified, server picks an appropriate default.
+            #     Optional. The maximum number of folders to return in the response. The
+            #     server can return fewer folders than requested. If unspecified, server
+            #     picks an appropriate default.
             #   @param page_token [::String]
             #     Optional. A pagination token returned from a previous call to `ListFolders`
             #     that indicates where this listing should continue from.
@@ -339,13 +384,11 @@ module Google
             #   # Call the list_folders method.
             #   result = client.list_folders request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ResourceManager::V3::Folder.
-            #     p response
+            #     p item
             #   end
             #
             def list_folders request, options = nil
@@ -359,10 +402,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_folders.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.list_folders.timeout,
@@ -376,7 +420,7 @@ module Google
               @folders_stub.call_rpc :list_folders, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @folders_stub, :list_folders, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -406,11 +450,12 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of folders to return in the response.
-            #     If unspecified, server picks an appropriate default.
+            #     Optional. The maximum number of folders to return in the response. The
+            #     server can return fewer folders than requested. If unspecified, server
+            #     picks an appropriate default.
             #   @param page_token [::String]
-            #     Optional. A pagination token returned from a previous call to `SearchFolders`
-            #     that indicates from where search should continue.
+            #     Optional. A pagination token returned from a previous call to
+            #     `SearchFolders` that indicates from where search should continue.
             #   @param query [::String]
             #     Optional. Search criteria used to select the folders to return.
             #     If no search criteria is specified then all accessible folders will be
@@ -464,13 +509,11 @@ module Google
             #   # Call the search_folders method.
             #   result = client.search_folders request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ResourceManager::V3::Folder.
-            #     p response
+            #     p item
             #   end
             #
             def search_folders request, options = nil
@@ -484,10 +527,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_folders.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.search_folders.timeout,
@@ -501,7 +545,7 @@ module Google
               @folders_stub.call_rpc :search_folders, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @folders_stub, :search_folders, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -552,8 +596,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param folder [::Google::Cloud::ResourceManager::V3::Folder, ::Hash]
-            #     Required. The folder being created, only the display name and parent will be
-            #     consulted. All other fields will be ignored.
+            #     Required. The folder being created, only the display name and parent will
+            #     be consulted. All other fields will be ignored.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -575,14 +619,14 @@ module Google
             #   # Call the create_folder method.
             #   result = client.create_folder request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_folder request, options = nil
@@ -596,10 +640,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.create_folder.timeout,
@@ -613,7 +658,7 @@ module Google
               @folders_stub.call_rpc :create_folder, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -623,7 +668,9 @@ module Google
             # Updates a folder, changing its `display_name`.
             # Changes to the folder `display_name` will be rejected if they violate
             # either the `display_name` formatting rules or the naming constraints
-            # described in the {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder} documentation.
+            # described in the
+            # {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder}
+            # documentation.
             #
             # The folder's `display_name` must start and end with a letter or digit,
             # may contain letters, digits, spaces, hyphens and underscores and can be
@@ -652,8 +699,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param folder [::Google::Cloud::ResourceManager::V3::Folder, ::Hash]
-            #     Required. The new definition of the Folder. It must include the `name` field, which
-            #     cannot be changed.
+            #     Required. The new definition of the Folder. It must include the `name`
+            #     field, which cannot be changed.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Required. Fields to be updated.
             #     Only the `display_name` can be updated.
@@ -678,14 +725,14 @@ module Google
             #   # Call the update_folder method.
             #   result = client.update_folder request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_folder request, options = nil
@@ -699,10 +746,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -724,7 +772,7 @@ module Google
               @folders_stub.call_rpc :update_folder, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -745,9 +793,9 @@ module Google
             # `FolderOperation` message as an aid to stateless clients.
             # Folder moves will be rejected if they violate either the naming, height,
             # or fanout constraints described in the
-            # {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder} documentation.
-            # The caller must have `resourcemanager.folders.move` permission on the
-            # folder's current and proposed new parent.
+            # {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder}
+            # documentation. The caller must have `resourcemanager.folders.move`
+            # permission on the folder's current and proposed new parent.
             #
             # @overload move_folder(request, options = nil)
             #   Pass arguments to `move_folder` via a request object, either of type
@@ -768,9 +816,9 @@ module Google
             #     Required. The resource name of the Folder to move.
             #     Must be of the form folders/\\{folder_id}
             #   @param destination_parent [::String]
-            #     Required. The resource name of the folder or organization which should be the
-            #     folder's new parent.
-            #     Must be of the form `folders/{folder_id}` or `organizations/{org_id}`.
+            #     Required. The resource name of the folder or organization which should be
+            #     the folder's new parent. Must be of the form `folders/{folder_id}` or
+            #     `organizations/{org_id}`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -792,14 +840,14 @@ module Google
             #   # Call the move_folder method.
             #   result = client.move_folder request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def move_folder request, options = nil
@@ -813,10 +861,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.move_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -838,7 +887,7 @@ module Google
               @folders_stub.call_rpc :move_folder, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -846,11 +895,13 @@ module Google
 
             ##
             # Requests deletion of a folder. The folder is moved into the
-            # {::Google::Cloud::ResourceManager::V3::Folder::State::DELETE_REQUESTED DELETE_REQUESTED} state
-            # immediately, and is deleted approximately 30 days later. This method may
-            # only be called on an empty folder, where a folder is empty if it doesn't
-            # contain any folders or projects in the {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE} state.
-            # If called on a folder in {::Google::Cloud::ResourceManager::V3::Folder::State::DELETE_REQUESTED DELETE_REQUESTED}
+            # {::Google::Cloud::ResourceManager::V3::Folder::State::DELETE_REQUESTED DELETE_REQUESTED}
+            # state immediately, and is deleted approximately 30 days later. This method
+            # may only be called on an empty folder, where a folder is empty if it
+            # doesn't contain any folders or projects in the
+            # {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE} state. If
+            # called on a folder in
+            # {::Google::Cloud::ResourceManager::V3::Folder::State::DELETE_REQUESTED DELETE_REQUESTED}
             # state the operation will result in a no-op success.
             # The caller must have `resourcemanager.folders.delete` permission on the
             # identified folder.
@@ -894,14 +945,14 @@ module Google
             #   # Call the delete_folder method.
             #   result = client.delete_folder request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_folder request, options = nil
@@ -915,10 +966,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -940,7 +992,7 @@ module Google
               @folders_stub.call_rpc :delete_folder, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -948,14 +1000,16 @@ module Google
 
             ##
             # Cancels the deletion request for a folder. This method may be called on a
-            # folder in any state. If the folder is in the {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE}
-            # state the result will be a no-op success. In order to succeed, the folder's
-            # parent must be in the {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE} state. In addition,
-            # reintroducing the folder into the tree must not violate folder naming,
-            # height, and fanout constraints described in the
-            # {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder} documentation.
-            # The caller must have `resourcemanager.folders.undelete` permission on the
-            # identified folder.
+            # folder in any state. If the folder is in the
+            # {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE} state the
+            # result will be a no-op success. In order to succeed, the folder's parent
+            # must be in the
+            # {::Google::Cloud::ResourceManager::V3::Folder::State::ACTIVE ACTIVE} state. In
+            # addition, reintroducing the folder into the tree must not violate folder
+            # naming, height, and fanout constraints described in the
+            # {::Google::Cloud::ResourceManager::V3::Folders::Client#create_folder CreateFolder}
+            # documentation. The caller must have `resourcemanager.folders.undelete`
+            # permission on the identified folder.
             #
             # @overload undelete_folder(request, options = nil)
             #   Pass arguments to `undelete_folder` via a request object, either of type
@@ -996,14 +1050,14 @@ module Google
             #   # Call the undelete_folder method.
             #   result = client.undelete_folder request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def undelete_folder request, options = nil
@@ -1017,10 +1071,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.undelete_folder.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1042,7 +1097,7 @@ module Google
               @folders_stub.call_rpc :undelete_folder, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1075,7 +1130,7 @@ module Google
             #     See the operation documentation for the appropriate value for this field.
             #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
             #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
-            #     `GetIamPolicy`. This field is only used by Cloud IAM.
+            #     `GetIamPolicy`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -1111,10 +1166,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1135,7 +1191,6 @@ module Google
 
               @folders_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1158,7 +1213,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_iam_policy(resource: nil, policy: nil)
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
             #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1171,6 +1226,12 @@ module Google
             #     the policy is limited to a few 10s of KB. An empty policy is a
             #     valid policy but certain Cloud Platform services (such as Projects)
             #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -1206,10 +1267,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1230,7 +1292,6 @@ module Google
 
               @folders_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1301,10 +1362,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.test_iam_permissions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1325,7 +1387,6 @@ module Google
 
               @folders_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1361,20 +1422,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudresourcemanager.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1409,11 +1477,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudresourcemanager.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudresourcemanager.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1428,6 +1510,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1446,6 +1530,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

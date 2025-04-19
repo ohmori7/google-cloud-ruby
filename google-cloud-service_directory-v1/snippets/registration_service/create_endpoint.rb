@@ -19,15 +19,29 @@
 # [START servicedirectory_v1_generated_RegistrationService_CreateEndpoint_sync]
 require "google/cloud/service_directory/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
+##
+# Snippet for the create_endpoint call in the RegistrationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ServiceDirectory::V1::RegistrationService::Client#create_endpoint.
+#
+def create_endpoint
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ServiceDirectory::V1::CreateEndpointRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ServiceDirectory::V1::CreateEndpointRequest.new
 
-# Call the create_endpoint method.
-result = client.create_endpoint request
+  # Call the create_endpoint method.
+  result = client.create_endpoint request
 
-# The returned object is of type Google::Cloud::ServiceDirectory::V1::Endpoint.
-p result
+  # The returned object is of type Google::Cloud::ServiceDirectory::V1::Endpoint.
+  p result
+end
 # [END servicedirectory_v1_generated_RegistrationService_CreateEndpoint_sync]

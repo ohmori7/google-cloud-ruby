@@ -19,15 +19,29 @@
 # [START datastream_v1alpha1_generated_Datastream_DiscoverConnectionProfile_sync]
 require "google/cloud/datastream/v1alpha1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastream::V1alpha1::Datastream::Client.new
+##
+# Snippet for the discover_connection_profile call in the Datastream service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastream::V1alpha1::Datastream::Client#discover_connection_profile.
+#
+def discover_connection_profile
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastream::V1alpha1::Datastream::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastream::V1alpha1::DiscoverConnectionProfileRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastream::V1alpha1::DiscoverConnectionProfileRequest.new
 
-# Call the discover_connection_profile method.
-result = client.discover_connection_profile request
+  # Call the discover_connection_profile method.
+  result = client.discover_connection_profile request
 
-# The returned object is of type Google::Cloud::Datastream::V1alpha1::DiscoverConnectionProfileResponse.
-p result
+  # The returned object is of type Google::Cloud::Datastream::V1alpha1::DiscoverConnectionProfileResponse.
+  p result
+end
 # [END datastream_v1alpha1_generated_Datastream_DiscoverConnectionProfile_sync]

@@ -30,6 +30,12 @@ module Google
           # Allow users to create and manage tag keys.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudresourcemanager.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -114,6 +120,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @tag_keys_stub.universe_domain
+            end
+
+            ##
             # Create a new TagKeys client object.
             #
             # @example
@@ -146,8 +161,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -160,15 +176,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @tag_keys_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::ResourceManager::V3::TagKeys::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @tag_keys_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -177,6 +208,15 @@ module Google
             # @return [::Google::Cloud::ResourceManager::V3::TagKeys::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @tag_keys_stub.logger
+            end
 
             # Service calls
 
@@ -199,12 +239,13 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the new TagKey's parent.
-            #     Must be of the form `folders/{folder_id}` or `organizations/{org_id}`.
+            #     Required. The resource name of the TagKey's parent.
+            #     Must be of the form `organizations/{org_id}` or `projects/{project_id}` or
+            #     `projects/{project_number}`
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of TagKeys to return in the response. The server allows
-            #     a maximum of 300 TagKeys to return. If unspecified, the server will use 100
-            #     as the default.
+            #     Optional. The maximum number of TagKeys to return in the response. The
+            #     server allows a maximum of 300 TagKeys to return. If unspecified, the
+            #     server will use 100 as the default.
             #   @param page_token [::String]
             #     Optional. A pagination token returned from a previous call to `ListTagKey`
             #     that indicates where this listing should continue from.
@@ -229,13 +270,11 @@ module Google
             #   # Call the list_tag_keys method.
             #   result = client.list_tag_keys request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ResourceManager::V3::TagKey.
-            #     p response
+            #     p item
             #   end
             #
             def list_tag_keys request, options = nil
@@ -249,10 +288,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_tag_keys.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.list_tag_keys.timeout,
@@ -266,7 +306,7 @@ module Google
               @tag_keys_stub.call_rpc :list_tag_keys, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @tag_keys_stub, :list_tag_keys, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -329,10 +369,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_tag_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -353,7 +394,88 @@ module Google
 
               @tag_keys_stub.call_rpc :get_tag_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Retrieves a TagKey by its namespaced name.
+            # This method will return `PERMISSION_DENIED` if the key does not exist
+            # or the user does not have permission to view it.
+            #
+            # @overload get_namespaced_tag_key(request, options = nil)
+            #   Pass arguments to `get_namespaced_tag_key` via a request object, either of type
+            #   {::Google::Cloud::ResourceManager::V3::GetNamespacedTagKeyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::ResourceManager::V3::GetNamespacedTagKeyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_namespaced_tag_key(name: nil)
+            #   Pass arguments to `get_namespaced_tag_key` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. A namespaced tag key name in the format
+            #     `{parentId}/{tagKeyShort}`, such as `42/foo` for a key with short name
+            #     "foo" under the organization with ID 42 or `r2-d2/bar` for a key with short
+            #     name "bar" under the project `r2-d2`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::ResourceManager::V3::TagKey]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::ResourceManager::V3::TagKey]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/resource_manager/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::ResourceManager::V3::TagKeys::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::ResourceManager::V3::GetNamespacedTagKeyRequest.new
+            #
+            #   # Call the get_namespaced_tag_key method.
+            #   result = client.get_namespaced_tag_key request
+            #
+            #   # The returned object is of type Google::Cloud::ResourceManager::V3::TagKey.
+            #   p result
+            #
+            def get_namespaced_tag_key request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::ResourceManager::V3::GetNamespacedTagKeyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_namespaced_tag_key.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              options.apply_defaults timeout:      @config.rpcs.get_namespaced_tag_key.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_namespaced_tag_key.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @tag_keys_stub.call_rpc :get_namespaced_tag_key, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -362,8 +484,8 @@ module Google
             ##
             # Creates a new TagKey. If another request with the same parameters is
             # sent while the original request is in process, the second request
-            # will receive an error. A maximum of 300 TagKeys can exist under a parent at
-            # any given time.
+            # will receive an error. A maximum of 1000 TagKeys can exist under a parent
+            # at any given time.
             #
             # @overload create_tag_key(request, options = nil)
             #   Pass arguments to `create_tag_key` via a request object, either of type
@@ -381,11 +503,11 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param tag_key [::Google::Cloud::ResourceManager::V3::TagKey, ::Hash]
-            #     Required. The TagKey to be created. Only fields `short_name`, `description`,
-            #     and `parent` are considered during the creation request.
+            #     Required. The TagKey to be created. Only fields `short_name`,
+            #     `description`, and `parent` are considered during the creation request.
             #   @param validate_only [::Boolean]
-            #     Optional. Set to true to perform validations necessary for creating the resource, but
-            #     not actually perform the action.
+            #     Optional. Set to true to perform validations necessary for creating the
+            #     resource, but not actually perform the action.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -407,14 +529,14 @@ module Google
             #   # Call the create_tag_key method.
             #   result = client.create_tag_key request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_tag_key request, options = nil
@@ -428,10 +550,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_tag_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.create_tag_key.timeout,
@@ -445,7 +568,7 @@ module Google
               @tag_keys_stub.call_rpc :create_tag_key, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -470,10 +593,10 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param tag_key [::Google::Cloud::ResourceManager::V3::TagKey, ::Hash]
-            #     Required. The new definition of the TagKey. Only the `description` and `etag` fields
-            #     can be updated by this request. If the `etag` field is not empty, it
-            #     must match the `etag` field of the existing tag key. Otherwise,
-            #     `FAILED_PRECONDITION` will be returned.
+            #     Required. The new definition of the TagKey. Only the `description` and
+            #     `etag` fields can be updated by this request. If the `etag` field is not
+            #     empty, it must match the `etag` field of the existing tag key. Otherwise,
+            #     `ABORTED` will be returned.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Fields to be updated. The mask may only contain `description` or
             #     `etag`. If omitted entirely, both `description` and `etag` are assumed to
@@ -502,14 +625,14 @@ module Google
             #   # Call the update_tag_key method.
             #   result = client.update_tag_key request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_tag_key request, options = nil
@@ -523,10 +646,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_tag_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -548,7 +672,7 @@ module Google
               @tag_keys_stub.call_rpc :update_tag_key, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -574,15 +698,15 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The resource name of a TagKey to be deleted in the format `tagKeys/123`.
-            #     The TagKey cannot be a parent of any existing TagValues or it will not be
-            #     deleted successfully.
+            #     Required. The resource name of a TagKey to be deleted in the format
+            #     `tagKeys/123`. The TagKey cannot be a parent of any existing TagValues or
+            #     it will not be deleted successfully.
             #   @param validate_only [::Boolean]
-            #     Optional. Set as true to perform validations necessary for deletion, but not actually
-            #     perform the action.
+            #     Optional. Set as true to perform validations necessary for deletion, but
+            #     not actually perform the action.
             #   @param etag [::String]
-            #     Optional. The etag known to the client for the expected state of the TagKey. This is
-            #     to be used for optimistic concurrency.
+            #     Optional. The etag known to the client for the expected state of the
+            #     TagKey. This is to be used for optimistic concurrency.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -604,14 +728,14 @@ module Google
             #   # Call the delete_tag_key method.
             #   result = client.delete_tag_key request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_tag_key request, options = nil
@@ -625,10 +749,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_tag_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -650,7 +775,7 @@ module Google
               @tag_keys_stub.call_rpc :delete_tag_key, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -684,7 +809,7 @@ module Google
             #     See the operation documentation for the appropriate value for this field.
             #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
             #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
-            #     `GetIamPolicy`. This field is only used by Cloud IAM.
+            #     `GetIamPolicy`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -720,10 +845,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -744,7 +870,6 @@ module Google
 
               @tag_keys_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -767,7 +892,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_iam_policy(resource: nil, policy: nil)
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
             #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -780,6 +905,12 @@ module Google
             #     the policy is limited to a few 10s of KB. An empty policy is a
             #     valid policy but certain Cloud Platform services (such as Projects)
             #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -815,10 +946,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -839,7 +971,6 @@ module Google
 
               @tag_keys_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -910,10 +1041,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.test_iam_permissions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -934,7 +1066,6 @@ module Google
 
               @tag_keys_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -970,20 +1101,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudresourcemanager.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1018,11 +1156,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudresourcemanager.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudresourcemanager.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1037,6 +1189,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1055,6 +1209,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -1085,6 +1247,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :get_tag_key
+                ##
+                # RPC-specific configuration for `get_namespaced_tag_key`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_namespaced_tag_key
                 ##
                 # RPC-specific configuration for `create_tag_key`
                 # @return [::Gapic::Config::Method]
@@ -1122,6 +1289,8 @@ module Google
                   @list_tag_keys = ::Gapic::Config::Method.new list_tag_keys_config
                   get_tag_key_config = parent_rpcs.get_tag_key if parent_rpcs.respond_to? :get_tag_key
                   @get_tag_key = ::Gapic::Config::Method.new get_tag_key_config
+                  get_namespaced_tag_key_config = parent_rpcs.get_namespaced_tag_key if parent_rpcs.respond_to? :get_namespaced_tag_key
+                  @get_namespaced_tag_key = ::Gapic::Config::Method.new get_namespaced_tag_key_config
                   create_tag_key_config = parent_rpcs.create_tag_key if parent_rpcs.respond_to? :create_tag_key
                   @create_tag_key = ::Gapic::Config::Method.new create_tag_key_config
                   update_tag_key_config = parent_rpcs.update_tag_key if parent_rpcs.respond_to? :update_tag_key

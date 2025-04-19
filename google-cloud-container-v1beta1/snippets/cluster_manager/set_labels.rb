@@ -19,15 +19,29 @@
 # [START container_v1beta1_generated_ClusterManager_SetLabels_sync]
 require "google/cloud/container/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Container::V1beta1::ClusterManager::Client.new
+##
+# Snippet for the set_labels call in the ClusterManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Container::V1beta1::ClusterManager::Client#set_labels.
+#
+def set_labels
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Container::V1beta1::ClusterManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Container::V1beta1::SetLabelsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Container::V1beta1::SetLabelsRequest.new
 
-# Call the set_labels method.
-result = client.set_labels request
+  # Call the set_labels method.
+  result = client.set_labels request
 
-# The returned object is of type Google::Cloud::Container::V1beta1::Operation.
-p result
+  # The returned object is of type Google::Cloud::Container::V1beta1::Operation.
+  p result
+end
 # [END container_v1beta1_generated_ClusterManager_SetLabels_sync]

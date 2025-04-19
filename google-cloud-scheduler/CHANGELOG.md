@@ -1,5 +1,53 @@
 # Release History
 
+### 3.0.0 (2025-02-13)
+
+### ⚠ BREAKING CHANGES
+
+* Removed dependency on google-cloud-scheduler-v1beta1 prerelease service ([#28983](https://github.com/googleapis/google-cloud-ruby/issues/28983))
+
+#### Features
+
+* Removed dependency on google-cloud-scheduler-v1beta1 prerelease service ([#28983](https://github.com/googleapis/google-cloud-ruby/issues/28983)) 
+* Updated google-cloud-scheduler-v1 dependency to version 1.x 
+
+### 2.7.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28532](https://github.com/googleapis/google-cloud-ruby/issues/28532)) 
+* Update Ruby version requirement to 3.0 
+
+### 2.6.1 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26630](https://github.com/googleapis/google-cloud-ruby/issues/26630)) 
+
+### 2.6.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24876](https://github.com/googleapis/google-cloud-ruby/issues/24876)) 
+
+### 2.5.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24266](https://github.com/googleapis/google-cloud-ruby/issues/24266)) 
+
+### 2.4.0 (2023-03-09)
+
+#### Features
+
+* Support REST transport ([#20768](https://github.com/googleapis/google-cloud-ruby/issues/20768)) 
+
+### 2.3.0 (2022-07-07)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
 ### 2.2.3 / 2022-01-11
 
 #### Documentation

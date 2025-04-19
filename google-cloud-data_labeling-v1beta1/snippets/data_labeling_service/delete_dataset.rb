@@ -19,15 +19,29 @@
 # [START datalabeling_v1beta1_generated_DataLabelingService_DeleteDataset_sync]
 require "google/cloud/data_labeling/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
+##
+# Snippet for the delete_dataset call in the DataLabelingService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client#delete_dataset.
+#
+def delete_dataset
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataLabeling::V1beta1::DeleteDatasetRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataLabeling::V1beta1::DeleteDatasetRequest.new
 
-# Call the delete_dataset method.
-result = client.delete_dataset request
+  # Call the delete_dataset method.
+  result = client.delete_dataset request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END datalabeling_v1beta1_generated_DataLabelingService_DeleteDataset_sync]

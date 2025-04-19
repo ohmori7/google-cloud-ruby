@@ -41,9 +41,26 @@ class ::Google::Cloud::Dialogflow::V2::Conversations::ClientTest < Minitest::Tes
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -294,6 +311,66 @@ class ::Google::Cloud::Dialogflow::V2::Conversations::ClientTest < Minitest::Tes
     end
   end
 
+  def test_ingest_context_references
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::IngestContextReferencesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    conversation = "hello world"
+    context_references = {}
+
+    ingest_context_references_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :ingest_context_references, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::IngestContextReferencesRequest, request
+      assert_equal "hello world", request["conversation"]
+      assert_equal({}, request["context_references"].to_h)
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, ingest_context_references_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.ingest_context_references({ conversation: conversation, context_references: context_references }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.ingest_context_references conversation: conversation, context_references: context_references do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.ingest_context_references ::Google::Cloud::Dialogflow::V2::IngestContextReferencesRequest.new(conversation: conversation, context_references: context_references) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.ingest_context_references({ conversation: conversation, context_references: context_references }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.ingest_context_references(::Google::Cloud::Dialogflow::V2::IngestContextReferencesRequest.new(conversation: conversation, context_references: context_references), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, ingest_context_references_client_stub.call_rpc_count
+    end
+  end
+
   def test_list_messages
     # Create GRPC objects.
     grpc_response = ::Google::Cloud::Dialogflow::V2::ListMessagesResponse.new
@@ -363,11 +440,345 @@ class ::Google::Cloud::Dialogflow::V2::Conversations::ClientTest < Minitest::Tes
     end
   end
 
+  def test_suggest_conversation_summary
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    conversation = "hello world"
+    latest_message = "hello world"
+    context_size = 42
+    assist_query_params = {}
+
+    suggest_conversation_summary_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :suggest_conversation_summary, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryRequest, request
+      assert_equal "hello world", request["conversation"]
+      assert_equal "hello world", request["latest_message"]
+      assert_equal 42, request["context_size"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::AssistQueryParameters), request["assist_query_params"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, suggest_conversation_summary_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.suggest_conversation_summary({ conversation: conversation, latest_message: latest_message, context_size: context_size, assist_query_params: assist_query_params }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.suggest_conversation_summary conversation: conversation, latest_message: latest_message, context_size: context_size, assist_query_params: assist_query_params do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.suggest_conversation_summary ::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryRequest.new(conversation: conversation, latest_message: latest_message, context_size: context_size, assist_query_params: assist_query_params) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.suggest_conversation_summary({ conversation: conversation, latest_message: latest_message, context_size: context_size, assist_query_params: assist_query_params }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.suggest_conversation_summary(::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryRequest.new(conversation: conversation, latest_message: latest_message, context_size: context_size, assist_query_params: assist_query_params), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, suggest_conversation_summary_client_stub.call_rpc_count
+    end
+  end
+
+  def test_generate_stateless_summary
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    stateless_conversation = {}
+    conversation_profile = {}
+    latest_message = "hello world"
+    max_context_size = 42
+
+    generate_stateless_summary_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :generate_stateless_summary, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryRequest::MinimalConversation), request["stateless_conversation"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::ConversationProfile), request["conversation_profile"]
+      assert_equal "hello world", request["latest_message"]
+      assert_equal 42, request["max_context_size"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, generate_stateless_summary_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.generate_stateless_summary({ stateless_conversation: stateless_conversation, conversation_profile: conversation_profile, latest_message: latest_message, max_context_size: max_context_size }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.generate_stateless_summary stateless_conversation: stateless_conversation, conversation_profile: conversation_profile, latest_message: latest_message, max_context_size: max_context_size do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.generate_stateless_summary ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryRequest.new(stateless_conversation: stateless_conversation, conversation_profile: conversation_profile, latest_message: latest_message, max_context_size: max_context_size) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.generate_stateless_summary({ stateless_conversation: stateless_conversation, conversation_profile: conversation_profile, latest_message: latest_message, max_context_size: max_context_size }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.generate_stateless_summary(::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryRequest.new(stateless_conversation: stateless_conversation, conversation_profile: conversation_profile, latest_message: latest_message, max_context_size: max_context_size), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, generate_stateless_summary_client_stub.call_rpc_count
+    end
+  end
+
+  def test_generate_stateless_suggestion
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    generator = {}
+    context_references = {}
+    conversation_context = {}
+    trigger_events = [:TRIGGER_EVENT_UNSPECIFIED]
+
+    generate_stateless_suggestion_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :generate_stateless_suggestion, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::Generator), request["generator"]
+      assert_equal :generator, request.generator_resource
+      assert_equal({}, request["context_references"].to_h)
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::ConversationContext), request["conversation_context"]
+      assert_equal [:TRIGGER_EVENT_UNSPECIFIED], request["trigger_events"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, generate_stateless_suggestion_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.generate_stateless_suggestion({ parent: parent, generator: generator, context_references: context_references, conversation_context: conversation_context, trigger_events: trigger_events }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.generate_stateless_suggestion parent: parent, generator: generator, context_references: context_references, conversation_context: conversation_context, trigger_events: trigger_events do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.generate_stateless_suggestion ::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionRequest.new(parent: parent, generator: generator, context_references: context_references, conversation_context: conversation_context, trigger_events: trigger_events) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.generate_stateless_suggestion({ parent: parent, generator: generator, context_references: context_references, conversation_context: conversation_context, trigger_events: trigger_events }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.generate_stateless_suggestion(::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionRequest.new(parent: parent, generator: generator, context_references: context_references, conversation_context: conversation_context, trigger_events: trigger_events), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, generate_stateless_suggestion_client_stub.call_rpc_count
+    end
+  end
+
+  def test_search_knowledge
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::SearchKnowledgeResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    query = {}
+    conversation_profile = "hello world"
+    session_id = "hello world"
+    conversation = "hello world"
+    latest_message = "hello world"
+    query_source = :QUERY_SOURCE_UNSPECIFIED
+    end_user_metadata = {}
+    search_config = {}
+    exact_search = true
+
+    search_knowledge_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :search_knowledge, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::SearchKnowledgeRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::TextInput), request["query"]
+      assert_equal "hello world", request["conversation_profile"]
+      assert_equal "hello world", request["session_id"]
+      assert_equal "hello world", request["conversation"]
+      assert_equal "hello world", request["latest_message"]
+      assert_equal :QUERY_SOURCE_UNSPECIFIED, request["query_source"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Struct), request["end_user_metadata"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::V2::SearchKnowledgeRequest::SearchConfig), request["search_config"]
+      assert_equal true, request["exact_search"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, search_knowledge_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.search_knowledge({ parent: parent, query: query, conversation_profile: conversation_profile, session_id: session_id, conversation: conversation, latest_message: latest_message, query_source: query_source, end_user_metadata: end_user_metadata, search_config: search_config, exact_search: exact_search }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.search_knowledge parent: parent, query: query, conversation_profile: conversation_profile, session_id: session_id, conversation: conversation, latest_message: latest_message, query_source: query_source, end_user_metadata: end_user_metadata, search_config: search_config, exact_search: exact_search do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.search_knowledge ::Google::Cloud::Dialogflow::V2::SearchKnowledgeRequest.new(parent: parent, query: query, conversation_profile: conversation_profile, session_id: session_id, conversation: conversation, latest_message: latest_message, query_source: query_source, end_user_metadata: end_user_metadata, search_config: search_config, exact_search: exact_search) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.search_knowledge({ parent: parent, query: query, conversation_profile: conversation_profile, session_id: session_id, conversation: conversation, latest_message: latest_message, query_source: query_source, end_user_metadata: end_user_metadata, search_config: search_config, exact_search: exact_search }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.search_knowledge(::Google::Cloud::Dialogflow::V2::SearchKnowledgeRequest.new(parent: parent, query: query, conversation_profile: conversation_profile, session_id: session_id, conversation: conversation, latest_message: latest_message, query_source: query_source, end_user_metadata: end_user_metadata, search_config: search_config, exact_search: exact_search), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, search_knowledge_client_stub.call_rpc_count
+    end
+  end
+
+  def test_generate_suggestions
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::V2::GenerateSuggestionsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    conversation = "hello world"
+    latest_message = "hello world"
+    trigger_events = [:TRIGGER_EVENT_UNSPECIFIED]
+
+    generate_suggestions_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :generate_suggestions, name
+      assert_kind_of ::Google::Cloud::Dialogflow::V2::GenerateSuggestionsRequest, request
+      assert_equal "hello world", request["conversation"]
+      assert_equal "hello world", request["latest_message"]
+      assert_equal [:TRIGGER_EVENT_UNSPECIFIED], request["trigger_events"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, generate_suggestions_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.generate_suggestions({ conversation: conversation, latest_message: latest_message, trigger_events: trigger_events }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.generate_suggestions conversation: conversation, latest_message: latest_message, trigger_events: trigger_events do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.generate_suggestions ::Google::Cloud::Dialogflow::V2::GenerateSuggestionsRequest.new(conversation: conversation, latest_message: latest_message, trigger_events: trigger_events) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.generate_suggestions({ conversation: conversation, latest_message: latest_message, trigger_events: trigger_events }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.generate_suggestions(::Google::Cloud::Dialogflow::V2::GenerateSuggestionsRequest.new(conversation: conversation, latest_message: latest_message, trigger_events: trigger_events), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, generate_suggestions_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Dialogflow::V2::Conversations::Client.new do |config|
         config.credentials = grpc_channel
       end

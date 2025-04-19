@@ -60,7 +60,8 @@ module Google
               #
               # - `metadata`: An empty [Struct
               #   message](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#struct)
-              # - `response`: [ExportAgentResponse][google.cloud.dialogflow.cx.v3.ExportAgentResponse]
+              # - `response`:
+              # [ExportAgentResponse][google.cloud.dialogflow.cx.v3.ExportAgentResponse]
               rpc :ExportAgent, ::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest, ::Google::Longrunning::Operation
               # Restores the specified agent from a binary file.
               #
@@ -87,6 +88,10 @@ module Google
               # Gets the latest agent validation result. Agent validation is performed
               # when ValidateAgent is called.
               rpc :GetAgentValidationResult, ::Google::Cloud::Dialogflow::CX::V3::GetAgentValidationResultRequest, ::Google::Cloud::Dialogflow::CX::V3::AgentValidationResult
+              # Gets the generative settings for the agent.
+              rpc :GetGenerativeSettings, ::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest, ::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings
+              # Updates the generative settings for the agent.
+              rpc :UpdateGenerativeSettings, ::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest, ::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings
             end
 
             Stub = Service.rpc_stub_class

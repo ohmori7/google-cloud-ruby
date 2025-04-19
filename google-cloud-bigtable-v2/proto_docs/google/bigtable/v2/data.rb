@@ -94,19 +94,116 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # `Value` represents a dynamically typed value.
+        # The typed fields in `Value` are used as a transport encoding for the actual
+        # value (which may be of a more complex type). See the documentation of the
+        # `Type` message for more details.
+        # @!attribute [rw] type
+        #   @return [::Google::Cloud::Bigtable::V2::Type]
+        #     The verified `Type` of this `Value`, if it cannot be inferred.
+        #
+        #     Read results will never specify the encoding for `type` since the value
+        #     will already have been decoded by the server. Furthermore, the `type` will
+        #     be omitted entirely if it can be inferred from a previous response. The
+        #     exact semantics for inferring `type` will vary, and are therefore
+        #     documented separately for each read method.
+        #
+        #     When using composite types (Struct, Array, Map) only the outermost `Value`
+        #     will specify the `type`. This top-level `type` will define the types for
+        #     any nested `Struct' fields, `Array` elements, or `Map` key/value pairs.
+        #     If a nested `Value` provides a `type` on write, the request will be
+        #     rejected with INVALID_ARGUMENT.
+        # @!attribute [rw] raw_value
+        #   @return [::String]
+        #     Represents a raw byte sequence with no type information.
+        #     The `type` field must be omitted.
+        #
+        #     Note: The following fields are mutually exclusive: `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] raw_timestamp_micros
+        #   @return [::Integer]
+        #     Represents a raw cell timestamp with no type information.
+        #     The `type` field must be omitted.
+        #
+        #     Note: The following fields are mutually exclusive: `raw_timestamp_micros`, `raw_value`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] bytes_value
+        #   @return [::String]
+        #     Represents a typed value transported as a byte sequence.
+        #
+        #     Note: The following fields are mutually exclusive: `bytes_value`, `raw_value`, `raw_timestamp_micros`, `string_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] string_value
+        #   @return [::String]
+        #     Represents a typed value transported as a string.
+        #
+        #     Note: The following fields are mutually exclusive: `string_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] int_value
+        #   @return [::Integer]
+        #     Represents a typed value transported as an integer.
+        #
+        #     Note: The following fields are mutually exclusive: `int_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] bool_value
+        #   @return [::Boolean]
+        #     Represents a typed value transported as a boolean.
+        #
+        #     Note: The following fields are mutually exclusive: `bool_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `float_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] float_value
+        #   @return [::Float]
+        #     Represents a typed value transported as a floating point number.
+        #
+        #     Note: The following fields are mutually exclusive: `float_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `timestamp_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] timestamp_value
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Represents a typed value transported as a timestamp.
+        #
+        #     Note: The following fields are mutually exclusive: `timestamp_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `float_value`, `date_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] date_value
+        #   @return [::Google::Type::Date]
+        #     Represents a typed value transported as a date.
+        #
+        #     Note: The following fields are mutually exclusive: `date_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] array_value
+        #   @return [::Google::Cloud::Bigtable::V2::ArrayValue]
+        #     Represents a typed value transported as a sequence of values.
+        #     To differentiate between `Struct`, `Array`, and `Map`, the outermost
+        #     `Value` must provide an explicit `type` on write. This `type` will
+        #     apply recursively to the nested `Struct` fields, `Array` elements,
+        #     or `Map` key/value pairs, which *must not* supply their own `type`.
+        #
+        #     Note: The following fields are mutually exclusive: `array_value`, `raw_value`, `raw_timestamp_micros`, `bytes_value`, `string_value`, `int_value`, `bool_value`, `float_value`, `timestamp_value`, `date_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        class Value
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # `ArrayValue` is an ordered list of `Value`.
+        # @!attribute [rw] values
+        #   @return [::Array<::Google::Cloud::Bigtable::V2::Value>]
+        #     The ordered elements in the array.
+        class ArrayValue
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Specifies a contiguous range of rows.
         # @!attribute [rw] start_key_closed
         #   @return [::String]
         #     Used when giving an inclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_key_closed`, `start_key_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] start_key_open
         #   @return [::String]
         #     Used when giving an exclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_key_open`, `start_key_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_key_open
         #   @return [::String]
         #     Used when giving an exclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_key_open`, `end_key_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_key_closed
         #   @return [::String]
         #     Used when giving an inclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_key_closed`, `end_key_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class RowRange
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -134,15 +231,23 @@ module Google
         # @!attribute [rw] start_qualifier_closed
         #   @return [::String]
         #     Used when giving an inclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_qualifier_closed`, `start_qualifier_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] start_qualifier_open
         #   @return [::String]
         #     Used when giving an exclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_qualifier_open`, `start_qualifier_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_qualifier_closed
         #   @return [::String]
         #     Used when giving an inclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_qualifier_closed`, `end_qualifier_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_qualifier_open
         #   @return [::String]
         #     Used when giving an exclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_qualifier_open`, `end_qualifier_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ColumnRange
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -164,15 +269,23 @@ module Google
         # @!attribute [rw] start_value_closed
         #   @return [::String]
         #     Used when giving an inclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_value_closed`, `start_value_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] start_value_open
         #   @return [::String]
         #     Used when giving an exclusive lower bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `start_value_open`, `start_value_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_value_closed
         #   @return [::String]
         #     Used when giving an inclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_value_closed`, `end_value_open`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] end_value_open
         #   @return [::String]
         #     Used when giving an exclusive upper bound for the range.
+        #
+        #     Note: The following fields are mutually exclusive: `end_value_open`, `end_value_closed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ValueRange
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -215,14 +328,20 @@ module Google
         #   @return [::Google::Cloud::Bigtable::V2::RowFilter::Chain]
         #     Applies several RowFilters to the data in sequence, progressively
         #     narrowing the results.
+        #
+        #     Note: The following fields are mutually exclusive: `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] interleave
         #   @return [::Google::Cloud::Bigtable::V2::RowFilter::Interleave]
         #     Applies several RowFilters to the data in parallel and combines the
         #     results.
+        #
+        #     Note: The following fields are mutually exclusive: `interleave`, `chain`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] condition
         #   @return [::Google::Cloud::Bigtable::V2::RowFilter::Condition]
         #     Applies one of two possible RowFilters to the data based on the output of
         #     a predicate RowFilter.
+        #
+        #     Note: The following fields are mutually exclusive: `condition`, `chain`, `interleave`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] sink
         #   @return [::Boolean]
         #     ADVANCED USE ONLY.
@@ -284,14 +403,20 @@ module Google
         #
         #     Cannot be used within the `predicate_filter`, `true_filter`, or
         #     `false_filter` of a {::Google::Cloud::Bigtable::V2::RowFilter::Condition Condition}.
+        #
+        #     Note: The following fields are mutually exclusive: `sink`, `chain`, `interleave`, `condition`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pass_all_filter
         #   @return [::Boolean]
         #     Matches all cells, regardless of input. Functionally equivalent to
         #     leaving `filter` unset, but included for completeness.
+        #
+        #     Note: The following fields are mutually exclusive: `pass_all_filter`, `chain`, `interleave`, `condition`, `sink`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] block_all_filter
         #   @return [::Boolean]
         #     Does not match any cells, regardless of input. Useful for temporarily
         #     disabling just part of a filter.
+        #
+        #     Note: The following fields are mutually exclusive: `block_all_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] row_key_regex_filter
         #   @return [::String]
         #     Matches only cells from rows whose keys satisfy the given RE2 regex. In
@@ -301,10 +426,14 @@ module Google
         #     sequence must be used if a true wildcard is desired. The `.` character
         #     will not match the new line character `\n`, which may be present in a
         #     binary key.
+        #
+        #     Note: The following fields are mutually exclusive: `row_key_regex_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] row_sample_filter
         #   @return [::Float]
         #     Matches all cells from a row with probability p, and matches no cells
         #     from the row with probability 1-p.
+        #
+        #     Note: The following fields are mutually exclusive: `row_sample_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] family_name_regex_filter
         #   @return [::String]
         #     Matches only cells from columns whose families satisfy the given RE2
@@ -313,6 +442,8 @@ module Google
         #     Note that, since column families cannot contain the new line character
         #     `\n`, it is sufficient to use `.` as a full wildcard when matching
         #     column family names.
+        #
+        #     Note: The following fields are mutually exclusive: `family_name_regex_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] column_qualifier_regex_filter
         #   @return [::String]
         #     Matches only cells from columns whose qualifiers satisfy the given RE2
@@ -321,12 +452,18 @@ module Google
         #     escape sequence must be used if a true wildcard is desired. The `.`
         #     character will not match the new line character `\n`, which may be
         #     present in a binary qualifier.
+        #
+        #     Note: The following fields are mutually exclusive: `column_qualifier_regex_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] column_range_filter
         #   @return [::Google::Cloud::Bigtable::V2::ColumnRange]
         #     Matches only cells from columns within the given range.
+        #
+        #     Note: The following fields are mutually exclusive: `column_range_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] timestamp_range_filter
         #   @return [::Google::Cloud::Bigtable::V2::TimestampRange]
         #     Matches only cells with timestamps within the given range.
+        #
+        #     Note: The following fields are mutually exclusive: `timestamp_range_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] value_regex_filter
         #   @return [::String]
         #     Matches only cells with values that satisfy the given regular expression.
@@ -334,19 +471,27 @@ module Google
         #     sequence must be used if a true wildcard is desired. The `.` character
         #     will not match the new line character `\n`, which may be present in a
         #     binary value.
+        #
+        #     Note: The following fields are mutually exclusive: `value_regex_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] value_range_filter
         #   @return [::Google::Cloud::Bigtable::V2::ValueRange]
         #     Matches only cells with values that fall within the given range.
+        #
+        #     Note: The following fields are mutually exclusive: `value_range_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cells_per_row_offset_filter
         #   @return [::Integer]
         #     Skips the first N cells of each row, matching all subsequent cells.
         #     If duplicate cells are present, as is possible when using an Interleave,
         #     each copy of the cell is counted separately.
+        #
+        #     Note: The following fields are mutually exclusive: `cells_per_row_offset_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cells_per_row_limit_filter
         #   @return [::Integer]
         #     Matches only the first N cells of each row.
         #     If duplicate cells are present, as is possible when using an Interleave,
         #     each copy of the cell is counted separately.
+        #
+        #     Note: The following fields are mutually exclusive: `cells_per_row_limit_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cells_per_column_limit_filter
         #   @return [::Integer]
         #     Matches only the most recent N cells within each column. For example,
@@ -355,9 +500,13 @@ module Google
         #     column `foo:bar2`.
         #     If duplicate cells are present, as is possible when using an Interleave,
         #     each copy of the cell is counted separately.
+        #
+        #     Note: The following fields are mutually exclusive: `cells_per_column_limit_filter`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `strip_value_transformer`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] strip_value_transformer
         #   @return [::Boolean]
         #     Replaces each cell's value with the empty string.
+        #
+        #     Note: The following fields are mutually exclusive: `strip_value_transformer`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `apply_label_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] apply_label_transformer
         #   @return [::String]
         #     Applies the given label to all cells in the output row. This allows
@@ -373,6 +522,8 @@ module Google
         #     an Interleave to contain multiple `apply_label_transformers`, as they
         #     will be applied to separate copies of the input. This may be relaxed in
         #     the future.
+        #
+        #     Note: The following fields are mutually exclusive: `apply_label_transformer`, `chain`, `interleave`, `condition`, `sink`, `pass_all_filter`, `block_all_filter`, `row_key_regex_filter`, `row_sample_filter`, `family_name_regex_filter`, `column_qualifier_regex_filter`, `column_range_filter`, `timestamp_range_filter`, `value_regex_filter`, `value_range_filter`, `cells_per_row_offset_filter`, `cells_per_row_limit_filter`, `cells_per_column_limit_filter`, `strip_value_transformer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class RowFilter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -452,15 +603,33 @@ module Google
         # @!attribute [rw] set_cell
         #   @return [::Google::Cloud::Bigtable::V2::Mutation::SetCell]
         #     Set a cell's value.
+        #
+        #     Note: The following fields are mutually exclusive: `set_cell`, `add_to_cell`, `merge_to_cell`, `delete_from_column`, `delete_from_family`, `delete_from_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] add_to_cell
+        #   @return [::Google::Cloud::Bigtable::V2::Mutation::AddToCell]
+        #     Incrementally updates an `Aggregate` cell.
+        #
+        #     Note: The following fields are mutually exclusive: `add_to_cell`, `set_cell`, `merge_to_cell`, `delete_from_column`, `delete_from_family`, `delete_from_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] merge_to_cell
+        #   @return [::Google::Cloud::Bigtable::V2::Mutation::MergeToCell]
+        #     Merges accumulated state to an `Aggregate` cell.
+        #
+        #     Note: The following fields are mutually exclusive: `merge_to_cell`, `set_cell`, `add_to_cell`, `delete_from_column`, `delete_from_family`, `delete_from_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] delete_from_column
         #   @return [::Google::Cloud::Bigtable::V2::Mutation::DeleteFromColumn]
         #     Deletes cells from a column.
+        #
+        #     Note: The following fields are mutually exclusive: `delete_from_column`, `set_cell`, `add_to_cell`, `merge_to_cell`, `delete_from_family`, `delete_from_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] delete_from_family
         #   @return [::Google::Cloud::Bigtable::V2::Mutation::DeleteFromFamily]
         #     Deletes cells from a column family.
+        #
+        #     Note: The following fields are mutually exclusive: `delete_from_family`, `set_cell`, `add_to_cell`, `merge_to_cell`, `delete_from_column`, `delete_from_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] delete_from_row
         #   @return [::Google::Cloud::Bigtable::V2::Mutation::DeleteFromRow]
         #     Deletes cells from the entire row.
+        #
+        #     Note: The following fields are mutually exclusive: `delete_from_row`, `set_cell`, `add_to_cell`, `merge_to_cell`, `delete_from_column`, `delete_from_family`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Mutation
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -485,6 +654,54 @@ module Google
           #   @return [::String]
           #     The value to be written into the specified cell.
           class SetCell
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A Mutation which incrementally updates a cell in an `Aggregate` family.
+          # @!attribute [rw] family_name
+          #   @return [::String]
+          #     The name of the `Aggregate` family into which new data should be added.
+          #     This must be a family with a `value_type` of `Aggregate`.
+          #     Format: `[-_.a-zA-Z0-9]+`
+          # @!attribute [rw] column_qualifier
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The qualifier of the column into which new data should be added. This
+          #     must be a `raw_value`.
+          # @!attribute [rw] timestamp
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The timestamp of the cell to which new data should be added. This must
+          #     be a `raw_timestamp_micros` that matches the table's `granularity`.
+          # @!attribute [rw] input
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The input value to be accumulated into the specified cell. This must be
+          #     compatible with the family's `value_type.input_type`.
+          class AddToCell
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A Mutation which merges accumulated state into a cell in an `Aggregate`
+          # family.
+          # @!attribute [rw] family_name
+          #   @return [::String]
+          #     The name of the `Aggregate` family into which new data should be added.
+          #     This must be a family with a `value_type` of `Aggregate`.
+          #     Format: `[-_.a-zA-Z0-9]+`
+          # @!attribute [rw] column_qualifier
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The qualifier of the column into which new data should be added. This
+          #     must be a `raw_value`.
+          # @!attribute [rw] timestamp
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The timestamp of the cell to which new data should be added. This must
+          #     be a `raw_timestamp_micros` that matches the table's `granularity`.
+          # @!attribute [rw] input
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          #     The input value to be merged into the specified cell. This must be
+          #     compatible with the family's `value_type.state_type`. Merging `NULL` is
+          #     allowed, but has no effect.
+          class MergeToCell
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -540,13 +757,216 @@ module Google
         #     Rule specifying that `append_value` be appended to the existing value.
         #     If the targeted cell is unset, it will be treated as containing the
         #     empty string.
+        #
+        #     Note: The following fields are mutually exclusive: `append_value`, `increment_amount`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] increment_amount
         #   @return [::Integer]
         #     Rule specifying that `increment_amount` be added to the existing value.
         #     If the targeted cell is unset, it will be treated as containing a zero.
         #     Otherwise, the targeted cell must contain an 8-byte value (interpreted
         #     as a 64-bit big-endian signed integer), or the entire request will fail.
+        #
+        #     Note: The following fields are mutually exclusive: `increment_amount`, `append_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ReadModifyWriteRule
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # A partition of a change stream.
+        # @!attribute [rw] row_range
+        #   @return [::Google::Cloud::Bigtable::V2::RowRange]
+        #     The row range covered by this partition and is specified by
+        #     [`start_key_closed`, `end_key_open`).
+        class StreamPartition
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # The information required to continue reading the data from multiple
+        # `StreamPartitions` from where a previous read left off.
+        # @!attribute [rw] tokens
+        #   @return [::Array<::Google::Cloud::Bigtable::V2::StreamContinuationToken>]
+        #     List of continuation tokens.
+        class StreamContinuationTokens
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # The information required to continue reading the data from a
+        # `StreamPartition` from where a previous read left off.
+        # @!attribute [rw] partition
+        #   @return [::Google::Cloud::Bigtable::V2::StreamPartition]
+        #     The partition that this token applies to.
+        # @!attribute [rw] token
+        #   @return [::String]
+        #     An encoded position in the stream to restart reading from.
+        class StreamContinuationToken
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Protocol buffers format descriptor, as described by Messages ProtoSchema and
+        # ProtoRows
+        class ProtoFormat
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Describes a column in a Bigtable Query Language result set.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     The name of the column.
+        # @!attribute [rw] type
+        #   @return [::Google::Cloud::Bigtable::V2::Type]
+        #     The type of the column.
+        class ColumnMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # ResultSet schema in proto format
+        # @!attribute [rw] columns
+        #   @return [::Array<::Google::Cloud::Bigtable::V2::ColumnMetadata>]
+        #     The columns in the result set.
+        class ProtoSchema
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Describes the structure of a Bigtable result set.
+        # @!attribute [rw] proto_schema
+        #   @return [::Google::Cloud::Bigtable::V2::ProtoSchema]
+        #     Schema in proto format
+        class ResultSetMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Rows represented in proto format.
+        #
+        # This should be constructed by concatenating the `batch_data` from each
+        # of the relevant `ProtoRowsBatch` messages and parsing the result as a
+        # `ProtoRows` message.
+        # @!attribute [rw] values
+        #   @return [::Array<::Google::Cloud::Bigtable::V2::Value>]
+        #     A proto rows message consists of a list of values. Every N complete values
+        #     defines a row, where N is equal to the  number of entries in the
+        #     `metadata.proto_schema.columns` value received in the first response.
+        class ProtoRows
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A part of a serialized `ProtoRows` message.
+        # @!attribute [rw] batch_data
+        #   @return [::String]
+        #     Part of a serialized `ProtoRows` message.
+        #     A complete, parseable ProtoRows message is constructed by
+        #     concatenating `batch_data` from multiple `ProtoRowsBatch` messages. The
+        #     `PartialResultSet` that contains the last part has `complete_batch` set to
+        #     `true`.
+        class ProtoRowsBatch
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A partial result set from the streaming query API.
+        # Cloud Bigtable clients buffer partial results received in this message until
+        # a `resume_token` is received.
+        #
+        # The pseudocode below describes how to buffer and parse a stream of
+        # `PartialResultSet` messages.
+        #
+        # Having:
+        # - queue of row results waiting to be returned `queue`
+        # - extensible buffer of bytes `buffer`
+        # - a place to keep track of the most recent `resume_token`
+        # for each PartialResultSet `p` received {
+        #   if p.reset {
+        #     ensure `queue` is empty
+        #     ensure `buffer` is empty
+        #   }
+        #   if p.estimated_batch_size != 0 {
+        #     (optional) ensure `buffer` is sized to at least `p.estimated_batch_size`
+        #   }
+        #   if `p.proto_rows_batch` is set {
+        #     append `p.proto_rows_batch.bytes` to `buffer`
+        #   }
+        #   if p.batch_checksum is set and `buffer` is not empty {
+        #     validate the checksum matches the contents of `buffer`
+        #     (see comments on `batch_checksum`)
+        #     parse `buffer` as `ProtoRows` message, clearing `buffer`
+        #     add parsed rows to end of `queue`
+        #   }
+        #   if p.resume_token is set {
+        #     release results in `queue`
+        #     save `p.resume_token` in `resume_token`
+        #   }
+        # }
+        # @!attribute [rw] proto_rows_batch
+        #   @return [::Google::Cloud::Bigtable::V2::ProtoRowsBatch]
+        #     Partial rows in serialized ProtoRows format.
+        # @!attribute [rw] batch_checksum
+        #   @return [::Integer]
+        #     CRC32C checksum of concatenated `partial_rows` data for the current batch.
+        #
+        #     When present, the buffered data from `partial_rows` forms a complete
+        #     parseable message of the appropriate type.
+        #
+        #     The client should mark the end of a parseable message and prepare to
+        #     receive a new one starting from the next `PartialResultSet` message.
+        #     Clients must verify the checksum of the serialized batch before yielding it
+        #     to the caller.
+        #
+        #     This does NOT mean the values can be yielded to the callers since a
+        #     `resume_token` is required to safely do so.
+        #
+        #     If `resume_token` is non-empty and any data has been received since the
+        #     last one, this field is guaranteed to be non-empty. In other words, clients
+        #     may assume that a batch will never cross a `resume_token` boundary.
+        # @!attribute [rw] resume_token
+        #   @return [::String]
+        #     An opaque token sent by the server to allow query resumption and signal
+        #     that the buffered values constructed from received `partial_rows` can be
+        #     yielded to the caller. Clients can provide this token in a subsequent
+        #     request to resume the result stream from the current point.
+        #
+        #     When `resume_token` is non-empty, the buffered values received from
+        #     `partial_rows` since the last non-empty `resume_token` can be yielded to
+        #     the callers, provided that the client keeps the value of `resume_token` and
+        #     uses it on subsequent retries.
+        #
+        #     A `resume_token` may be sent without information in `partial_rows` to
+        #     checkpoint the progress of a sparse query. Any previous `partial_rows` data
+        #     should still be yielded in this case, and the new `resume_token` should be
+        #     saved for future retries as normal.
+        #
+        #     A `resume_token` will only be sent on a boundary where there is either no
+        #     ongoing result batch, or `batch_checksum` is also populated.
+        #
+        #     The server will also send a sentinel `resume_token` when last batch of
+        #     `partial_rows` is sent. If the client retries the ExecuteQueryRequest with
+        #     the sentinel `resume_token`, the server will emit it again without any
+        #     data in `partial_rows`, then return OK.
+        # @!attribute [rw] reset
+        #   @return [::Boolean]
+        #     If `true`, any data buffered since the last non-empty `resume_token` must
+        #     be discarded before the other parts of this message, if any, are handled.
+        # @!attribute [rw] estimated_batch_size
+        #   @return [::Integer]
+        #     Estimated size of the buffer required to hold the next batch of results.
+        #
+        #     This value will be sent with the first `partial_rows` of a batch. That is,
+        #     on the first `partial_rows` received in a stream, on the first message
+        #     after a `batch_checksum` message, and any time `reset` is true.
+        #
+        #     The client can use this estimate to allocate a buffer for the next batch of
+        #     results. This helps minimize the number of allocations required, though the
+        #     buffer size may still need to be increased if the estimate is too low.
+        class PartialResultSet
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

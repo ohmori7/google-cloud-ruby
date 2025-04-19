@@ -19,15 +19,29 @@
 # [START contactcenterinsights_v1_generated_ContactCenterInsights_GetAnalysis_sync]
 require "google/cloud/contact_center_insights/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client.new
+##
+# Snippet for the get_analysis call in the ContactCenterInsights service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client#get_analysis.
+#
+def get_analysis
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ContactCenterInsights::V1::GetAnalysisRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ContactCenterInsights::V1::GetAnalysisRequest.new
 
-# Call the get_analysis method.
-result = client.get_analysis request
+  # Call the get_analysis method.
+  result = client.get_analysis request
 
-# The returned object is of type Google::Cloud::ContactCenterInsights::V1::Analysis.
-p result
+  # The returned object is of type Google::Cloud::ContactCenterInsights::V1::Analysis.
+  p result
+end
 # [END contactcenterinsights_v1_generated_ContactCenterInsights_GetAnalysis_sync]

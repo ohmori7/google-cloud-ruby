@@ -37,17 +37,24 @@ module Google
           # 3. Resellers and distributors can manage customer entitlements.
           #
           # CloudChannelService exposes the following resources:
-          # - {::Google::Cloud::Channel::V1::Customer Customer}s: An entity—usually an enterprise—managed by a reseller or
-          # distributor.
+          # - {::Google::Cloud::Channel::V1::Customer Customer}s: An entity-usually an
+          # enterprise-managed by a reseller or distributor.
           #
-          # - {::Google::Cloud::Channel::V1::Entitlement Entitlement}s: An entity that provides a customer with the means to use
-          # a service. Entitlements are created or updated as a result of a successful
-          # fulfillment.
+          # - {::Google::Cloud::Channel::V1::Entitlement Entitlement}s: An entity that
+          # provides a customer with the means to use a service. Entitlements are created
+          # or updated as a result of a successful fulfillment.
           #
-          # - {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}s: An entity that identifies links between
-          # distributors and their indirect resellers in a channel.
+          # - {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}s: An
+          # entity that identifies links between distributors and their indirect
+          # resellers in a channel.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudchannel.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -136,6 +143,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @cloud_channel_service_stub.universe_domain
+            end
+
+            ##
             # Create a new CloudChannelService client object.
             #
             # @example
@@ -168,8 +184,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -182,15 +199,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @cloud_channel_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Channel::V1::CloudChannelService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @cloud_channel_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -199,6 +231,15 @@ module Google
             # @return [::Google::Cloud::Channel::V1::CloudChannelService::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @cloud_channel_service_stub.logger
+            end
 
             # Service calls
 
@@ -212,7 +253,8 @@ module Google
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # Return value:
-            # List of {::Google::Cloud::Channel::V1::Customer Customer}s, or an empty list if there are no customers.
+            # List of {::Google::Cloud::Channel::V1::Customer Customer}s, or an empty list if
+            # there are no customers.
             #
             # @overload list_customers(request, options = nil)
             #   Pass arguments to `list_customers` via a request object, either of type
@@ -224,7 +266,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_customers(parent: nil, page_size: nil, page_token: nil)
+            # @overload list_customers(parent: nil, page_size: nil, page_token: nil, filter: nil)
             #   Pass arguments to `list_customers` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -233,14 +275,21 @@ module Google
             #     Required. The resource name of the reseller account to list customers from.
             #     Parent uses the format: accounts/\\{account_id}.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of customers to return. The service may return fewer
-            #     than this value. If unspecified, returns at most 10 customers. The
+            #     Optional. The maximum number of customers to return. The service may return
+            #     fewer than this value. If unspecified, returns at most 10 customers. The
             #     maximum value is 50.
             #   @param page_token [::String]
             #     Optional. A token identifying a page of results other than the first page.
             #     Obtained through
-            #     {::Google::Cloud::Channel::V1::ListCustomersResponse#next_page_token ListCustomersResponse.next_page_token} of the previous
-            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_customers CloudChannelService.ListCustomers} call.
+            #     {::Google::Cloud::Channel::V1::ListCustomersResponse#next_page_token ListCustomersResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_customers CloudChannelService.ListCustomers}
+            #     call.
+            #   @param filter [::String]
+            #     Optional. Filters applied to the [CloudChannelService.ListCustomers]
+            #     results. See
+            #     https://cloud.google.com/channel/docs/concepts/google-cloud/filter-customers
+            #     for more information.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::Customer>]
@@ -262,13 +311,11 @@ module Google
             #   # Call the list_customers method.
             #   result = client.list_customers request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::Customer.
-            #     p response
+            #     p item
             #   end
             #
             def list_customers request, options = nil
@@ -282,10 +329,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_customers.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -307,14 +355,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_customers, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_customers, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Returns the requested {::Google::Cloud::Channel::V1::Customer Customer} resource.
+            # Returns the requested {::Google::Cloud::Channel::V1::Customer Customer}
+            # resource.
             #
             # Possible error codes:
             #
@@ -380,10 +429,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_customer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -404,7 +454,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :get_customer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -422,11 +471,14 @@ module Google
             # * INVALID_VALUE: Invalid domain value in the request.
             #
             # Return value:
-            # A list of {::Google::Cloud::Channel::V1::CloudIdentityCustomerAccount CloudIdentityCustomerAccount} resources for the domain (may be
-            # empty)
+            # A list of
+            # {::Google::Cloud::Channel::V1::CloudIdentityCustomerAccount CloudIdentityCustomerAccount}
+            # resources for the domain (may be empty)
             #
             # Note: in the v1alpha1 version of the API, a NOT_FOUND error returns if
-            # no {::Google::Cloud::Channel::V1::CloudIdentityCustomerAccount CloudIdentityCustomerAccount} resources match the domain.
+            # no
+            # {::Google::Cloud::Channel::V1::CloudIdentityCustomerAccount CloudIdentityCustomerAccount}
+            # resources match the domain.
             #
             # @overload check_cloud_identity_accounts_exist(request, options = nil)
             #   Pass arguments to `check_cloud_identity_accounts_exist` via a request object, either of type
@@ -438,7 +490,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload check_cloud_identity_accounts_exist(parent: nil, domain: nil)
+            # @overload check_cloud_identity_accounts_exist(parent: nil, domain: nil, primary_admin_email: nil)
             #   Pass arguments to `check_cloud_identity_accounts_exist` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -447,7 +499,12 @@ module Google
             #     Required. The reseller account's resource name.
             #     Parent uses the format: accounts/\\{account_id}
             #   @param domain [::String]
-            #     Required. Domain to fetch for Cloud Identity account customer.
+            #     Required. Domain to fetch for Cloud Identity account customers, including
+            #     domain and team customers. For team customers, please use the domain for
+            #     their emails.
+            #   @param primary_admin_email [::String]
+            #     Optional. Primary admin email to fetch for Cloud Identity account team
+            #     customer.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistResponse]
@@ -483,10 +540,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.check_cloud_identity_accounts_exist.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -507,20 +565,22 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :check_cloud_identity_accounts_exist, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Creates a new {::Google::Cloud::Channel::V1::Customer Customer} resource under the reseller or distributor
-            # account.
+            # Creates a new {::Google::Cloud::Channel::V1::Customer Customer} resource under
+            # the reseller or distributor account.
             #
             # Possible error codes:
             #
-            # * PERMISSION_DENIED: The reseller account making the request is different
-            # from the reseller account in the API request.
+            # * PERMISSION_DENIED:
+            #     * The reseller account making the request is different from the
+            #     reseller account in the API request.
+            #     * You are not authorized to create a customer. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * INVALID_ARGUMENT:
             #     * Required request parameters are missing or invalid.
             #     * Domain field value doesn't match the primary email domain.
@@ -544,8 +604,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of reseller account in which to create the customer.
-            #     Parent uses the format: accounts/\\{account_id}
+            #     Required. The resource name of reseller account in which to create the
+            #     customer. Parent uses the format: accounts/\\{account_id}
             #   @param customer [::Google::Cloud::Channel::V1::Customer, ::Hash]
             #     Required. The customer to create.
             #
@@ -583,10 +643,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_customer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -607,22 +668,22 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :create_customer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Updates an existing {::Google::Cloud::Channel::V1::Customer Customer} resource for the reseller or
-            # distributor.
+            # Updates an existing {::Google::Cloud::Channel::V1::Customer Customer} resource
+            # for the reseller or distributor.
             #
             # Possible error codes:
             #
             # * PERMISSION_DENIED: The reseller account making the request is different
             # from the reseller account in the API request.
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
-            # * NOT_FOUND: No {::Google::Cloud::Channel::V1::Customer Customer} resource found for the name in the request.
+            # * NOT_FOUND: No {::Google::Cloud::Channel::V1::Customer Customer} resource found
+            # for the name in the request.
             #
             # Return value:
             # The updated {::Google::Cloud::Channel::V1::Customer Customer} resource.
@@ -682,10 +743,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_customer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -706,7 +768,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :update_customer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -721,7 +782,8 @@ module Google
             # this customer.
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             # * FAILED_PRECONDITION: The customer has existing entitlements.
-            # * NOT_FOUND: No {::Google::Cloud::Channel::V1::Customer Customer} resource found for the name in the request.
+            # * NOT_FOUND: No {::Google::Cloud::Channel::V1::Customer Customer} resource found
+            # for the name in the request.
             #
             # @overload delete_customer(request, options = nil)
             #   Pass arguments to `delete_customer` via a request object, either of type
@@ -775,10 +837,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_customer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -799,22 +862,24 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :delete_customer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Imports a {::Google::Cloud::Channel::V1::Customer Customer} from the Cloud Identity associated with the provided
-            # Cloud Identity ID or domain before a TransferEntitlements call. If a
-            # linked Customer already exists and overwrite_if_exists is true, it will
-            # update that Customer's data.
+            # Imports a {::Google::Cloud::Channel::V1::Customer Customer} from the Cloud
+            # Identity associated with the provided Cloud Identity ID or domain before a
+            # TransferEntitlements call. If a linked Customer already exists and
+            # overwrite_if_exists is true, it will update that Customer's data.
             #
             # Possible error codes:
             #
-            # * PERMISSION_DENIED: The reseller account making the request is different
-            # from the reseller account in the API request.
+            # * PERMISSION_DENIED:
+            #     * The reseller account making the request is different from the
+            #     reseller account in the API request.
+            #     * You are not authorized to import the customer. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * NOT_FOUND: Cloud Identity doesn't exist or was deleted.
             # * INVALID_ARGUMENT: Required parameters are missing, or the auth_token is
             # expired or invalid.
@@ -834,15 +899,23 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload import_customer(domain: nil, cloud_identity_id: nil, parent: nil, auth_token: nil, overwrite_if_exists: nil, channel_partner_id: nil, customer: nil)
+            # @overload import_customer(domain: nil, cloud_identity_id: nil, primary_admin_email: nil, parent: nil, auth_token: nil, overwrite_if_exists: nil, channel_partner_id: nil, customer: nil)
             #   Pass arguments to `import_customer` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param domain [::String]
             #     Required. Customer domain.
+            #
+            #     Note: The following fields are mutually exclusive: `domain`, `cloud_identity_id`, `primary_admin_email`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param cloud_identity_id [::String]
             #     Required. Customer's Cloud Identity ID
+            #
+            #     Note: The following fields are mutually exclusive: `cloud_identity_id`, `domain`, `primary_admin_email`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            #   @param primary_admin_email [::String]
+            #     Required. Customer's primary admin email.
+            #
+            #     Note: The following fields are mutually exclusive: `primary_admin_email`, `domain`, `cloud_identity_id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param parent [::String]
             #     Required. The resource name of the reseller's account.
             #     Parent takes the format: accounts/\\{account_id} or
@@ -857,9 +930,10 @@ module Google
             #     This must be set to true if there is an existing customer with a
             #     conflicting region code or domain.
             #   @param channel_partner_id [::String]
-            #     Optional. Cloud Identity ID of a channel partner who will be the direct reseller for
-            #     the customer's order. This field is required for 2-tier transfer scenarios
-            #     and can be provided via the request Parent binding as well.
+            #     Optional. Cloud Identity ID of a channel partner who will be the direct
+            #     reseller for the customer's order. This field is required for 2-tier
+            #     transfer scenarios and can be provided via the request Parent binding as
+            #     well.
             #   @param customer [::String]
             #     Optional. Specifies the customer that will receive imported Cloud Identity
             #     information.
@@ -899,10 +973,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.import_customer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -923,7 +998,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :import_customer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -935,7 +1009,10 @@ module Google
             #
             # Possible error codes:
             #
-            # *  PERMISSION_DENIED: The customer doesn't belong to the reseller.
+            # *  PERMISSION_DENIED:
+            #      * The customer doesn't belong to the reseller.
+            #      * You are not authorized to provision cloud identity id. See
+            #      https://support.google.com/channelservices/answer/9759265
             # *  INVALID_ARGUMENT: Required request parameters are missing or invalid.
             # *  NOT_FOUND: The customer was not found.
             # *  ALREADY_EXISTS: The customer's primary email already exists. Retry
@@ -997,14 +1074,14 @@ module Google
             #   # Call the provision_cloud_identity method.
             #   result = client.provision_cloud_identity request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def provision_cloud_identity request, options = nil
@@ -1018,10 +1095,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.provision_cloud_identity.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1043,14 +1121,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :provision_cloud_identity, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Lists {::Google::Cloud::Channel::V1::Entitlement Entitlement}s belonging to a customer.
+            # Lists {::Google::Cloud::Channel::V1::Entitlement Entitlement}s belonging to a
+            # customer.
             #
             # Possible error codes:
             #
@@ -1058,7 +1137,8 @@ module Google
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # Return value:
-            # A list of the customer's {::Google::Cloud::Channel::V1::Entitlement Entitlement}s.
+            # A list of the customer's
+            # {::Google::Cloud::Channel::V1::Entitlement Entitlement}s.
             #
             # @overload list_entitlements(request, options = nil)
             #   Pass arguments to `list_entitlements` via a request object, either of type
@@ -1080,14 +1160,16 @@ module Google
             #     entitlements for.
             #     Parent uses the format: accounts/\\{account_id}/customers/\\{customer_id}
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, return at most 50 entitlements.
-            #     The maximum value is 100; the server will coerce values above 100.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, return at most 50 entitlements. The maximum
+            #     value is 100; the server will coerce values above 100.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #     Obtained using
-            #     {::Google::Cloud::Channel::V1::ListEntitlementsResponse#next_page_token ListEntitlementsResponse.next_page_token} of the previous
-            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_entitlements CloudChannelService.ListEntitlements} call.
+            #     {::Google::Cloud::Channel::V1::ListEntitlementsResponse#next_page_token ListEntitlementsResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_entitlements CloudChannelService.ListEntitlements}
+            #     call.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::Entitlement>]
@@ -1109,13 +1191,11 @@ module Google
             #   # Call the list_entitlements method.
             #   result = client.list_entitlements request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::Entitlement.
-            #     p response
+            #     p item
             #   end
             #
             def list_entitlements request, options = nil
@@ -1129,10 +1209,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_entitlements.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1154,15 +1235,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_entitlements, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_entitlements, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List {::Google::Cloud::Channel::V1::TransferableSku TransferableSku}s of a customer based on the Cloud Identity ID or
-            # Customer Name in the request.
+            # List {::Google::Cloud::Channel::V1::TransferableSku TransferableSku}s of a
+            # customer based on the Cloud Identity ID or Customer Name in the request.
             #
             # Use this method to list the entitlements information of an
             # unowned customer. You should provide the customer's
@@ -1178,7 +1259,8 @@ module Google
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # Return value:
-            # A list of the customer's {::Google::Cloud::Channel::V1::TransferableSku TransferableSku}.
+            # A list of the customer's
+            # {::Google::Cloud::Channel::V1::TransferableSku TransferableSku}.
             #
             # @overload list_transferable_skus(request, options = nil)
             #   Pass arguments to `list_transferable_skus` via a request object, either of type
@@ -1197,11 +1279,15 @@ module Google
             #
             #   @param cloud_identity_id [::String]
             #     Customer's Cloud Identity ID
+            #
+            #     Note: The following fields are mutually exclusive: `cloud_identity_id`, `customer_name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param customer_name [::String]
             #     A reseller is required to create a customer and use the resource name of
             #     the created customer here.
             #     Customer_name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}
+            #
+            #     Note: The following fields are mutually exclusive: `customer_name`, `cloud_identity_id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param parent [::String]
             #     Required. The reseller account's resource name.
             #     Parent uses the format: accounts/\\{account_id}
@@ -1213,11 +1299,12 @@ module Google
             #   @param page_token [::String]
             #     A token for a page of results other than the first page.
             #     Obtained using
-            #     {::Google::Cloud::Channel::V1::ListTransferableSkusResponse#next_page_token ListTransferableSkusResponse.next_page_token} of the previous
-            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_transferable_skus CloudChannelService.ListTransferableSkus} call.
-            #     Optional.
+            #     {::Google::Cloud::Channel::V1::ListTransferableSkusResponse#next_page_token ListTransferableSkusResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_transferable_skus CloudChannelService.ListTransferableSkus}
+            #     call. Optional.
             #   @param auth_token [::String]
-            #     The super admin of the resold customer generates this token to
+            #     Optional. The super admin of the resold customer generates this token to
             #     authorize a reseller to access their Cloud Identity and purchase
             #     entitlements on their behalf. You can omit this token after authorization.
             #     See https://support.google.com/a/answer/7643790 for more details.
@@ -1247,13 +1334,11 @@ module Google
             #   # Call the list_transferable_skus method.
             #   result = client.list_transferable_skus request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::TransferableSku.
-            #     p response
+            #     p item
             #   end
             #
             def list_transferable_skus request, options = nil
@@ -1267,10 +1352,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_transferable_skus.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1292,15 +1378,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_transferable_skus, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_transferable_skus, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List {::Google::Cloud::Channel::V1::TransferableOffer TransferableOffer}s of a customer based on Cloud Identity ID or
-            # Customer Name in the request.
+            # List {::Google::Cloud::Channel::V1::TransferableOffer TransferableOffer}s of a
+            # customer based on Cloud Identity ID or Customer Name in the request.
             #
             # Use this method when a reseller gets the entitlement information of an
             # unowned customer. The reseller should provide the customer's
@@ -1310,13 +1396,17 @@ module Google
             #
             # * PERMISSION_DENIED:
             #     * The customer doesn't belong to the reseller and has no auth token.
-            #     * The supplied auth token is invalid.
+            #     * The customer provided incorrect reseller information when generating
+            #     auth token.
             #     * The reseller account making the request is different
             #     from the reseller account in the query.
+            #     * The reseller is not authorized to transact on this Product. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # Return value:
-            # List of {::Google::Cloud::Channel::V1::TransferableOffer TransferableOffer} for the given customer and SKU.
+            # List of {::Google::Cloud::Channel::V1::TransferableOffer TransferableOffer} for
+            # the given customer and SKU.
             #
             # @overload list_transferable_offers(request, options = nil)
             #   Pass arguments to `list_transferable_offers` via a request object, either of type
@@ -1328,16 +1418,20 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_transferable_offers(cloud_identity_id: nil, customer_name: nil, parent: nil, page_size: nil, page_token: nil, sku: nil, language_code: nil)
+            # @overload list_transferable_offers(cloud_identity_id: nil, customer_name: nil, parent: nil, page_size: nil, page_token: nil, sku: nil, language_code: nil, billing_account: nil)
             #   Pass arguments to `list_transferable_offers` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param cloud_identity_id [::String]
             #     Customer's Cloud Identity ID
+            #
+            #     Note: The following fields are mutually exclusive: `cloud_identity_id`, `customer_name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param customer_name [::String]
             #     A reseller should create a customer and use the resource name of
             #     that customer here.
+            #
+            #     Note: The following fields are mutually exclusive: `customer_name`, `cloud_identity_id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param parent [::String]
             #     Required. The resource name of the reseller's account.
             #   @param page_size [::Integer]
@@ -1347,14 +1441,22 @@ module Google
             #   @param page_token [::String]
             #     A token for a page of results other than the first page.
             #     Obtained using
-            #     {::Google::Cloud::Channel::V1::ListTransferableOffersResponse#next_page_token ListTransferableOffersResponse.next_page_token} of the previous
-            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_transferable_offers CloudChannelService.ListTransferableOffers} call.
+            #     {::Google::Cloud::Channel::V1::ListTransferableOffersResponse#next_page_token ListTransferableOffersResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_transferable_offers CloudChannelService.ListTransferableOffers}
+            #     call.
             #   @param sku [::String]
             #     Required. The SKU to look up Offers for.
             #   @param language_code [::String]
-            #     The BCP-47 language code. For example, "en-US". The
+            #     Optional. The BCP-47 language code. For example, "en-US". The
             #     response will localize in the corresponding language code, if specified.
             #     The default value is "en-US".
+            #   @param billing_account [::String]
+            #     Optional. The Billing Account to look up Offers for. Format:
+            #     accounts/\\{account_id}/billingAccounts/\\{billing_account_id}.
+            #
+            #     This field is only relevant for multi-currency accounts. It should be left
+            #     empty for single currency accounts.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::TransferableOffer>]
@@ -1376,13 +1478,11 @@ module Google
             #   # Call the list_transferable_offers method.
             #   result = client.list_transferable_offers request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::TransferableOffer.
-            #     p response
+            #     p item
             #   end
             #
             def list_transferable_offers request, options = nil
@@ -1396,10 +1496,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_transferable_offers.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1421,14 +1522,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_transferable_offers, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_transferable_offers, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Returns the requested {::Google::Cloud::Channel::V1::Entitlement Entitlement} resource.
+            # Returns the requested {::Google::Cloud::Channel::V1::Entitlement Entitlement}
+            # resource.
             #
             # Possible error codes:
             #
@@ -1493,10 +1595,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_entitlement.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1517,7 +1620,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :get_entitlement, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1528,7 +1630,10 @@ module Google
             #
             # Possible error codes:
             #
-            # * PERMISSION_DENIED: The customer doesn't belong to the reseller.
+            # * PERMISSION_DENIED:
+            #     * The customer doesn't belong to the reseller.
+            #     * The reseller is not authorized to transact on this Product. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * INVALID_ARGUMENT:
             #     * Required request parameters are missing or invalid.
             #     * There is already a customer entitlement for a SKU from the same
@@ -1577,14 +1682,15 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the reseller's customer account in which to create the
-            #     entitlement.
-            #     Parent uses the format: accounts/\\{account_id}/customers/\\{customer_id}
+            #     Required. The resource name of the reseller's customer account in which to
+            #     create the entitlement. Parent uses the format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}
             #   @param entitlement [::Google::Cloud::Channel::V1::Entitlement, ::Hash]
             #     Required. The entitlement to create.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -1615,14 +1721,14 @@ module Google
             #   # Call the create_entitlement method.
             #   result = client.create_entitlement request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_entitlement request, options = nil
@@ -1636,10 +1742,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_entitlement.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1661,7 +1768,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :create_entitlement, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1712,13 +1819,16 @@ module Google
             #     Name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
             #   @param parameters [::Array<::Google::Cloud::Channel::V1::Parameter, ::Hash>]
-            #     Required. Entitlement parameters to update. You can only change editable parameters.
+            #     Required. Entitlement parameters to update. You can only change editable
+            #     parameters.
             #
             #     To view the available Parameters for a request, refer to the
-            #     {::Google::Cloud::Channel::V1::Offer#parameter_definitions Offer.parameter_definitions} from the desired offer.
+            #     {::Google::Cloud::Channel::V1::Offer#parameter_definitions Offer.parameter_definitions}
+            #     from the desired offer.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -1751,14 +1861,14 @@ module Google
             #   # Call the change_parameters method.
             #   result = client.change_parameters request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def change_parameters request, options = nil
@@ -1772,10 +1882,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.change_parameters.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1797,7 +1908,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :change_parameters, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1850,8 +1961,9 @@ module Google
             #   @param renewal_settings [::Google::Cloud::Channel::V1::RenewalSettings, ::Hash]
             #     Required. New renewal settings.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -1882,14 +1994,14 @@ module Google
             #   # Call the change_renewal_settings method.
             #   result = client.change_renewal_settings request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def change_renewal_settings request, options = nil
@@ -1903,10 +2015,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.change_renewal_settings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1928,7 +2041,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :change_renewal_settings, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1967,7 +2080,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload change_offer(name: nil, offer: nil, parameters: nil, purchase_order_id: nil, request_id: nil)
+            # @overload change_offer(name: nil, offer: nil, parameters: nil, purchase_order_id: nil, request_id: nil, billing_account: nil)
             #   Pass arguments to `change_offer` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1980,13 +2093,16 @@ module Google
             #     Required. New Offer.
             #     Format: accounts/\\{account_id}/offers/\\{offer_id}.
             #   @param parameters [::Array<::Google::Cloud::Channel::V1::Parameter, ::Hash>]
-            #     Optional. Parameters needed to purchase the Offer. To view the available Parameters
-            #     refer to the {::Google::Cloud::Channel::V1::Offer#parameter_definitions Offer.parameter_definitions} from the desired offer.
+            #     Optional. Parameters needed to purchase the Offer. To view the available
+            #     Parameters refer to the
+            #     {::Google::Cloud::Channel::V1::Offer#parameter_definitions Offer.parameter_definitions}
+            #     from the desired offer.
             #   @param purchase_order_id [::String]
             #     Optional. Purchase order id provided by the reseller.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -1996,6 +2112,12 @@ module Google
             #     The request ID must be a valid [UUID](https://tools.ietf.org/html/rfc4122)
             #     with the exception that zero UUID is not supported
             #     (`00000000-0000-0000-0000-000000000000`).
+            #   @param billing_account [::String]
+            #     Optional. The billing account resource name that is used to pay for this
+            #     entitlement when setting up billing on a trial subscription.
+            #
+            #     This field is only relevant for multi-currency accounts. It should be
+            #     left empty for single currency accounts.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -2017,14 +2139,14 @@ module Google
             #   # Call the change_offer method.
             #   result = client.change_offer request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def change_offer request, options = nil
@@ -2038,10 +2160,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.change_offer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2063,7 +2186,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :change_offer, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2115,8 +2238,9 @@ module Google
             #     Name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2147,14 +2271,14 @@ module Google
             #   # Call the start_paid_service method.
             #   result = client.start_paid_service request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def start_paid_service request, options = nil
@@ -2168,10 +2292,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.start_paid_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2193,7 +2318,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :start_paid_service, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2242,8 +2367,9 @@ module Google
             #     Name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2274,14 +2400,14 @@ module Google
             #   # Call the suspend_entitlement method.
             #   result = client.suspend_entitlement request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def suspend_entitlement request, options = nil
@@ -2295,10 +2421,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.suspend_entitlement.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2320,7 +2447,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :suspend_entitlement, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2374,8 +2501,9 @@ module Google
             #     Name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2406,14 +2534,14 @@ module Google
             #   # Call the cancel_entitlement method.
             #   result = client.cancel_entitlement request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def cancel_entitlement request, options = nil
@@ -2427,10 +2555,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.cancel_entitlement.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2452,7 +2581,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :cancel_entitlement, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2507,8 +2636,9 @@ module Google
             #     Name uses the format:
             #     accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2539,14 +2669,14 @@ module Google
             #   # Call the activate_entitlement method.
             #   result = client.activate_entitlement request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def activate_entitlement request, options = nil
@@ -2560,10 +2690,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.activate_entitlement.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2585,7 +2716,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :activate_entitlement, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2596,7 +2727,10 @@ module Google
             #
             # Possible error codes:
             #
-            # * PERMISSION_DENIED: The customer doesn't belong to the reseller.
+            # * PERMISSION_DENIED:
+            #     * The customer doesn't belong to the reseller.
+            #     * The reseller is not authorized to transact on this Product. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             # * NOT_FOUND: The customer or offer resource was not found.
             # * ALREADY_EXISTS: The SKU was already transferred for the customer.
@@ -2638,9 +2772,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the reseller's customer account that will receive
-            #     transferred entitlements.
-            #     Parent uses the format: accounts/\\{account_id}/customers/\\{customer_id}
+            #     Required. The resource name of the reseller's customer account that will
+            #     receive transferred entitlements. Parent uses the format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}
             #   @param entitlements [::Array<::Google::Cloud::Channel::V1::Entitlement, ::Hash>]
             #     Required. The new entitlements to create or transfer.
             #   @param auth_token [::String]
@@ -2649,8 +2783,9 @@ module Google
             #     entitlements on their behalf. You can omit this token after authorization.
             #     See https://support.google.com/a/answer/7643790 for more details.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2681,14 +2816,14 @@ module Google
             #   # Call the transfer_entitlements method.
             #   result = client.transfer_entitlements request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def transfer_entitlements request, options = nil
@@ -2702,10 +2837,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.transfer_entitlements.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2727,7 +2863,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :transfer_entitlements, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2780,14 +2916,15 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the reseller's customer account where the entitlements
-            #     transfer from.
-            #     Parent uses the format: accounts/\\{account_id}/customers/\\{customer_id}
+            #     Required. The resource name of the reseller's customer account where the
+            #     entitlements transfer from. Parent uses the format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}
             #   @param entitlements [::Array<::Google::Cloud::Channel::V1::Entitlement, ::Hash>]
             #     Required. The entitlements to transfer to Google.
             #   @param request_id [::String]
-            #     Optional. You can specify an optional unique request ID, and if you need to retry
-            #     your request, the server will know to ignore the request if it's complete.
+            #     Optional. You can specify an optional unique request ID, and if you need to
+            #     retry your request, the server will know to ignore the request if it's
+            #     complete.
             #
             #     For example, you make an initial request and the request times out. If you
             #     make the request again with the same request ID, the server can check if
@@ -2818,14 +2955,14 @@ module Google
             #   # Call the transfer_entitlements_to_google method.
             #   result = client.transfer_entitlements_to_google request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def transfer_entitlements_to_google request, options = nil
@@ -2839,10 +2976,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.transfer_entitlements_to_google.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2864,15 +3002,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :transfer_entitlements_to_google, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}s belonging to a distributor.
-            # You must be a distributor to call this method.
+            # List {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}s
+            # belonging to a distributor. You must be a distributor to call this method.
             #
             # Possible error codes:
             #
@@ -2881,7 +3019,8 @@ module Google
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # Return value:
-            # The list of the distributor account's {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resources.
+            # The list of the distributor account's
+            # {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resources.
             #
             # @overload list_channel_partner_links(request, options = nil)
             #   Pass arguments to `list_channel_partner_links` via a request object, either of type
@@ -2899,18 +3038,19 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the reseller account for listing channel partner
-            #     links.
-            #     Parent uses the format: accounts/\\{account_id}
+            #     Required. The resource name of the reseller account for listing channel
+            #     partner links. Parent uses the format: accounts/\\{account_id}
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, server will pick a default size (25).
-            #     The maximum value is 200; the server will coerce values above 200.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, server will pick a default size (25). The
+            #     maximum value is 200; the server will coerce values above 200.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #     Obtained using
-            #     {::Google::Cloud::Channel::V1::ListChannelPartnerLinksResponse#next_page_token ListChannelPartnerLinksResponse.next_page_token} of the previous
-            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_channel_partner_links CloudChannelService.ListChannelPartnerLinks} call.
+            #     {::Google::Cloud::Channel::V1::ListChannelPartnerLinksResponse#next_page_token ListChannelPartnerLinksResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_channel_partner_links CloudChannelService.ListChannelPartnerLinks}
+            #     call.
             #   @param view [::Google::Cloud::Channel::V1::ChannelPartnerLinkView]
             #     Optional. The level of granularity the ChannelPartnerLink will display.
             #
@@ -2934,13 +3074,11 @@ module Google
             #   # Call the list_channel_partner_links method.
             #   result = client.list_channel_partner_links request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::ChannelPartnerLink.
-            #     p response
+            #     p item
             #   end
             #
             def list_channel_partner_links request, options = nil
@@ -2954,10 +3092,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_channel_partner_links.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2979,14 +3118,15 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_channel_partner_links, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_channel_partner_links, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Returns the requested {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
+            # Returns the requested
+            # {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
             # You must be a distributor to call this method.
             #
             # Possible error codes:
@@ -2998,7 +3138,8 @@ module Google
             # invalid channel partner link name.
             #
             # Return value:
-            # The {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
+            # The {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}
+            # resource.
             #
             # @overload get_channel_partner_link(request, options = nil)
             #   Pass arguments to `get_channel_partner_link` via a request object, either of type
@@ -3056,10 +3197,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_channel_partner_link.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3080,7 +3222,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :get_channel_partner_link, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3108,7 +3249,8 @@ module Google
             # Contact Cloud Channel support.
             #
             # Return value:
-            # The new {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
+            # The new {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}
+            # resource.
             #
             # @overload create_channel_partner_link(request, options = nil)
             #   Pass arguments to `create_channel_partner_link` via a request object, either of type
@@ -3168,10 +3310,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_channel_partner_link.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3192,7 +3335,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :create_channel_partner_link, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3219,7 +3361,8 @@ module Google
             # Contact Cloud Channel support.
             #
             # Return value:
-            # The updated {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
+            # The updated
+            # {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink} resource.
             #
             # @overload update_channel_partner_link(request, options = nil)
             #   Pass arguments to `update_channel_partner_link` via a request object, either of type
@@ -3241,8 +3384,8 @@ module Google
             #     Name uses the format: accounts/\\{account_id}/channelPartnerLinks/\\{id}
             #     where \\{id} is the Cloud Identity ID of the partner.
             #   @param channel_partner_link [::Google::Cloud::Channel::V1::ChannelPartnerLink, ::Hash]
-            #     Required. The channel partner link to update. Only channel_partner_link.link_state
-            #     is allowed for updates.
+            #     Required. The channel partner link to update. Only
+            #     channel_partner_link.link_state is allowed for updates.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Required. The update mask that applies to the resource.
             #     The only allowable value for an update mask is
@@ -3282,10 +3425,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_channel_partner_link.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3306,7 +3450,1428 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :update_channel_partner_link, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Gets information about how a Reseller modifies their bill before sending
+            # it to a Customer.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # was not found.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload get_customer_repricing_config(request, options = nil)
+            #   Pass arguments to `get_customer_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_customer_repricing_config(name: nil)
+            #   Pass arguments to `get_customer_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the CustomerRepricingConfig.
+            #     Format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}/customerRepricingConfigs/\\{id}.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest.new
+            #
+            #   # Call the get_customer_repricing_config method.
+            #   result = client.get_customer_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::CustomerRepricingConfig.
+            #   p result
+            #
+            def get_customer_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_customer_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_customer_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_customer_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :get_customer_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists information about how a Reseller modifies their bill before sending
+            # it to a Customer.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # resources. The data for each resource is displayed in the ascending order
+            # of:
+            #
+            # * Customer ID
+            # * {::Google::Cloud::Channel::V1::RepricingConfig::EntitlementGranularity#entitlement RepricingConfig.EntitlementGranularity.entitlement}
+            # * {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # * {::Google::Cloud::Channel::V1::CustomerRepricingConfig#update_time CustomerRepricingConfig.update_time}
+            #
+            # If unsuccessful, returns an error.
+            #
+            # @overload list_customer_repricing_configs(request, options = nil)
+            #   Pass arguments to `list_customer_repricing_configs` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_customer_repricing_configs(parent: nil, page_size: nil, page_token: nil, filter: nil)
+            #   Pass arguments to `list_customer_repricing_configs` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the customer.
+            #     Parent uses the format: accounts/\\{account_id}/customers/\\{customer_id}.
+            #     Supports accounts/\\{account_id}/customers/- to retrieve configs for all
+            #     customers.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of repricing configs to return. The service
+            #     may return fewer than this value. If unspecified, returns a maximum of 50
+            #     rules. The maximum value is 100; values above 100 will be coerced to 100.
+            #   @param page_token [::String]
+            #     Optional. A token identifying a page of results beyond the first page.
+            #     Obtained through
+            #     {::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsResponse#next_page_token ListCustomerRepricingConfigsResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_customer_repricing_configs CloudChannelService.ListCustomerRepricingConfigs}
+            #     call.
+            #   @param filter [::String]
+            #     Optional. A filter for [CloudChannelService.ListCustomerRepricingConfigs]
+            #     results (customer only). You can use this filter when you support
+            #     a BatchGet-like query.
+            #     To use the filter, you must set `parent=accounts/{account_id}/customers/-`.
+            #
+            #     Example: customer = accounts/account_id/customers/c1 OR
+            #     customer = accounts/account_id/customers/c2.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::CustomerRepricingConfig>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::CustomerRepricingConfig>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest.new
+            #
+            #   # Call the list_customer_repricing_configs method.
+            #   result = client.list_customer_repricing_configs request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Channel::V1::CustomerRepricingConfig.
+            #     p item
+            #   end
+            #
+            def list_customer_repricing_configs request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_customer_repricing_configs.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_customer_repricing_configs.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_customer_repricing_configs.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :list_customer_repricing_configs, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_customer_repricing_configs, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Creates a CustomerRepricingConfig. Call this method to set modifications
+            # for a specific customer's bill. You can only create configs if the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is a future month. If needed, you can create a config for the current
+            # month, with some restrictions.
+            #
+            # When creating a config for a future month, make sure there are no existing
+            # configs for that
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            #
+            # The following restrictions are for creating configs in the current month.
+            #
+            # * This functionality is reserved for recovering from an erroneous config,
+            # and should not be used for regular business cases.
+            # * The new config will not modify exports used with other configs.
+            # Changes to the config may be immediate, but may take up to 24 hours.
+            # * There is a limit of ten configs for any
+            # {::Google::Cloud::Channel::V1::RepricingConfig::EntitlementGranularity#entitlement RepricingConfig.EntitlementGranularity.entitlement},
+            # for any
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            # * The contained
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig#repricing_config CustomerRepricingConfig.repricing_config}
+            # value must be different from the value used in the current config for a
+            # {::Google::Cloud::Channel::V1::RepricingConfig::EntitlementGranularity#entitlement RepricingConfig.EntitlementGranularity.entitlement}.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * INVALID_ARGUMENT: Missing or invalid required parameters in the
+            # request. Also displays if the updated config is for the current month or
+            # past months.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the updated
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload create_customer_repricing_config(request, options = nil)
+            #   Pass arguments to `create_customer_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload create_customer_repricing_config(parent: nil, customer_repricing_config: nil)
+            #   Pass arguments to `create_customer_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the customer that will receive this
+            #     repricing config. Parent uses the format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}
+            #   @param customer_repricing_config [::Google::Cloud::Channel::V1::CustomerRepricingConfig, ::Hash]
+            #     Required. The CustomerRepricingConfig object to update.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest.new
+            #
+            #   # Call the create_customer_repricing_config method.
+            #   result = client.create_customer_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::CustomerRepricingConfig.
+            #   p result
+            #
+            def create_customer_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.create_customer_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.create_customer_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.create_customer_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :create_customer_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates a CustomerRepricingConfig. Call this method to set modifications
+            # for a specific customer's bill. This method overwrites the existing
+            # CustomerRepricingConfig.
+            #
+            # You can only update configs if the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is a future month. To make changes to configs for the current month, use
+            # {::Google::Cloud::Channel::V1::CloudChannelService::Client#create_customer_repricing_config CreateCustomerRepricingConfig},
+            # taking note of its restrictions. You cannot update the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            #
+            # When updating a config in the future:
+            #
+            # * This config must already exist.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * INVALID_ARGUMENT: Missing or invalid required parameters in the
+            # request. Also displays if the updated config is for the current month or
+            # past months.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the updated
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload update_customer_repricing_config(request, options = nil)
+            #   Pass arguments to `update_customer_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_customer_repricing_config(customer_repricing_config: nil)
+            #   Pass arguments to `update_customer_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param customer_repricing_config [::Google::Cloud::Channel::V1::CustomerRepricingConfig, ::Hash]
+            #     Required. The CustomerRepricingConfig object to update.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::CustomerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest.new
+            #
+            #   # Call the update_customer_repricing_config method.
+            #   result = client.update_customer_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::CustomerRepricingConfig.
+            #   p result
+            #
+            def update_customer_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_customer_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.customer_repricing_config&.name
+                header_params["customer_repricing_config.name"] = request.customer_repricing_config.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_customer_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_customer_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :update_customer_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Deletes the given
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # permanently. You can only delete configs if their
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is set to a date after the current month.
+            #
+            # Possible error codes:
+            #
+            # * PERMISSION_DENIED: The account making the request does not own
+            # this customer.
+            # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
+            # * FAILED_PRECONDITION: The
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # is active or in the past.
+            # * NOT_FOUND: No
+            # {::Google::Cloud::Channel::V1::CustomerRepricingConfig CustomerRepricingConfig}
+            # found for the name in the request.
+            #
+            # @overload delete_customer_repricing_config(request, options = nil)
+            #   Pass arguments to `delete_customer_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload delete_customer_repricing_config(name: nil)
+            #   Pass arguments to `delete_customer_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the customer repricing config rule to
+            #     delete. Format:
+            #     accounts/\\{account_id}/customers/\\{customer_id}/customerRepricingConfigs/\\{id}.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Protobuf::Empty]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Protobuf::Empty]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest.new
+            #
+            #   # Call the delete_customer_repricing_config method.
+            #   result = client.delete_customer_repricing_config request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
+            def delete_customer_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.delete_customer_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.delete_customer_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.delete_customer_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :delete_customer_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Gets information about how a Distributor modifies their bill before sending
+            # it to a ChannelPartner.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # was not found.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload get_channel_partner_repricing_config(request, options = nil)
+            #   Pass arguments to `get_channel_partner_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_channel_partner_repricing_config(name: nil)
+            #   Pass arguments to `get_channel_partner_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the ChannelPartnerRepricingConfig
+            #     Format:
+            #     accounts/\\{account_id}/channelPartnerLinks/\\{channel_partner_id}/channelPartnerRepricingConfigs/\\{id}.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest.new
+            #
+            #   # Call the get_channel_partner_repricing_config method.
+            #   result = client.get_channel_partner_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.
+            #   p result
+            #
+            def get_channel_partner_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_channel_partner_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_channel_partner_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_channel_partner_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :get_channel_partner_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists information about how a Reseller modifies their bill before sending
+            # it to a ChannelPartner.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # resources. The data for each resource is displayed in the ascending order
+            # of:
+            #
+            # * Channel Partner ID
+            # * {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # * {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig#update_time ChannelPartnerRepricingConfig.update_time}
+            #
+            # If unsuccessful, returns an error.
+            #
+            # @overload list_channel_partner_repricing_configs(request, options = nil)
+            #   Pass arguments to `list_channel_partner_repricing_configs` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_channel_partner_repricing_configs(parent: nil, page_size: nil, page_token: nil, filter: nil)
+            #   Pass arguments to `list_channel_partner_repricing_configs` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the account's
+            #     {::Google::Cloud::Channel::V1::ChannelPartnerLink ChannelPartnerLink}. Parent
+            #     uses the format:
+            #     accounts/\\{account_id}/channelPartnerLinks/\\{channel_partner_id}.
+            #     Supports accounts/\\{account_id}/channelPartnerLinks/- to retrieve configs
+            #     for all channel partners.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of repricing configs to return. The service
+            #     may return fewer than this value. If unspecified, returns a maximum of 50
+            #     rules. The maximum value is 100; values above 100 will be coerced to 100.
+            #   @param page_token [::String]
+            #     Optional. A token identifying a page of results beyond the first page.
+            #     Obtained through
+            #     {::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsResponse#next_page_token ListChannelPartnerRepricingConfigsResponse.next_page_token}
+            #     of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_channel_partner_repricing_configs CloudChannelService.ListChannelPartnerRepricingConfigs}
+            #     call.
+            #   @param filter [::String]
+            #     Optional. A filter for
+            #     [CloudChannelService.ListChannelPartnerRepricingConfigs] results
+            #     (channel_partner_link only). You can use this filter when you support a
+            #     BatchGet-like query. To use the filter, you must set
+            #     `parent=accounts/{account_id}/channelPartnerLinks/-`.
+            #
+            #     Example: `channel_partner_link =
+            #     accounts/account_id/channelPartnerLinks/c1` OR `channel_partner_link =
+            #     accounts/account_id/channelPartnerLinks/c2`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest.new
+            #
+            #   # Call the list_channel_partner_repricing_configs method.
+            #   result = client.list_channel_partner_repricing_configs request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.
+            #     p item
+            #   end
+            #
+            def list_channel_partner_repricing_configs request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_channel_partner_repricing_configs.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_channel_partner_repricing_configs.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_channel_partner_repricing_configs.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :list_channel_partner_repricing_configs, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_channel_partner_repricing_configs, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Creates a ChannelPartnerRepricingConfig. Call this method to set
+            # modifications for a specific ChannelPartner's bill. You can only create
+            # configs if the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is a future month. If needed, you can create a config for the current
+            # month, with some restrictions.
+            #
+            # When creating a config for a future month, make sure there are no existing
+            # configs for that
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            #
+            # The following restrictions are for creating configs in the current month.
+            #
+            # * This functionality is reserved for recovering from an erroneous config,
+            # and should not be used for regular business cases.
+            # * The new config will not modify exports used with other configs.
+            # Changes to the config may be immediate, but may take up to 24 hours.
+            # * There is a limit of ten configs for any ChannelPartner or
+            # {::Google::Cloud::Channel::V1::RepricingConfig::EntitlementGranularity#entitlement RepricingConfig.EntitlementGranularity.entitlement},
+            # for any
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            # * The contained
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig#repricing_config ChannelPartnerRepricingConfig.repricing_config}
+            # value must be different from the value used in the current config for a
+            # ChannelPartner.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * INVALID_ARGUMENT: Missing or invalid required parameters in the
+            # request. Also displays if the updated config is for the current month or
+            # past months.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the updated
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload create_channel_partner_repricing_config(request, options = nil)
+            #   Pass arguments to `create_channel_partner_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload create_channel_partner_repricing_config(parent: nil, channel_partner_repricing_config: nil)
+            #   Pass arguments to `create_channel_partner_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the ChannelPartner that will receive the
+            #     repricing config. Parent uses the format:
+            #     accounts/\\{account_id}/channelPartnerLinks/\\{channel_partner_id}
+            #   @param channel_partner_repricing_config [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig, ::Hash]
+            #     Required. The ChannelPartnerRepricingConfig object to update.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest.new
+            #
+            #   # Call the create_channel_partner_repricing_config method.
+            #   result = client.create_channel_partner_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.
+            #   p result
+            #
+            def create_channel_partner_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.create_channel_partner_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.create_channel_partner_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.create_channel_partner_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :create_channel_partner_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates a ChannelPartnerRepricingConfig. Call this method to set
+            # modifications for a specific ChannelPartner's bill. This method overwrites
+            # the existing CustomerRepricingConfig.
+            #
+            # You can only update configs if the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is a future month. To make changes to configs for the current month, use
+            # {::Google::Cloud::Channel::V1::CloudChannelService::Client#create_channel_partner_repricing_config CreateChannelPartnerRepricingConfig},
+            # taking note of its restrictions. You cannot update the
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}.
+            #
+            # When updating a config in the future:
+            #
+            # * This config must already exist.
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different.
+            # * INVALID_ARGUMENT: Missing or invalid required parameters in the
+            # request. Also displays if the updated config is for the current month or
+            # past months.
+            # * NOT_FOUND: The
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # specified does not exist or is not associated with the given account.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the updated
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # resource, otherwise returns an error.
+            #
+            # @overload update_channel_partner_repricing_config(request, options = nil)
+            #   Pass arguments to `update_channel_partner_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_channel_partner_repricing_config(channel_partner_repricing_config: nil)
+            #   Pass arguments to `update_channel_partner_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param channel_partner_repricing_config [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig, ::Hash]
+            #     Required. The ChannelPartnerRepricingConfig object to update.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest.new
+            #
+            #   # Call the update_channel_partner_repricing_config method.
+            #   result = client.update_channel_partner_repricing_config request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.
+            #   p result
+            #
+            def update_channel_partner_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_channel_partner_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.channel_partner_repricing_config&.name
+                header_params["channel_partner_repricing_config.name"] = request.channel_partner_repricing_config.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_channel_partner_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_channel_partner_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :update_channel_partner_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Deletes the given
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # permanently. You can only delete configs if their
+            # {::Google::Cloud::Channel::V1::RepricingConfig#effective_invoice_month RepricingConfig.effective_invoice_month}
+            # is set to a date after the current month.
+            #
+            # Possible error codes:
+            #
+            # * PERMISSION_DENIED: The account making the request does not own
+            # this customer.
+            # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
+            # * FAILED_PRECONDITION: The
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # is active or in the past.
+            # * NOT_FOUND: No
+            # {::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig ChannelPartnerRepricingConfig}
+            # found for the name in the request.
+            #
+            # @overload delete_channel_partner_repricing_config(request, options = nil)
+            #   Pass arguments to `delete_channel_partner_repricing_config` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload delete_channel_partner_repricing_config(name: nil)
+            #   Pass arguments to `delete_channel_partner_repricing_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the channel partner repricing config rule to
+            #     delete.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Protobuf::Empty]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Protobuf::Empty]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest.new
+            #
+            #   # Call the delete_channel_partner_repricing_config method.
+            #   result = client.delete_channel_partner_repricing_config request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
+            def delete_channel_partner_repricing_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.delete_channel_partner_repricing_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.delete_channel_partner_repricing_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.delete_channel_partner_repricing_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :delete_channel_partner_repricing_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists the Rebilling supported SKU groups the account is authorized to
+            # sell.
+            # Reference: https://cloud.google.com/skus/sku-groups
+            #
+            # Possible Error Codes:
+            #
+            # * PERMISSION_DENIED: If the account making the request and the account
+            # being queried are different, or the account doesn't exist.
+            # * INTERNAL: Any non-user error related to technical issues in the
+            # backend. In this case, contact Cloud Channel support.
+            #
+            # Return Value:
+            # If successful, the {::Google::Cloud::Channel::V1::SkuGroup SkuGroup} resources.
+            # The data for each resource is displayed in the alphabetical order of SKU
+            # group display name.
+            # The data for each resource is displayed in the ascending order of
+            # {::Google::Cloud::Channel::V1::SkuGroup#display_name SkuGroup.display_name}
+            #
+            # If unsuccessful, returns an error.
+            #
+            # @overload list_sku_groups(request, options = nil)
+            #   Pass arguments to `list_sku_groups` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::ListSkuGroupsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::ListSkuGroupsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_sku_groups(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_sku_groups` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the account from which to list SKU groups.
+            #     Parent uses the format: accounts/\\{account}.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of SKU groups to return. The service may
+            #     return fewer than this value. If unspecified, returns a maximum of 1000 SKU
+            #     groups. The maximum value is 1000; values above 1000 will be coerced to
+            #     1000.
+            #   @param page_token [::String]
+            #     Optional. A token identifying a page of results beyond the first page.
+            #     Obtained through
+            #     [ListSkuGroups.next_page_token][] of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_sku_groups CloudChannelService.ListSkuGroups}
+            #     call.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::SkuGroup>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::SkuGroup>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::ListSkuGroupsRequest.new
+            #
+            #   # Call the list_sku_groups method.
+            #   result = client.list_sku_groups request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Channel::V1::SkuGroup.
+            #     p item
+            #   end
+            #
+            def list_sku_groups request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::ListSkuGroupsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_sku_groups.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_sku_groups.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_sku_groups.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :list_sku_groups, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_sku_groups, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists the Billable SKUs in a given SKU group.
+            #
+            # Possible error codes:
+            # PERMISSION_DENIED: If the account making the request and the account
+            # being queried for are different, or the account doesn't exist.
+            # INVALID_ARGUMENT: Missing or invalid required parameters in the
+            # request.
+            # INTERNAL: Any non-user error related to technical issue in the
+            # backend. In this case, contact cloud channel support.
+            #
+            # Return Value:
+            # If successful, the {::Google::Cloud::Channel::V1::BillableSku BillableSku}
+            # resources. The data for each resource is displayed in the ascending order
+            # of:
+            #
+            # * {::Google::Cloud::Channel::V1::BillableSku#service_display_name BillableSku.service_display_name}
+            # * {::Google::Cloud::Channel::V1::BillableSku#sku_display_name BillableSku.sku_display_name}
+            #
+            # If unsuccessful, returns an error.
+            #
+            # @overload list_sku_group_billable_skus(request, options = nil)
+            #   Pass arguments to `list_sku_group_billable_skus` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_sku_group_billable_skus(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_sku_group_billable_skus` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. Resource name of the SKU group.
+            #     Format: accounts/\\{account}/skuGroups/\\{sku_group}.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of SKUs to return. The service may return
+            #     fewer than this value. If unspecified, returns a maximum of 100000 SKUs.
+            #     The maximum value is 100000; values above 100000 will be coerced to 100000.
+            #   @param page_token [::String]
+            #     Optional. A token identifying a page of results beyond the first page.
+            #     Obtained through
+            #     [ListSkuGroupBillableSkus.next_page_token][] of the previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_sku_group_billable_skus CloudChannelService.ListSkuGroupBillableSkus}
+            #     call.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::BillableSku>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::BillableSku>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest.new
+            #
+            #   # Call the list_sku_group_billable_skus method.
+            #   result = client.list_sku_group_billable_skus request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Channel::V1::BillableSku.
+            #     p item
+            #   end
+            #
+            def list_sku_group_billable_skus request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_sku_group_billable_skus.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_sku_group_billable_skus.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_sku_group_billable_skus.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :list_sku_group_billable_skus, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_sku_group_billable_skus, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3378,10 +4943,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.lookup_offer.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3402,7 +4968,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :lookup_offer, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3434,9 +4999,9 @@ module Google
             #     Required. The resource name of the reseller account.
             #     Format: accounts/\\{account_id}.
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, returns at most 100 Products.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, returns at most 100 Products. The maximum value
+            #     is 1000; the server will coerce values above 1000.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #   @param language_code [::String]
@@ -3464,13 +5029,11 @@ module Google
             #   # Call the list_products method.
             #   result = client.list_products request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::Product.
-            #     p response
+            #     p item
             #   end
             #
             def list_products request, options = nil
@@ -3484,10 +5047,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_products.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.list_products.timeout,
@@ -3501,7 +5065,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_products, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_products, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3537,9 +5101,9 @@ module Google
             #     Required. Resource name of the reseller.
             #     Format: accounts/\\{account_id}.
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, returns at most 100 SKUs.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, returns at most 100 SKUs. The maximum value is
+            #     1000; the server will coerce values above 1000.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #     Optional.
@@ -3568,13 +5132,11 @@ module Google
             #   # Call the list_skus method.
             #   result = client.list_skus request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::Sku.
-            #     p response
+            #     p item
             #   end
             #
             def list_skus request, options = nil
@@ -3588,10 +5150,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_skus.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3613,7 +5176,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_skus, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_skus, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3636,18 +5199,18 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload list_offers(parent: nil, page_size: nil, page_token: nil, filter: nil, language_code: nil)
+            # @overload list_offers(parent: nil, page_size: nil, page_token: nil, filter: nil, language_code: nil, show_future_offers: nil)
             #   Pass arguments to `list_offers` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the reseller account from which to list Offers.
-            #     Parent uses the format: accounts/\\{account_id}.
+            #     Required. The resource name of the reseller account from which to list
+            #     Offers. Parent uses the format: accounts/\\{account_id}.
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, returns at most 500 Offers.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, returns at most 500 Offers. The maximum value is
+            #     1000; the server will coerce values above 1000.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #   @param filter [::String]
@@ -3660,6 +5223,11 @@ module Google
             #     Optional. The BCP-47 language code. For example, "en-US". The
             #     response will localize in the corresponding language code, if specified.
             #     The default value is "en-US".
+            #   @param show_future_offers [::Boolean]
+            #     Optional. A boolean flag that determines if a response returns future
+            #     offers 30 days from now. If the show_future_offers is true, the response
+            #     will only contain offers that are scheduled to be available 30 days from
+            #     now.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::Offer>]
@@ -3681,13 +5249,11 @@ module Google
             #   # Call the list_offers method.
             #   result = client.list_offers request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::Offer.
-            #     p response
+            #     p item
             #   end
             #
             def list_offers request, options = nil
@@ -3701,10 +5267,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_offers.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3726,7 +5293,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_offers, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_offers, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3760,15 +5327,19 @@ module Google
             #
             #   @param create_entitlement_purchase [::Google::Cloud::Channel::V1::ListPurchasableSkusRequest::CreateEntitlementPurchase, ::Hash]
             #     List SKUs for CreateEntitlement purchase.
+            #
+            #     Note: The following fields are mutually exclusive: `create_entitlement_purchase`, `change_offer_purchase`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param change_offer_purchase [::Google::Cloud::Channel::V1::ListPurchasableSkusRequest::ChangeOfferPurchase, ::Hash]
             #     List SKUs for ChangeOffer purchase with a new SKU.
+            #
+            #     Note: The following fields are mutually exclusive: `change_offer_purchase`, `create_entitlement_purchase`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param customer [::String]
             #     Required. The resource name of the customer to list SKUs for.
             #     Format: accounts/\\{account_id}/customers/\\{customer_id}.
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, returns at most 100 SKUs.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, returns at most 100 SKUs. The maximum value is
+            #     1000; the server will coerce values above 1000.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #   @param language_code [::String]
@@ -3796,13 +5367,11 @@ module Google
             #   # Call the list_purchasable_skus method.
             #   result = client.list_purchasable_skus request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::PurchasableSku.
-            #     p response
+            #     p item
             #   end
             #
             def list_purchasable_skus request, options = nil
@@ -3816,10 +5385,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_purchasable_skus.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3841,7 +5411,7 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_purchasable_skus, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_purchasable_skus, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3855,7 +5425,10 @@ module Google
             #
             # Possible error codes:
             #
-            # * PERMISSION_DENIED: The customer doesn't belong to the reseller
+            # * PERMISSION_DENIED:
+            #     * The customer doesn't belong to the reseller
+            #     * The reseller is not authorized to transact on this Product. See
+            #     https://support.google.com/channelservices/answer/9759265
             # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
             #
             # @overload list_purchasable_offers(request, options = nil)
@@ -3875,15 +5448,19 @@ module Google
             #
             #   @param create_entitlement_purchase [::Google::Cloud::Channel::V1::ListPurchasableOffersRequest::CreateEntitlementPurchase, ::Hash]
             #     List Offers for CreateEntitlement purchase.
+            #
+            #     Note: The following fields are mutually exclusive: `create_entitlement_purchase`, `change_offer_purchase`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param change_offer_purchase [::Google::Cloud::Channel::V1::ListPurchasableOffersRequest::ChangeOfferPurchase, ::Hash]
             #     List Offers for ChangeOffer purchase.
+            #
+            #     Note: The following fields are mutually exclusive: `change_offer_purchase`, `create_entitlement_purchase`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param customer [::String]
             #     Required. The resource name of the customer to list Offers for.
             #     Format: accounts/\\{account_id}/customers/\\{customer_id}.
             #   @param page_size [::Integer]
-            #     Optional. Requested page size. Server might return fewer results than requested.
-            #     If unspecified, returns at most 100 Offers.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. Requested page size. Server might return fewer results than
+            #     requested. If unspecified, returns at most 100 Offers. The maximum value is
+            #     1000; the server will coerce values above 1000.
             #   @param page_token [::String]
             #     Optional. A token for a page of results other than the first page.
             #   @param language_code [::String]
@@ -3911,13 +5488,11 @@ module Google
             #   # Call the list_purchasable_offers method.
             #   result = client.list_purchasable_offers request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Channel::V1::PurchasableOffer.
-            #     p response
+            #     p item
             #   end
             #
             def list_purchasable_offers request, options = nil
@@ -3931,10 +5506,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_purchasable_offers.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3956,7 +5532,107 @@ module Google
               @cloud_channel_service_stub.call_rpc :list_purchasable_offers, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_purchasable_offers, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists the billing accounts that are eligible to purchase particular SKUs
+            # for a given customer.
+            #
+            # Possible error codes:
+            #
+            # * PERMISSION_DENIED: The customer doesn't belong to the reseller.
+            # * INVALID_ARGUMENT: Required request parameters are missing or invalid.
+            #
+            # Return value:
+            # Based on the provided list of SKUs, returns a list of SKU groups that must
+            # be purchased using the same billing account and the billing accounts
+            # eligible to purchase each SKU group.
+            #
+            # @overload query_eligible_billing_accounts(request, options = nil)
+            #   Pass arguments to `query_eligible_billing_accounts` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload query_eligible_billing_accounts(customer: nil, skus: nil)
+            #   Pass arguments to `query_eligible_billing_accounts` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param customer [::String]
+            #     Required. The resource name of the customer to list eligible billing
+            #     accounts for. Format: accounts/\\{account_id}/customers/\\{customer_id}.
+            #   @param skus [::Array<::String>]
+            #     Required. List of SKUs to list eligible billing accounts for. At least one
+            #     SKU is required. Format: products/\\{product_id}/skus/\\{sku_id}.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest.new
+            #
+            #   # Call the query_eligible_billing_accounts method.
+            #   result = client.query_eligible_billing_accounts request
+            #
+            #   # The returned object is of type Google::Cloud::Channel::V1::QueryEligibleBillingAccountsResponse.
+            #   p result
+            #
+            def query_eligible_billing_accounts request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.query_eligible_billing_accounts.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.customer
+                header_params["customer"] = request.customer
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.query_eligible_billing_accounts.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.query_eligible_billing_accounts.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :query_eligible_billing_accounts, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3965,7 +5641,8 @@ module Google
             ##
             # Registers a service account with subscriber privileges on the Cloud Pub/Sub
             # topic for this Channel Services account. After you create a
-            # subscriber, you get the events through {::Google::Cloud::Channel::V1::SubscriberEvent SubscriberEvent}
+            # subscriber, you get the events through
+            # {::Google::Cloud::Channel::V1::SubscriberEvent SubscriberEvent}
             #
             # Possible error codes:
             #
@@ -3999,7 +5676,8 @@ module Google
             #   @param account [::String]
             #     Required. Resource name of the account.
             #   @param service_account [::String]
-            #     Required. Service account that provides subscriber access to the registered topic.
+            #     Required. Service account that provides subscriber access to the registered
+            #     topic.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Channel::V1::RegisterSubscriberResponse]
@@ -4035,10 +5713,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.register_subscriber.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -4059,7 +5738,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :register_subscriber, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -4106,7 +5784,8 @@ module Google
             #   @param account [::String]
             #     Required. Resource name of the account.
             #   @param service_account [::String]
-            #     Required. Service account to unregister from subscriber access to the topic.
+            #     Required. Service account to unregister from subscriber access to the
+            #     topic.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Channel::V1::UnregisterSubscriberResponse]
@@ -4142,10 +5821,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.unregister_subscriber.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -4166,7 +5846,6 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :unregister_subscriber, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -4209,10 +5888,10 @@ module Google
             #   @param account [::String]
             #     Required. Resource name of the account.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of service accounts to return. The service may return
-            #     fewer than this value.
-            #     If unspecified, returns at most 100 service accounts.
-            #     The maximum value is 1000; the server will coerce values above 1000.
+            #     Optional. The maximum number of service accounts to return. The service may
+            #     return fewer than this value. If unspecified, returns at most 100 service
+            #     accounts. The maximum value is 1000; the server will coerce values above
+            #     1000.
             #   @param page_token [::String]
             #     Optional. A page token, received from a previous `ListSubscribers` call.
             #     Provide this to retrieve the subsequent page.
@@ -4254,10 +5933,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_subscribers.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -4278,7 +5958,132 @@ module Google
 
               @cloud_channel_service_stub.call_rpc :list_subscribers, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # List entitlement history.
+            #
+            # Possible error codes:
+            #
+            # * PERMISSION_DENIED: The reseller account making the request and the
+            # provided reseller account are different.
+            # * INVALID_ARGUMENT: Missing or invalid required fields in the request.
+            # * NOT_FOUND: The parent resource doesn't exist. Usually the result of an
+            # invalid name parameter.
+            # * INTERNAL: Any non-user error related to a technical issue in the backend.
+            # In this case, contact CloudChannel support.
+            # * UNKNOWN: Any non-user error related to a technical issue in the backend.
+            # In this case, contact Cloud Channel support.
+            #
+            # Return value:
+            # List of {::Google::Cloud::Channel::V1::EntitlementChange EntitlementChange}s.
+            #
+            # @overload list_entitlement_changes(request, options = nil)
+            #   Pass arguments to `list_entitlement_changes` via a request object, either of type
+            #   {::Google::Cloud::Channel::V1::ListEntitlementChangesRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Channel::V1::ListEntitlementChangesRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_entitlement_changes(parent: nil, page_size: nil, page_token: nil, filter: nil)
+            #   Pass arguments to `list_entitlement_changes` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The resource name of the entitlement for which to list
+            #     entitlement changes. The `-` wildcard may be used to match entitlements
+            #     across a customer. Formats:
+            #
+            #       * accounts/\\{account_id}/customers/\\{customer_id}/entitlements/\\{entitlement_id}
+            #       * accounts/\\{account_id}/customers/\\{customer_id}/entitlements/-
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of entitlement changes to return. The service
+            #     may return fewer than this value. If unspecified, returns at most 10
+            #     entitlement changes. The maximum value is 50; the server will coerce values
+            #     above 50.
+            #   @param page_token [::String]
+            #     Optional. A page token, received from a previous
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_entitlement_changes CloudChannelService.ListEntitlementChanges}
+            #     call. Provide this to retrieve the subsequent page.
+            #
+            #     When paginating, all other parameters provided to
+            #     {::Google::Cloud::Channel::V1::CloudChannelService::Client#list_entitlement_changes CloudChannelService.ListEntitlementChanges}
+            #     must match the call that provided the page token.
+            #   @param filter [::String]
+            #     Optional. Filters applied to the list results.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::EntitlementChange>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Channel::V1::EntitlementChange>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/channel/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Channel::V1::ListEntitlementChangesRequest.new
+            #
+            #   # Call the list_entitlement_changes method.
+            #   result = client.list_entitlement_changes request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Channel::V1::EntitlementChange.
+            #     p item
+            #   end
+            #
+            def list_entitlement_changes request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Channel::V1::ListEntitlementChangesRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_entitlement_changes.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Channel::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_entitlement_changes.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_entitlement_changes.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @cloud_channel_service_stub.call_rpc :list_entitlement_changes, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @cloud_channel_service_stub, :list_entitlement_changes, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -4314,20 +6119,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudchannel.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -4362,11 +6174,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudchannel.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudchannel.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -4381,6 +6207,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -4399,6 +6227,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -4550,6 +6386,66 @@ module Google
                 #
                 attr_reader :update_channel_partner_link
                 ##
+                # RPC-specific configuration for `get_customer_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_customer_repricing_config
+                ##
+                # RPC-specific configuration for `list_customer_repricing_configs`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_customer_repricing_configs
+                ##
+                # RPC-specific configuration for `create_customer_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :create_customer_repricing_config
+                ##
+                # RPC-specific configuration for `update_customer_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_customer_repricing_config
+                ##
+                # RPC-specific configuration for `delete_customer_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :delete_customer_repricing_config
+                ##
+                # RPC-specific configuration for `get_channel_partner_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_channel_partner_repricing_config
+                ##
+                # RPC-specific configuration for `list_channel_partner_repricing_configs`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_channel_partner_repricing_configs
+                ##
+                # RPC-specific configuration for `create_channel_partner_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :create_channel_partner_repricing_config
+                ##
+                # RPC-specific configuration for `update_channel_partner_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_channel_partner_repricing_config
+                ##
+                # RPC-specific configuration for `delete_channel_partner_repricing_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :delete_channel_partner_repricing_config
+                ##
+                # RPC-specific configuration for `list_sku_groups`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_sku_groups
+                ##
+                # RPC-specific configuration for `list_sku_group_billable_skus`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_sku_group_billable_skus
+                ##
                 # RPC-specific configuration for `lookup_offer`
                 # @return [::Gapic::Config::Method]
                 #
@@ -4580,6 +6476,11 @@ module Google
                 #
                 attr_reader :list_purchasable_offers
                 ##
+                # RPC-specific configuration for `query_eligible_billing_accounts`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :query_eligible_billing_accounts
+                ##
                 # RPC-specific configuration for `register_subscriber`
                 # @return [::Gapic::Config::Method]
                 #
@@ -4594,6 +6495,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :list_subscribers
+                ##
+                # RPC-specific configuration for `list_entitlement_changes`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_entitlement_changes
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -4649,6 +6555,30 @@ module Google
                   @create_channel_partner_link = ::Gapic::Config::Method.new create_channel_partner_link_config
                   update_channel_partner_link_config = parent_rpcs.update_channel_partner_link if parent_rpcs.respond_to? :update_channel_partner_link
                   @update_channel_partner_link = ::Gapic::Config::Method.new update_channel_partner_link_config
+                  get_customer_repricing_config_config = parent_rpcs.get_customer_repricing_config if parent_rpcs.respond_to? :get_customer_repricing_config
+                  @get_customer_repricing_config = ::Gapic::Config::Method.new get_customer_repricing_config_config
+                  list_customer_repricing_configs_config = parent_rpcs.list_customer_repricing_configs if parent_rpcs.respond_to? :list_customer_repricing_configs
+                  @list_customer_repricing_configs = ::Gapic::Config::Method.new list_customer_repricing_configs_config
+                  create_customer_repricing_config_config = parent_rpcs.create_customer_repricing_config if parent_rpcs.respond_to? :create_customer_repricing_config
+                  @create_customer_repricing_config = ::Gapic::Config::Method.new create_customer_repricing_config_config
+                  update_customer_repricing_config_config = parent_rpcs.update_customer_repricing_config if parent_rpcs.respond_to? :update_customer_repricing_config
+                  @update_customer_repricing_config = ::Gapic::Config::Method.new update_customer_repricing_config_config
+                  delete_customer_repricing_config_config = parent_rpcs.delete_customer_repricing_config if parent_rpcs.respond_to? :delete_customer_repricing_config
+                  @delete_customer_repricing_config = ::Gapic::Config::Method.new delete_customer_repricing_config_config
+                  get_channel_partner_repricing_config_config = parent_rpcs.get_channel_partner_repricing_config if parent_rpcs.respond_to? :get_channel_partner_repricing_config
+                  @get_channel_partner_repricing_config = ::Gapic::Config::Method.new get_channel_partner_repricing_config_config
+                  list_channel_partner_repricing_configs_config = parent_rpcs.list_channel_partner_repricing_configs if parent_rpcs.respond_to? :list_channel_partner_repricing_configs
+                  @list_channel_partner_repricing_configs = ::Gapic::Config::Method.new list_channel_partner_repricing_configs_config
+                  create_channel_partner_repricing_config_config = parent_rpcs.create_channel_partner_repricing_config if parent_rpcs.respond_to? :create_channel_partner_repricing_config
+                  @create_channel_partner_repricing_config = ::Gapic::Config::Method.new create_channel_partner_repricing_config_config
+                  update_channel_partner_repricing_config_config = parent_rpcs.update_channel_partner_repricing_config if parent_rpcs.respond_to? :update_channel_partner_repricing_config
+                  @update_channel_partner_repricing_config = ::Gapic::Config::Method.new update_channel_partner_repricing_config_config
+                  delete_channel_partner_repricing_config_config = parent_rpcs.delete_channel_partner_repricing_config if parent_rpcs.respond_to? :delete_channel_partner_repricing_config
+                  @delete_channel_partner_repricing_config = ::Gapic::Config::Method.new delete_channel_partner_repricing_config_config
+                  list_sku_groups_config = parent_rpcs.list_sku_groups if parent_rpcs.respond_to? :list_sku_groups
+                  @list_sku_groups = ::Gapic::Config::Method.new list_sku_groups_config
+                  list_sku_group_billable_skus_config = parent_rpcs.list_sku_group_billable_skus if parent_rpcs.respond_to? :list_sku_group_billable_skus
+                  @list_sku_group_billable_skus = ::Gapic::Config::Method.new list_sku_group_billable_skus_config
                   lookup_offer_config = parent_rpcs.lookup_offer if parent_rpcs.respond_to? :lookup_offer
                   @lookup_offer = ::Gapic::Config::Method.new lookup_offer_config
                   list_products_config = parent_rpcs.list_products if parent_rpcs.respond_to? :list_products
@@ -4661,12 +6591,16 @@ module Google
                   @list_purchasable_skus = ::Gapic::Config::Method.new list_purchasable_skus_config
                   list_purchasable_offers_config = parent_rpcs.list_purchasable_offers if parent_rpcs.respond_to? :list_purchasable_offers
                   @list_purchasable_offers = ::Gapic::Config::Method.new list_purchasable_offers_config
+                  query_eligible_billing_accounts_config = parent_rpcs.query_eligible_billing_accounts if parent_rpcs.respond_to? :query_eligible_billing_accounts
+                  @query_eligible_billing_accounts = ::Gapic::Config::Method.new query_eligible_billing_accounts_config
                   register_subscriber_config = parent_rpcs.register_subscriber if parent_rpcs.respond_to? :register_subscriber
                   @register_subscriber = ::Gapic::Config::Method.new register_subscriber_config
                   unregister_subscriber_config = parent_rpcs.unregister_subscriber if parent_rpcs.respond_to? :unregister_subscriber
                   @unregister_subscriber = ::Gapic::Config::Method.new unregister_subscriber_config
                   list_subscribers_config = parent_rpcs.list_subscribers if parent_rpcs.respond_to? :list_subscribers
                   @list_subscribers = ::Gapic::Config::Method.new list_subscribers_config
+                  list_entitlement_changes_config = parent_rpcs.list_entitlement_changes if parent_rpcs.respond_to? :list_entitlement_changes
+                  @list_entitlement_changes = ::Gapic::Config::Method.new list_entitlement_changes_config
 
                   yield self if block_given?
                 end

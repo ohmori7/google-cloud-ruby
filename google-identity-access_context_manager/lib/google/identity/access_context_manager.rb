@@ -31,40 +31,80 @@ module Google
       # Create a new client object for AccessContextManager.
       #
       # By default, this returns an instance of
-      # [Google::Identity::AccessContextManager::V1::AccessContextManager::Client](https://googleapis.dev/ruby/google-identity-access_context_manager-v1/latest/Google/Identity/AccessContextManager/V1/AccessContextManager/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Identity::AccessContextManager::V1::AccessContextManager::Client](https://cloud.google.com/ruby/docs/reference/google-identity-access_context_manager-v1/latest/Google-Identity-AccessContextManager-V1-AccessContextManager-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the AccessContextManager service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the AccessContextManager service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Identity::AccessContextManager.access_context_manager_available?}.
       #
       # ## About AccessContextManager
       #
-      # API for setting [Access Levels]
-      # [google.identity.accesscontextmanager.v1.AccessLevel] and [Service
-      # Perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
-      # for Google Cloud Projects. Each organization has one [AccessPolicy]
-      # [google.identity.accesscontextmanager.v1.AccessPolicy] containing the
-      # [Access Levels] [google.identity.accesscontextmanager.v1.AccessLevel]
-      # and [Service Perimeters]
+      # API for setting [access levels]
+      # [google.identity.accesscontextmanager.v1.AccessLevel] and [service
+      # perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
+      # for Google Cloud projects. Each organization has one [access policy]
+      # [google.identity.accesscontextmanager.v1.AccessPolicy] that contains the
+      # [access levels] [google.identity.accesscontextmanager.v1.AccessLevel]
+      # and [service perimeters]
       # [google.identity.accesscontextmanager.v1.ServicePerimeter]. This
-      # [AccessPolicy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
+      # [access policy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
       # applicable to all resources in the organization.
       # AccessPolicies
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [AccessContextManager::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.access_context_manager version: :v1, &block
+      def self.access_context_manager version: :v1, transport: :grpc, &block
         require "google/identity/access_context_manager/#{version.to_s.downcase}"
 
         package_name = Google::Identity::AccessContextManager
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Identity::AccessContextManager.const_get package_name
-        package_module.const_get(:AccessContextManager).const_get(:Client).new(&block)
+        service_module = Google::Identity::AccessContextManager.const_get(package_name).const_get(:AccessContextManager)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AccessContextManager service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Identity::AccessContextManager.access_context_manager}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AccessContextManager service,
+      # or if the versioned client gem needs an update to support the AccessContextManager service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.access_context_manager_available? version: :v1, transport: :grpc
+        require "google/identity/access_context_manager/#{version.to_s.downcase}"
+        package_name = Google::Identity::AccessContextManager
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Identity::AccessContextManager.const_get package_name
+        return false unless service_module.const_defined? :AccessContextManager
+        service_module = service_module.const_get :AccessContextManager
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
     end
   end

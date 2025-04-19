@@ -19,15 +19,29 @@
 # [START cloudasset_v1_generated_AssetService_AnalyzeIamPolicy_sync]
 require "google/cloud/asset/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Asset::V1::AssetService::Client.new
+##
+# Snippet for the analyze_iam_policy call in the AssetService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Asset::V1::AssetService::Client#analyze_iam_policy.
+#
+def analyze_iam_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Asset::V1::AssetService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Asset::V1::AnalyzeIamPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Asset::V1::AnalyzeIamPolicyRequest.new
 
-# Call the analyze_iam_policy method.
-result = client.analyze_iam_policy request
+  # Call the analyze_iam_policy method.
+  result = client.analyze_iam_policy request
 
-# The returned object is of type Google::Cloud::Asset::V1::AnalyzeIamPolicyResponse.
-p result
+  # The returned object is of type Google::Cloud::Asset::V1::AnalyzeIamPolicyResponse.
+  p result
+end
 # [END cloudasset_v1_generated_AssetService_AnalyzeIamPolicy_sync]

@@ -25,7 +25,8 @@ module Google
         # Google Service Management.
         # @!attribute [rw] service_name
         #   @return [::String]
-        #     The name of the service. See the [overview](https://cloud.google.com/service-management/overview)
+        #     The name of the service. See the
+        #     [overview](https://cloud.google.com/service-infrastructure/docs/overview)
         #     for naming requirements.
         # @!attribute [rw] producer_project_id
         #   @return [::String]
@@ -204,8 +205,9 @@ module Google
         # service config, and then create a Rollout to push the service config.
         # @!attribute [rw] rollout_id
         #   @return [::String]
-        #     Optional. Unique identifier of this Rollout. Must be no longer than 63 characters
-        #     and only lower case letters, digits, '.', '_' and '-' are allowed.
+        #     Optional. Unique identifier of this Rollout. Must be no longer than 63
+        #     characters and only lower case letters, digits, '.', '_' and '-' are
+        #     allowed.
         #
         #     If not specified by client, the server will generate one. The generated id
         #     will have the form of <date><revision number>, where "date" is the create
@@ -227,10 +229,14 @@ module Google
         #   @return [::Google::Cloud::ServiceManagement::V1::Rollout::TrafficPercentStrategy]
         #     Google Service Control selects service configurations based on
         #     traffic percentage.
+        #
+        #     Note: The following fields are mutually exclusive: `traffic_percent_strategy`, `delete_service_strategy`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] delete_service_strategy
         #   @return [::Google::Cloud::ServiceManagement::V1::Rollout::DeleteServiceStrategy]
         #     The strategy associated with a rollout to delete a `ManagedService`.
         #     Readonly.
+        #
+        #     Note: The following fields are mutually exclusive: `delete_service_strategy`, `traffic_percent_strategy`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] service_name
         #   @return [::String]
         #     The name of the service associated with this Rollout.

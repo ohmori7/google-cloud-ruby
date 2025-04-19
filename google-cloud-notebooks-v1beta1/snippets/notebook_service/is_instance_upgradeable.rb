@@ -19,15 +19,29 @@
 # [START notebooks_v1beta1_generated_NotebookService_IsInstanceUpgradeable_sync]
 require "google/cloud/notebooks/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Notebooks::V1beta1::NotebookService::Client.new
+##
+# Snippet for the is_instance_upgradeable call in the NotebookService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Notebooks::V1beta1::NotebookService::Client#is_instance_upgradeable.
+#
+def is_instance_upgradeable
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Notebooks::V1beta1::NotebookService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Notebooks::V1beta1::IsInstanceUpgradeableRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Notebooks::V1beta1::IsInstanceUpgradeableRequest.new
 
-# Call the is_instance_upgradeable method.
-result = client.is_instance_upgradeable request
+  # Call the is_instance_upgradeable method.
+  result = client.is_instance_upgradeable request
 
-# The returned object is of type Google::Cloud::Notebooks::V1beta1::IsInstanceUpgradeableResponse.
-p result
+  # The returned object is of type Google::Cloud::Notebooks::V1beta1::IsInstanceUpgradeableResponse.
+  p result
+end
 # [END notebooks_v1beta1_generated_NotebookService_IsInstanceUpgradeable_sync]

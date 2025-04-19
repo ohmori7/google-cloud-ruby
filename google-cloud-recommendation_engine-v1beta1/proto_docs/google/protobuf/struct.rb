@@ -46,28 +46,40 @@ module Google
 
     # `Value` represents a dynamically typed value which can be either
     # null, a number, a string, a boolean, a recursive struct value, or a
-    # list of values. A producer of value is expected to set one of that
-    # variants, absence of any variant indicates an error.
+    # list of values. A producer of value is expected to set one of these
+    # variants. Absence of any variant indicates an error.
     #
     # The JSON representation for `Value` is JSON value.
     # @!attribute [rw] null_value
     #   @return [::Google::Protobuf::NullValue]
     #     Represents a null value.
+    #
+    #     Note: The following fields are mutually exclusive: `null_value`, `number_value`, `string_value`, `bool_value`, `struct_value`, `list_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] number_value
     #   @return [::Float]
     #     Represents a double value.
+    #
+    #     Note: The following fields are mutually exclusive: `number_value`, `null_value`, `string_value`, `bool_value`, `struct_value`, `list_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] string_value
     #   @return [::String]
     #     Represents a string value.
+    #
+    #     Note: The following fields are mutually exclusive: `string_value`, `null_value`, `number_value`, `bool_value`, `struct_value`, `list_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] bool_value
     #   @return [::Boolean]
     #     Represents a boolean value.
+    #
+    #     Note: The following fields are mutually exclusive: `bool_value`, `null_value`, `number_value`, `string_value`, `struct_value`, `list_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] struct_value
     #   @return [::Google::Protobuf::Struct]
     #     Represents a structured value.
+    #
+    #     Note: The following fields are mutually exclusive: `struct_value`, `null_value`, `number_value`, `string_value`, `bool_value`, `list_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] list_value
     #   @return [::Google::Protobuf::ListValue]
     #     Represents a repeated `Value`.
+    #
+    #     Note: The following fields are mutually exclusive: `list_value`, `null_value`, `number_value`, `string_value`, `bool_value`, `struct_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     class Value
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -87,7 +99,7 @@ module Google
     # `NullValue` is a singleton enumeration to represent the null value for the
     # `Value` type union.
     #
-    #  The JSON representation for `NullValue` is JSON `null`.
+    # The JSON representation for `NullValue` is JSON `null`.
     module NullValue
       # Null value.
       NULL_VALUE = 0

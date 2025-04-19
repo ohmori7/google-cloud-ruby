@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_SessionEntityTypes_DeleteSessionEntityType_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::SessionEntityTypes::Client.new
+##
+# Snippet for the delete_session_entity_type call in the SessionEntityTypes service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::SessionEntityTypes::Client#delete_session_entity_type.
+#
+def delete_session_entity_type
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::SessionEntityTypes::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::DeleteSessionEntityTypeRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::DeleteSessionEntityTypeRequest.new
 
-# Call the delete_session_entity_type method.
-result = client.delete_session_entity_type request
+  # Call the delete_session_entity_type method.
+  result = client.delete_session_entity_type request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END dialogflow_v2_generated_SessionEntityTypes_DeleteSessionEntityType_sync]

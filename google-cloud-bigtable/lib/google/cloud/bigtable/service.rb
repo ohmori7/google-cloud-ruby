@@ -20,6 +20,9 @@ require "google/cloud/bigtable/errors"
 require "google/cloud/bigtable/credentials"
 require "google/cloud/bigtable/v2"
 require "google/cloud/bigtable/admin/v2"
+require "google/cloud/bigtable/convert"
+require "gapic/lru_hash"
+require "concurrent"
 
 module Google
   module Cloud
@@ -29,6 +32,11 @@ module Google
       class Service
         # @private
         attr_accessor :project_id, :credentials, :host, :host_admin, :timeout
+
+        # @private
+        def universe_domain
+          tables.universe_domain
+        end
 
         # @private
         # Creates a new Service instance.
@@ -49,17 +57,24 @@ module Google
         # @param timeout [Integer]
         #   The default timeout, in seconds, for calls made through this client.
         #
-        def initialize project_id, credentials, host: nil, host_admin: nil, timeout: nil
+        def initialize project_id, credentials, host: nil, host_admin: nil, timeout: nil,
+                       channel_selection: nil, channel_count: nil, universe_domain: nil
           @project_id = project_id
           @credentials = credentials
           @host = host
           @host_admin = host_admin
           @timeout = timeout
+          @channel_selection = channel_selection
+          @channel_count = channel_count
+          @universe_domain_override = universe_domain
+          @bigtable_clients = ::Gapic::LruHash.new 10
+          @mutex = Mutex.new
         end
 
         def instances
           return mocked_instances if mocked_instances
           @instances ||= Admin::V2::BigtableInstanceAdmin::Client.new do |config|
+            config.universe_domain = @universe_domain_override if @universe_domain_override
             config.credentials = credentials if credentials
             config.timeout = timeout if timeout
             config.endpoint = host_admin if host_admin
@@ -73,6 +88,7 @@ module Google
         def tables
           return mocked_tables if mocked_tables
           @tables ||= Admin::V2::BigtableTableAdmin::Client.new do |config|
+            config.universe_domain = @universe_domain_override if @universe_domain_override
             config.credentials = credentials if credentials
             config.timeout = timeout if timeout
             config.endpoint = host_admin if host_admin
@@ -83,15 +99,15 @@ module Google
         end
         attr_accessor :mocked_tables
 
-        def client
+        def client table_path, app_profile_id
           return mocked_client if mocked_client
-          @client ||= V2::Bigtable::Client.new do |config|
-            config.credentials = credentials if credentials
-            config.timeout = timeout if timeout
-            config.endpoint = host if host
-            config.lib_name = "gccl"
-            config.lib_version = Google::Cloud::Bigtable::VERSION
-            config.metadata = { "google-cloud-resource-prefix": "projects/#{@project_id}" }
+          table_key = "#{table_path}_#{app_profile_id}"
+          @mutex.synchronize do
+            if @bigtable_clients.get(table_key).nil?
+              bigtable_client = create_bigtable_client table_path, app_profile_id
+              @bigtable_clients.put table_key, bigtable_client
+            end
+            @bigtable_clients.get table_key
           end
         end
         attr_accessor :mocked_client
@@ -282,12 +298,12 @@ module Google
           initial_splits = initial_splits.map { |key| { key: key } } if initial_splits
 
           tables.create_table(
-            {
+            **{
               parent:         instance_path(instance_id),
               table_id:       table_id,
               table:          table,
               initial_splits: initial_splits
-            }.delete_if { |_, v| v.nil? }
+            }.compact
           )
         end
 
@@ -649,35 +665,37 @@ module Google
         end
 
         def read_rows instance_id, table_id, app_profile_id: nil, rows: nil, filter: nil, rows_limit: nil
-          client.read_rows table_name:     table_path(instance_id, table_id),
-                           rows:           rows,
-                           filter:         filter,
-                           rows_limit:     rows_limit,
-                           app_profile_id: app_profile_id
+          client(table_path(instance_id, table_id), app_profile_id).read_rows(
+            table_name:     table_path(instance_id, table_id),
+            rows:           rows,
+            filter:         filter,
+            rows_limit:     rows_limit,
+            app_profile_id: app_profile_id
+          )
         end
 
         def sample_row_keys table_name, app_profile_id: nil
-          client.sample_row_keys table_name: table_name, app_profile_id: app_profile_id
+          client(table_name, app_profile_id).sample_row_keys table_name: table_name, app_profile_id: app_profile_id
         end
 
         def mutate_row table_name, row_key, mutations, app_profile_id: nil
-          client.mutate_row(
-            {
+          client(table_name, app_profile_id).mutate_row(
+            **{
               table_name:     table_name,
               app_profile_id: app_profile_id,
               row_key:        row_key,
               mutations:      mutations
-            }.delete_if { |_, v| v.nil? }
+            }.compact
           )
         end
 
         def mutate_rows table_name, entries, app_profile_id: nil
-          client.mutate_rows(
-            {
+          client(table_name, app_profile_id).mutate_rows(
+            **{
               table_name:     table_name,
               app_profile_id: app_profile_id,
               entries:        entries
-            }.delete_if { |_, v| v.nil? }
+            }.compact
           )
         end
 
@@ -687,26 +705,26 @@ module Google
                                  predicate_filter: nil,
                                  true_mutations: nil,
                                  false_mutations: nil
-          client.check_and_mutate_row(
-            {
+          client(table_name, app_profile_id).check_and_mutate_row(
+            **{
               table_name:       table_name,
               app_profile_id:   app_profile_id,
               row_key:          row_key,
               predicate_filter: predicate_filter,
               true_mutations:   true_mutations,
               false_mutations:  false_mutations
-            }.delete_if { |_, v| v.nil? }
+            }.compact
           )
         end
 
         def read_modify_write_row table_name, row_key, rules, app_profile_id: nil
-          client.read_modify_write_row(
-            {
+          client(table_name, app_profile_id).read_modify_write_row(
+            **{
               table_name:     table_name,
               app_profile_id: app_profile_id,
               row_key:        row_key,
               rules:          rules
-            }.delete_if { |_, v| v.nil? }
+            }.compact
           )
         end
 
@@ -719,6 +737,19 @@ module Google
           backup = Google::Cloud::Bigtable::Admin::V2::Backup.new \
             source_table: table_path(instance_id, source_table_id), expire_time: expire_time
           tables.create_backup parent: cluster_path(instance_id, cluster_id), backup_id: backup_id, backup: backup
+        end
+
+        ##
+        # Starts copying the selected backup to the chosen location.
+        # The underlying Google::Longrunning::Operation tracks the copying of backup.
+        #
+        # @return [Gapic::Operation]
+        #
+        def copy_backup project_id:, instance_id:, cluster_id:, backup_id:, source_backup:, expire_time:
+          tables.copy_backup parent: "projects/#{project_id}/instances/#{instance_id}/clusters/#{cluster_id}",
+                             backup_id: backup_id,
+                             source_backup: source_backup,
+                             expire_time: expire_time
         end
 
         ##
@@ -867,6 +898,24 @@ module Google
         #
         def inspect
           "#{self.class}(#{@project_id})"
+        end
+
+        def create_bigtable_client table_path, app_profile_id
+          V2::Bigtable::Client.new do |config|
+            config.credentials = credentials if credentials
+            config.universe_domain = @universe_domain_override if @universe_domain_override
+            config.timeout = timeout if timeout
+            config.endpoint = host if host
+            config.lib_name = "gccl"
+            config.lib_version = Google::Cloud::Bigtable::VERSION
+            config.metadata = { "google-cloud-resource-prefix": "projects/#{@project_id}" }
+            config.channel_pool.channel_selection = @channel_selection
+            config.channel_pool.channel_count = @channel_count
+            request, options = Convert.ping_and_warm_request table_path, app_profile_id, timeout
+            config.channel_pool.on_channel_create = proc do |channel|
+              channel.call_rpc :ping_and_warm, request, options: options
+            end
+          end
         end
       end
     end

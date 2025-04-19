@@ -19,15 +19,29 @@
 # [START vmmigration_v1_generated_VMMigration_GetDatacenterConnector_sync]
 require "google/cloud/vm_migration/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::VMMigration::V1::VMMigration::Client.new
+##
+# Snippet for the get_datacenter_connector call in the VMMigration service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::VMMigration::V1::VMMigration::Client#get_datacenter_connector.
+#
+def get_datacenter_connector
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::VMMigration::V1::VMMigration::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::VMMigration::V1::GetDatacenterConnectorRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::VMMigration::V1::GetDatacenterConnectorRequest.new
 
-# Call the get_datacenter_connector method.
-result = client.get_datacenter_connector request
+  # Call the get_datacenter_connector method.
+  result = client.get_datacenter_connector request
 
-# The returned object is of type Google::Cloud::VMMigration::V1::DatacenterConnector.
-p result
+  # The returned object is of type Google::Cloud::VMMigration::V1::DatacenterConnector.
+  p result
+end
 # [END vmmigration_v1_generated_VMMigration_GetDatacenterConnector_sync]

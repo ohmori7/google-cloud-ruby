@@ -31,9 +31,19 @@ module Google
           # @!attribute [rw] gauge_view
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::Scorecard::GaugeView]
           #     Will cause the scorecard to show a gauge chart.
+          #
+          #     Note: The following fields are mutually exclusive: `gauge_view`, `spark_chart_view`, `blank_view`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] spark_chart_view
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::Scorecard::SparkChartView]
           #     Will cause the scorecard to show a spark chart.
+          #
+          #     Note: The following fields are mutually exclusive: `spark_chart_view`, `gauge_view`, `blank_view`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] blank_view
+          #   @return [::Google::Protobuf::Empty]
+          #     Will cause the `Scorecard` to show only the value, with no indicator to
+          #     its value relative to its thresholds.
+          #
+          #     Note: The following fields are mutually exclusive: `blank_view`, `gauge_view`, `spark_chart_view`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] thresholds
           #   @return [::Array<::Google::Cloud::Monitoring::Dashboard::V1::Threshold>]
           #     The thresholds used to determine the state of the scorecard given the
@@ -45,6 +55,8 @@ module Google
           #     it in a danger state. (Danger trumps warning.)
           #
           #     As an example, consider a scorecard with the following four thresholds:
+          #
+          #     ```
           #     {
           #       value: 90,
           #       category: 'DANGER',
@@ -65,6 +77,7 @@ module Google
           #       category: 'WARNING',
           #       trigger: 'BELOW',
           #     }
+          #     ```
           #
           #     Then: values less than or equal to 10 would put the scorecard in a DANGER
           #     state, values greater than 10 but less than or equal to 20 a WARNING state,

@@ -19,15 +19,29 @@
 # [START dataflow_v1beta3_generated_Jobs_UpdateJob_sync]
 require "google/cloud/dataflow/v1beta3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataflow::V1beta3::Jobs::Client.new
+##
+# Snippet for the update_job call in the Jobs service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataflow::V1beta3::Jobs::Client#update_job.
+#
+def update_job
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataflow::V1beta3::Jobs::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataflow::V1beta3::UpdateJobRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataflow::V1beta3::UpdateJobRequest.new
 
-# Call the update_job method.
-result = client.update_job request
+  # Call the update_job method.
+  result = client.update_job request
 
-# The returned object is of type Google::Cloud::Dataflow::V1beta3::Job.
-p result
+  # The returned object is of type Google::Cloud::Dataflow::V1beta3::Job.
+  p result
+end
 # [END dataflow_v1beta3_generated_Jobs_UpdateJob_sync]

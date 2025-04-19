@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/metastore/v1beta/dataproc_metastore"
 
 class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_backup_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -35,9 +53,21 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientPathsTest < M
     end
   end
 
+  def test_lake_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.lake_path project: "value0", location: "value1", lake: "value2"
+      assert_equal "projects/value0/locations/value1/lakes/value2", path
+    end
+  end
+
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +79,7 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientPathsTest < M
 
   def test_metadata_import_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +91,7 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientPathsTest < M
 
   def test_network_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,13 +103,25 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientPathsTest < M
 
   def test_service_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
 
       path = client.service_path project: "value0", location: "value1", service: "value2"
       assert_equal "projects/value0/locations/value1/services/value2", path
+    end
+  end
+
+  def test_subnetwork_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.subnetwork_path project: "value0", region: "value1", subnetwork: "value2"
+      assert_equal "projects/value0/regions/value1/subnetworks/value2", path
     end
   end
 end

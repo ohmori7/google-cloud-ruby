@@ -26,8 +26,9 @@ module Google
         module V3
           module Sessions
             # A session represents an interaction with a user. You retrieve user input
-            # and pass it to the [DetectIntent][google.cloud.dialogflow.cx.v3.Sessions.DetectIntent] method to determine
-            # user intent and respond.
+            # and pass it to the
+            # [DetectIntent][google.cloud.dialogflow.cx.v3.Sessions.DetectIntent] method to
+            # determine user intent and respond.
             class Service
 
               include ::GRPC::GenericService
@@ -45,6 +46,12 @@ module Google
               # See [Versions and
               # environments](https://cloud.google.com/dialogflow/cx/docs/concept/version).
               rpc :DetectIntent, ::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest, ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse
+              # Processes a natural language query and returns structured, actionable data
+              # as a result through server-side streaming. Server-side streaming allows
+              # Dialogflow to send [partial
+              # responses](https://cloud.google.com/dialogflow/cx/docs/concept/fulfillment#partial-response)
+              # earlier in a single request.
+              rpc :ServerStreamingDetectIntent, ::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest, stream(::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse)
               # Processes a natural language query in audio format in a streaming fashion
               # and returns structured, actionable data as a result. This method is only
               # available via the gRPC API (not REST).
@@ -56,10 +63,17 @@ module Google
               # Returns preliminary intent match results, doesn't change the session
               # status.
               rpc :MatchIntent, ::Google::Cloud::Dialogflow::CX::V3::MatchIntentRequest, ::Google::Cloud::Dialogflow::CX::V3::MatchIntentResponse
-              # Fulfills a matched intent returned by [MatchIntent][google.cloud.dialogflow.cx.v3.Sessions.MatchIntent].
-              # Must be called after [MatchIntent][google.cloud.dialogflow.cx.v3.Sessions.MatchIntent], with input from
-              # [MatchIntentResponse][google.cloud.dialogflow.cx.v3.MatchIntentResponse]. Otherwise, the behavior is undefined.
+              # Fulfills a matched intent returned by
+              # [MatchIntent][google.cloud.dialogflow.cx.v3.Sessions.MatchIntent]. Must be
+              # called after
+              # [MatchIntent][google.cloud.dialogflow.cx.v3.Sessions.MatchIntent], with
+              # input from
+              # [MatchIntentResponse][google.cloud.dialogflow.cx.v3.MatchIntentResponse].
+              # Otherwise, the behavior is undefined.
               rpc :FulfillIntent, ::Google::Cloud::Dialogflow::CX::V3::FulfillIntentRequest, ::Google::Cloud::Dialogflow::CX::V3::FulfillIntentResponse
+              # Updates the feedback received from the user for a single turn of the bot
+              # response.
+              rpc :SubmitAnswerFeedback, ::Google::Cloud::Dialogflow::CX::V3::SubmitAnswerFeedbackRequest, ::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback
             end
 
             Stub = Service.rpc_stub_class

@@ -44,6 +44,10 @@ module Google
         # @!attribute [rw] project_id
         #   @return [::String]
         #     The ID of the project to which the entities belong.
+        # @!attribute [rw] database_id
+        #   @return [::String]
+        #     If not empty, the ID of the database to which the entities
+        #     belong.
         # @!attribute [rw] namespace_id
         #   @return [::String]
         #     If not empty, the ID of the namespace to which the entities belong.
@@ -90,20 +94,35 @@ module Google
           # @!attribute [rw] kind
           #   @return [::String]
           #     The kind of the entity.
+          #
           #     A kind matching regex `__.*__` is reserved/read-only.
           #     A kind must not contain more than 1500 bytes when UTF-8 encoded.
           #     Cannot be `""`.
+          #
+          #     Must be valid UTF-8 bytes. Legacy values that are not valid UTF-8 are
+          #     encoded as `__bytes<X>__` where `<X>` is the base-64 encoding of the
+          #     bytes.
           # @!attribute [rw] id
           #   @return [::Integer]
           #     The auto-allocated ID of the entity.
+          #
           #     Never equal to zero. Values less than zero are discouraged and may not
           #     be supported in the future.
+          #
+          #     Note: The following fields are mutually exclusive: `id`, `name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] name
           #   @return [::String]
           #     The name of the entity.
+          #
           #     A name matching regex `__.*__` is reserved/read-only.
           #     A name must not be more than 1500 bytes when UTF-8 encoded.
           #     Cannot be `""`.
+          #
+          #     Must be valid UTF-8 bytes. Legacy values that are not valid UTF-8 are
+          #     encoded as `__bytes<X>__` where `<X>` is the base-64 encoding of the
+          #     bytes.
+          #
+          #     Note: The following fields are mutually exclusive: `name`, `id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class PathElement
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -126,37 +145,55 @@ module Google
         # @!attribute [rw] null_value
         #   @return [::Google::Protobuf::NullValue]
         #     A null value.
+        #
+        #     Note: The following fields are mutually exclusive: `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] boolean_value
         #   @return [::Boolean]
         #     A boolean value.
+        #
+        #     Note: The following fields are mutually exclusive: `boolean_value`, `null_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] integer_value
         #   @return [::Integer]
         #     An integer value.
+        #
+        #     Note: The following fields are mutually exclusive: `integer_value`, `null_value`, `boolean_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] double_value
         #   @return [::Float]
         #     A double value.
+        #
+        #     Note: The following fields are mutually exclusive: `double_value`, `null_value`, `boolean_value`, `integer_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] timestamp_value
         #   @return [::Google::Protobuf::Timestamp]
         #     A timestamp value.
         #     When stored in the Datastore, precise only to microseconds;
         #     any additional precision is rounded down.
+        #
+        #     Note: The following fields are mutually exclusive: `timestamp_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] key_value
         #   @return [::Google::Cloud::Datastore::V1::Key]
         #     A key value.
+        #
+        #     Note: The following fields are mutually exclusive: `key_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] string_value
         #   @return [::String]
         #     A UTF-8 encoded string value.
-        #     When `exclude_from_indexes` is false (it is indexed), may have at most
+        #     When `exclude_from_indexes` is false (it is indexed) , may have at most
         #     1500 bytes. Otherwise, may be set to at most 1,000,000 bytes.
+        #
+        #     Note: The following fields are mutually exclusive: `string_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `blob_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] blob_value
         #   @return [::String]
         #     A blob value.
         #     May have at most 1,000,000 bytes.
         #     When `exclude_from_indexes` is false, may have at most 1500 bytes.
         #     In JSON requests, must be base64-encoded.
+        #
+        #     Note: The following fields are mutually exclusive: `blob_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `geo_point_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] geo_point_value
         #   @return [::Google::Type::LatLng]
         #     A geo point value representing a point on the surface of Earth.
+        #
+        #     Note: The following fields are mutually exclusive: `geo_point_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `entity_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] entity_value
         #   @return [::Google::Cloud::Datastore::V1::Entity]
         #     An entity value.
@@ -164,12 +201,16 @@ module Google
         #     - May have no key.
         #     - May have a key with an incomplete key path.
         #     - May have a reserved/read-only key.
+        #
+        #     Note: The following fields are mutually exclusive: `entity_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `array_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] array_value
         #   @return [::Google::Cloud::Datastore::V1::ArrayValue]
         #     An array value.
         #     Cannot contain another array value.
         #     A `Value` instance that sets field `array_value` must not set fields
         #     `meaning` or `exclude_from_indexes`.
+        #
+        #     Note: The following fields are mutually exclusive: `array_value`, `null_value`, `boolean_value`, `integer_value`, `double_value`, `timestamp_value`, `key_value`, `string_value`, `blob_value`, `geo_point_value`, `entity_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] meaning
         #   @return [::Integer]
         #     The `meaning` field should only be populated for backwards compatibility.
@@ -184,9 +225,7 @@ module Google
 
         # A Datastore data object.
         #
-        # An entity is limited to 1 megabyte when stored. That _roughly_
-        # corresponds to a limit of 1 megabyte for the serialized form of this
-        # message.
+        # Must not exceed 1 MiB - 4 bytes.
         # @!attribute [rw] key
         #   @return [::Google::Cloud::Datastore::V1::Key]
         #     The entity's key.
@@ -201,8 +240,8 @@ module Google
         #     The map's keys are property names.
         #     A property name matching regex `__.*__` is reserved.
         #     A reserved property name is forbidden in certain documented contexts.
-        #     The name must not contain more than 500 characters.
-        #     The name cannot be `""`.
+        #     The map keys, represented as UTF-8, must not exceed 1,500 bytes and cannot
+        #     be empty.
         class Entity
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

@@ -19,15 +19,29 @@
 # [START cloudchannel_v1_generated_CloudChannelService_CheckCloudIdentityAccountsExist_sync]
 require "google/cloud/channel/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
+##
+# Snippet for the check_cloud_identity_accounts_exist call in the CloudChannelService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Channel::V1::CloudChannelService::Client#check_cloud_identity_accounts_exist.
+#
+def check_cloud_identity_accounts_exist
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Channel::V1::CloudChannelService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new
 
-# Call the check_cloud_identity_accounts_exist method.
-result = client.check_cloud_identity_accounts_exist request
+  # Call the check_cloud_identity_accounts_exist method.
+  result = client.check_cloud_identity_accounts_exist request
 
-# The returned object is of type Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistResponse.
-p result
+  # The returned object is of type Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistResponse.
+  p result
+end
 # [END cloudchannel_v1_generated_CloudChannelService_CheckCloudIdentityAccountsExist_sync]

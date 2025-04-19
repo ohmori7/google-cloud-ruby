@@ -59,6 +59,40 @@
         }
       }
     },
+    "Generators": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::V2::Generators::Client",
+          "rpcs": {
+            "CreateGenerator": {
+              "methods": [
+                "create_generator"
+              ]
+            },
+            "GetGenerator": {
+              "methods": [
+                "get_generator"
+              ]
+            },
+            "ListGenerators": {
+              "methods": [
+                "list_generators"
+              ]
+            },
+            "DeleteGenerator": {
+              "methods": [
+                "delete_generator"
+              ]
+            },
+            "UpdateGenerator": {
+              "methods": [
+                "update_generator"
+              ]
+            }
+          }
+        }
+      }
+    },
     "Contexts": {
       "clients": {
         "grpc": {
@@ -284,6 +318,11 @@
                 "analyze_content"
               ]
             },
+            "StreamingAnalyzeContent": {
+              "methods": [
+                "streaming_analyze_content"
+              ]
+            },
             "SuggestArticles": {
               "methods": [
                 "suggest_articles"
@@ -297,6 +336,11 @@
             "SuggestSmartReplies": {
               "methods": [
                 "suggest_smart_replies"
+              ]
+            },
+            "SuggestKnowledgeAssist": {
+              "methods": [
+                "suggest_knowledge_assist"
               ]
             }
           }
@@ -351,6 +395,16 @@
               "methods": [
                 "delete_conversation_profile"
               ]
+            },
+            "SetSuggestionFeatureConfig": {
+              "methods": [
+                "set_suggestion_feature_config"
+              ]
+            },
+            "ClearSuggestionFeatureConfig": {
+              "methods": [
+                "clear_suggestion_feature_config"
+              ]
             }
           }
         }
@@ -381,9 +435,127 @@
                 "complete_conversation"
               ]
             },
+            "IngestContextReferences": {
+              "methods": [
+                "ingest_context_references"
+              ]
+            },
             "ListMessages": {
               "methods": [
                 "list_messages"
+              ]
+            },
+            "SuggestConversationSummary": {
+              "methods": [
+                "suggest_conversation_summary"
+              ]
+            },
+            "GenerateStatelessSummary": {
+              "methods": [
+                "generate_stateless_summary"
+              ]
+            },
+            "GenerateStatelessSuggestion": {
+              "methods": [
+                "generate_stateless_suggestion"
+              ]
+            },
+            "SearchKnowledge": {
+              "methods": [
+                "search_knowledge"
+              ]
+            },
+            "GenerateSuggestions": {
+              "methods": [
+                "generate_suggestions"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ConversationDatasets": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::V2::ConversationDatasets::Client",
+          "rpcs": {
+            "CreateConversationDataset": {
+              "methods": [
+                "create_conversation_dataset"
+              ]
+            },
+            "GetConversationDataset": {
+              "methods": [
+                "get_conversation_dataset"
+              ]
+            },
+            "ListConversationDatasets": {
+              "methods": [
+                "list_conversation_datasets"
+              ]
+            },
+            "DeleteConversationDataset": {
+              "methods": [
+                "delete_conversation_dataset"
+              ]
+            },
+            "ImportConversationData": {
+              "methods": [
+                "import_conversation_data"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ConversationModels": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::V2::ConversationModels::Client",
+          "rpcs": {
+            "CreateConversationModel": {
+              "methods": [
+                "create_conversation_model"
+              ]
+            },
+            "GetConversationModel": {
+              "methods": [
+                "get_conversation_model"
+              ]
+            },
+            "ListConversationModels": {
+              "methods": [
+                "list_conversation_models"
+              ]
+            },
+            "DeleteConversationModel": {
+              "methods": [
+                "delete_conversation_model"
+              ]
+            },
+            "DeployConversationModel": {
+              "methods": [
+                "deploy_conversation_model"
+              ]
+            },
+            "UndeployConversationModel": {
+              "methods": [
+                "undeploy_conversation_model"
+              ]
+            },
+            "GetConversationModelEvaluation": {
+              "methods": [
+                "get_conversation_model_evaluation"
+              ]
+            },
+            "ListConversationModelEvaluations": {
+              "methods": [
+                "list_conversation_model_evaluations"
+              ]
+            },
+            "CreateConversationModelEvaluation": {
+              "methods": [
+                "create_conversation_model_evaluation"
               ]
             }
           }
@@ -433,6 +605,25 @@
             "ExportDocument": {
               "methods": [
                 "export_document"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "EncryptionSpecService": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::V2::EncryptionSpecService::Client",
+          "rpcs": {
+            "GetEncryptionSpec": {
+              "methods": [
+                "get_encryption_spec"
+              ]
+            },
+            "InitializeEncryptionSpec": {
+              "methods": [
+                "initialize_encryption_spec"
               ]
             }
           }

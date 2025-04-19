@@ -19,15 +19,29 @@
 # [START logging_v2_generated_ConfigService_GetSink_sync]
 require "google/cloud/logging/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Logging::V2::ConfigService::Client.new
+##
+# Snippet for the get_sink call in the ConfigService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Logging::V2::ConfigService::Client#get_sink.
+#
+def get_sink
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Logging::V2::ConfigService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Logging::V2::GetSinkRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Logging::V2::GetSinkRequest.new
 
-# Call the get_sink method.
-result = client.get_sink request
+  # Call the get_sink method.
+  result = client.get_sink request
 
-# The returned object is of type Google::Cloud::Logging::V2::LogSink.
-p result
+  # The returned object is of type Google::Cloud::Logging::V2::LogSink.
+  p result
+end
 # [END logging_v2_generated_ConfigService_GetSink_sync]

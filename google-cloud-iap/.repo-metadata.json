@@ -3,6 +3,7 @@
     "api_shortname": "iap",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-iap/latest",
     "distribution_name": "google-cloud-iap",
+    "is_cloud": true,
     "language": "ruby",
     "name": "iap",
     "name_pretty": "Identity-Aware Proxy API",
@@ -13,5 +14,5 @@
     "ruby-cloud-description": "IAP lets you establish a central authorization layer for applications accessed by HTTPS, so you can use an application-level access control model instead of relying on network-level firewalls.",
     "ruby-cloud-env-prefix": "IAP",
     "ruby-cloud-product-url": "https://cloud.google.com/iap/",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

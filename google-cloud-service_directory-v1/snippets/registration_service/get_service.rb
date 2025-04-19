@@ -19,15 +19,29 @@
 # [START servicedirectory_v1_generated_RegistrationService_GetService_sync]
 require "google/cloud/service_directory/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
+##
+# Snippet for the get_service call in the RegistrationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ServiceDirectory::V1::RegistrationService::Client#get_service.
+#
+def get_service
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ServiceDirectory::V1::GetServiceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ServiceDirectory::V1::GetServiceRequest.new
 
-# Call the get_service method.
-result = client.get_service request
+  # Call the get_service method.
+  result = client.get_service request
 
-# The returned object is of type Google::Cloud::ServiceDirectory::V1::Service.
-p result
+  # The returned object is of type Google::Cloud::ServiceDirectory::V1::Service.
+  p result
+end
 # [END servicedirectory_v1_generated_RegistrationService_GetService_sync]

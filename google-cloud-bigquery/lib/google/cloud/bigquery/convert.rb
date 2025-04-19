@@ -39,6 +39,7 @@ module Google
       #   | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
       #   | `DATE`       | `Date`                               |                                                    |
       #   | `GEOGRAPHY`  | `String`                             |                                                    |
+      #   | `JSON`       | `String`                             | String, as JSON does not have a schema to verify.  |
       #   | `TIMESTAMP`  | `Time`                               |                                                    |
       #   | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
       #   | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |
@@ -54,10 +55,9 @@ module Google
         end
 
         def self.format_row row, fields
-          row_pairs = fields.zip(row[:f]).map do |f, v|
+          fields.zip(row[:f]).to_h do |f, v|
             [f.name.to_sym, format_value(v, f)]
           end
-          Hash[row_pairs]
         end
 
         # rubocop:disable all
@@ -73,7 +73,7 @@ module Google
             value[:v].map { |v| format_value v, field }
           elsif Hash === value[:v]
             format_row value[:v], field.fields
-          elsif field.type == "STRING"
+          elsif field.type == "STRING" || field.type == "JSON" || field.type == "GEOGRAPHY"
             String value[:v]
           elsif field.type == "INTEGER"
             Integer value[:v]
@@ -103,8 +103,6 @@ module Google
             ::Time.parse("#{value[:v]} UTC").to_datetime
           elsif field.type == "DATE"
             Date.parse value[:v]
-          elsif field.type == "GEOGRAPHY"
-            String value[:v]
           else
             value[:v]
           end
@@ -123,10 +121,9 @@ module Google
             array_values = json_value.map { |v| to_query_param_value v, type }
             Google::Apis::BigqueryV2::QueryParameterValue.new array_values: array_values
           when Hash
-            struct_pairs = json_value.map do |k, v|
+            struct_values = json_value.to_h do |k, v|
               [String(k), to_query_param_value(v, type)]
             end
-            struct_values = Hash[struct_pairs]
             Google::Apis::BigqueryV2::QueryParameterValue.new struct_values: struct_values
           else
             # Everything else is converted to a string, per the API expectations.
@@ -239,7 +236,7 @@ module Google
             type = extract_array_type type
             value.map { |x| to_json_value x, type }
           elsif Hash === value
-            Hash[value.map { |k, v| [k.to_s, to_json_value(v, type)] }]
+            value.to_h { |k, v| [k.to_s, to_json_value(v, type)] }
           else
             value
           end
@@ -256,17 +253,17 @@ module Google
 
         ##
         # Lists are specified by providing the type code in an array. For example, an array of integers are specified as
-        # `[:INT64]`. Extracts the symbol.
+        # `[:INT64]`. Extracts the symbol/hash.
         def self.extract_array_type type
           return nil if type.nil?
-          unless type.is_a?(Array) && type.count == 1 && type.first.is_a?(Symbol)
-            raise ArgumentError, "types Array #{type.inspect} should include only a single symbol element."
+          unless type.is_a?(Array) && type.count == 1 && (type.first.is_a?(Symbol) || type.first.is_a?(Hash))
+            raise ArgumentError, "types Array #{type.inspect} should include only a single symbol or hash element."
           end
           type.first
         end
 
         def self.to_json_row row
-          Hash[row.map { |k, v| [k.to_s, to_json_value(v)] }]
+          row.to_h { |k, v| [k.to_s, to_json_value(v)] }
         end
 
         def self.resolve_legacy_sql standard_sql, legacy_sql
@@ -311,6 +308,21 @@ module Google
           }[str.to_s.downcase]
           return val unless val.nil?
           str
+        end
+
+        ##
+        # Converts character map strings to API values.
+        #
+        # @return [String] API representation of character map.
+        def self.character_map mapping_version
+          val = {
+            "default" => "COLUMN_NAME_CHARACTER_MAP_UNSPECIFIED",
+            "strict"  => "STRICT",
+            "v1"      => "V1",
+            "v2"      => "V2"
+          }[mapping_version.to_s.downcase]
+          return val unless val.nil?
+          mapping_version
         end
 
         ##

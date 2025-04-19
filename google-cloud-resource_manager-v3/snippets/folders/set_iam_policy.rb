@@ -19,15 +19,29 @@
 # [START cloudresourcemanager_v3_generated_Folders_SetIamPolicy_sync]
 require "google/cloud/resource_manager/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ResourceManager::V3::Folders::Client.new
+##
+# Snippet for the set_iam_policy call in the Folders service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ResourceManager::V3::Folders::Client#set_iam_policy.
+#
+def set_iam_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ResourceManager::V3::Folders::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Iam::V1::SetIamPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Iam::V1::SetIamPolicyRequest.new
 
-# Call the set_iam_policy method.
-result = client.set_iam_policy request
+  # Call the set_iam_policy method.
+  result = client.set_iam_policy request
 
-# The returned object is of type Google::Iam::V1::Policy.
-p result
+  # The returned object is of type Google::Iam::V1::Policy.
+  p result
+end
 # [END cloudresourcemanager_v3_generated_Folders_SetIamPolicy_sync]

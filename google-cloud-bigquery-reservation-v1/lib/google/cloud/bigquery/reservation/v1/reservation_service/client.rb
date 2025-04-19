@@ -28,7 +28,7 @@ module Google
             ##
             # Client for the ReservationService service.
             #
-            # This API allows users to manage their flat-rate BigQuery reservations.
+            # This API allows users to manage their BigQuery reservations.
             #
             # A reservation provides computational resource guarantees, in the form of
             # [slots](https://cloud.google.com/bigquery/docs/slots), to users. A slot is a
@@ -45,6 +45,12 @@ module Google
             #   `projects/myproject/locations/US/capacityCommitments/id`.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "bigqueryreservation.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -97,6 +103,8 @@ module Google
                   }
 
                   default_config.rpcs.update_reservation.timeout = 300.0
+
+                  default_config.rpcs.failover_reservation.timeout = 300.0
 
                   default_config.rpcs.create_capacity_commitment.timeout = 300.0
 
@@ -174,6 +182,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @reservation_service_stub.universe_domain
+              end
+
+              ##
               # Create a new ReservationService client object.
               #
               # @example
@@ -206,8 +223,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -218,11 +236,34 @@ module Google
 
                 @reservation_service_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @reservation_service_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+              end
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @reservation_service_stub.logger
               end
 
               # Service calls
@@ -249,8 +290,9 @@ module Google
               #     Required. Project, location. E.g.,
               #     `projects/myproject/locations/US`
               #   @param reservation_id [::String]
-              #     The reservation ID. This field must only contain lower case alphanumeric
-              #     characters or dash. Max length is 64 characters.
+              #     The reservation ID. It must only contain lower case alphanumeric
+              #     characters or dashes. It must start with a letter and must not end
+              #     with a dash. Its maximum length is 64 characters.
               #   @param reservation [::Google::Cloud::Bigquery::Reservation::V1::Reservation, ::Hash]
               #     Definition of the new reservation to create.
               #
@@ -288,10 +330,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -312,7 +355,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :create_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -364,13 +406,11 @@ module Google
               #   # Call the list_reservations method.
               #   result = client.list_reservations request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::Reservation::V1::Reservation.
-              #     p response
+              #     p item
               #   end
               #
               def list_reservations request, options = nil
@@ -384,10 +424,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_reservations.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -409,7 +450,7 @@ module Google
                 @reservation_service_stub.call_rpc :list_reservations, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @reservation_service_stub, :list_reservations, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -471,10 +512,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -495,7 +537,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :get_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -559,10 +600,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -583,7 +625,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :delete_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -646,10 +687,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -670,7 +712,96 @@ module Google
 
                 @reservation_service_stub.call_rpc :update_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Fail over a reservation to the secondary location. The operation should be
+              # done in the current secondary location, which will be promoted to the
+              # new primary location for the reservation.
+              # Attempting to failover a reservation in the current primary location will
+              # fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.
+              #
+              # @overload failover_reservation(request, options = nil)
+              #   Pass arguments to `failover_reservation` via a request object, either of type
+              #   {::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload failover_reservation(name: nil)
+              #   Pass arguments to `failover_reservation` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. Resource name of the reservation to failover. E.g.,
+              #        `projects/myproject/locations/US/reservations/team1-prod`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Bigquery::Reservation::V1::Reservation]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Bigquery::Reservation::V1::Reservation]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/bigquery/reservation/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest.new
+              #
+              #   # Call the failover_reservation method.
+              #   result = client.failover_reservation request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::Reservation::V1::Reservation.
+              #   p result
+              #
+              def failover_reservation request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.failover_reservation.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.failover_reservation.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.failover_reservation.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @reservation_service_stub.call_rpc :failover_reservation, request, options: options do |response, operation|
+                  yield response, operation if block_given?
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -705,8 +836,8 @@ module Google
               #   @param capacity_commitment_id [::String]
               #     The optional capacity commitment ID. Capacity commitment name will be
               #     generated automatically if this field is empty.
-              #     This field must only contain lower case alphanumeric characters or dash.
-              #     Max length is 64 characters.
+              #     This field must only contain lower case alphanumeric characters or dashes.
+              #     The first and last character cannot be a dash. Max length is 64 characters.
               #     NOTE: this ID won't be kept if the capacity commitment is split or merged.
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -743,10 +874,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_capacity_commitment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -767,7 +899,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :create_capacity_commitment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -819,13 +950,11 @@ module Google
               #   # Call the list_capacity_commitments method.
               #   result = client.list_capacity_commitments request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::Reservation::V1::CapacityCommitment.
-              #     p response
+              #     p item
               #   end
               #
               def list_capacity_commitments request, options = nil
@@ -839,10 +968,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_capacity_commitments.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -864,7 +994,7 @@ module Google
                 @reservation_service_stub.call_rpc :list_capacity_commitments, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @reservation_service_stub, :list_capacity_commitments, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -926,10 +1056,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_capacity_commitment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -950,7 +1081,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :get_capacity_commitment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1018,10 +1148,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_capacity_commitment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1042,7 +1173,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :delete_capacity_commitment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1111,10 +1241,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_capacity_commitment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1135,7 +1266,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :update_capacity_commitment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1149,7 +1279,7 @@ module Google
               #
               # For example, in order to downgrade from 10000 slots to 8000, you might
               # split a 10000 capacity commitment into commitments of 2000 and 8000. Then,
-              # you would change the plan of the first one to `FLEX` and then delete it.
+              # you delete the first one after the commitment end time passes.
               #
               # @overload split_capacity_commitment(request, options = nil)
               #   Pass arguments to `split_capacity_commitment` via a request object, either of type
@@ -1206,10 +1336,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.split_capacity_commitment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1230,7 +1361,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :split_capacity_commitment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1304,10 +1434,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.merge_capacity_commitments.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1328,7 +1459,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :merge_capacity_commitments, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1394,7 +1524,7 @@ module Google
               #   @param assignment_id [::String]
               #     The optional assignment ID. Assignment name will be generated automatically
               #     if this field is empty.
-              #     This field must only contain lower case alphanumeric characters or dash.
+              #     This field must only contain lower case alphanumeric characters or dashes.
               #     Max length is 64 characters.
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -1431,10 +1561,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_assignment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1455,7 +1586,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :create_assignment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1532,13 +1662,11 @@ module Google
               #   # Call the list_assignments method.
               #   result = client.list_assignments request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::Reservation::V1::Assignment.
-              #     p response
+              #     p item
               #   end
               #
               def list_assignments request, options = nil
@@ -1552,10 +1680,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_assignments.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1577,7 +1706,7 @@ module Google
                 @reservation_service_stub.call_rpc :list_assignments, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @reservation_service_stub, :list_assignments, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1653,10 +1782,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_assignment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1677,15 +1807,14 @@ module Google
 
                 @reservation_service_stub.call_rpc :delete_assignment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Deprecated: Looks up assignments for a specified resource for a particular region.
-              # If the request is about a project:
+              # Deprecated: Looks up assignments for a specified resource for a particular
+              # region. If the request is about a project:
               #
               # 1. Assignments created on the project will be returned if they exist.
               # 2. Otherwise assignments created on the closest ancestor will be
@@ -1726,8 +1855,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The resource name of the admin project(containing project and location),
-              #     e.g.:
+              #     Required. The resource name of the admin project(containing project and
+              #     location), e.g.:
               #       `projects/myproject/locations/US`.
               #   @param query [::String]
               #     Please specify resource name as assignee in the query.
@@ -1762,13 +1891,11 @@ module Google
               #   # Call the search_assignments method.
               #   result = client.search_assignments request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::Reservation::V1::Assignment.
-              #     p response
+              #     p item
               #   end
               #
               def search_assignments request, options = nil
@@ -1782,10 +1909,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.search_assignments.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1807,7 +1935,7 @@ module Google
                 @reservation_service_stub.call_rpc :search_assignments, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @reservation_service_stub, :search_assignments, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1851,8 +1979,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The resource name with location (project name could be the wildcard '-'),
-              #     e.g.:
+              #     Required. The resource name with location (project name could be the
+              #     wildcard '-'), e.g.:
               #       `projects/-/locations/US`.
               #   @param query [::String]
               #     Please specify resource name as assignee in the query.
@@ -1887,13 +2015,11 @@ module Google
               #   # Call the search_all_assignments method.
               #   result = client.search_all_assignments request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::Reservation::V1::Assignment.
-              #     p response
+              #     p item
               #   end
               #
               def search_all_assignments request, options = nil
@@ -1907,10 +2033,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.search_all_assignments.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1932,7 +2059,7 @@ module Google
                 @reservation_service_stub.call_rpc :search_all_assignments, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @reservation_service_stub, :search_all_assignments, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1955,7 +2082,7 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload move_assignment(name: nil, destination_id: nil)
+              # @overload move_assignment(name: nil, destination_id: nil, assignment_id: nil)
               #   Pass arguments to `move_assignment` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1967,6 +2094,12 @@ module Google
               #   @param destination_id [::String]
               #     The new reservation ID, e.g.:
               #       `projects/myotherproject/locations/US/reservations/team2-prod`
+              #   @param assignment_id [::String]
+              #     The optional assignment ID. A new assignment name is generated if this
+              #     field is empty.
+              #
+              #     This field can contain only lowercase alphanumeric characters or dashes.
+              #     Max length is 64 characters.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Bigquery::Reservation::V1::Assignment]
@@ -2002,10 +2135,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.move_assignment.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2026,7 +2160,95 @@ module Google
 
                 @reservation_service_stub.call_rpc :move_assignment, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Updates an existing assignment.
+              #
+              # Only the `priority` field can be updated.
+              #
+              # @overload update_assignment(request, options = nil)
+              #   Pass arguments to `update_assignment` via a request object, either of type
+              #   {::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload update_assignment(assignment: nil, update_mask: nil)
+              #   Pass arguments to `update_assignment` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param assignment [::Google::Cloud::Bigquery::Reservation::V1::Assignment, ::Hash]
+              #     Content of the assignment to update.
+              #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+              #     Standard field mask for the set of fields to be updated.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Bigquery::Reservation::V1::Assignment]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Bigquery::Reservation::V1::Assignment]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/bigquery/reservation/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest.new
+              #
+              #   # Call the update_assignment method.
+              #   result = client.update_assignment request
+              #
+              #   # The returned object is of type Google::Cloud::Bigquery::Reservation::V1::Assignment.
+              #   p result
+              #
+              def update_assignment request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.update_assignment.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.assignment&.name
+                  header_params["assignment.name"] = request.assignment.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.update_assignment.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.update_assignment.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @reservation_service_stub.call_rpc :update_assignment, request, options: options do |response, operation|
+                  yield response, operation if block_given?
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -2088,10 +2310,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_bi_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2112,7 +2335,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :get_bi_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -2182,10 +2404,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_bi_reservation.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::Reservation::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2206,7 +2429,6 @@ module Google
 
                 @reservation_service_stub.call_rpc :update_bi_reservation, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -2242,20 +2464,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"bigqueryreservation.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -2290,11 +2519,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "bigqueryreservation.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "bigqueryreservation.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -2309,6 +2552,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -2327,6 +2572,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##
@@ -2372,6 +2625,11 @@ module Google
                   # @return [::Gapic::Config::Method]
                   #
                   attr_reader :update_reservation
+                  ##
+                  # RPC-specific configuration for `failover_reservation`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :failover_reservation
                   ##
                   # RPC-specific configuration for `create_capacity_commitment`
                   # @return [::Gapic::Config::Method]
@@ -2438,6 +2696,11 @@ module Google
                   #
                   attr_reader :move_assignment
                   ##
+                  # RPC-specific configuration for `update_assignment`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :update_assignment
+                  ##
                   # RPC-specific configuration for `get_bi_reservation`
                   # @return [::Gapic::Config::Method]
                   #
@@ -2460,6 +2723,8 @@ module Google
                     @delete_reservation = ::Gapic::Config::Method.new delete_reservation_config
                     update_reservation_config = parent_rpcs.update_reservation if parent_rpcs.respond_to? :update_reservation
                     @update_reservation = ::Gapic::Config::Method.new update_reservation_config
+                    failover_reservation_config = parent_rpcs.failover_reservation if parent_rpcs.respond_to? :failover_reservation
+                    @failover_reservation = ::Gapic::Config::Method.new failover_reservation_config
                     create_capacity_commitment_config = parent_rpcs.create_capacity_commitment if parent_rpcs.respond_to? :create_capacity_commitment
                     @create_capacity_commitment = ::Gapic::Config::Method.new create_capacity_commitment_config
                     list_capacity_commitments_config = parent_rpcs.list_capacity_commitments if parent_rpcs.respond_to? :list_capacity_commitments
@@ -2486,6 +2751,8 @@ module Google
                     @search_all_assignments = ::Gapic::Config::Method.new search_all_assignments_config
                     move_assignment_config = parent_rpcs.move_assignment if parent_rpcs.respond_to? :move_assignment
                     @move_assignment = ::Gapic::Config::Method.new move_assignment_config
+                    update_assignment_config = parent_rpcs.update_assignment if parent_rpcs.respond_to? :update_assignment
+                    @update_assignment = ::Gapic::Config::Method.new update_assignment_config
                     get_bi_reservation_config = parent_rpcs.get_bi_reservation if parent_rpcs.respond_to? :get_bi_reservation
                     @get_bi_reservation = ::Gapic::Config::Method.new get_bi_reservation_config
                     update_bi_reservation_config = parent_rpcs.update_bi_reservation if parent_rpcs.respond_to? :update_bi_reservation

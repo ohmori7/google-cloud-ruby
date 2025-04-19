@@ -31,30 +31,70 @@ module Google
       # Create a new client object for AnalyticsAdminService.
       #
       # By default, this returns an instance of
-      # [Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client](https://googleapis.dev/ruby/google-analytics-admin-v1alpha/latest/Google/Analytics/Admin/V1alpha/AnalyticsAdminService/Client.html)
-      # for version V1alpha of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client](https://rubydoc.info/gems/google-analytics-admin-v1alpha/Google/Analytics/Admin/V1alpha/AnalyticsAdminService/Client)
+      # for a gRPC client for version V1alpha of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the AnalyticsAdminService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the AnalyticsAdminService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Analytics::Admin.analytics_admin_service_available?}.
       #
       # ## About AnalyticsAdminService
       #
-      # Service Interface for the Analytics Admin API (GA4).
+      # Service Interface for the Google Analytics Admin API.
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1alpha`.
-      # @return [AnalyticsAdminService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.analytics_admin_service version: :v1alpha, &block
+      def self.analytics_admin_service version: :v1alpha, transport: :grpc, &block
         require "google/analytics/admin/#{version.to_s.downcase}"
 
         package_name = Google::Analytics::Admin
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Analytics::Admin.const_get package_name
-        package_module.const_get(:AnalyticsAdminService).const_get(:Client).new(&block)
+        service_module = Google::Analytics::Admin.const_get(package_name).const_get(:AnalyticsAdminService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AnalyticsAdminService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Analytics::Admin.analytics_admin_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AnalyticsAdminService service,
+      # or if the versioned client gem needs an update to support the AnalyticsAdminService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1alpha`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.analytics_admin_service_available? version: :v1alpha, transport: :grpc
+        require "google/analytics/admin/#{version.to_s.downcase}"
+        package_name = Google::Analytics::Admin
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Analytics::Admin.const_get package_name
+        return false unless service_module.const_defined? :AnalyticsAdminService
+        service_module = service_module.const_get :AnalyticsAdminService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
     end
   end

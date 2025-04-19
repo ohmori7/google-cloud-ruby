@@ -28,7 +28,7 @@ module Google
         # operational aspects of the service are accessible.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Resource name for this Service. The format is:
+        #     Identifier. Resource name for this Service. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/services/[SERVICE_ID]
         # @!attribute [rw] display_name
@@ -37,23 +37,61 @@ module Google
         # @!attribute [rw] custom
         #   @return [::Google::Cloud::Monitoring::V3::Service::Custom]
         #     Custom service type.
+        #
+        #     Note: The following fields are mutually exclusive: `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] app_engine
         #   @return [::Google::Cloud::Monitoring::V3::Service::AppEngine]
         #     Type used for App Engine services.
+        #
+        #     Note: The following fields are mutually exclusive: `app_engine`, `custom`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cloud_endpoints
         #   @return [::Google::Cloud::Monitoring::V3::Service::CloudEndpoints]
         #     Type used for Cloud Endpoints services.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_endpoints`, `custom`, `app_engine`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cluster_istio
         #   @return [::Google::Cloud::Monitoring::V3::Service::ClusterIstio]
         #     Type used for Istio services that live in a Kubernetes cluster.
+        #
+        #     Note: The following fields are mutually exclusive: `cluster_istio`, `custom`, `app_engine`, `cloud_endpoints`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] mesh_istio
         #   @return [::Google::Cloud::Monitoring::V3::Service::MeshIstio]
         #     Type used for Istio services scoped to an Istio mesh.
+        #
+        #     Note: The following fields are mutually exclusive: `mesh_istio`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] istio_canonical_service
         #   @return [::Google::Cloud::Monitoring::V3::Service::IstioCanonicalService]
         #     Type used for canonical services scoped to an Istio mesh.
         #     Metrics for Istio are
         #     [documented here](https://istio.io/latest/docs/reference/config/metrics/)
+        #
+        #     Note: The following fields are mutually exclusive: `istio_canonical_service`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `cloud_run`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] cloud_run
+        #   @return [::Google::Cloud::Monitoring::V3::Service::CloudRun]
+        #     Type used for Cloud Run services.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_run`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `gke_namespace`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] gke_namespace
+        #   @return [::Google::Cloud::Monitoring::V3::Service::GkeNamespace]
+        #     Type used for GKE Namespaces.
+        #
+        #     Note: The following fields are mutually exclusive: `gke_namespace`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_workload`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] gke_workload
+        #   @return [::Google::Cloud::Monitoring::V3::Service::GkeWorkload]
+        #     Type used for GKE Workloads.
+        #
+        #     Note: The following fields are mutually exclusive: `gke_workload`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_service`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] gke_service
+        #   @return [::Google::Cloud::Monitoring::V3::Service::GkeService]
+        #     Type used for GKE Services (the Kubernetes concept of a service).
+        #
+        #     Note: The following fields are mutually exclusive: `gke_service`, `custom`, `app_engine`, `cloud_endpoints`, `cluster_istio`, `mesh_istio`, `istio_canonical_service`, `cloud_run`, `gke_namespace`, `gke_workload`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] basic_service
+        #   @return [::Google::Cloud::Monitoring::V3::Service::BasicService]
+        #     Message that contains the service type and service labels of this service
+        #     if it is a basic service.
+        #     Documentation and examples
+        #     [here](https://cloud.google.com/stackdriver/docs/solutions/slo-monitoring/api/api-structures#basic-svc-w-basic-sli).
         # @!attribute [rw] telemetry
         #   @return [::Google::Cloud::Monitoring::V3::Service::Telemetry]
         #     Configuration for how to query telemetry on a Service.
@@ -69,8 +107,9 @@ module Google
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # Custom view of service telemetry. Currently a place-holder pending final
-          # design.
+          # Use a custom service to designate a service that you want to monitor
+          # when none of the other service types (like App Engine, Cloud Run, or
+          # a GKE type) matches your intended service.
           class Custom
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -80,8 +119,8 @@ module Google
           # @!attribute [rw] module_id
           #   @return [::String]
           #     The ID of the App Engine module underlying this service. Corresponds to
-          #     the `module_id` resource label in the `gae_app` monitored resource:
-          #     https://cloud.google.com/monitoring/api/resources#tag_gae_app
+          #     the `module_id` resource label in the [`gae_app` monitored
+          #     resource](https://cloud.google.com/monitoring/api/resources#tag_gae_app).
           class AppEngine
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -91,8 +130,8 @@ module Google
           # @!attribute [rw] service
           #   @return [::String]
           #     The name of the Cloud Endpoints service underlying this service.
-          #     Corresponds to the `service` resource label in the `api` monitored
-          #     resource: https://cloud.google.com/monitoring/api/resources#tag_api
+          #     Corresponds to the `service` resource label in the [`api` monitored
+          #     resource](https://cloud.google.com/monitoring/api/resources#tag_api).
           class CloudEndpoints
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -167,6 +206,129 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
+          # Cloud Run service. Learn more at https://cloud.google.com/run.
+          # @!attribute [rw] service_name
+          #   @return [::String]
+          #     The name of the Cloud Run service. Corresponds to the `service_name`
+          #     resource label in the [`cloud_run_revision` monitored
+          #     resource](https://cloud.google.com/monitoring/api/resources#tag_cloud_run_revision).
+          # @!attribute [rw] location
+          #   @return [::String]
+          #     The location the service is run. Corresponds to the `location`
+          #     resource label in the [`cloud_run_revision` monitored
+          #     resource](https://cloud.google.com/monitoring/api/resources#tag_cloud_run_revision).
+          class CloudRun
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # GKE Namespace. The field names correspond to the resource metadata labels
+          # on monitored resources that fall under a namespace (for example,
+          # `k8s_container` or `k8s_pod`).
+          # @!attribute [r] project_id
+          #   @return [::String]
+          #     Output only. The project this resource lives in. For legacy services
+          #     migrated from the `Custom` type, this may be a distinct project from the
+          #     one parenting the service itself.
+          # @!attribute [rw] location
+          #   @return [::String]
+          #     The location of the parent cluster. This may be a zone or region.
+          # @!attribute [rw] cluster_name
+          #   @return [::String]
+          #     The name of the parent cluster.
+          # @!attribute [rw] namespace_name
+          #   @return [::String]
+          #     The name of this namespace.
+          class GkeNamespace
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A GKE Workload (Deployment, StatefulSet, etc). The field names correspond
+          # to the metadata labels on monitored resources that fall under a workload
+          # (for example, `k8s_container` or `k8s_pod`).
+          # @!attribute [r] project_id
+          #   @return [::String]
+          #     Output only. The project this resource lives in. For legacy services
+          #     migrated from the `Custom` type, this may be a distinct project from the
+          #     one parenting the service itself.
+          # @!attribute [rw] location
+          #   @return [::String]
+          #     The location of the parent cluster. This may be a zone or region.
+          # @!attribute [rw] cluster_name
+          #   @return [::String]
+          #     The name of the parent cluster.
+          # @!attribute [rw] namespace_name
+          #   @return [::String]
+          #     The name of the parent namespace.
+          # @!attribute [rw] top_level_controller_type
+          #   @return [::String]
+          #     The type of this workload (for example, "Deployment" or "DaemonSet")
+          # @!attribute [rw] top_level_controller_name
+          #   @return [::String]
+          #     The name of this workload.
+          class GkeWorkload
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # GKE Service. The "service" here represents a
+          # [Kubernetes service
+          # object](https://kubernetes.io/docs/concepts/services-networking/service).
+          # The field names correspond to the resource labels on [`k8s_service`
+          # monitored
+          # resources](https://cloud.google.com/monitoring/api/resources#tag_k8s_service).
+          # @!attribute [r] project_id
+          #   @return [::String]
+          #     Output only. The project this resource lives in. For legacy services
+          #     migrated from the `Custom` type, this may be a distinct project from the
+          #     one parenting the service itself.
+          # @!attribute [rw] location
+          #   @return [::String]
+          #     The location of the parent cluster. This may be a zone or region.
+          # @!attribute [rw] cluster_name
+          #   @return [::String]
+          #     The name of the parent cluster.
+          # @!attribute [rw] namespace_name
+          #   @return [::String]
+          #     The name of the parent namespace.
+          # @!attribute [rw] service_name
+          #   @return [::String]
+          #     The name of this service.
+          class GkeService
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A well-known service type, defined by its service type and service labels.
+          # Documentation and examples
+          # [here](https://cloud.google.com/stackdriver/docs/solutions/slo-monitoring/api/api-structures#basic-svc-w-basic-sli).
+          # @!attribute [rw] service_type
+          #   @return [::String]
+          #     The type of service that this basic service defines, e.g.
+          #     APP_ENGINE service type.
+          #     Documentation and valid values
+          #     [here](https://cloud.google.com/stackdriver/docs/solutions/slo-monitoring/api/api-structures#basic-svc-w-basic-sli).
+          # @!attribute [rw] service_labels
+          #   @return [::Google::Protobuf::Map{::String => ::String}]
+          #     Labels that specify the resource that emits the monitoring data which
+          #     is used for SLO reporting of this `Service`.
+          #     Documentation and valid values for given service types
+          #     [here](https://cloud.google.com/stackdriver/docs/solutions/slo-monitoring/api/api-structures#basic-svc-w-basic-sli).
+          class BasicService
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::String]
+            class ServiceLabelsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+
           # Configuration for how to query telemetry on a Service.
           # @!attribute [rw] resource_name
           #   @return [::String]
@@ -195,7 +357,7 @@ module Google
         # "99.5% of requests in each calendar month return successfully."
         # @!attribute [rw] name
         #   @return [::String]
-        #     Resource name for this `ServiceLevelObjective`. The format is:
+        #     Identifier. Resource name for this `ServiceLevelObjective`. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/services/[SERVICE_ID]/serviceLevelObjectives/[SLO_NAME]
         # @!attribute [rw] display_name
@@ -209,16 +371,20 @@ module Google
         # @!attribute [rw] goal
         #   @return [::Float]
         #     The fraction of service that must be good in order for this objective to be
-        #     met. `0 < goal <= 0.999`.
+        #     met. `0 < goal <= 0.9999`.
         # @!attribute [rw] rolling_period
         #   @return [::Google::Protobuf::Duration]
         #     A rolling time period, semantically "in the past `<rolling_period>`".
         #     Must be an integer multiple of 1 day no larger than 30 days.
+        #
+        #     Note: The following fields are mutually exclusive: `rolling_period`, `calendar_period`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] calendar_period
         #   @return [::Google::Type::CalendarPeriod]
         #     A calendar period, semantically "since the start of the current
         #     `<calendar_period>`". At this time, only `DAY`, `WEEK`, `FORTNIGHT`, and
         #     `MONTH` are supported.
+        #
+        #     Note: The following fields are mutually exclusive: `calendar_period`, `rolling_period`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] user_labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Labels which have been used to annotate the service-level objective. Label
@@ -276,12 +442,18 @@ module Google
         # @!attribute [rw] basic_sli
         #   @return [::Google::Cloud::Monitoring::V3::BasicSli]
         #     Basic SLI on a well-known service type.
+        #
+        #     Note: The following fields are mutually exclusive: `basic_sli`, `request_based`, `windows_based`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] request_based
         #   @return [::Google::Cloud::Monitoring::V3::RequestBasedSli]
         #     Request-based SLIs
+        #
+        #     Note: The following fields are mutually exclusive: `request_based`, `basic_sli`, `windows_based`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] windows_based
         #   @return [::Google::Cloud::Monitoring::V3::WindowsBasedSli]
         #     Windows-based SLIs
+        #
+        #     Note: The following fields are mutually exclusive: `windows_based`, `basic_sli`, `request_based`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ServiceLevelIndicator
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -318,10 +490,14 @@ module Google
         #   @return [::Google::Cloud::Monitoring::V3::BasicSli::AvailabilityCriteria]
         #     Good service is defined to be the count of requests made to this service
         #     that return successfully.
+        #
+        #     Note: The following fields are mutually exclusive: `availability`, `latency`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] latency
         #   @return [::Google::Cloud::Monitoring::V3::BasicSli::LatencyCriteria]
         #     Good service is defined to be the count of requests made to this service
         #     that are fast enough with respect to `latency.threshold`.
+        #
+        #     Note: The following fields are mutually exclusive: `latency`, `availability`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class BasicSli
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -361,12 +537,16 @@ module Google
         #   @return [::Google::Cloud::Monitoring::V3::TimeSeriesRatio]
         #     `good_total_ratio` is used when the ratio of `good_service` to
         #     `total_service` is computed from two `TimeSeries`.
+        #
+        #     Note: The following fields are mutually exclusive: `good_total_ratio`, `distribution_cut`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] distribution_cut
         #   @return [::Google::Cloud::Monitoring::V3::DistributionCut]
         #     `distribution_cut` is used when `good_service` is a count of values
         #     aggregated in a `Distribution` that fall into a good range. The
         #     `total_service` is the total count of all values aggregated in the
         #     `Distribution`.
+        #
+        #     Note: The following fields are mutually exclusive: `distribution_cut`, `good_total_ratio`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class RequestBasedSli
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -429,17 +609,25 @@ module Google
         #     A [monitoring filter](https://cloud.google.com/monitoring/api/v3/filters)
         #     specifying a `TimeSeries` with `ValueType = BOOL`. The window is good if
         #     any `true` values appear in the window.
+        #
+        #     Note: The following fields are mutually exclusive: `good_bad_metric_filter`, `good_total_ratio_threshold`, `metric_mean_in_range`, `metric_sum_in_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] good_total_ratio_threshold
         #   @return [::Google::Cloud::Monitoring::V3::WindowsBasedSli::PerformanceThreshold]
         #     A window is good if its `performance` is high enough.
+        #
+        #     Note: The following fields are mutually exclusive: `good_total_ratio_threshold`, `good_bad_metric_filter`, `metric_mean_in_range`, `metric_sum_in_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] metric_mean_in_range
         #   @return [::Google::Cloud::Monitoring::V3::WindowsBasedSli::MetricRange]
         #     A window is good if the metric's value is in a good range, averaged
         #     across returned streams.
+        #
+        #     Note: The following fields are mutually exclusive: `metric_mean_in_range`, `good_bad_metric_filter`, `good_total_ratio_threshold`, `metric_sum_in_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] metric_sum_in_range
         #   @return [::Google::Cloud::Monitoring::V3::WindowsBasedSli::MetricRange]
         #     A window is good if the metric's value is in a good range, summed across
         #     returned streams.
+        #
+        #     Note: The following fields are mutually exclusive: `metric_sum_in_range`, `good_bad_metric_filter`, `good_total_ratio_threshold`, `metric_mean_in_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] window_period
         #   @return [::Google::Protobuf::Duration]
         #     Duration over which window quality is evaluated. Must be an integer
@@ -453,9 +641,13 @@ module Google
           # @!attribute [rw] performance
           #   @return [::Google::Cloud::Monitoring::V3::RequestBasedSli]
           #     `RequestBasedSli` to evaluate to judge window quality.
+          #
+          #     Note: The following fields are mutually exclusive: `performance`, `basic_sli_performance`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] basic_sli_performance
           #   @return [::Google::Cloud::Monitoring::V3::BasicSli]
           #     `BasicSli` to evaluate to judge window quality.
+          #
+          #     Note: The following fields are mutually exclusive: `basic_sli_performance`, `performance`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] threshold
           #   @return [::Float]
           #     If window `performance >= threshold`, the window is counted as good.

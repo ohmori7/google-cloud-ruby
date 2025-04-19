@@ -41,9 +41,26 @@ class ::Google::Cloud::Monitoring::V3::UptimeCheckService::ClientTest < Minitest
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -56,6 +73,7 @@ class ::Google::Cloud::Monitoring::V3::UptimeCheckService::ClientTest < Minitest
 
     # Create request parameters for a unary method.
     parent = "hello world"
+    filter = "hello world"
     page_size = 42
     page_token = "hello world"
 
@@ -63,6 +81,7 @@ class ::Google::Cloud::Monitoring::V3::UptimeCheckService::ClientTest < Minitest
       assert_equal :list_uptime_check_configs, name
       assert_kind_of ::Google::Cloud::Monitoring::V3::ListUptimeCheckConfigsRequest, request
       assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["filter"]
       assert_equal 42, request["page_size"]
       assert_equal "hello world", request["page_token"]
       refute_nil options
@@ -75,35 +94,35 @@ class ::Google::Cloud::Monitoring::V3::UptimeCheckService::ClientTest < Minitest
       end
 
       # Use hash object
-      client.list_uptime_check_configs({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+      client.list_uptime_check_configs({ parent: parent, filter: filter, page_size: page_size, page_token: page_token }) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_uptime_check_configs parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+      client.list_uptime_check_configs parent: parent, filter: filter, page_size: page_size, page_token: page_token do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_uptime_check_configs ::Google::Cloud::Monitoring::V3::ListUptimeCheckConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+      client.list_uptime_check_configs ::Google::Cloud::Monitoring::V3::ListUptimeCheckConfigsRequest.new(parent: parent, filter: filter, page_size: page_size, page_token: page_token) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_uptime_check_configs({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+      client.list_uptime_check_configs({ parent: parent, filter: filter, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_uptime_check_configs(::Google::Cloud::Monitoring::V3::ListUptimeCheckConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+      client.list_uptime_check_configs(::Google::Cloud::Monitoring::V3::ListUptimeCheckConfigsRequest.new(parent: parent, filter: filter, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
@@ -419,7 +438,8 @@ class ::Google::Cloud::Monitoring::V3::UptimeCheckService::ClientTest < Minitest
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Monitoring::V3::UptimeCheckService::Client.new do |config|
         config.credentials = grpc_channel
       end

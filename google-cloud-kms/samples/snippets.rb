@@ -258,7 +258,7 @@ class Snippets
 
       # Start the first rotation in 24 hours.
       next_rotation_time: {
-        seconds: (Time.now + 60 * 60 * 24).to_i
+        seconds: (Time.now + (60 * 60 * 24)).to_i
       }
     }
 
@@ -751,7 +751,7 @@ class Snippets
     # Print the policy.
     puts "Policy for #{resource_name}"
     policy.bindings.each do |bind|
-      puts bind.role.to_s
+      puts bind.role
       bind.members.each do |member|
         puts "- #{member}"
       end
@@ -827,7 +827,7 @@ class Snippets
     # Example of iterating over key rings.
     puts "Key rings in #{location_name}"
     key_rings.each do |key_ring|
-      puts key_ring.name.to_s
+      puts key_ring.name
     end
     # [END kms_quickstart]
 
@@ -974,7 +974,7 @@ class Snippets
 
       # Start the first rotation in 24 hours.
       next_rotation_time: {
-        seconds: (Time.now + 60 * 60 * 24).to_i
+        seconds: (Time.now + (60 * 60 * 24)).to_i
       }
     }
 
@@ -1268,7 +1268,7 @@ if $PROGRAM_NAME == __FILE__
     out << "Commands:\n"
     methods.each do |method_name|
       out << "  " << method_name.to_s
-      instance.public_method(method_name).parameters.each do |_, param|
+      instance.public_method(method_name).parameters.each do |(_, param)|
         next if param == :project_id
         out << " " << param.to_s.upcase
       end
@@ -1289,7 +1289,7 @@ if $PROGRAM_NAME == __FILE__
   else
     kwargs = {}
 
-    instance.public_method(command.to_sym).parameters.each do |_, param|
+    instance.public_method(command.to_sym).parameters.each do |(_, param)|
       if param == :project_id
         kwargs[:project_id] = project
       else

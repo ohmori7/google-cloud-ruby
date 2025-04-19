@@ -41,9 +41,26 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -574,6 +591,7 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
     custom_ranking_info = {}
     disable_keyword_match = true
     keyword_match_mode = :KEYWORD_MATCH_MODE_UNSPECIFIED
+    relevance_threshold = :RELEVANCE_THRESHOLD_UNSPECIFIED
 
     search_jobs_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :search_jobs, name
@@ -593,6 +611,7 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo), request["custom_ranking_info"]
       assert_equal true, request["disable_keyword_match"]
       assert_equal :KEYWORD_MATCH_MODE_UNSPECIFIED, request["keyword_match_mode"]
+      assert_equal :RELEVANCE_THRESHOLD_UNSPECIFIED, request["relevance_threshold"]
       refute_nil options
     end
 
@@ -603,31 +622,31 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.search_jobs({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode }) do |response, operation|
+      client.search_jobs({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.search_jobs parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode do |response, operation|
+      client.search_jobs parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.search_jobs ::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode) do |response, operation|
+      client.search_jobs ::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.search_jobs({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode }, grpc_options) do |response, operation|
+      client.search_jobs({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.search_jobs(::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode), grpc_options) do |response, operation|
+      client.search_jobs(::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -660,6 +679,7 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
     custom_ranking_info = {}
     disable_keyword_match = true
     keyword_match_mode = :KEYWORD_MATCH_MODE_UNSPECIFIED
+    relevance_threshold = :RELEVANCE_THRESHOLD_UNSPECIFIED
 
     search_jobs_for_alert_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :search_jobs_for_alert, name
@@ -679,6 +699,7 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo), request["custom_ranking_info"]
       assert_equal true, request["disable_keyword_match"]
       assert_equal :KEYWORD_MATCH_MODE_UNSPECIFIED, request["keyword_match_mode"]
+      assert_equal :RELEVANCE_THRESHOLD_UNSPECIFIED, request["relevance_threshold"]
       refute_nil options
     end
 
@@ -689,31 +710,31 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.search_jobs_for_alert({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode }) do |response, operation|
+      client.search_jobs_for_alert({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.search_jobs_for_alert parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode do |response, operation|
+      client.search_jobs_for_alert parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.search_jobs_for_alert ::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode) do |response, operation|
+      client.search_jobs_for_alert ::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.search_jobs_for_alert({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode }, grpc_options) do |response, operation|
+      client.search_jobs_for_alert({ parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.search_jobs_for_alert(::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode), grpc_options) do |response, operation|
+      client.search_jobs_for_alert(::Google::Cloud::Talent::V4::SearchJobsRequest.new(parent: parent, search_mode: search_mode, request_metadata: request_metadata, job_query: job_query, enable_broadening: enable_broadening, histogram_queries: histogram_queries, job_view: job_view, offset: offset, max_page_size: max_page_size, page_token: page_token, order_by: order_by, diversification_level: diversification_level, custom_ranking_info: custom_ranking_info, disable_keyword_match: disable_keyword_match, keyword_match_mode: keyword_match_mode, relevance_threshold: relevance_threshold), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -727,7 +748,8 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -745,7 +767,8 @@ class ::Google::Cloud::Talent::V4::JobService::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Talent::V4::JobService::Client.new do |config|
         config.credentials = grpc_channel
       end

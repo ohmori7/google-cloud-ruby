@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/retail/v2/completion_service_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -27,13 +28,18 @@ module Google
           ##
           # Client for the CompletionService service.
           #
-          # Auto-completion service for retail.
+          # Autocomplete service for retail.
           #
           # This feature is only available for users who have Retail Search enabled.
-          # Please submit a form [here](https://cloud.google.com/contact) to contact
-          # cloud sales if you are interested in using Retail Search.
+          # Enable Retail Search on Cloud Console before using this feature.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "retail.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -100,6 +106,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @completion_service_stub.universe_domain
+            end
+
+            ##
             # Create a new CompletionService client object.
             #
             # @example
@@ -132,8 +147,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -146,15 +162,38 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @completion_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Retail::V2::CompletionService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @completion_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @completion_service_stub.endpoint
+                config.universe_domain = @completion_service_stub.universe_domain
+                config.logger = @completion_service_stub.logger if config.respond_to? :logger=
+              end
             end
 
             ##
@@ -164,14 +203,29 @@ module Google
             #
             attr_reader :operations_client
 
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @completion_service_stub.logger
+            end
+
             # Service calls
 
             ##
             # Completes the specified prefix with keyword suggestions.
             #
             # This feature is only available for users who have Retail Search enabled.
-            # Please submit a form [here](https://cloud.google.com/contact) to contact
-            # cloud sales if you are interested in using Retail Search.
+            # Enable Retail Search on Cloud Console before using this feature.
             #
             # @overload complete_query(request, options = nil)
             #   Pass arguments to `complete_query` via a request object, either of type
@@ -183,7 +237,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload complete_query(catalog: nil, query: nil, visitor_id: nil, language_codes: nil, device_type: nil, dataset: nil, max_suggestions: nil)
+            # @overload complete_query(catalog: nil, query: nil, visitor_id: nil, language_codes: nil, device_type: nil, dataset: nil, max_suggestions: nil, enable_attribute_suggestions: nil, entity: nil)
             #   Pass arguments to `complete_query` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -198,24 +252,28 @@ module Google
             #
             #     The maximum number of allowed characters is 255.
             #   @param visitor_id [::String]
-            #     A unique identifier for tracking visitors. For example, this could be
-            #     implemented with an HTTP cookie, which should be able to uniquely identify
-            #     a visitor on a single device. This unique identifier should not change if
-            #     the visitor logs in or out of the website.
+            #     Required field. A unique identifier for tracking visitors. For example,
+            #     this could be implemented with an HTTP cookie, which should be able to
+            #     uniquely identify a visitor on a single device. This unique identifier
+            #     should not change if the visitor logs in or out of the website.
             #
             #     The field must be a UTF-8 encoded string with a length limit of 128
             #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
             #   @param language_codes [::Array<::String>]
-            #     The list of languages of the query. This is
-            #     the BCP-47 language code, such as "en-US" or "sr-Latn".
-            #     For more information, see
-            #     [Tags for Identifying Languages](https://tools.ietf.org/html/bcp47).
+            #     Note that this field applies for `user-data` dataset only. For requests
+            #     with `cloud-retail` dataset, setting this field has no effect.
             #
-            #     The maximum number of allowed characters is 255.
-            #     Only "en-US" is currently supported.
+            #     The language filters applied to the output suggestions. If set, it should
+            #     contain the language of the query. If not set, suggestions are returned
+            #     without considering language restrictions. This is the BCP-47 language
+            #     code, such as "en-US" or "sr-Latn". For more information, see [Tags for
+            #     Identifying Languages](https://tools.ietf.org/html/bcp47). The maximum
+            #     number of language codes is 3.
             #   @param device_type [::String]
-            #     The device type context for completion suggestions.
-            #     It is useful to apply different suggestions on different device types, e.g.
+            #     The device type context for completion suggestions. We recommend that you
+            #     leave this field empty.
+            #
+            #     It can apply different suggestions on different device types, e.g.
             #     `DESKTOP`, `MOBILE`. If it is empty, the suggestions are across all device
             #     types.
             #
@@ -239,15 +297,27 @@ module Google
             #
             #     * user-data
             #
-            #     * cloud-retail
-            #       This option requires additional allowlisting. Before using cloud-retail,
-            #       contact Cloud Retail support team first.
+            #     * cloud-retail:
+            #       This option requires enabling auto-learning function first. See
+            #       [guidelines](https://cloud.google.com/retail/docs/completion-overview#generated-completion-dataset).
             #   @param max_suggestions [::Integer]
             #     Completion max suggestions. If left unset or set to 0, then will fallback
-            #     to the configured value [CompletionConfig.max_suggestions][].
+            #     to the configured value
+            #     {::Google::Cloud::Retail::V2::CompletionConfig#max_suggestions CompletionConfig.max_suggestions}.
             #
             #     The maximum allowed max suggestions is 20. If it is set higher, it will be
             #     capped by 20.
+            #   @param enable_attribute_suggestions [::Boolean]
+            #     If true, attribute suggestions are enabled and provided in the response.
+            #
+            #     This field is only available for the "cloud-retail" dataset.
+            #   @param entity [::String]
+            #     The entity for customers who run multiple entities, domains, sites, or
+            #     regions, for example, `Google US`, `Google Ads`, `Waymo`,
+            #     `google.com`, `youtube.com`, etc.
+            #     If this is set, it must be an exact match with
+            #     {::Google::Cloud::Retail::V2::UserEvent#entity UserEvent.entity} to get
+            #     per-entity autocomplete results.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Retail::V2::CompleteQueryResponse]
@@ -283,10 +353,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.complete_query.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -307,7 +378,6 @@ module Google
 
               @completion_service_stub.call_rpc :complete_query, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -316,11 +386,13 @@ module Google
             ##
             # Bulk import of processed completion dataset.
             #
-            # Request processing may be synchronous. Partial updating is not supported.
+            # Request processing is asynchronous. Partial updating is not supported.
+            #
+            # The operation is successfully finished only after the imported suggestions
+            # are indexed successfully and ready for serving. The process takes hours.
             #
             # This feature is only available for users who have Retail Search enabled.
-            # Please submit a form [here](https://cloud.google.com/contact) to contact
-            # cloud sales if you are interested in using Retail Search.
+            # Enable Retail Search on Cloud Console before using this feature.
             #
             # @overload import_completion_data(request, options = nil)
             #   Pass arguments to `import_completion_data` via a request object, either of type
@@ -345,8 +417,8 @@ module Google
             #     Required. The desired input location of the data.
             #   @param notification_pubsub_topic [::String]
             #     Pub/Sub topic for receiving notification. If this field is set,
-            #     when the import is finished, a notification will be sent to
-            #     specified Pub/Sub topic. The message data will be JSON string of a
+            #     when the import is finished, a notification is sent to
+            #     specified Pub/Sub topic. The message data is JSON string of a
             #     {::Google::Longrunning::Operation Operation}.
             #     Format of the Pub/Sub topic is `projects/{project}/topics/{topic}`.
             #
@@ -370,14 +442,14 @@ module Google
             #   # Call the import_completion_data method.
             #   result = client.import_completion_data request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def import_completion_data request, options = nil
@@ -391,10 +463,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.import_completion_data.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -416,7 +489,7 @@ module Google
               @completion_service_stub.call_rpc :import_completion_data, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -452,20 +525,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"retail.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -500,11 +580,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "retail.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "retail.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -519,6 +613,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -537,6 +633,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

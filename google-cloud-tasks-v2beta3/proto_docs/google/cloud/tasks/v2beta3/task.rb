@@ -24,7 +24,8 @@ module Google
         # A unit of scheduled work.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Optionally caller-specified in {::Google::Cloud::Tasks::V2beta3::CloudTasks::Client#create_task CreateTask}.
+        #     Optionally caller-specified in
+        #     {::Google::Cloud::Tasks::V2beta3::CloudTasks::Client#create_task CreateTask}.
         #
         #     The task name.
         #
@@ -38,7 +39,7 @@ module Google
         #        projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects)
         #     * `LOCATION_ID` is the canonical ID for the task's location.
         #        The list of available locations can be obtained by calling
-        #        [ListLocations][google.cloud.location.Locations.ListLocations].
+        #        `::Google::Cloud::Location::Locations::Client#list_locations`.
         #        For more information, see https://cloud.google.com/about/locations/.
         #     * `QUEUE_ID` can contain letters ([A-Za-z]), numbers ([0-9]), or
         #       hyphens (-). The maximum length is 100 characters.
@@ -48,21 +49,30 @@ module Google
         #   @return [::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest]
         #     HTTP request that is sent to the App Engine app handler.
         #
-        #     An App Engine task is a task that has {::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest AppEngineHttpRequest} set.
+        #     An App Engine task is a task that has
+        #     {::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest AppEngineHttpRequest}
+        #     set.
+        #
+        #     Note: The following fields are mutually exclusive: `app_engine_http_request`, `http_request`, `pull_message`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] http_request
         #   @return [::Google::Cloud::Tasks::V2beta3::HttpRequest]
         #     HTTP request that is sent to the task's target.
         #
-        #     An HTTP task is a task that has {::Google::Cloud::Tasks::V2beta3::HttpRequest HttpRequest} set.
+        #     An HTTP task is a task that has
+        #     {::Google::Cloud::Tasks::V2beta3::HttpRequest HttpRequest} set.
+        #
+        #     Note: The following fields are mutually exclusive: `http_request`, `app_engine_http_request`, `pull_message`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pull_message
         #   @return [::Google::Cloud::Tasks::V2beta3::PullMessage]
-        #     Pull Message contained in a task in a {::Google::Cloud::Tasks::V2beta3::Queue#type PULL} queue type. This
-        #     payload type cannot be explicitly set through Cloud Tasks API. Its
-        #     purpose, currently is to provide backward compatibility with App Engine
-        #     Task Queue
+        #     Pull Message contained in a task in a
+        #     {::Google::Cloud::Tasks::V2beta3::Queue#type PULL} queue type. This payload
+        #     type cannot be explicitly set through Cloud Tasks API. Its purpose,
+        #     currently is to provide backward compatibility with App Engine Task Queue
         #     [pull](https://cloud.google.com/appengine/docs/standard/java/taskqueue/pull/)
         #     queues to provide a way to inspect contents of pull tasks through the
         #     {::Google::Cloud::Tasks::V2beta3::CloudTasks::Client#get_task CloudTasks.GetTask}.
+        #
+        #     Note: The following fields are mutually exclusive: `pull_message`, `app_engine_http_request`, `http_request`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] schedule_time
         #   @return [::Google::Protobuf::Timestamp]
         #     The time when the task is scheduled to be attempted.
@@ -80,7 +90,8 @@ module Google
         #     The deadline for requests sent to the worker. If the worker does not
         #     respond by this deadline then the request is cancelled and the attempt
         #     is marked as a `DEADLINE_EXCEEDED` failure. Cloud Tasks will retry the
-        #     task according to the {::Google::Cloud::Tasks::V2beta3::RetryConfig RetryConfig}.
+        #     task according to the
+        #     {::Google::Cloud::Tasks::V2beta3::RetryConfig RetryConfig}.
         #
         #     Note that when the request is cancelled, Cloud Tasks will stop listening
         #     for the response, but whether the worker stops processing depends on the
@@ -89,10 +100,12 @@ module Google
         #
         #     The default and maximum values depend on the type of request:
         #
-        #     * For {::Google::Cloud::Tasks::V2beta3::HttpRequest HTTP tasks}, the default is 10 minutes. The deadline
+        #     * For {::Google::Cloud::Tasks::V2beta3::HttpRequest HTTP tasks}, the default is
+        #     10 minutes. The deadline
         #       must be in the interval [15 seconds, 30 minutes].
         #
-        #     * For {::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest App Engine tasks}, 0 indicates that the
+        #     * For {::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest App Engine tasks},
+        #     0 indicates that the
         #       request has the default deadline. The default deadline depends on the
         #       [scaling
         #       type](https://cloud.google.com/appengine/docs/standard/go/how-instances-are-managed#instance_scaling)
@@ -121,20 +134,22 @@ module Google
         #   @return [::Google::Cloud::Tasks::V2beta3::Attempt]
         #     Output only. The status of the task's first attempt.
         #
-        #     Only {::Google::Cloud::Tasks::V2beta3::Attempt#dispatch_time dispatch_time} will be set.
-        #     The other {::Google::Cloud::Tasks::V2beta3::Attempt Attempt} information is not retained by Cloud Tasks.
+        #     Only {::Google::Cloud::Tasks::V2beta3::Attempt#dispatch_time dispatch_time} will
+        #     be set. The other {::Google::Cloud::Tasks::V2beta3::Attempt Attempt} information
+        #     is not retained by Cloud Tasks.
         # @!attribute [rw] last_attempt
         #   @return [::Google::Cloud::Tasks::V2beta3::Attempt]
         #     Output only. The status of the task's last attempt.
         # @!attribute [rw] view
         #   @return [::Google::Cloud::Tasks::V2beta3::Task::View]
-        #     Output only. The view specifies which subset of the {::Google::Cloud::Tasks::V2beta3::Task Task} has
-        #     been returned.
+        #     Output only. The view specifies which subset of the
+        #     {::Google::Cloud::Tasks::V2beta3::Task Task} has been returned.
         class Task
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # The view specifies a subset of {::Google::Cloud::Tasks::V2beta3::Task Task} data.
+          # The view specifies a subset of {::Google::Cloud::Tasks::V2beta3::Task Task}
+          # data.
           #
           # When a task is returned in a response, not all
           # information is retrieved by default because some data, such as
@@ -149,7 +164,8 @@ module Google
             # sensitive data.
             #
             # This view does not include the
-            # {::Google::Cloud::Tasks::V2beta3::AppEngineHttpRequest#body body in AppEngineHttpRequest}.
+            # [body in
+            # AppEngineHttpRequest][google.cloud.tasks.v2beta3.AppEngineHttpRequest.body].
             # Bodies are desirable to return only when needed, because they
             # can be large and because of the sensitivity of the data that you
             # choose to store in it.
@@ -157,9 +173,10 @@ module Google
 
             # All information is returned.
             #
-            # Authorization for {::Google::Cloud::Tasks::V2beta3::Task::View::FULL FULL} requires
-            # `cloudtasks.tasks.fullView` [Google IAM](https://cloud.google.com/iam/)
-            # permission on the {::Google::Cloud::Tasks::V2beta3::Queue Queue} resource.
+            # Authorization for {::Google::Cloud::Tasks::V2beta3::Task::View::FULL FULL}
+            # requires `cloudtasks.tasks.fullView` [Google
+            # IAM](https://cloud.google.com/iam/) permission on the
+            # {::Google::Cloud::Tasks::V2beta3::Queue Queue} resource.
             FULL = 2
           end
         end

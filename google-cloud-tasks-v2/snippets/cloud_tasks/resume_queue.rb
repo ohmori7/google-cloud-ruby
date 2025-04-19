@@ -19,15 +19,29 @@
 # [START cloudtasks_v2_generated_CloudTasks_ResumeQueue_sync]
 require "google/cloud/tasks/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Tasks::V2::CloudTasks::Client.new
+##
+# Snippet for the resume_queue call in the CloudTasks service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Tasks::V2::CloudTasks::Client#resume_queue.
+#
+def resume_queue
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Tasks::V2::CloudTasks::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Tasks::V2::ResumeQueueRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Tasks::V2::ResumeQueueRequest.new
 
-# Call the resume_queue method.
-result = client.resume_queue request
+  # Call the resume_queue method.
+  result = client.resume_queue request
 
-# The returned object is of type Google::Cloud::Tasks::V2::Queue.
-p result
+  # The returned object is of type Google::Cloud::Tasks::V2::Queue.
+  p result
+end
 # [END cloudtasks_v2_generated_CloudTasks_ResumeQueue_sync]

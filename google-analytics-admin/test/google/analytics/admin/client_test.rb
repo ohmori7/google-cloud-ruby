@@ -20,15 +20,45 @@ require "helper"
 require "google/analytics/admin"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Analytics::Admin::ClientConstructionMinitest < Minitest::Test
-  def test_analytics_admin_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_analytics_admin_service_grpc
+    skip unless Google::Analytics::Admin.analytics_admin_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Analytics::Admin.analytics_admin_service do |config|
+      client = Google::Analytics::Admin.analytics_admin_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client, client
+    end
+  end
+
+  def test_analytics_admin_service_rest
+    skip unless Google::Analytics::Admin.analytics_admin_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Analytics::Admin.analytics_admin_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Rest::Client, client
     end
   end
 end

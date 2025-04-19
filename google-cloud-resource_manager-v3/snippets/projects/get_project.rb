@@ -19,15 +19,29 @@
 # [START cloudresourcemanager_v3_generated_Projects_GetProject_sync]
 require "google/cloud/resource_manager/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ResourceManager::V3::Projects::Client.new
+##
+# Snippet for the get_project call in the Projects service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ResourceManager::V3::Projects::Client#get_project.
+#
+def get_project
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ResourceManager::V3::Projects::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ResourceManager::V3::GetProjectRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ResourceManager::V3::GetProjectRequest.new
 
-# Call the get_project method.
-result = client.get_project request
+  # Call the get_project method.
+  result = client.get_project request
 
-# The returned object is of type Google::Cloud::ResourceManager::V3::Project.
-p result
+  # The returned object is of type Google::Cloud::ResourceManager::V3::Project.
+  p result
+end
 # [END cloudresourcemanager_v3_generated_Projects_GetProject_sync]

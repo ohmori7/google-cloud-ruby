@@ -41,15 +41,26 @@ module Google
         # @private
         attr_reader :retries, :timeout, :host
 
+        # @private
+        def universe_domain
+          service.universe_domain
+        end
+
         ##
         # Creates a new Service instance.
-        def initialize project, credentials, retries: nil, timeout: nil, host: nil, quota_project: nil
+        def initialize project, credentials,
+                       retries: nil,
+                       timeout: nil,
+                       host: nil,
+                       quota_project: nil,
+                       universe_domain: nil
           @project = project
           @credentials = credentials
           @retries = retries
           @timeout = timeout
           @host = host
           @quota_project = quota_project
+          @universe_domain = universe_domain
         end
 
         def service
@@ -63,13 +74,20 @@ module Google
             service.client_options.send_timeout_sec = timeout
             service.request_options.retries = 0 # handle retries in #execute
             service.request_options.header ||= {}
-            service.request_options.header["x-goog-api-client"] = \
+            service.request_options.header["x-goog-api-client"] =
               "gl-ruby/#{RUBY_VERSION} gccl/#{Google::Cloud::Bigquery::VERSION}"
             service.request_options.query ||= {}
             service.request_options.query["prettyPrint"] = false
             service.request_options.quota_project = @quota_project if @quota_project
             service.authorization = @credentials.client
+            service.universe_domain = @universe_domain
             service.root_url = host if host
+            begin
+              service.verify_universe_domain!
+            rescue Google::Apis::UniverseDomainError => e
+              # TODO: Create a Google::Cloud::Error subclass for this.
+              raise Google::Cloud::Error, e.message
+            end
             service
           end
         end
@@ -92,9 +110,15 @@ module Google
         ##
         # Returns the dataset specified by datasetID.
         def get_dataset dataset_id
+          get_project_dataset @project, dataset_id
+        end
+
+        ##
+        # Gets the specified dataset resource by full dataset reference.
+        def get_project_dataset project_id, dataset_id
           # The get operation is considered idempotent
           execute backoff: true do
-            service.get_dataset @project, dataset_id
+            service.get_dataset project_id, dataset_id
           end
         end
 
@@ -144,10 +168,11 @@ module Google
 
         ##
         # Gets the specified table resource by full table reference.
-        def get_project_table project_id, dataset_id, table_id
+        def get_project_table project_id, dataset_id, table_id, metadata_view: nil
+          metadata_view = table_metadata_view_type_for metadata_view
           # The get operation is considered idempotent
           execute backoff: true do
-            service.get_table project_id, dataset_id, table_id
+            service.get_table project_id, dataset_id, table_id, view: metadata_view
           end
         end
 
@@ -156,8 +181,8 @@ module Google
         # This method does not return the data in the table,
         # it only returns the table resource,
         # which describes the structure of this table.
-        def get_table dataset_id, table_id
-          get_project_table @project, dataset_id, table_id
+        def get_table dataset_id, table_id, metadata_view: nil
+          get_project_table @project, dataset_id, table_id, metadata_view: metadata_view
         end
 
         ##
@@ -232,15 +257,17 @@ module Google
           end
         end
 
-        def insert_tabledata dataset_id, table_id, rows, insert_ids: nil, ignore_unknown: nil, skip_invalid: nil
+        def insert_tabledata dataset_id, table_id, rows, insert_ids: nil, ignore_unknown: nil,
+                             skip_invalid: nil, project_id: nil
           json_rows = Array(rows).map { |row| Convert.to_json_row row }
           insert_tabledata_json_rows dataset_id, table_id, json_rows, insert_ids:     insert_ids,
                                                                       ignore_unknown: ignore_unknown,
-                                                                      skip_invalid:   skip_invalid
+                                                                      skip_invalid:   skip_invalid,
+                                                                      project_id:     project_id
         end
 
         def insert_tabledata_json_rows dataset_id, table_id, json_rows, insert_ids: nil, ignore_unknown: nil,
-                                       skip_invalid: nil
+                                       skip_invalid: nil, project_id: nil
           rows_and_ids = Array(json_rows).zip Array(insert_ids)
           insert_rows = rows_and_ids.map do |json_row, insert_id|
             if insert_id == :skip
@@ -261,9 +288,10 @@ module Google
           }.to_json
 
           # The insertAll with insertId operation is considered idempotent
+          project_id ||= @project
           execute backoff: true do
             service.insert_all_table_data(
-              @project, dataset_id, table_id, insert_req,
+              project_id, dataset_id, table_id, insert_req,
               options: { skip_serialization: true }
             )
           end
@@ -489,11 +517,24 @@ module Google
             project_id: m["prj"],
             dataset_id: m["dts"],
             table_id:   m["tbl"]
-          }.delete_if { |_, v| v.nil? }
+          }.compact
           str_table_ref_hash = default_ref.to_h.merge str_table_ref_hash
           ref = Google::Apis::BigqueryV2::TableReference.new(**str_table_ref_hash)
           validate_table_ref ref
           ref
+        end
+
+        ##
+        # Converts a hash to a Google::Apis::BigqueryV2::DatasetAccessEntry oject.
+        #
+        # @param [Hash<String,String>] dataset_hash Hash for a DatasetAccessEntry.
+        #
+        def self.dataset_access_entry_from_hash dataset_hash
+          params = {
+            dataset: Google::Apis::BigqueryV2::DatasetReference.new(**dataset_hash),
+            target_types: dataset_hash[:target_types]
+          }.compact
+          Google::Apis::BigqueryV2::DatasetAccessEntry.new(**params)
         end
 
         def self.validate_table_ref table_ref
@@ -526,13 +567,15 @@ module Google
         def dataset_ref_from dts, pjt = nil
           return nil if dts.nil?
           if dts.respond_to? :dataset_id
+            pjt ||= dts.project_id || @project
             Google::Apis::BigqueryV2::DatasetReference.new(
-              project_id: (pjt || dts.project_id || @project),
+              project_id: pjt,
               dataset_id: dts.dataset_id
             )
           else
+            pjt ||= @project
             Google::Apis::BigqueryV2::DatasetReference.new(
-              project_id: (pjt || @project),
+              project_id: pjt,
               dataset_id: dts
             )
           end
@@ -570,6 +613,14 @@ module Google
           end
         rescue Google::Apis::Error => e
           raise Google::Cloud::Error.from_error e
+        end
+
+        def table_metadata_view_type_for str
+          return nil if str.nil?
+          { "unspecified" => "TABLE_METADATA_VIEW_UNSPECIFIED",
+            "basic" => "BASIC",
+            "storage" => "STORAGE_STATS",
+            "full" => "FULL" }[str.to_s.downcase]
         end
 
         class Backoff

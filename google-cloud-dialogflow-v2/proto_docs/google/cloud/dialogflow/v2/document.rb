@@ -21,7 +21,8 @@ module Google
   module Cloud
     module Dialogflow
       module V2
-        # A knowledge document to be used by a {::Google::Cloud::Dialogflow::V2::KnowledgeBase KnowledgeBase}.
+        # A knowledge document to be used by a
+        # {::Google::Cloud::Dialogflow::V2::KnowledgeBase KnowledgeBase}.
         #
         # For more information, see the [knowledge base
         # guide](https://cloud.google.com/dialogflow/docs/how/knowledge-bases).
@@ -55,10 +56,14 @@ module Google
         #     be indexed by Google Search. In particular, URLs for showing documents in
         #     Google Cloud Storage (i.e. the URL in your browser) are not supported.
         #     Instead use the `gs://` format URI described above.
+        #
+        #     Note: The following fields are mutually exclusive: `content_uri`, `raw_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] raw_content
         #   @return [::String]
         #     The raw content of the document. This field is only permitted for
         #     EXTRACTIVE_QA and FAQ knowledge types.
+        #
+        #     Note: The following fields are mutually exclusive: `raw_content`, `content_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] enable_auto_reload
         #   @return [::Boolean]
         #     Optional. If true, we try to automatically reload the document every day
@@ -73,7 +78,7 @@ module Google
         #
         #     If a reload fails with internal errors, the system will try to reload the
         #     document on the next day.
-        #     If a reload fails with non-retriable errors (e.g. PERMISION_DENIED), the
+        #     If a reload fails with non-retriable errors (e.g. PERMISSION_DENIED), the
         #     system will not try to reload the document anymore. You need to manually
         #     reload the document successfully by calling `ReloadDocument` and clear the
         #     errors.
@@ -88,6 +93,9 @@ module Google
         #     key-value pairs. Suggested use cases include storing a document's title,
         #     an external URL distinct from the document's content_uri, etc.
         #     The max size of a `key` or a `value` of the metadata is 1024 bytes.
+        # @!attribute [r] state
+        #   @return [::Google::Cloud::Dialogflow::V2::Document::State]
+        #     Output only. The current state of the document.
         class Document
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -136,10 +144,35 @@ module Google
             # The entire document content as a whole can be used for query results.
             # Only for Contact Center Solutions on Dialogflow.
             ARTICLE_SUGGESTION = 3
+
+            # The document contains agent-facing Smart Reply entries.
+            AGENT_FACING_SMART_REPLY = 4
+          end
+
+          # Possible states of the document
+          module State
+            # The document state is unspecified.
+            STATE_UNSPECIFIED = 0
+
+            # The document creation is in progress.
+            CREATING = 1
+
+            # The document is active and ready to use.
+            ACTIVE = 2
+
+            # The document updation is in progress.
+            UPDATING = 3
+
+            # The document is reloading.
+            RELOADING = 4
+
+            # The document deletion is in progress.
+            DELETING = 5
           end
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#get_document Documents.GetDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#get_document Documents.GetDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the document to retrieve.
@@ -150,7 +183,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#list_documents Documents.ListDocuments}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#list_documents Documents.ListDocuments}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The knowledge base to list all documents for.
@@ -191,7 +225,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Response message for {::Google::Cloud::Dialogflow::V2::Documents::Client#list_documents Documents.ListDocuments}.
+        # Response message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#list_documents Documents.ListDocuments}.
         # @!attribute [rw] documents
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::Document>]
         #     The list of documents.
@@ -204,7 +239,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#create_document Documents.CreateDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#create_document Documents.CreateDocument}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The knowledge base to create a document for.
@@ -218,7 +254,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#import_documents Documents.ImportDocuments}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#import_documents Documents.ImportDocuments}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The knowledge base to import documents into.
@@ -226,7 +263,7 @@ module Google
         #     ID>/knowledgeBases/<Knowledge Base ID>`.
         # @!attribute [rw] gcs_source
         #   @return [::Google::Cloud::Dialogflow::V2::GcsSources]
-        #     The Google Cloud Storage location for the documents.
+        #     Optional. The Google Cloud Storage location for the documents.
         #     The path can include a wildcard.
         #
         #     These URIs may have the forms
@@ -271,7 +308,8 @@ module Google
           end
         end
 
-        # Response message for {::Google::Cloud::Dialogflow::V2::Documents::Client#import_documents Documents.ImportDocuments}.
+        # Response message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#import_documents Documents.ImportDocuments}.
         # @!attribute [rw] warnings
         #   @return [::Array<::Google::Rpc::Status>]
         #     Includes details about skipped documents or any other warnings.
@@ -280,7 +318,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#delete_document Documents.DeleteDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#delete_document Documents.DeleteDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the document to delete.
@@ -291,7 +330,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#update_document Documents.UpdateDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#update_document Documents.UpdateDocument}.
         # @!attribute [rw] document
         #   @return [::Google::Cloud::Dialogflow::V2::Document]
         #     Required. The document to update.
@@ -305,7 +345,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#reload_document Documents.ReloadDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#reload_document Documents.ReloadDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the document to reload.
@@ -313,8 +354,8 @@ module Google
         #     ID>/knowledgeBases/<Knowledge Base ID>/documents/<Document ID>`
         # @!attribute [rw] content_uri
         #   @return [::String]
-        #     Optional. The path of gcs source file for reloading document content. For now,
-        #     only gcs uri is supported.
+        #     Optional. The path of gcs source file for reloading document content. For
+        #     now, only gcs uri is supported.
         #
         #     For documents stored in Google Cloud Storage, these URIs must have
         #     the form `gs://<bucket-name>/<object-name>`.
@@ -324,14 +365,15 @@ module Google
         #     Only valid when the document source is Google Cloud Storage URI.
         # @!attribute [rw] smart_messaging_partial_update
         #   @return [::Boolean]
-        #     Optional. When enabled, the reload request is to apply partial update to the smart
-        #     messaging allowlist.
+        #     Optional. When enabled, the reload request is to apply partial update to
+        #     the smart messaging allowlist.
         class ReloadDocumentRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::Documents::Client#export_document Documents.ExportDocument}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::Documents::Client#export_document Documents.ExportDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the document to export.
@@ -353,6 +395,15 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Metadata related to the Export Data Operations (e.g. ExportDocument).
+        # @!attribute [rw] exported_gcs_destination
+        #   @return [::Google::Cloud::Dialogflow::V2::GcsDestination]
+        #     Cloud Storage file path of the exported data.
+        class ExportOperationMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Metadata in google::longrunning::Operation for Knowledge operations.
         # @!attribute [r] state
         #   @return [::Google::Cloud::Dialogflow::V2::KnowledgeOperationMetadata::State]
@@ -360,6 +411,9 @@ module Google
         # @!attribute [rw] knowledge_base
         #   @return [::String]
         #     The name of the knowledge base interacted with during the operation.
+        # @!attribute [rw] export_operation_metadata
+        #   @return [::Google::Cloud::Dialogflow::V2::ExportOperationMetadata]
+        #     Metadata for the Export Data Operation such as the destination of export.
         class KnowledgeOperationMetadata
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

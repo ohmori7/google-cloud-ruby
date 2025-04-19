@@ -19,15 +19,29 @@
 # [START recommender_v1_generated_Recommender_GetInsight_sync]
 require "google/cloud/recommender/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Recommender::V1::Recommender::Client.new
+##
+# Snippet for the get_insight call in the Recommender service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Recommender::V1::Recommender::Client#get_insight.
+#
+def get_insight
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Recommender::V1::Recommender::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Recommender::V1::GetInsightRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Recommender::V1::GetInsightRequest.new
 
-# Call the get_insight method.
-result = client.get_insight request
+  # Call the get_insight method.
+  result = client.get_insight request
 
-# The returned object is of type Google::Cloud::Recommender::V1::Insight.
-p result
+  # The returned object is of type Google::Cloud::Recommender::V1::Insight.
+  p result
+end
 # [END recommender_v1_generated_Recommender_GetInsight_sync]

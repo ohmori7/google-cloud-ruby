@@ -36,9 +36,12 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     The unique identifier of the entity type.
-        #     Required for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType} and
-        #     {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes} methods.
-        #     Format: `projects/<Project ID>/agent/entityTypes/<Entity Type ID>`.
+        #     Required for
+        #     {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}
+        #     and
+        #     {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes}
+        #     methods. Format: `projects/<Project ID>/agent/entityTypes/<Entity Type
+        #     ID>`.
         # @!attribute [rw] display_name
         #   @return [::String]
         #     Required. The name of the entity type.
@@ -120,7 +123,8 @@ module Google
           end
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The agent to list all entity types from.
@@ -144,7 +148,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
+        # The response message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
         # @!attribute [rw] entity_types
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::EntityType>]
         #     The list of agent entity types. There will be a maximum number of items
@@ -158,7 +163,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#get_entity_type EntityTypes.GetEntityType}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#get_entity_type EntityTypes.GetEntityType}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the entity type.
@@ -175,7 +181,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#create_entity_type EntityTypes.CreateEntityType}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#create_entity_type EntityTypes.CreateEntityType}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The agent to create a entity type for.
@@ -195,7 +202,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
         # @!attribute [rw] entity_type
         #   @return [::Google::Cloud::Dialogflow::V2::EntityType]
         #     Required. The entity type to update.
@@ -214,7 +222,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#delete_entity_type EntityTypes.DeleteEntityType}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#delete_entity_type EntityTypes.DeleteEntityType}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the entity type to delete.
@@ -224,7 +233,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the agent to update or create entity types in.
@@ -235,9 +245,13 @@ module Google
         #     or create. The file format can either be a serialized proto (of
         #     EntityBatch type) or a JSON object. Note: The URI must start with
         #     "gs://".
+        #
+        #     Note: The following fields are mutually exclusive: `entity_type_batch_uri`, `entity_type_batch_inline`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] entity_type_batch_inline
         #   @return [::Google::Cloud::Dialogflow::V2::EntityTypeBatch]
         #     The collection of entity types to update or create.
+        #
+        #     Note: The following fields are mutually exclusive: `entity_type_batch_inline`, `entity_type_batch_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] language_code
         #   @return [::String]
         #     Optional. The language used to access language-specific data.
@@ -253,7 +267,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes}.
+        # The response message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entity_types EntityTypes.BatchUpdateEntityTypes}.
         # @!attribute [rw] entity_types
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::EntityType>]
         #     The collection of updated or created entity types.
@@ -262,7 +277,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_delete_entity_types EntityTypes.BatchDeleteEntityTypes}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_delete_entity_types EntityTypes.BatchDeleteEntityTypes}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the agent to delete all entities types for. Format:
@@ -276,7 +292,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_create_entities EntityTypes.BatchCreateEntities}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_create_entities EntityTypes.BatchCreateEntities}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the entity type to create entities in. Format:
@@ -296,7 +313,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entities EntityTypes.BatchUpdateEntities}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_update_entities EntityTypes.BatchUpdateEntities}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the entity type to update or create entities in.
@@ -319,7 +337,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_delete_entities EntityTypes.BatchDeleteEntities}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_delete_entities EntityTypes.BatchDeleteEntities}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the entity type to delete entries for. Format:

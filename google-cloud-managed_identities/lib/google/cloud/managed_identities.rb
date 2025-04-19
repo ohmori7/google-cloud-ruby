@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :managed_identities do |config|
-  config.add_field! :endpoint,      "managedidentities.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,6 +39,7 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -48,12 +49,17 @@ module Google
       # Create a new client object for ManagedIdentitiesService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::ManagedIdentities::V1::ManagedIdentitiesService::Client](https://googleapis.dev/ruby/google-cloud-managed_identities-v1/latest/Google/Cloud/ManagedIdentities/V1/ManagedIdentitiesService/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::ManagedIdentities::V1::ManagedIdentitiesService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-managed_identities-v1/latest/Google-Cloud-ManagedIdentities-V1-ManagedIdentitiesService-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ManagedIdentitiesService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ManagedIdentitiesService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::ManagedIdentities.managed_identities_service_available?}.
       #
       # ## About ManagedIdentitiesService
       #
@@ -92,7 +98,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ManagedIdentitiesService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.managed_identities_service version: :v1, &block
         require "google/cloud/managed_identities/#{version.to_s.downcase}"
@@ -101,8 +107,34 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::ManagedIdentities.const_get package_name
-        package_module.const_get(:ManagedIdentitiesService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::ManagedIdentities.const_get(package_name).const_get(:ManagedIdentitiesService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ManagedIdentitiesService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::ManagedIdentities.managed_identities_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ManagedIdentitiesService service,
+      # or if the versioned client gem needs an update to support the ManagedIdentitiesService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.managed_identities_service_available? version: :v1
+        require "google/cloud/managed_identities/#{version.to_s.downcase}"
+        package_name = Google::Cloud::ManagedIdentities
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::ManagedIdentities.const_get package_name
+        return false unless service_module.const_defined? :ManagedIdentitiesService
+        service_module = service_module.const_get :ManagedIdentitiesService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -122,7 +154,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

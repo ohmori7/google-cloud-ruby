@@ -41,9 +41,26 @@ class ::Google::Cloud::Language::V1::LanguageService::ClientTest < Minitest::Tes
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -296,11 +313,13 @@ class ::Google::Cloud::Language::V1::LanguageService::ClientTest < Minitest::Tes
 
     # Create request parameters for a unary method.
     document = {}
+    classification_model_options = {}
 
     classify_text_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :classify_text, name
       assert_kind_of ::Google::Cloud::Language::V1::ClassifyTextRequest, request
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Language::V1::Document), request["document"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Language::V1::ClassificationModelOptions), request["classification_model_options"]
       refute_nil options
     end
 
@@ -311,37 +330,95 @@ class ::Google::Cloud::Language::V1::LanguageService::ClientTest < Minitest::Tes
       end
 
       # Use hash object
-      client.classify_text({ document: document }) do |response, operation|
+      client.classify_text({ document: document, classification_model_options: classification_model_options }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.classify_text document: document do |response, operation|
+      client.classify_text document: document, classification_model_options: classification_model_options do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.classify_text ::Google::Cloud::Language::V1::ClassifyTextRequest.new(document: document) do |response, operation|
+      client.classify_text ::Google::Cloud::Language::V1::ClassifyTextRequest.new(document: document, classification_model_options: classification_model_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.classify_text({ document: document }, grpc_options) do |response, operation|
+      client.classify_text({ document: document, classification_model_options: classification_model_options }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.classify_text(::Google::Cloud::Language::V1::ClassifyTextRequest.new(document: document), grpc_options) do |response, operation|
+      client.classify_text(::Google::Cloud::Language::V1::ClassifyTextRequest.new(document: document, classification_model_options: classification_model_options), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Verify method calls
       assert_equal 5, classify_text_client_stub.call_rpc_count
+    end
+  end
+
+  def test_moderate_text
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Language::V1::ModerateTextResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    document = {}
+
+    moderate_text_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :moderate_text, name
+      assert_kind_of ::Google::Cloud::Language::V1::ModerateTextRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Language::V1::Document), request["document"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, moderate_text_client_stub do
+      # Create client
+      client = ::Google::Cloud::Language::V1::LanguageService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.moderate_text({ document: document }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.moderate_text document: document do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.moderate_text ::Google::Cloud::Language::V1::ModerateTextRequest.new(document: document) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.moderate_text({ document: document }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.moderate_text(::Google::Cloud::Language::V1::ModerateTextRequest.new(document: document), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, moderate_text_client_stub.call_rpc_count
     end
   end
 
@@ -411,7 +488,8 @@ class ::Google::Cloud::Language::V1::LanguageService::ClientTest < Minitest::Tes
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Language::V1::LanguageService::Client.new do |config|
         config.credentials = grpc_channel
       end

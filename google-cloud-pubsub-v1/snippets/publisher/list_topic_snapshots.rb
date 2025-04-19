@@ -19,15 +19,29 @@
 # [START pubsub_v1_generated_Publisher_ListTopicSnapshots_sync]
 require "google/cloud/pubsub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PubSub::V1::Publisher::Client.new
+##
+# Snippet for the list_topic_snapshots call in the Publisher service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PubSub::V1::Publisher::Client#list_topic_snapshots.
+#
+def list_topic_snapshots
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PubSub::V1::Publisher::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PubSub::V1::ListTopicSnapshotsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PubSub::V1::ListTopicSnapshotsRequest.new
 
-# Call the list_topic_snapshots method.
-result = client.list_topic_snapshots request
+  # Call the list_topic_snapshots method.
+  result = client.list_topic_snapshots request
 
-# The returned object is of type Google::Cloud::PubSub::V1::ListTopicSnapshotsResponse.
-p result
+  # The returned object is of type Google::Cloud::PubSub::V1::ListTopicSnapshotsResponse.
+  p result
+end
 # [END pubsub_v1_generated_Publisher_ListTopicSnapshots_sync]

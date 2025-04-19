@@ -19,15 +19,29 @@
 # [START accessapproval_v1_generated_AccessApproval_GetApprovalRequest_sync]
 require "google/cloud/access_approval/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AccessApproval::V1::AccessApproval::Client.new
+##
+# Snippet for the get_approval_request call in the AccessApproval service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AccessApproval::V1::AccessApproval::Client#get_approval_request.
+#
+def get_approval_request
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AccessApproval::V1::AccessApproval::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AccessApproval::V1::GetApprovalRequestMessage.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AccessApproval::V1::GetApprovalRequestMessage.new
 
-# Call the get_approval_request method.
-result = client.get_approval_request request
+  # Call the get_approval_request method.
+  result = client.get_approval_request request
 
-# The returned object is of type Google::Cloud::AccessApproval::V1::ApprovalRequest.
-p result
+  # The returned object is of type Google::Cloud::AccessApproval::V1::ApprovalRequest.
+  p result
+end
 # [END accessapproval_v1_generated_AccessApproval_GetApprovalRequest_sync]

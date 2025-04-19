@@ -19,22 +19,36 @@
 # [START privateca_v1beta1_generated_CertificateAuthorityService_EnableCertificateAuthority_sync]
 require "google/cloud/security/private_ca/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
+##
+# Snippet for the enable_certificate_authority call in the CertificateAuthorityService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client#enable_certificate_authority.
+#
+def enable_certificate_authority
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Security::PrivateCA::V1beta1::EnableCertificateAuthorityRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Security::PrivateCA::V1beta1::EnableCertificateAuthorityRequest.new
 
-# Call the enable_certificate_authority method.
-result = client.enable_certificate_authority request
+  # Call the enable_certificate_authority method.
+  result = client.enable_certificate_authority request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END privateca_v1beta1_generated_CertificateAuthorityService_EnableCertificateAuthority_sync]

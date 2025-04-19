@@ -30,11 +30,11 @@ module Google
     module Monitoring
       module V3
         ##
-        # The QueryService API is used to manage time series data in Stackdriver
+        # The QueryService API is used to manage time series data in Cloud
         # Monitoring. Time series data is a collection of data points that describes
         # the time-varying values of a metric.
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/cloud/monitoring/v3/query_service"
         #     client = ::Google::Cloud::Monitoring::V3::QueryService::Client.new

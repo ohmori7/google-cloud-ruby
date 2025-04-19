@@ -38,6 +38,12 @@ module Grafeas
     # @!attribute [rw] analysis_status
     #   @return [::Grafeas::V1::DiscoveryOccurrence::AnalysisStatus]
     #     The status of discovery for the resource.
+    # @!attribute [rw] analysis_completed
+    #   @return [::Grafeas::V1::DiscoveryOccurrence::AnalysisCompleted]
+    # @!attribute [rw] analysis_error
+    #   @return [::Array<::Google::Rpc::Status>]
+    #     Indicates any errors encountered during analysis of a resource. There
+    #     could be 0 or more of these errors.
     # @!attribute [rw] analysis_status_error
     #   @return [::Google::Rpc::Status]
     #     When an error is encountered this will contain a LocalizedMessage under
@@ -52,9 +58,76 @@ module Grafeas
     # @!attribute [r] archive_time
     #   @return [::Google::Protobuf::Timestamp]
     #     The time occurrences related to this discovery occurrence were archived.
+    # @!attribute [rw] sbom_status
+    #   @return [::Grafeas::V1::DiscoveryOccurrence::SBOMStatus]
+    #     The status of an SBOM generation.
+    # @!attribute [rw] vulnerability_attestation
+    #   @return [::Grafeas::V1::DiscoveryOccurrence::VulnerabilityAttestation]
+    #     The status of an vulnerability attestation generation.
     class DiscoveryOccurrence
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods
+
+      # Indicates which analysis completed successfully. Multiple types of
+      # analysis can be performed on a single resource.
+      # @!attribute [rw] analysis_type
+      #   @return [::Array<::String>]
+      class AnalysisCompleted
+        include ::Google::Protobuf::MessageExts
+        extend ::Google::Protobuf::MessageExts::ClassMethods
+      end
+
+      # The status of an SBOM generation.
+      # @!attribute [rw] sbom_state
+      #   @return [::Grafeas::V1::DiscoveryOccurrence::SBOMStatus::SBOMState]
+      #     The progress of the SBOM generation.
+      # @!attribute [rw] error
+      #   @return [::String]
+      #     If there was an error generating an SBOM, this will indicate what that
+      #     error was.
+      class SBOMStatus
+        include ::Google::Protobuf::MessageExts
+        extend ::Google::Protobuf::MessageExts::ClassMethods
+
+        # An enum indicating the progress of the SBOM generation.
+        module SBOMState
+          # Default unknown state.
+          SBOM_STATE_UNSPECIFIED = 0
+
+          # SBOM scanning is pending.
+          PENDING = 1
+
+          # SBOM scanning has completed.
+          COMPLETE = 2
+        end
+      end
+
+      # The status of an vulnerability attestation generation.
+      # @!attribute [rw] last_attempt_time
+      #   @return [::Google::Protobuf::Timestamp]
+      #     The last time we attempted to generate an attestation.
+      # @!attribute [rw] state
+      #   @return [::Grafeas::V1::DiscoveryOccurrence::VulnerabilityAttestation::VulnerabilityAttestationState]
+      #     The success/failure state of the latest attestation attempt.
+      # @!attribute [rw] error
+      #   @return [::String]
+      #     If failure, the error reason for why the attestation generation failed.
+      class VulnerabilityAttestation
+        include ::Google::Protobuf::MessageExts
+        extend ::Google::Protobuf::MessageExts::ClassMethods
+
+        # An enum indicating the state of the attestation generation.
+        module VulnerabilityAttestationState
+          # Default unknown state.
+          VULNERABILITY_ATTESTATION_STATE_UNSPECIFIED = 0
+
+          # Attestation was successfully generated and stored.
+          SUCCESS = 1
+
+          # Attestation was unsuccessfully generated and stored.
+          FAILURE = 2
+        end
+      end
 
       # Whether the resource is continuously analyzed.
       module ContinuousAnalysis
@@ -83,11 +156,14 @@ module Grafeas
         # Analysis has finished successfully.
         FINISHED_SUCCESS = 3
 
+        # Analysis has completed.
+        COMPLETE = 3
+
         # Analysis has finished unsuccessfully, the analysis itself is in a bad
         # state.
         FINISHED_FAILED = 4
 
-        # The resource is known not to be supported
+        # The resource is known not to be supported.
         FINISHED_UNSUPPORTED = 5
       end
     end

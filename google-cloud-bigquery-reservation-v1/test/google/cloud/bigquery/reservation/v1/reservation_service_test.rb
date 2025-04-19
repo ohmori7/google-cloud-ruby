@@ -41,9 +41,26 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientTest
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -349,6 +366,64 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientTest
 
       # Verify method calls
       assert_equal 5, update_reservation_client_stub.call_rpc_count
+    end
+  end
+
+  def test_failover_reservation
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigquery::Reservation::V1::Reservation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    failover_reservation_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :failover_reservation, name
+      assert_kind_of ::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, failover_reservation_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.failover_reservation({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.failover_reservation name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.failover_reservation ::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.failover_reservation({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.failover_reservation(::Google::Cloud::Bigquery::Reservation::V1::FailoverReservationRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, failover_reservation_client_stub.call_rpc_count
     end
   end
 
@@ -1116,12 +1191,14 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientTest
     # Create request parameters for a unary method.
     name = "hello world"
     destination_id = "hello world"
+    assignment_id = "hello world"
 
     move_assignment_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :move_assignment, name
       assert_kind_of ::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest, request
       assert_equal "hello world", request["name"]
       assert_equal "hello world", request["destination_id"]
+      assert_equal "hello world", request["assignment_id"]
       refute_nil options
     end
 
@@ -1132,37 +1209,97 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientTest
       end
 
       # Use hash object
-      client.move_assignment({ name: name, destination_id: destination_id }) do |response, operation|
+      client.move_assignment({ name: name, destination_id: destination_id, assignment_id: assignment_id }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.move_assignment name: name, destination_id: destination_id do |response, operation|
+      client.move_assignment name: name, destination_id: destination_id, assignment_id: assignment_id do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.move_assignment ::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest.new(name: name, destination_id: destination_id) do |response, operation|
+      client.move_assignment ::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest.new(name: name, destination_id: destination_id, assignment_id: assignment_id) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.move_assignment({ name: name, destination_id: destination_id }, grpc_options) do |response, operation|
+      client.move_assignment({ name: name, destination_id: destination_id, assignment_id: assignment_id }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.move_assignment(::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest.new(name: name, destination_id: destination_id), grpc_options) do |response, operation|
+      client.move_assignment(::Google::Cloud::Bigquery::Reservation::V1::MoveAssignmentRequest.new(name: name, destination_id: destination_id, assignment_id: assignment_id), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Verify method calls
       assert_equal 5, move_assignment_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_assignment
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Bigquery::Reservation::V1::Assignment.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    assignment = {}
+    update_mask = {}
+
+    update_assignment_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_assignment, name
+      assert_kind_of ::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Bigquery::Reservation::V1::Assignment), request["assignment"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_assignment_client_stub do
+      # Create client
+      client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_assignment({ assignment: assignment, update_mask: update_mask }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_assignment assignment: assignment, update_mask: update_mask do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_assignment ::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest.new(assignment: assignment, update_mask: update_mask) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_assignment({ assignment: assignment, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_assignment(::Google::Cloud::Bigquery::Reservation::V1::UpdateAssignmentRequest.new(assignment: assignment, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_assignment_client_stub.call_rpc_count
     end
   end
 
@@ -1288,7 +1425,8 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientTest
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end

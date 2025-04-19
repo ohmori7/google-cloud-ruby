@@ -41,9 +41,26 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -373,6 +390,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     seqno = 42
     query_options = {}
     request_options = {}
+    directed_read_options = {}
+    data_boost_enabled = true
+    last_statement = true
 
     execute_sql_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :execute_sql, name
@@ -388,6 +408,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal 42, request["seqno"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::ExecuteSqlRequest::QueryOptions), request["query_options"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::DirectedReadOptions), request["directed_read_options"]
+      assert_equal true, request["data_boost_enabled"]
+      assert_equal true, request["last_statement"]
       refute_nil options
     end
 
@@ -398,31 +421,31 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.execute_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options }) do |response, operation|
+      client.execute_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.execute_sql session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options do |response, operation|
+      client.execute_sql session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.execute_sql ::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options) do |response, operation|
+      client.execute_sql ::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.execute_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options }, grpc_options) do |response, operation|
+      client.execute_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.execute_sql(::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options), grpc_options) do |response, operation|
+      client.execute_sql(::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -451,6 +474,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     seqno = 42
     query_options = {}
     request_options = {}
+    directed_read_options = {}
+    data_boost_enabled = true
+    last_statement = true
 
     execute_streaming_sql_client_stub = ClientStub.new [grpc_response].to_enum, grpc_operation do |name, request, options:|
       assert_equal :execute_streaming_sql, name
@@ -466,6 +492,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal 42, request["seqno"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::ExecuteSqlRequest::QueryOptions), request["query_options"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::DirectedReadOptions), request["directed_read_options"]
+      assert_equal true, request["data_boost_enabled"]
+      assert_equal true, request["last_statement"]
       refute_nil options
     end
 
@@ -476,7 +505,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.execute_streaming_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options }) do |response, operation|
+      client.execute_streaming_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement }) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -485,7 +514,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use named arguments
-      client.execute_streaming_sql session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options do |response, operation|
+      client.execute_streaming_sql session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -494,7 +523,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use protobuf object
-      client.execute_streaming_sql ::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options) do |response, operation|
+      client.execute_streaming_sql ::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -503,7 +532,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object with options
-      client.execute_streaming_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options }, grpc_options) do |response, operation|
+      client.execute_streaming_sql({ session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement }, grpc_options) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -512,7 +541,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use protobuf object with options
-      client.execute_streaming_sql(::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options), grpc_options) do |response, operation|
+      client.execute_streaming_sql(::Google::Cloud::Spanner::V1::ExecuteSqlRequest.new(session: session, transaction: transaction, sql: sql, params: params, param_types: param_types, resume_token: resume_token, query_mode: query_mode, partition_token: partition_token, seqno: seqno, query_options: query_options, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, last_statement: last_statement), grpc_options) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -538,6 +567,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     statements = [{}]
     seqno = 42
     request_options = {}
+    last_statements = true
 
     execute_batch_dml_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :execute_batch_dml, name
@@ -547,6 +577,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_kind_of ::Google::Cloud::Spanner::V1::ExecuteBatchDmlRequest::Statement, request["statements"].first
       assert_equal 42, request["seqno"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal true, request["last_statements"]
       refute_nil options
     end
 
@@ -557,31 +588,31 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.execute_batch_dml({ session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options }) do |response, operation|
+      client.execute_batch_dml({ session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options, last_statements: last_statements }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.execute_batch_dml session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options do |response, operation|
+      client.execute_batch_dml session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options, last_statements: last_statements do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.execute_batch_dml ::Google::Cloud::Spanner::V1::ExecuteBatchDmlRequest.new(session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options) do |response, operation|
+      client.execute_batch_dml ::Google::Cloud::Spanner::V1::ExecuteBatchDmlRequest.new(session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options, last_statements: last_statements) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.execute_batch_dml({ session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options }, grpc_options) do |response, operation|
+      client.execute_batch_dml({ session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options, last_statements: last_statements }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.execute_batch_dml(::Google::Cloud::Spanner::V1::ExecuteBatchDmlRequest.new(session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options), grpc_options) do |response, operation|
+      client.execute_batch_dml(::Google::Cloud::Spanner::V1::ExecuteBatchDmlRequest.new(session: session, transaction: transaction, statements: statements, seqno: seqno, request_options: request_options, last_statements: last_statements), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -609,6 +640,10 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     resume_token = "hello world"
     partition_token = "hello world"
     request_options = {}
+    directed_read_options = {}
+    data_boost_enabled = true
+    order_by = :ORDER_BY_UNSPECIFIED
+    lock_hint = :LOCK_HINT_UNSPECIFIED
 
     read_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :read, name
@@ -623,6 +658,10 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal "hello world", request["resume_token"]
       assert_equal "hello world", request["partition_token"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::DirectedReadOptions), request["directed_read_options"]
+      assert_equal true, request["data_boost_enabled"]
+      assert_equal :ORDER_BY_UNSPECIFIED, request["order_by"]
+      assert_equal :LOCK_HINT_UNSPECIFIED, request["lock_hint"]
       refute_nil options
     end
 
@@ -633,31 +672,31 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options }) do |response, operation|
+      client.read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.read session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options do |response, operation|
+      client.read session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.read ::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options) do |response, operation|
+      client.read ::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options }, grpc_options) do |response, operation|
+      client.read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.read(::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options), grpc_options) do |response, operation|
+      client.read(::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -685,6 +724,10 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     resume_token = "hello world"
     partition_token = "hello world"
     request_options = {}
+    directed_read_options = {}
+    data_boost_enabled = true
+    order_by = :ORDER_BY_UNSPECIFIED
+    lock_hint = :LOCK_HINT_UNSPECIFIED
 
     streaming_read_client_stub = ClientStub.new [grpc_response].to_enum, grpc_operation do |name, request, options:|
       assert_equal :streaming_read, name
@@ -699,6 +742,10 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal "hello world", request["resume_token"]
       assert_equal "hello world", request["partition_token"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::DirectedReadOptions), request["directed_read_options"]
+      assert_equal true, request["data_boost_enabled"]
+      assert_equal :ORDER_BY_UNSPECIFIED, request["order_by"]
+      assert_equal :LOCK_HINT_UNSPECIFIED, request["lock_hint"]
       refute_nil options
     end
 
@@ -709,7 +756,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.streaming_read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options }) do |response, operation|
+      client.streaming_read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint }) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -718,7 +765,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use named arguments
-      client.streaming_read session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options do |response, operation|
+      client.streaming_read session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -727,7 +774,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use protobuf object
-      client.streaming_read ::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options) do |response, operation|
+      client.streaming_read ::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -736,7 +783,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object with options
-      client.streaming_read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options }, grpc_options) do |response, operation|
+      client.streaming_read({ session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint }, grpc_options) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -745,7 +792,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use protobuf object with options
-      client.streaming_read(::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options), grpc_options) do |response, operation|
+      client.streaming_read(::Google::Cloud::Spanner::V1::ReadRequest.new(session: session, transaction: transaction, table: table, index: index, columns: columns, key_set: key_set, limit: limit, resume_token: resume_token, partition_token: partition_token, request_options: request_options, directed_read_options: directed_read_options, data_boost_enabled: data_boost_enabled, order_by: order_by, lock_hint: lock_hint), grpc_options) do |response, operation|
         assert_kind_of Enumerable, response
         response.to_a.each do |r|
           assert_kind_of ::Google::Cloud::Spanner::V1::PartialResultSet, r
@@ -769,6 +816,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     session = "hello world"
     options = {}
     request_options = {}
+    mutation_key = {}
 
     begin_transaction_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :begin_transaction, name
@@ -776,6 +824,7 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal "hello world", request["session"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::TransactionOptions), request["options"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::Mutation), request["mutation_key"]
       refute_nil options
     end
 
@@ -786,31 +835,31 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.begin_transaction({ session: session, options: options, request_options: request_options }) do |response, operation|
+      client.begin_transaction({ session: session, options: options, request_options: request_options, mutation_key: mutation_key }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.begin_transaction session: session, options: options, request_options: request_options do |response, operation|
+      client.begin_transaction session: session, options: options, request_options: request_options, mutation_key: mutation_key do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.begin_transaction ::Google::Cloud::Spanner::V1::BeginTransactionRequest.new(session: session, options: options, request_options: request_options) do |response, operation|
+      client.begin_transaction ::Google::Cloud::Spanner::V1::BeginTransactionRequest.new(session: session, options: options, request_options: request_options, mutation_key: mutation_key) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.begin_transaction({ session: session, options: options, request_options: request_options }, grpc_options) do |response, operation|
+      client.begin_transaction({ session: session, options: options, request_options: request_options, mutation_key: mutation_key }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.begin_transaction(::Google::Cloud::Spanner::V1::BeginTransactionRequest.new(session: session, options: options, request_options: request_options), grpc_options) do |response, operation|
+      client.begin_transaction(::Google::Cloud::Spanner::V1::BeginTransactionRequest.new(session: session, options: options, request_options: request_options, mutation_key: mutation_key), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -832,7 +881,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     transaction_id = "hello world"
     mutations = [{}]
     return_commit_stats = true
+    max_commit_delay = {}
     request_options = {}
+    precommit_token = {}
 
     commit_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :commit, name
@@ -842,7 +893,9 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       assert_equal :transaction_id, request.transaction
       assert_kind_of ::Google::Cloud::Spanner::V1::Mutation, request["mutations"].first
       assert_equal true, request["return_commit_stats"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Duration), request["max_commit_delay"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::MultiplexedSessionPrecommitToken), request["precommit_token"]
       refute_nil options
     end
 
@@ -853,31 +906,31 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.commit({ session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, request_options: request_options }) do |response, operation|
+      client.commit({ session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, max_commit_delay: max_commit_delay, request_options: request_options, precommit_token: precommit_token }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.commit session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, request_options: request_options do |response, operation|
+      client.commit session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, max_commit_delay: max_commit_delay, request_options: request_options, precommit_token: precommit_token do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.commit ::Google::Cloud::Spanner::V1::CommitRequest.new(session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, request_options: request_options) do |response, operation|
+      client.commit ::Google::Cloud::Spanner::V1::CommitRequest.new(session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, max_commit_delay: max_commit_delay, request_options: request_options, precommit_token: precommit_token) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.commit({ session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, request_options: request_options }, grpc_options) do |response, operation|
+      client.commit({ session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, max_commit_delay: max_commit_delay, request_options: request_options, precommit_token: precommit_token }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.commit(::Google::Cloud::Spanner::V1::CommitRequest.new(session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, request_options: request_options), grpc_options) do |response, operation|
+      client.commit(::Google::Cloud::Spanner::V1::CommitRequest.new(session: session, transaction_id: transaction_id, mutations: mutations, return_commit_stats: return_commit_stats, max_commit_delay: max_commit_delay, request_options: request_options, precommit_token: precommit_token), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -1085,11 +1138,91 @@ class ::Google::Cloud::Spanner::V1::Spanner::ClientTest < Minitest::Test
     end
   end
 
+  def test_batch_write
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Spanner::V1::BatchWriteResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a server streaming method.
+    session = "hello world"
+    request_options = {}
+    mutation_groups = [{}]
+    exclude_txn_from_change_streams = true
+
+    batch_write_client_stub = ClientStub.new [grpc_response].to_enum, grpc_operation do |name, request, options:|
+      assert_equal :batch_write, name
+      assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteRequest, request
+      assert_equal "hello world", request["session"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Spanner::V1::RequestOptions), request["request_options"]
+      assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteRequest::MutationGroup, request["mutation_groups"].first
+      assert_equal true, request["exclude_txn_from_change_streams"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, batch_write_client_stub do
+      # Create client
+      client = ::Google::Cloud::Spanner::V1::Spanner::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.batch_write({ session: session, request_options: request_options, mutation_groups: mutation_groups, exclude_txn_from_change_streams: exclude_txn_from_change_streams }) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.batch_write session: session, request_options: request_options, mutation_groups: mutation_groups, exclude_txn_from_change_streams: exclude_txn_from_change_streams do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.batch_write ::Google::Cloud::Spanner::V1::BatchWriteRequest.new(session: session, request_options: request_options, mutation_groups: mutation_groups, exclude_txn_from_change_streams: exclude_txn_from_change_streams) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.batch_write({ session: session, request_options: request_options, mutation_groups: mutation_groups, exclude_txn_from_change_streams: exclude_txn_from_change_streams }, grpc_options) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.batch_write(::Google::Cloud::Spanner::V1::BatchWriteRequest.new(session: session, request_options: request_options, mutation_groups: mutation_groups, exclude_txn_from_change_streams: exclude_txn_from_change_streams), grpc_options) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Spanner::V1::BatchWriteResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, batch_write_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Spanner::V1::Spanner::Client.new do |config|
         config.credentials = grpc_channel
       end

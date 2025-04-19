@@ -19,15 +19,29 @@
 # [START datamigration_v1_generated_DataMigrationService_GenerateSshScript_sync]
 require "google/cloud/cloud_dms/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::CloudDMS::V1::DataMigrationService::Client.new
+##
+# Snippet for the generate_ssh_script call in the DataMigrationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::CloudDMS::V1::DataMigrationService::Client#generate_ssh_script.
+#
+def generate_ssh_script
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::CloudDMS::V1::DataMigrationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::CloudDMS::V1::GenerateSshScriptRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::CloudDMS::V1::GenerateSshScriptRequest.new
 
-# Call the generate_ssh_script method.
-result = client.generate_ssh_script request
+  # Call the generate_ssh_script method.
+  result = client.generate_ssh_script request
 
-# The returned object is of type Google::Cloud::CloudDMS::V1::SshScript.
-p result
+  # The returned object is of type Google::Cloud::CloudDMS::V1::SshScript.
+  p result
+end
 # [END datamigration_v1_generated_DataMigrationService_GenerateSshScript_sync]

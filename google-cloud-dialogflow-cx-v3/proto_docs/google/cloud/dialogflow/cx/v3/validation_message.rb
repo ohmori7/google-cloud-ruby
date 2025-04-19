@@ -27,6 +27,7 @@ module Google
           #   @return [::Google::Cloud::Dialogflow::CX::V3::ValidationMessage::ResourceType]
           #     The type of the resources where the message is found.
           # @!attribute [rw] resources
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Array<::String>]
           #     The names of the resources where the message is found.
           # @!attribute [rw] resource_names
@@ -85,6 +86,9 @@ module Google
 
               # Transition route group.
               TRANSITION_ROUTE_GROUP = 7
+
+              # Agent transition route group.
+              AGENT_TRANSITION_ROUTE_GROUP = 14
             end
 
             # Severity level.

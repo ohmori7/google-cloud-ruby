@@ -26,15 +26,56 @@ module Google
         #   @return [::String]
         #     Name of the information type. Either a name of your choosing when
         #     creating a CustomInfoType, or one of the names listed
-        #     at https://cloud.google.com/dlp/docs/infotypes-reference when specifying
-        #     a built-in type.  When sending Cloud DLP results to Data Catalog, infoType
-        #     names should conform to the pattern `[A-Za-z0-9$-_]{1,64}`.
+        #     at
+        #     https://cloud.google.com/sensitive-data-protection/docs/infotypes-reference
+        #     when specifying a built-in type.  When sending Cloud DLP results to Data
+        #     Catalog, infoType names should conform to the pattern
+        #     `[A-Za-z0-9$_-]{1,64}`.
         # @!attribute [rw] version
         #   @return [::String]
         #     Optional version name for this InfoType.
+        # @!attribute [rw] sensitivity_score
+        #   @return [::Google::Cloud::Dlp::V2::SensitivityScore]
+        #     Optional custom sensitivity for this InfoType.
+        #     This only applies to data profiling.
         class InfoType
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Score is calculated from of all elements in the data profile.
+        # A higher level means the data is more sensitive.
+        # @!attribute [rw] score
+        #   @return [::Google::Cloud::Dlp::V2::SensitivityScore::SensitivityScoreLevel]
+        #     The sensitivity score applied to the resource.
+        class SensitivityScore
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Various sensitivity score levels for resources.
+          module SensitivityScoreLevel
+            # Unused.
+            SENSITIVITY_SCORE_UNSPECIFIED = 0
+
+            # No sensitive information detected. The resource isn't publicly
+            # accessible.
+            SENSITIVITY_LOW = 10
+
+            # Unable to determine sensitivity.
+            SENSITIVITY_UNKNOWN = 12
+
+            # Medium risk. Contains personally identifiable information (PII),
+            # potentially sensitive data, or fields with free-text data that are at a
+            # higher risk of having intermittent sensitive data. Consider limiting
+            # access.
+            SENSITIVITY_MODERATE = 20
+
+            # High risk. Sensitive personally identifiable information (SPII) can be
+            # present. Exfiltration of data can lead to user data loss.
+            # Re-identification of users might be possible. Consider limiting usage and
+            # or removing SPII.
+            SENSITIVITY_HIGH = 30
+          end
         end
 
         # A reference to a StoredInfoType to use with scanning.
@@ -70,17 +111,25 @@ module Google
         # @!attribute [rw] dictionary
         #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::Dictionary]
         #     A list of phrases to detect as a CustomInfoType.
+        #
+        #     Note: The following fields are mutually exclusive: `dictionary`, `regex`, `surrogate_type`, `stored_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] regex
         #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::Regex]
         #     Regular expression based CustomInfoType.
+        #
+        #     Note: The following fields are mutually exclusive: `regex`, `dictionary`, `surrogate_type`, `stored_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] surrogate_type
         #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::SurrogateType]
         #     Message for detecting output from deidentification transformations that
         #     support reversing.
+        #
+        #     Note: The following fields are mutually exclusive: `surrogate_type`, `dictionary`, `regex`, `stored_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] stored_type
         #   @return [::Google::Cloud::Dlp::V2::StoredType]
         #     Load an existing `StoredInfoType` resource for use in
         #     `InspectDataSource`. Not currently supported in `InspectContent`.
+        #
+        #     Note: The following fields are mutually exclusive: `stored_type`, `dictionary`, `regex`, `surrogate_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] detection_rules
         #   @return [::Array<::Google::Cloud::Dlp::V2::CustomInfoType::DetectionRule>]
         #     Set of detection rules to apply to all findings of this CustomInfoType.
@@ -90,6 +139,13 @@ module Google
         #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::ExclusionType]
         #     If set to EXCLUSION_TYPE_EXCLUDE this infoType will not cause a finding
         #     to be returned. It still can be used for rules matching.
+        # @!attribute [rw] sensitivity_score
+        #   @return [::Google::Cloud::Dlp::V2::SensitivityScore]
+        #     Sensitivity for this CustomInfoType. If this CustomInfoType extends an
+        #     existing InfoType, the sensitivity here will take precedence over that of
+        #     the original InfoType. If unset for a CustomInfoType, it will default to
+        #     HIGH.
+        #     This only applies to data profiling.
         class CustomInfoType
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -103,7 +159,7 @@ module Google
           # Plane](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane)
           # will be replaced with whitespace when scanning for matches, so the
           # dictionary phrase "Sam Johnson" will match all three phrases "sam johnson",
-          # Plane](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane)
+          # "Sam, Johnson", and "Sam (Johnson)". Additionally, the characters
           # surrounding any match must be of a different type than the adjacent
           # characters within the word, so letters must be next to non-letters and
           # digits next to non-digits. For example, the dictionary word "jen" will
@@ -113,17 +169,21 @@ module Google
           # Dictionary words containing a large number of characters that are not
           # letters or digits may result in unexpected findings because such characters
           # are treated as whitespace. The
-          # [limits](https://cloud.google.com/dlp/limits) page contains details about
-          # the size limits of dictionaries. For dictionaries that do not fit within
-          # these constraints, consider using `LargeCustomDictionaryConfig` in the
-          # [limits](https://cloud.google.com/dlp/limits) page contains details about
+          # [limits](https://cloud.google.com/sensitive-data-protection/limits) page
+          # contains details about the size limits of dictionaries. For dictionaries
+          # that do not fit within these constraints, consider using
+          # `LargeCustomDictionaryConfig` in the `StoredInfoType` API.
           # @!attribute [rw] word_list
           #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::Dictionary::WordList]
           #     List of words or phrases to search for.
+          #
+          #     Note: The following fields are mutually exclusive: `word_list`, `cloud_storage_path`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] cloud_storage_path
           #   @return [::Google::Cloud::Dlp::V2::CloudStoragePath]
           #     Newline-delimited file of words in Cloud Storage. Only a single file
           #     is accepted.
+          #
+          #     Note: The following fields are mutually exclusive: `cloud_storage_path`, `word_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class Dictionary
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -148,7 +208,6 @@ module Google
           #     google/re2 repository on GitHub.
           # @!attribute [rw] group_indexes
           #   @return [::Array<::Integer>]
-          #     (https://github.com/google/re2/wiki/Syntax) can be found under the
           #     The index of the submatch to extract as findings. When not
           #     specified, the entire match is returned. No more than 3 may be included.
           class Regex
@@ -158,10 +217,10 @@ module Google
 
           # Message for detecting output from deidentification transformations
           # such as
-          # [`CryptoReplaceFfxFpeConfig`](https://cloud.google.com/dlp/docs/reference/rest/v2/organizations.deidentifyTemplates#cryptoreplaceffxfpeconfig).
+          # [`CryptoReplaceFfxFpeConfig`](https://cloud.google.com/sensitive-data-protection/docs/reference/rest/v2/organizations.deidentifyTemplates#cryptoreplaceffxfpeconfig).
           # These types of transformations are
           # those that perform pseudonymization, thereby producing a "surrogate" as
-          # [`CryptoReplaceFfxFpeConfig`](https://cloud.google.com/dlp/docs/reference/rest/v2/organizations.deidentifyTemplates#cryptoreplaceffxfpeconfig).
+          # output. This should be used in conjunction with a field on the
           # transformation such as `surrogate_info_type`. This CustomInfoType does
           # not support the use of `detection_rules`.
           class SurrogateType
@@ -184,7 +243,11 @@ module Google
             # rule.
             # @!attribute [rw] window_before
             #   @return [::Integer]
-            #     Number of characters before the finding to consider.
+            #     Number of characters before the finding to consider. For tabular data,
+            #     if you want to modify the likelihood of an entire column of findngs,
+            #     set this to 1. For more information, see
+            #     [Hotword example: Set the match likelihood of a table column]
+            #     (https://cloud.google.com/sensitive-data-protection/docs/creating-custom-infotypes-likelihood#match-column-values).
             # @!attribute [rw] window_after
             #   @return [::Integer]
             #     Number of characters after the finding to consider.
@@ -198,6 +261,8 @@ module Google
             # @!attribute [rw] fixed_likelihood
             #   @return [::Google::Cloud::Dlp::V2::Likelihood]
             #     Set the likelihood of a finding to a fixed value.
+            #
+            #     Note: The following fields are mutually exclusive: `fixed_likelihood`, `relative_likelihood`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] relative_likelihood
             #   @return [::Integer]
             #     Increase or decrease the likelihood by the specified number of
@@ -208,6 +273,8 @@ module Google
             #     `VERY_LIKELY`, so applying an adjustment of 1 followed by an
             #     adjustment of -1 when base likelihood is `VERY_LIKELY` will result in
             #     a final likelihood of `LIKELY`.
+            #
+            #     Note: The following fields are mutually exclusive: `relative_likelihood`, `fixed_likelihood`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class LikelihoodAdjustment
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -220,14 +287,19 @@ module Google
             #     Regular expression pattern defining what qualifies as a hotword.
             # @!attribute [rw] proximity
             #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::DetectionRule::Proximity]
-            #     Proximity of the finding within which the entire hotword must reside.
-            #     The total length of the window cannot exceed 1000 characters. Note that
-            #     the finding itself will be included in the window, so that hotwords may
-            #     be used to match substrings of the finding itself. For example, the
-            #     certainty of a phone number regex "\(\d\\{3}\) \d\\{3}-\d\\{4}" could be
-            #     adjusted upwards if the area code is known to be the local area code of
-            #     a company office using the hotword regex "\(xxx\)", where "xxx"
-            #     is the area code in question.
+            #     Range of characters within which the entire hotword must reside.
+            #     The total length of the window cannot exceed 1000 characters.
+            #     The finding itself will be included in the window, so that hotwords can
+            #     be used to match substrings of the finding itself. Suppose you
+            #     want Cloud DLP to promote the likelihood of the phone number
+            #     regex "\(\d\\{3}\) \d\\{3}-\d\\{4}" if the area code is known to be the
+            #     area code of a company's office. In this case, use the hotword regex
+            #     "\(xxx\)", where "xxx" is the area code in question.
+            #
+            #     For tabular data, if you want to modify the likelihood of an entire
+            #     column of findngs, see
+            #     [Hotword example: Set the match likelihood of a table column]
+            #     (https://cloud.google.com/sensitive-data-protection/docs/creating-custom-infotypes-likelihood#match-column-values).
             # @!attribute [rw] likelihood_adjustment
             #   @return [::Google::Cloud::Dlp::V2::CustomInfoType::DetectionRule::LikelihoodAdjustment]
             #     Likelihood adjustment to apply to all matching findings.
@@ -237,6 +309,7 @@ module Google
             end
           end
 
+          # Type of exclusion rule.
           module ExclusionType
             # A finding of this custom info type will not be excluded from results.
             EXCLUSION_TYPE_UNSPECIFIED = 0
@@ -343,7 +416,6 @@ module Google
         #     under the google/re2 repository on GitHub.
         # @!attribute [rw] exclude_regex
         #   @return [::Array<::String>]
-        #     [syntax](https://github.com/google/re2/wiki/Syntax); a guide can be found
         #     A list of regular expressions matching file paths to exclude. All files in
         #     the bucket that match at least one of these regular expressions will be
         #     excluded from the scan.
@@ -356,7 +428,7 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Options defining a file or a set of files within a Google Cloud Storage
+        # Options defining a file or a set of files within a Cloud Storage
         # bucket.
         # @!attribute [rw] file_set
         #   @return [::Google::Cloud::Dlp::V2::CloudStorageOptions::FileSet]
@@ -364,16 +436,22 @@ module Google
         # @!attribute [rw] bytes_limit_per_file
         #   @return [::Integer]
         #     Max number of bytes to scan from a file. If a scanned file's size is bigger
-        #     than this value then the rest of the bytes are omitted. Only one
-        #     of bytes_limit_per_file and bytes_limit_per_file_percent can be specified.
-        #     Cannot be set if de-identification is requested.
+        #     than this value then the rest of the bytes are omitted. Only one of
+        #     `bytes_limit_per_file` and `bytes_limit_per_file_percent` can be specified.
+        #     This field can't be set if de-identification is requested. For certain file
+        #     types, setting this field has no effect. For more information, see [Limits
+        #     on bytes scanned per
+        #     file](https://cloud.google.com/sensitive-data-protection/docs/supported-file-types#max-byte-size-per-file).
         # @!attribute [rw] bytes_limit_per_file_percent
         #   @return [::Integer]
         #     Max percentage of bytes to scan from a file. The rest are omitted. The
         #     number of bytes scanned is rounded down. Must be between 0 and 100,
-        #     inclusively. Both 0 and 100 means no limit. Defaults to 0. Only one
-        #     of bytes_limit_per_file and bytes_limit_per_file_percent can be specified.
-        #     Cannot be set if de-identification is requested.
+        #     inclusively. Both 0 and 100 means no limit. Defaults to 0. Only one of
+        #     bytes_limit_per_file and bytes_limit_per_file_percent can be specified.
+        #     This field can't be set if de-identification is requested. For certain file
+        #     types, setting this field has no effect. For more information, see [Limits
+        #     on bytes scanned per
+        #     file](https://cloud.google.com/sensitive-data-protection/docs/supported-file-types#max-byte-size-per-file).
         # @!attribute [rw] file_types
         #   @return [::Array<::Google::Cloud::Dlp::V2::FileType>]
         #     List of file type groups to include in the scan.
@@ -385,6 +463,7 @@ module Google
         #     Image inspection is restricted to 'global', 'us', 'asia', and 'europe'.
         # @!attribute [rw] sample_method
         #   @return [::Google::Cloud::Dlp::V2::CloudStorageOptions::SampleMethod]
+        #     How to sample the data.
         # @!attribute [rw] files_limit_percent
         #   @return [::Integer]
         #     Limits the number of files to scan to this percentage of the input FileSet.
@@ -420,6 +499,7 @@ module Google
           # in conjunction with bytes_limit_per_file. If not specified, scanning would
           # start from the top.
           module SampleMethod
+            # No sampling.
             SAMPLE_METHOD_UNSPECIFIED = 0
 
             # Scan from the top (default).
@@ -444,8 +524,8 @@ module Google
         # Message representing a single file or path in Cloud Storage.
         # @!attribute [rw] path
         #   @return [::String]
-        #     A url representing a file or path (no wildcards) in Cloud Storage.
-        #     Example: gs://[BUCKET_NAME]/dictionary.txt
+        #     A URL representing a file or path (no wildcards) in Cloud Storage.
+        #     Example: `gs://[BUCKET_NAME]/dictionary.txt`
         class CloudStoragePath
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -475,15 +555,27 @@ module Google
         #     100 means no limit. Defaults to 0. Only one of rows_limit and
         #     rows_limit_percent can be specified. Cannot be used in conjunction with
         #     TimespanConfig.
+        #
+        #     Caution: A [known
+        #     issue](https://cloud.google.com/sensitive-data-protection/docs/known-issues#bq-sampling)
+        #     is causing the `rowsLimitPercent` field to behave unexpectedly. We
+        #     recommend using `rowsLimit` instead.
         # @!attribute [rw] sample_method
         #   @return [::Google::Cloud::Dlp::V2::BigQueryOptions::SampleMethod]
+        #     How to sample the data.
         # @!attribute [rw] excluded_fields
         #   @return [::Array<::Google::Cloud::Dlp::V2::FieldId>]
         #     References to fields excluded from scanning. This allows you to skip
         #     inspection of entire columns which you know have no findings.
+        #     When inspecting a table, we recommend that you inspect all columns.
+        #     Otherwise, findings might be affected because hints from excluded columns
+        #     will not be used.
         # @!attribute [rw] included_fields
         #   @return [::Array<::Google::Cloud::Dlp::V2::FieldId>]
         #     Limit scanning only to these fields.
+        #     When inspecting a table, we recommend that you inspect all columns.
+        #     Otherwise, findings might be affected because hints from excluded columns
+        #     will not be used.
         class BigQueryOptions
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -492,6 +584,7 @@ module Google
           # in conjunction with either rows_limit or rows_limit_percent. If not
           # specified, rows are scanned in the order BigQuery reads them.
           module SampleMethod
+            # No sampling.
             SAMPLE_METHOD_UNSPECIFIED = 0
 
             # Scan groups of rows in the order BigQuery provides (default). Multiple
@@ -508,23 +601,32 @@ module Google
         # @!attribute [rw] datastore_options
         #   @return [::Google::Cloud::Dlp::V2::DatastoreOptions]
         #     Google Cloud Datastore options.
+        #
+        #     Note: The following fields are mutually exclusive: `datastore_options`, `cloud_storage_options`, `big_query_options`, `hybrid_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cloud_storage_options
         #   @return [::Google::Cloud::Dlp::V2::CloudStorageOptions]
-        #     Google Cloud Storage options.
+        #     Cloud Storage options.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_storage_options`, `datastore_options`, `big_query_options`, `hybrid_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] big_query_options
         #   @return [::Google::Cloud::Dlp::V2::BigQueryOptions]
         #     BigQuery options.
+        #
+        #     Note: The following fields are mutually exclusive: `big_query_options`, `datastore_options`, `cloud_storage_options`, `hybrid_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] hybrid_options
         #   @return [::Google::Cloud::Dlp::V2::HybridOptions]
         #     Hybrid inspection options.
+        #
+        #     Note: The following fields are mutually exclusive: `hybrid_options`, `datastore_options`, `cloud_storage_options`, `big_query_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] timespan_config
         #   @return [::Google::Cloud::Dlp::V2::StorageConfig::TimespanConfig]
+        #     Configuration of the timespan of the items to include in scanning.
         class StorageConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # Configuration of the timespan of the items to include in scanning.
-          # Currently only supported when inspecting Google Cloud Storage and BigQuery.
+          # Currently only supported when inspecting Cloud Storage and BigQuery.
           # @!attribute [rw] start_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Exclude files, tables, or rows older than this value.
@@ -538,7 +640,8 @@ module Google
           #     Specification of the field containing the timestamp of scanned items.
           #     Used for data sources like Datastore and BigQuery.
           #
-          #     For BigQuery:
+          #     **For BigQuery**
+          #
           #     If this value is not specified and the table was modified between the
           #     given start and end times, the entire table will be scanned. If this
           #     value is specified, then rows are filtered based on the given start and
@@ -547,17 +650,44 @@ module Google
           #     Valid data types of the provided BigQuery column are: `INTEGER`, `DATE`,
           #     `TIMESTAMP`, and `DATETIME`.
           #
-          #     For Datastore:
+          #     If your BigQuery table is [partitioned at ingestion
+          #     time](https://cloud.google.com/bigquery/docs/partitioned-tables#ingestion_time),
+          #     you can use any of the following pseudo-columns as your timestamp field.
+          #     When used with Cloud DLP, these pseudo-column names are case sensitive.
+          #
+          #     - `_PARTITIONTIME`
+          #     - `_PARTITIONDATE`
+          #     - `_PARTITION_LOAD_TIME`
+          #
+          #     **For Datastore**
+          #
           #     If this value is specified, then entities are filtered based on the given
           #     start and end times. If an entity does not contain the provided timestamp
           #     property or contains empty or invalid values, then it is included.
           #     Valid data types of the provided timestamp property are: `TIMESTAMP`.
+          #
+          #     See the
+          #     [known
+          #     issue](https://cloud.google.com/sensitive-data-protection/docs/known-issues#bq-timespan)
+          #     related to this operation.
           # @!attribute [rw] enable_auto_population_of_timespan_config
           #   @return [::Boolean]
           #     When the job is started by a JobTrigger we will automatically figure out
           #     a valid start_time to avoid scanning files that have not been modified
           #     since the last time the JobTrigger executed. This will be based on the
-          #     time of the execution of the last run of the JobTrigger.
+          #     time of the execution of the last run of the JobTrigger or the timespan
+          #     end_time used in the last run of the JobTrigger.
+          #
+          #     **For BigQuery**
+          #
+          #     Inspect jobs triggered by automatic population will scan data that is at
+          #     least three hours old when the job starts. This is because streaming
+          #     buffer rows are not read during inspection and reading up to the current
+          #     timestamp will result in skipped rows.
+          #
+          #     See the [known
+          #     issue](https://cloud.google.com/sensitive-data-protection/docs/known-issues#recently-streamed-data)
+          #     related to this operation.
           class TimespanConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -593,6 +723,7 @@ module Google
         #     No more than 10 labels can be associated with a given finding.
         #
         #     Examples:
+        #
         #     * `"environment" : "production"`
         #     * `"pipeline" : "etl"`
         # @!attribute [rw] table_options
@@ -677,12 +808,16 @@ module Google
           #     The auto-allocated ID of the entity.
           #     Never equal to zero. Values less than zero are discouraged and may not
           #     be supported in the future.
+          #
+          #     Note: The following fields are mutually exclusive: `id`, `name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] name
           #   @return [::String]
           #     The name of the entity.
           #     A name matching regex `__.*__` is reserved/read-only.
           #     A name must not be more than 1500 bytes when UTF-8 encoded.
           #     Cannot be `""`.
+          #
+          #     Note: The following fields are mutually exclusive: `name`, `id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class PathElement
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -692,8 +827,14 @@ module Google
         # Message for a unique key indicating a record that contains a finding.
         # @!attribute [rw] datastore_key
         #   @return [::Google::Cloud::Dlp::V2::DatastoreKey]
+        #     BigQuery key
+        #
+        #     Note: The following fields are mutually exclusive: `datastore_key`, `big_query_key`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] big_query_key
         #   @return [::Google::Cloud::Dlp::V2::BigQueryKey]
+        #     Datastore key
+        #
+        #     Note: The following fields are mutually exclusive: `big_query_key`, `datastore_key`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] id_values
         #   @return [::Array<::String>]
         #     Values of identifying columns in the given row. Order of values matches
@@ -710,7 +851,7 @@ module Google
         # `<project_id>.<dataset_id>.<table_id>`.
         # @!attribute [rw] project_id
         #   @return [::String]
-        #     The Google Cloud Platform project ID of the project containing the table.
+        #     The Google Cloud project ID of the project containing the table.
         #     If omitted, project ID is inferred from the API call.
         # @!attribute [rw] dataset_id
         #   @return [::String]
@@ -719,6 +860,19 @@ module Google
         #   @return [::String]
         #     Name of the table.
         class BigQueryTable
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Message defining the location of a BigQuery table with the projectId inferred
+        # from the parent project.
+        # @!attribute [rw] dataset_id
+        #   @return [::String]
+        #     Dataset ID of the table.
+        # @!attribute [rw] table_id
+        #   @return [::String]
+        #     Name of the table.
+        class TableReference
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -760,23 +914,38 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Categorization of results based on how likely they are to represent a match,
-        # based on the number of elements they contain which imply a match.
+        # Coarse-grained confidence level of how well a particular finding
+        # satisfies the criteria to match a particular infoType.
+        #
+        # Likelihood is calculated based on the number of signals a
+        # finding has that implies that the finding matches the infoType. For
+        # example, a string that has an '@' and a '.com' is more likely to be a
+        # match for an email address than a string that only has an '@'.
+        #
+        # In general, the highest likelihood level has the strongest signals that
+        # indicate a match. That is, a finding with a high likelihood has a low chance
+        # of being a false positive.
+        #
+        # For more information about each likelihood level
+        # and how likelihood works, see [Match
+        # likelihood](https://cloud.google.com/sensitive-data-protection/docs/likelihood).
         module Likelihood
           # Default value; same as POSSIBLE.
           LIKELIHOOD_UNSPECIFIED = 0
 
-          # Few matching elements.
+          # Highest chance of a false positive.
           VERY_UNLIKELY = 1
 
+          # High chance of a false positive.
           UNLIKELY = 2
 
-          # Some matching elements.
+          # Some matching signals. The default value.
           POSSIBLE = 3
 
+          # Low chance of a false positive.
           LIKELY = 4
 
-          # Many matching elements.
+          # Confidence level is high. Lowest chance of a false positive.
           VERY_LIKELY = 5
         end
 
@@ -790,7 +959,7 @@ module Google
           # scanning attempts to convert the content of the file to utf_8 to scan
           # the file.
           # If you wish to avoid this fall back, specify one or more of the other
-          # FileType's in your storage scan.
+          # file types in your storage scan.
           BINARY_FILE = 1
 
           # Included file extensions:
@@ -798,24 +967,30 @@ module Google
           #   dat, dot, eml,, epbub, ged, go, h, hh, hpp, hxx, h++, hs, html, htm,
           #   mkd, markdown, m, ml, mli, perl, pl, plist, pm, php, phtml, pht,
           #   properties, py, pyw, rb, rbw, rs, rss,  rc, scala, sh, sql, swift, tex,
-          #   shtml, shtm, xhtml, lhs, ics, ini, java, js, json, kix, kml, ocaml, md,
-          #   txt, text, tsv, vb, vcard, vcs, wml, xcodeproj, xml, xsl, xsd, yml, yaml.
+          #   shtml, shtm, xhtml, lhs, ics, ini, java, js, json, jsonl, kix, kml,
+          #   ocaml, md, txt, text, tsv, vb, vcard, vcs, wml, xcodeproj, xml, xsl, xsd,
+          #   yml, yaml.
           TEXT_FILE = 2
 
           # Included file extensions:
-          #   bmp, gif, jpg, jpeg, jpe, png.
-          # bytes_limit_per_file has no effect on image files.
-          # Image inspection is restricted to 'global', 'us', 'asia', and 'europe'.
+          #   bmp, gif, jpg, jpeg, jpe, png. Setting
+          # {::Google::Cloud::Dlp::V2::CloudStorageOptions#bytes_limit_per_file bytes_limit_per_file}
+          # or
+          # {::Google::Cloud::Dlp::V2::CloudStorageOptions#bytes_limit_per_file bytes_limit_per_file_percent}
+          # has no effect on image files. Image inspection is restricted to the
+          # `global`, `us`, `asia`, and `europe` regions.
           IMAGE = 3
 
-          # Word files >30 MB will be scanned as binary files.
+          # Microsoft Word files larger than 30 MB will be scanned as binary files.
           # Included file extensions:
-          #   docx, dotx, docm, dotm
+          #   docx, dotx, docm, dotm. Setting `bytes_limit_per_file` or
+          #   `bytes_limit_per_file_percent` has no effect on Word files.
           WORD = 5
 
-          # PDF files >30 MB will be scanned as binary files.
+          # PDF files larger than 30 MB will be scanned as binary files.
           # Included file extensions:
-          #   pdf
+          #   pdf. Setting `bytes_limit_per_file` or `bytes_limit_per_file_percent`
+          # has no effect on PDF files.
           PDF = 6
 
           # Included file extensions:
@@ -829,6 +1004,18 @@ module Google
           # Included file extensions:
           #   tsv
           TSV = 9
+
+          # Microsoft PowerPoint files larger than 30 MB will be scanned as binary
+          # files. Included file extensions:
+          #   pptx, pptm, potx, potm, pot. Setting `bytes_limit_per_file` or
+          #   `bytes_limit_per_file_percent` has no effect on PowerPoint files.
+          POWERPOINT = 11
+
+          # Microsoft Excel files larger than 30 MB will be scanned as binary files.
+          # Included file extensions:
+          #   xlsx, xlsm, xltx, xltm. Setting `bytes_limit_per_file` or
+          #   `bytes_limit_per_file_percent` has no effect on Excel files.
+          EXCEL = 12
         end
       end
     end

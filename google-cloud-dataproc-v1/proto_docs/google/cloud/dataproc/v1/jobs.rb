@@ -24,10 +24,12 @@ module Google
         # The runtime logging config of the job.
         # @!attribute [rw] driver_log_levels
         #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Dataproc::V1::LoggingConfig::Level}]
-        #     The per-package log levels for the driver. This may include
+        #     The per-package log levels for the driver. This can include
         #     "root" package name to configure rootLogger.
         #     Examples:
-        #       'com.google = FATAL', 'root = INFO', 'org.apache = DEBUG'
+        #     - 'com.google = FATAL'
+        #     - 'root = INFO'
+        #     - 'org.apache = DEBUG'
         class LoggingConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -86,15 +88,19 @@ module Google
         #         'gs://foo-bucket/analytics-binaries/extract-useful-metrics-mr.jar'
         #         'hdfs:/tmp/test-samples/custom-wordcount.jar'
         #         'file:///home/usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples.jar'
+        #
+        #     Note: The following fields are mutually exclusive: `main_jar_file_uri`, `main_class`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] main_class
         #   @return [::String]
         #     The name of the driver's main class. The jar file containing the class
         #     must be in the default CLASSPATH or specified in `jar_file_uris`.
+        #
+        #     Note: The following fields are mutually exclusive: `main_class`, `main_jar_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] args
         #   @return [::Array<::String>]
         #     Optional. The arguments to pass to the driver. Do not
         #     include arguments, such as `-libjars` or `-Dfoo=bar`, that can be set as
-        #     job properties, since a collision may occur that causes an incorrect job
+        #     job properties, since a collision might occur that causes an incorrect job
         #     submission.
         # @!attribute [rw] jar_file_uris
         #   @return [::Array<::String>]
@@ -113,8 +119,8 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure Hadoop.
-        #     Properties that conflict with values set by the Dataproc API may be
-        #     overwritten. Can include properties set in /etc/hadoop/conf/*-site and
+        #     Properties that conflict with values set by the Dataproc API might be
+        #     overwritten. Can include properties set in `/etc/hadoop/conf/*-site` and
         #     classes in user code.
         # @!attribute [rw] logging_config
         #   @return [::Google::Cloud::Dataproc::V1::LoggingConfig]
@@ -133,15 +139,20 @@ module Google
           end
         end
 
-        # A Dataproc job for running [Apache Spark](http://spark.apache.org/)
+        # A Dataproc job for running [Apache Spark](https://spark.apache.org/)
         # applications on YARN.
         # @!attribute [rw] main_jar_file_uri
         #   @return [::String]
         #     The HCFS URI of the jar file that contains the main class.
+        #
+        #     Note: The following fields are mutually exclusive: `main_jar_file_uri`, `main_class`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] main_class
         #   @return [::String]
         #     The name of the driver's main class. The jar file that contains the class
-        #     must be in the default CLASSPATH or specified in `jar_file_uris`.
+        #     must be in the default CLASSPATH or specified in
+        #     SparkJob.jar_file_uris.
+        #
+        #     Note: The following fields are mutually exclusive: `main_class`, `main_jar_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] args
         #   @return [::Array<::String>]
         #     Optional. The arguments to pass to the driver. Do not include arguments,
@@ -163,7 +174,7 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure Spark.
-        #     Properties that conflict with values set by the Dataproc API may be
+        #     Properties that conflict with values set by the Dataproc API might be
         #     overwritten. Can include properties set in
         #     /etc/spark/conf/spark-defaults.conf and classes in user code.
         # @!attribute [rw] logging_config
@@ -216,7 +227,7 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure PySpark.
-        #     Properties that conflict with values set by the Dataproc API may be
+        #     Properties that conflict with values set by the Dataproc API might be
         #     overwritten. Can include properties set in
         #     /etc/spark/conf/spark-defaults.conf and classes in user code.
         # @!attribute [rw] logging_config
@@ -263,9 +274,13 @@ module Google
         # @!attribute [rw] query_file_uri
         #   @return [::String]
         #     The HCFS URI of the script that contains Hive queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_file_uri`, `query_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] query_list
         #   @return [::Google::Cloud::Dataproc::V1::QueryList]
         #     A list of queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_list`, `query_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] continue_on_failure
         #   @return [::Boolean]
         #     Optional. Whether to continue executing queries if a query fails.
@@ -278,8 +293,8 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names and values, used to configure Hive.
-        #     Properties that conflict with values set by the Dataproc API may be
-        #     overwritten. Can include properties set in /etc/hadoop/conf/*-site.xml,
+        #     Properties that conflict with values set by the Dataproc API might be
+        #     overwritten. Can include properties set in `/etc/hadoop/conf/*-site.xml`,
         #     /etc/hive/conf/hive-site.xml, and classes in user code.
         # @!attribute [rw] jar_file_uris
         #   @return [::Array<::String>]
@@ -310,13 +325,17 @@ module Google
         end
 
         # A Dataproc job for running [Apache Spark
-        # SQL](http://spark.apache.org/sql/) queries.
+        # SQL](https://spark.apache.org/sql/) queries.
         # @!attribute [rw] query_file_uri
         #   @return [::String]
         #     The HCFS URI of the script that contains SQL queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_file_uri`, `query_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] query_list
         #   @return [::Google::Cloud::Dataproc::V1::QueryList]
         #     A list of queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_list`, `query_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] script_variables
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. Mapping of query variable names to values (equivalent to the
@@ -325,7 +344,7 @@ module Google
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure
         #     Spark SQL's SparkConf. Properties that conflict with values set by the
-        #     Dataproc API may be overwritten.
+        #     Dataproc API might be overwritten.
         # @!attribute [rw] jar_file_uris
         #   @return [::Array<::String>]
         #     Optional. HCFS URIs of jar files to be added to the Spark CLASSPATH.
@@ -360,9 +379,13 @@ module Google
         # @!attribute [rw] query_file_uri
         #   @return [::String]
         #     The HCFS URI of the script that contains the Pig queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_file_uri`, `query_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] query_list
         #   @return [::Google::Cloud::Dataproc::V1::QueryList]
         #     A list of queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_list`, `query_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] continue_on_failure
         #   @return [::Boolean]
         #     Optional. Whether to continue executing queries if a query fails.
@@ -375,8 +398,8 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure Pig.
-        #     Properties that conflict with values set by the Dataproc API may be
-        #     overwritten. Can include properties set in /etc/hadoop/conf/*-site.xml,
+        #     Properties that conflict with values set by the Dataproc API might be
+        #     overwritten. Can include properties set in `/etc/hadoop/conf/*-site.xml`,
         #     /etc/pig/conf/pig.properties, and classes in user code.
         # @!attribute [rw] jar_file_uris
         #   @return [::Array<::String>]
@@ -432,7 +455,7 @@ module Google
         # @!attribute [rw] properties
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. A mapping of property names to values, used to configure SparkR.
-        #     Properties that conflict with values set by the Dataproc API may be
+        #     Properties that conflict with values set by the Dataproc API might be
         #     overwritten. Can include properties set in
         #     /etc/spark/conf/spark-defaults.conf and classes in user code.
         # @!attribute [rw] logging_config
@@ -460,9 +483,13 @@ module Google
         # @!attribute [rw] query_file_uri
         #   @return [::String]
         #     The HCFS URI of the script that contains SQL queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_file_uri`, `query_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] query_list
         #   @return [::Google::Cloud::Dataproc::V1::QueryList]
         #     A list of queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_list`, `query_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] continue_on_failure
         #   @return [::Boolean]
         #     Optional. Whether to continue executing queries if a query fails.
@@ -497,6 +524,104 @@ module Google
           end
         end
 
+        # A Dataproc job for running [Trino](https://trino.io/) queries.
+        # **IMPORTANT**: The [Dataproc Trino Optional
+        # Component](https://cloud.google.com/dataproc/docs/concepts/components/trino)
+        # must be enabled when the cluster is created to submit a Trino job to the
+        # cluster.
+        # @!attribute [rw] query_file_uri
+        #   @return [::String]
+        #     The HCFS URI of the script that contains SQL queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_file_uri`, `query_list`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] query_list
+        #   @return [::Google::Cloud::Dataproc::V1::QueryList]
+        #     A list of queries.
+        #
+        #     Note: The following fields are mutually exclusive: `query_list`, `query_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] continue_on_failure
+        #   @return [::Boolean]
+        #     Optional. Whether to continue executing queries if a query fails.
+        #     The default value is `false`. Setting to `true` can be useful when
+        #     executing independent parallel queries.
+        # @!attribute [rw] output_format
+        #   @return [::String]
+        #     Optional. The format in which query output will be displayed. See the
+        #     Trino documentation for supported output formats
+        # @!attribute [rw] client_tags
+        #   @return [::Array<::String>]
+        #     Optional. Trino client tags to attach to this query
+        # @!attribute [rw] properties
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. A mapping of property names to values. Used to set Trino
+        #     [session properties](https://trino.io/docs/current/sql/set-session.html)
+        #     Equivalent to using the --session flag in the Trino CLI
+        # @!attribute [rw] logging_config
+        #   @return [::Google::Cloud::Dataproc::V1::LoggingConfig]
+        #     Optional. The runtime log config for job execution.
+        class TrinoJob
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class PropertiesEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # A Dataproc job for running Apache Flink applications on YARN.
+        # @!attribute [rw] main_jar_file_uri
+        #   @return [::String]
+        #     The HCFS URI of the jar file that contains the main class.
+        #
+        #     Note: The following fields are mutually exclusive: `main_jar_file_uri`, `main_class`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] main_class
+        #   @return [::String]
+        #     The name of the driver's main class. The jar file that contains the class
+        #     must be in the default CLASSPATH or specified in
+        #     {::Google::Cloud::Dataproc::V1::FlinkJob#jar_file_uris jarFileUris}.
+        #
+        #     Note: The following fields are mutually exclusive: `main_class`, `main_jar_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] args
+        #   @return [::Array<::String>]
+        #     Optional. The arguments to pass to the driver. Do not include arguments,
+        #     such as `--conf`, that can be set as job properties, since a collision
+        #     might occur that causes an incorrect job submission.
+        # @!attribute [rw] jar_file_uris
+        #   @return [::Array<::String>]
+        #     Optional. HCFS URIs of jar files to add to the CLASSPATHs of the
+        #     Flink driver and tasks.
+        # @!attribute [rw] savepoint_uri
+        #   @return [::String]
+        #     Optional. HCFS URI of the savepoint, which contains the last saved progress
+        #     for starting the current job.
+        # @!attribute [rw] properties
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. A mapping of property names to values, used to configure Flink.
+        #     Properties that conflict with values set by the Dataproc API might be
+        #     overwritten. Can include properties set in
+        #     `/etc/flink/conf/flink-defaults.conf` and classes in user code.
+        # @!attribute [rw] logging_config
+        #   @return [::Google::Cloud::Dataproc::V1::LoggingConfig]
+        #     Optional. The runtime log config for job execution.
+        class FlinkJob
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class PropertiesEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
         # Dataproc job config.
         # @!attribute [rw] cluster_name
         #   @return [::String]
@@ -507,7 +632,8 @@ module Google
         #     the job is submitted.
         # @!attribute [rw] cluster_labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
-        #     Optional. Cluster labels to identify a cluster where the job will be submitted.
+        #     Optional. Cluster labels to identify a cluster where the job will be
+        #     submitted.
         class JobPlacement
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -529,7 +655,7 @@ module Google
         # @!attribute [r] details
         #   @return [::String]
         #     Optional. Output only. Job state details, such as an error
-        #     description if the state is <code>ERROR</code>.
+        #     description if the state is `ERROR`.
         # @!attribute [r] state_start_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. The time when this state was entered.
@@ -589,14 +715,14 @@ module Google
             # Applies to RUNNING state.
             SUBMITTED = 1
 
-            # The Job has been received and is awaiting execution (it may be waiting
+            # The Job has been received and is awaiting execution (it might be waiting
             # for a condition to be met). See the "details" field for the reason for
             # the delay.
             #
             # Applies to RUNNING state.
             QUEUED = 2
 
-            # The agent-reported status is out of date, which may be caused by a
+            # The agent-reported status is out of date, which can be caused by a
             # loss of communication between the agent and Dataproc. If the
             # agent does not send a timely update, the job will fail.
             #
@@ -608,8 +734,8 @@ module Google
         # Encapsulates the full scoping used to reference a job.
         # @!attribute [rw] project_id
         #   @return [::String]
-        #     Optional. The ID of the Google Cloud Platform project that the job belongs to. If
-        #     specified, must match the request project ID.
+        #     Optional. The ID of the Google Cloud Platform project that the job belongs
+        #     to. If specified, must match the request project ID.
         # @!attribute [rw] job_id
         #   @return [::String]
         #     Optional. The job ID, which must be unique within the project.
@@ -693,31 +819,57 @@ module Google
         # @!attribute [rw] hadoop_job
         #   @return [::Google::Cloud::Dataproc::V1::HadoopJob]
         #     Optional. Job is a Hadoop job.
+        #
+        #     Note: The following fields are mutually exclusive: `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_job
         #   @return [::Google::Cloud::Dataproc::V1::SparkJob]
         #     Optional. Job is a Spark job.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_job`, `hadoop_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pyspark_job
         #   @return [::Google::Cloud::Dataproc::V1::PySparkJob]
         #     Optional. Job is a PySpark job.
+        #
+        #     Note: The following fields are mutually exclusive: `pyspark_job`, `hadoop_job`, `spark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] hive_job
         #   @return [::Google::Cloud::Dataproc::V1::HiveJob]
         #     Optional. Job is a Hive job.
+        #
+        #     Note: The following fields are mutually exclusive: `hive_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pig_job
         #   @return [::Google::Cloud::Dataproc::V1::PigJob]
         #     Optional. Job is a Pig job.
+        #
+        #     Note: The following fields are mutually exclusive: `pig_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_r_job
         #   @return [::Google::Cloud::Dataproc::V1::SparkRJob]
         #     Optional. Job is a SparkR job.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_r_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_sql_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_sql_job
         #   @return [::Google::Cloud::Dataproc::V1::SparkSqlJob]
         #     Optional. Job is a SparkSql job.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_sql_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `presto_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] presto_job
         #   @return [::Google::Cloud::Dataproc::V1::PrestoJob]
         #     Optional. Job is a Presto job.
+        #
+        #     Note: The following fields are mutually exclusive: `presto_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `trino_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] trino_job
+        #   @return [::Google::Cloud::Dataproc::V1::TrinoJob]
+        #     Optional. Job is a Trino job.
+        #
+        #     Note: The following fields are mutually exclusive: `trino_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `flink_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] flink_job
+        #   @return [::Google::Cloud::Dataproc::V1::FlinkJob]
+        #     Optional. Job is a Flink job.
+        #
+        #     Note: The following fields are mutually exclusive: `flink_job`, `hadoop_job`, `spark_job`, `pyspark_job`, `hive_job`, `pig_job`, `spark_r_job`, `spark_sql_job`, `presto_job`, `trino_job`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] status
         #   @return [::Google::Cloud::Dataproc::V1::JobStatus]
         #     Output only. The job status. Additional application-specific
-        #     status information may be contained in the <code>type_job</code>
+        #     status information might be contained in the <code>type_job</code>
         #     and <code>yarn_applications</code> fields.
         # @!attribute [r] status_history
         #   @return [::Array<::Google::Cloud::Dataproc::V1::JobStatus>]
@@ -727,7 +879,7 @@ module Google
         #     Output only. The collection of YARN applications spun up by this job.
         #
         #     **Beta** Feature: This report is available for testing purposes only. It
-        #     may be changed before final release.
+        #     might be changed before final release.
         # @!attribute [r] driver_output_resource_uri
         #   @return [::String]
         #     Output only. A URI pointing to the location of the stdout of the job's
@@ -735,14 +887,14 @@ module Google
         # @!attribute [r] driver_control_files_uri
         #   @return [::String]
         #     Output only. If present, the location of miscellaneous control files
-        #     which may be used as part of job setup and handling. If not present,
-        #     control files may be placed in the same location as `driver_output_uri`.
+        #     which can be used as part of job setup and handling. If not present,
+        #     control files might be placed in the same location as `driver_output_uri`.
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. The labels to associate with this job.
         #     Label **keys** must contain 1 to 63 characters, and must conform to
         #     [RFC 1035](https://www.ietf.org/rfc/rfc1035.txt).
-        #     Label **values** may be empty, but, if present, must contain 1 to 63
+        #     Label **values** can be empty, but, if present, must contain 1 to 63
         #     characters, and must conform to [RFC
         #     1035](https://www.ietf.org/rfc/rfc1035.txt). No more than 32 labels can be
         #     associated with a job.
@@ -753,13 +905,16 @@ module Google
         #   @return [::String]
         #     Output only. A UUID that uniquely identifies a job within the project
         #     over time. This is in contrast to a user-settable reference.job_id that
-        #     may be reused over time.
+        #     might be reused over time.
         # @!attribute [r] done
         #   @return [::Boolean]
-        #     Output only. Indicates whether the job is completed. If the value is `false`,
-        #     the job is still in progress. If `true`, the job is completed, and
+        #     Output only. Indicates whether the job is completed. If the value is
+        #     `false`, the job is still in progress. If `true`, the job is completed, and
         #     `status.state` field will indicate if it was successful, failed,
         #     or cancelled.
+        # @!attribute [rw] driver_scheduling_config
+        #   @return [::Google::Cloud::Dataproc::V1::DriverSchedulingConfig]
+        #     Optional. Driver scheduling configuration.
         class Job
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -774,34 +929,45 @@ module Google
           end
         end
 
+        # Driver scheduling configuration.
+        # @!attribute [rw] memory_mb
+        #   @return [::Integer]
+        #     Required. The amount of memory in MB the driver is requesting.
+        # @!attribute [rw] vcores
+        #   @return [::Integer]
+        #     Required. The number of vCPUs the driver is requesting.
+        class DriverSchedulingConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Job scheduling options.
         # @!attribute [rw] max_failures_per_hour
         #   @return [::Integer]
-        #     Optional. Maximum number of times per hour a driver may be restarted as
+        #     Optional. Maximum number of times per hour a driver can be restarted as
         #     a result of driver exiting with non-zero code before job is
         #     reported failed.
         #
-        #     A job may be reported as thrashing if driver exits with non-zero code
-        #     4 times within 10 minute window.
+        #     A job might be reported as thrashing if the driver exits with a non-zero
+        #     code four times within a 10-minute window.
         #
         #     Maximum value is 10.
         #
-        #     **Note:** Currently, this restartable job option is
-        #     not supported in Dataproc
-        #     [workflow
-        #     template](https://cloud.google.com/dataproc/docs/concepts/workflows/using-workflows#adding_jobs_to_a_template)
-        #     jobs.
+        #     **Note:** This restartable job option is not supported in Dataproc
+        #     [workflow templates]
+        #     (https://cloud.google.com/dataproc/docs/concepts/workflows/using-workflows#adding_jobs_to_a_template).
         # @!attribute [rw] max_failures_total
         #   @return [::Integer]
-        #     Optional. Maximum number of times in total a driver may be restarted as a result of
-        #     driver exiting with non-zero code before job is reported failed.
+        #     Optional. Maximum total number of times a driver can be restarted as a
+        #     result of the driver exiting with a non-zero code. After the maximum number
+        #     is reached, the job will be reported as failed.
+        #
         #     Maximum value is 240.
         #
         #     **Note:** Currently, this restartable job option is
         #     not supported in Dataproc
         #     [workflow
-        #     template](https://cloud.google.com/dataproc/docs/concepts/workflows/using-workflows#adding_jobs_to_a_template)
-        #     jobs.
+        #     templates](https://cloud.google.com/dataproc/docs/concepts/workflows/using-workflows#adding_jobs_to_a_template).
         class JobScheduling
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -966,6 +1132,12 @@ module Google
         #     Optional. This token is included in the response if there are more results
         #     to fetch. To fetch additional results, provide this value as the
         #     `page_token` in a subsequent <code>ListJobsRequest</code>.
+        # @!attribute [r] unreachable
+        #   @return [::Array<::String>]
+        #     Output only. List of jobs with
+        #     {::Google::Cloud::Dataproc::V1::EncryptionConfig#kms_key kms_key}-encrypted
+        #     parameters that could not be decrypted. A response to a `jobs.get` request
+        #     may indicate the reason for the decryption failure for a specific job.
         class ListJobsResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

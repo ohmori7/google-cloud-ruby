@@ -19,15 +19,29 @@
 # [START contactcenterinsights_v1_generated_ContactCenterInsights_UpdateIssueModel_sync]
 require "google/cloud/contact_center_insights/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client.new
+##
+# Snippet for the update_issue_model call in the ContactCenterInsights service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client#update_issue_model.
+#
+def update_issue_model
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ContactCenterInsights::V1::UpdateIssueModelRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ContactCenterInsights::V1::UpdateIssueModelRequest.new
 
-# Call the update_issue_model method.
-result = client.update_issue_model request
+  # Call the update_issue_model method.
+  result = client.update_issue_model request
 
-# The returned object is of type Google::Cloud::ContactCenterInsights::V1::IssueModel.
-p result
+  # The returned object is of type Google::Cloud::ContactCenterInsights::V1::IssueModel.
+  p result
+end
 # [END contactcenterinsights_v1_generated_ContactCenterInsights_UpdateIssueModel_sync]

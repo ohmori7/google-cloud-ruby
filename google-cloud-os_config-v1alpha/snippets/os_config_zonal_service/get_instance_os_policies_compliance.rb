@@ -19,15 +19,29 @@
 # [START osconfig_v1alpha_generated_OsConfigZonalService_GetInstanceOSPoliciesCompliance_sync]
 require "google/cloud/os_config/v1alpha"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Client.new
+##
+# Snippet for the get_instance_os_policies_compliance call in the OsConfigZonalService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Client#get_instance_os_policies_compliance.
+#
+def get_instance_os_policies_compliance
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OsConfig::V1alpha::GetInstanceOSPoliciesComplianceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OsConfig::V1alpha::GetInstanceOSPoliciesComplianceRequest.new
 
-# Call the get_instance_os_policies_compliance method.
-result = client.get_instance_os_policies_compliance request
+  # Call the get_instance_os_policies_compliance method.
+  result = client.get_instance_os_policies_compliance request
 
-# The returned object is of type Google::Cloud::OsConfig::V1alpha::InstanceOSPoliciesCompliance.
-p result
+  # The returned object is of type Google::Cloud::OsConfig::V1alpha::InstanceOSPoliciesCompliance.
+  p result
+end
 # [END osconfig_v1alpha_generated_OsConfigZonalService_GetInstanceOSPoliciesCompliance_sync]

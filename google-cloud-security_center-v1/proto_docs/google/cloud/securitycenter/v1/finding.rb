@@ -30,10 +30,12 @@ module Google
         # finding.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The relative resource name of this finding. See:
-        #     https://cloud.google.com/apis/design/resource_names#relative_resource_name
-        #     Example:
-        #     "organizations/\\{organization_id}/sources/\\{source_id}/findings/\\{finding_id}"
+        #     The [relative resource
+        #     name](https://cloud.google.com/apis/design/resource_names#relative_resource_name)
+        #     of the finding. Example:
+        #     "organizations/\\{organization_id}/sources/\\{source_id}/findings/\\{finding_id}",
+        #     "folders/\\{folder_id}/sources/\\{source_id}/findings/\\{finding_id}",
+        #     "projects/\\{project_id}/sources/\\{source_id}/findings/\\{finding_id}".
         # @!attribute [rw] parent
         #   @return [::String]
         #     The relative resource name of the source the finding belongs to. See:
@@ -99,21 +101,22 @@ module Google
         #     finding.
         # @!attribute [rw] mute
         #   @return [::Google::Cloud::SecurityCenter::V1::Finding::Mute]
-        #     Indicates the mute state of a finding (either unspecified, muted, unmuted
-        #     or undefined).
+        #     Indicates the mute state of a finding (either muted, unmuted
+        #     or undefined). Unlike other attributes of a finding, a finding provider
+        #     shouldn't set the value of mute.
         # @!attribute [rw] finding_class
         #   @return [::Google::Cloud::SecurityCenter::V1::Finding::FindingClass]
         #     The class of the finding.
         # @!attribute [rw] indicator
         #   @return [::Google::Cloud::SecurityCenter::V1::Indicator]
-        #     Represents what's commonly known as an Indicator of compromise (IoC) in
+        #     Represents what's commonly known as an *indicator of compromise* (IoC) in
         #     computer forensics. This is an artifact observed on a network or in an
         #     operating system that, with high confidence, indicates a computer
-        #     intrusion.
-        #     Reference: https://en.wikipedia.org/wiki/Indicator_of_compromise
+        #     intrusion. For more information, see [Indicator of
+        #     compromise](https://en.wikipedia.org/wiki/Indicator_of_compromise).
         # @!attribute [rw] vulnerability
         #   @return [::Google::Cloud::SecurityCenter::V1::Vulnerability]
-        #     Represents vulnerability specific fields like cve, cvss scores etc.
+        #     Represents vulnerability-specific fields like CVE and CVSS scores.
         #     CVE stands for Common Vulnerabilities and Exposures
         #     (https://cve.mitre.org/about/)
         # @!attribute [r] mute_update_time
@@ -121,20 +124,183 @@ module Google
         #     Output only. The most recent time this finding was muted or unmuted.
         # @!attribute [r] external_systems
         #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::SecurityCenter::V1::ExternalSystem}]
-        #     Output only. Third party SIEM/SOAR fields within SCC, contains external system
-        #     information and external system finding fields.
+        #     Output only. Third party SIEM/SOAR fields within SCC, contains external
+        #     system information and external system finding fields.
+        # @!attribute [rw] mitre_attack
+        #   @return [::Google::Cloud::SecurityCenter::V1::MitreAttack]
+        #     MITRE ATT&CK tactics and techniques related to this finding.
+        #     See: https://attack.mitre.org
         # @!attribute [rw] access
         #   @return [::Google::Cloud::SecurityCenter::V1::Access]
-        #     Access details associated to the Finding, such as more information on the
-        #     caller, which method was accessed, from where, etc.
+        #     Access details associated with the finding, such as more information on the
+        #     caller, which method was accessed, and from where.
+        # @!attribute [rw] connections
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Connection>]
+        #     Contains information about the IP connection associated with the finding.
         # @!attribute [rw] mute_initiator
         #   @return [::String]
-        #     First known as mute_annotation. Records additional information about the
-        #     mute operation e.g. mute config that muted the finding, user who muted the
-        #     finding, etc.
+        #     Records additional information about the mute operation, for example, the
+        #     [mute configuration](/security-command-center/docs/how-to-mute-findings)
+        #     that muted the finding and the user who muted the finding.
+        # @!attribute [r] mute_info
+        #   @return [::Google::Cloud::SecurityCenter::V1::Finding::MuteInfo]
+        #     Output only. The mute information regarding this finding.
+        # @!attribute [rw] processes
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Process>]
+        #     Represents operating system processes associated with the Finding.
+        # @!attribute [r] contacts
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::SecurityCenter::V1::ContactDetails}]
+        #     Output only. Map containing the points of contact for the given finding.
+        #     The key represents the type of contact, while the value contains a list of
+        #     all the contacts that pertain. Please refer to:
+        #     https://cloud.google.com/resource-manager/docs/managing-notification-contacts#notification-categories
+        #
+        #         {
+        #           "security": {
+        #             "contacts": [
+        #               {
+        #                 "email": "person1@company.com"
+        #               },
+        #               {
+        #                 "email": "person2@company.com"
+        #               }
+        #             ]
+        #           }
+        #         }
+        # @!attribute [rw] compliances
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Compliance>]
+        #     Contains compliance information for security standards associated to the
+        #     finding.
+        # @!attribute [r] parent_display_name
+        #   @return [::String]
+        #     Output only. The human readable display name of the finding source such as
+        #     "Event Threat Detection" or "Security Health Analytics".
+        # @!attribute [rw] description
+        #   @return [::String]
+        #     Contains more details about the finding.
+        # @!attribute [rw] exfiltration
+        #   @return [::Google::Cloud::SecurityCenter::V1::Exfiltration]
+        #     Represents exfiltrations associated with the finding.
+        # @!attribute [rw] iam_bindings
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::IamBinding>]
+        #     Represents IAM bindings associated with the finding.
+        # @!attribute [rw] next_steps
+        #   @return [::String]
+        #     Steps to address the finding.
+        # @!attribute [rw] module_name
+        #   @return [::String]
+        #     Unique identifier of the module which generated the finding.
+        #     Example:
+        #     folders/598186756061/securityHealthAnalyticsSettings/customModules/56799441161885
+        # @!attribute [rw] containers
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Container>]
+        #     Containers associated with the finding. This field provides information for
+        #     both Kubernetes and non-Kubernetes containers.
+        # @!attribute [rw] kubernetes
+        #   @return [::Google::Cloud::SecurityCenter::V1::Kubernetes]
+        #     Kubernetes resources associated with the finding.
+        # @!attribute [rw] database
+        #   @return [::Google::Cloud::SecurityCenter::V1::Database]
+        #     Database associated with the finding.
+        # @!attribute [rw] attack_exposure
+        #   @return [::Google::Cloud::SecurityCenter::V1::AttackExposure]
+        #     The results of an attack path simulation relevant to this finding.
+        # @!attribute [rw] files
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::File>]
+        #     File associated with the finding.
+        # @!attribute [rw] cloud_dlp_inspection
+        #   @return [::Google::Cloud::SecurityCenter::V1::CloudDlpInspection]
+        #     Cloud Data Loss Prevention (Cloud DLP) inspection results that are
+        #     associated with the finding.
+        # @!attribute [rw] cloud_dlp_data_profile
+        #   @return [::Google::Cloud::SecurityCenter::V1::CloudDlpDataProfile]
+        #     Cloud DLP data profile that is associated with the finding.
+        # @!attribute [rw] kernel_rootkit
+        #   @return [::Google::Cloud::SecurityCenter::V1::KernelRootkit]
+        #     Signature of the kernel rootkit.
+        # @!attribute [rw] org_policies
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::OrgPolicy>]
+        #     Contains information about the org policies associated with the finding.
+        # @!attribute [rw] application
+        #   @return [::Google::Cloud::SecurityCenter::V1::Application]
+        #     Represents an application associated with the finding.
+        # @!attribute [rw] backup_disaster_recovery
+        #   @return [::Google::Cloud::SecurityCenter::V1::BackupDisasterRecovery]
+        #     Fields related to Backup and DR findings.
+        # @!attribute [rw] security_posture
+        #   @return [::Google::Cloud::SecurityCenter::V1::SecurityPosture]
+        #     The security posture associated with the finding.
+        # @!attribute [rw] log_entries
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::LogEntry>]
+        #     Log entries that are relevant to the finding.
+        # @!attribute [rw] load_balancers
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::LoadBalancer>]
+        #     The load balancers associated with the finding.
+        # @!attribute [rw] cloud_armor
+        #   @return [::Google::Cloud::SecurityCenter::V1::CloudArmor]
+        #     Fields related to Cloud Armor findings.
+        # @!attribute [rw] notebook
+        #   @return [::Google::Cloud::SecurityCenter::V1::Notebook]
+        #     Notebook associated with the finding.
+        # @!attribute [rw] toxic_combination
+        #   @return [::Google::Cloud::SecurityCenter::V1::ToxicCombination]
+        #     Contains details about a group of security issues that, when the issues
+        #     occur together, represent a greater risk than when the issues occur
+        #     independently. A group of such issues is referred to as a toxic
+        #     combination.
+        #     This field cannot be updated. Its value is ignored in all update requests.
+        # @!attribute [rw] group_memberships
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::GroupMembership>]
+        #     Contains details about groups of which this finding is a member. A group is
+        #     a collection of findings that are related in some way.
+        #     This field cannot be updated. Its value is ignored in all update requests.
         class Finding
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Mute information about the finding, including whether the finding has a
+          # static mute or any matching dynamic mute rules.
+          # @!attribute [rw] static_mute
+          #   @return [::Google::Cloud::SecurityCenter::V1::Finding::MuteInfo::StaticMute]
+          #     If set, the static mute applied to this finding. Static mutes override
+          #     dynamic mutes. If unset, there is no static mute.
+          # @!attribute [rw] dynamic_mute_records
+          #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Finding::MuteInfo::DynamicMuteRecord>]
+          #     The list of dynamic mute rules that currently match the finding.
+          class MuteInfo
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Information about the static mute state. A static mute state overrides
+            # any dynamic mute rules that apply to this finding. The static mute state
+            # can be set by a static mute rule or by muting the finding directly.
+            # @!attribute [rw] state
+            #   @return [::Google::Cloud::SecurityCenter::V1::Finding::Mute]
+            #     The static mute state. If the value is `MUTED` or `UNMUTED`, then the
+            #     finding's overall mute state will have the same value.
+            # @!attribute [rw] apply_time
+            #   @return [::Google::Protobuf::Timestamp]
+            #     When the static mute was applied.
+            class StaticMute
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # The record of a dynamic mute rule that matches the finding.
+            # @!attribute [rw] mute_config
+            #   @return [::String]
+            #     The relative resource name of the mute rule, represented by a mute
+            #     config, that created this record, for example
+            #     `organizations/123/muteConfigs/mymuteconfig` or
+            #     `organizations/123/locations/global/muteConfigs/mymuteconfig`.
+            # @!attribute [rw] match_time
+            #   @return [::Google::Protobuf::Timestamp]
+            #     When the dynamic mute rule first matched the finding.
+            class DynamicMuteRecord
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
 
           # @!attribute [rw] key
           #   @return [::String]
@@ -150,6 +316,15 @@ module Google
           # @!attribute [rw] value
           #   @return [::Google::Cloud::SecurityCenter::V1::ExternalSystem]
           class ExternalSystemsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::SecurityCenter::V1::ContactDetails]
+          class ContactsEntry
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -178,7 +353,8 @@ module Google
             # exploitable, and results in the direct ability to execute arbitrary code,
             # exfiltrate data, and otherwise gain additional access and privileges to
             # cloud resources and workloads. Examples include publicly accessible
-            # unprotected user data, public SSH access with weak or no passwords, etc.
+            # unprotected user data and public SSH access with weak or no
+            # passwords.
             #
             # Threat:
             # Indicates a threat that is able to access, modify, or delete data or
@@ -215,7 +391,7 @@ module Google
             MEDIUM = 3
 
             # Vulnerability:
-            # A low risk vulnerability hampers a security organization’s ability to
+            # A low risk vulnerability hampers a security organization's ability to
             # detect vulnerabilities or active threats in their deployment, or prevents
             # the root cause investigation of security issues. An example is monitoring
             # and logs being disabled for resource configurations and access.
@@ -259,6 +435,19 @@ module Google
 
             # Describes a security observation that is for informational purposes.
             OBSERVATION = 4
+
+            # Describes an error that prevents some SCC functionality.
+            SCC_ERROR = 5
+
+            # Describes a potential security risk due to a change in the security
+            # posture.
+            POSTURE_VIOLATION = 6
+
+            # Describes a group of security issues that, when the issues
+            # occur together, represent a greater risk than when the issues occur
+            # independently. A group of such issues is referred to as a toxic
+            # combination.
+            TOXIC_COMBINATION = 7
           end
         end
       end

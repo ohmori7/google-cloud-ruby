@@ -19,16 +19,34 @@
 require "helper"
 require "google/cloud/gke_connect/gateway"
 require "gapic/common"
-require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::GkeConnect::Gateway::ClientConstructionMinitest < Minitest::Test
-  def test_gateway_service
-    Gapic::ServiceStub.stub :new, :stub do
-      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::GkeConnect::Gateway.gateway_service do |config|
-        config.credentials = grpc_channel
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_gateway_control_rest
+    skip unless Google::Cloud::GkeConnect::Gateway.gateway_control_available?
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::GkeConnect::Gateway.gateway_control do |config|
+        config.credentials = :dummy_credentials
       end
-      assert_kind_of Google::Cloud::GkeConnect::Gateway::V1beta1::GatewayService::Client, client
+      assert_kind_of Google::Cloud::GkeConnect::Gateway::V1::GatewayControl::Rest::Client, client
     end
   end
 end

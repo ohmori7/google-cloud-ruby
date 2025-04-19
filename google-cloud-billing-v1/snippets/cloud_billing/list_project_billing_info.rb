@@ -19,21 +19,33 @@
 # [START cloudbilling_v1_generated_CloudBilling_ListProjectBillingInfo_sync]
 require "google/cloud/billing/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Billing::V1::CloudBilling::Client.new
+##
+# Snippet for the list_project_billing_info call in the CloudBilling service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Billing::V1::CloudBilling::Client#list_project_billing_info.
+#
+def list_project_billing_info
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Billing::V1::CloudBilling::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Billing::V1::ListProjectBillingInfoRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Billing::V1::ListProjectBillingInfoRequest.new
 
-# Call the list_project_billing_info method.
-result = client.list_project_billing_info request
+  # Call the list_project_billing_info method.
+  result = client.list_project_billing_info request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Billing::V1::ProjectBillingInfo.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Billing::V1::ProjectBillingInfo.
+    p item
+  end
 end
 # [END cloudbilling_v1_generated_CloudBilling_ListProjectBillingInfo_sync]

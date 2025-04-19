@@ -29,28 +29,32 @@ module Google
           #     Format: `projects/{project_number}/locations/{location}/jobs/{job}`
           # @!attribute [rw] input_uri
           #   @return [::String]
-          #     Input only. Specify the `input_uri` to populate empty `uri` fields in each element of
-          #     `Job.config.inputs` or `JobTemplate.config.inputs` when using template.
-          #     URI of the media. Input files must be at least 5 seconds in duration and
-          #     stored in Cloud Storage (for example, `gs://bucket/inputs/file.mp4`).
+          #     Input only. Specify the `input_uri` to populate empty `uri` fields in each
+          #     element of `Job.config.inputs` or `JobTemplate.config.inputs` when using
+          #     template. URI of the media. Input files must be at least 5 seconds in
+          #     duration and stored in Cloud Storage (for example,
+          #     `gs://bucket/inputs/file.mp4`). See [Supported input and output
+          #     formats](https://cloud.google.com/transcoder/docs/concepts/supported-input-and-output-formats).
           # @!attribute [rw] output_uri
           #   @return [::String]
-          #     Input only. Specify the `output_uri` to populate an empty `Job.config.output.uri` or
-          #     `JobTemplate.config.output.uri` when using template.
-          #     URI for the output file(s). For example, `gs://my-bucket/outputs/`.
+          #     Input only. Specify the `output_uri` to populate an empty
+          #     `Job.config.output.uri` or `JobTemplate.config.output.uri` when using
+          #     template. URI for the output file(s). For example,
+          #     `gs://my-bucket/outputs/`. See [Supported input and output
+          #     formats](https://cloud.google.com/transcoder/docs/concepts/supported-input-and-output-formats).
           # @!attribute [rw] template_id
           #   @return [::String]
-          #     Input only. Specify the `template_id` to use for populating `Job.config`. The default
-          #     is `preset/web-hd`.
+          #     Input only. Specify the `template_id` to use for populating `Job.config`.
+          #     The default is `preset/web-hd`, which is the only supported preset.
           #
-          #     Preset Transcoder templates:
-          #     - `preset/{preset_id}`
+          #     User defined JobTemplate: `{job_template_id}`
           #
-          #     - User defined JobTemplate:
-          #       `{job_template_id}`
+          #     Note: The following fields are mutually exclusive: `template_id`, `config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] config
           #   @return [::Google::Cloud::Video::Transcoder::V1::JobConfig]
           #     The configuration for this job.
+          #
+          #     Note: The following fields are mutually exclusive: `config`, `template_id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [r] state
           #   @return [::Google::Cloud::Video::Transcoder::V1::Job::ProcessingState]
           #     Output only. The current state of the job.
@@ -68,13 +72,40 @@ module Google
           #     Job time to live value in days, which will be effective after job
           #     completion. Job should be deleted automatically after the given TTL. Enter
           #     a value between 1 and 90. The default is 30.
+          # @!attribute [rw] labels
+          #   @return [::Google::Protobuf::Map{::String => ::String}]
+          #     The labels associated with this job. You can use these to organize and
+          #     group your jobs.
           # @!attribute [r] error
           #   @return [::Google::Rpc::Status]
           #     Output only. An error object that describes the reason for the failure.
           #     This property is always present when `state` is `FAILED`.
+          # @!attribute [rw] mode
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Job::ProcessingMode]
+          #     The processing mode of the job.
+          #     The default is `PROCESSING_MODE_INTERACTIVE`.
+          # @!attribute [rw] batch_mode_priority
+          #   @return [::Integer]
+          #     The processing priority of a batch job.
+          #     This field can only be set for batch mode jobs. The default value is 0.
+          #     This value cannot be negative. Higher values correspond to higher
+          #     priorities for the job.
+          # @!attribute [rw] optimization
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Job::OptimizationStrategy]
+          #     Optional. The optimization strategy of the job. The default is
+          #     `AUTODETECT`.
           class Job
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::String]
+            class LabelsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
 
             # The current state of the job.
             module ProcessingState
@@ -94,6 +125,33 @@ module Google
               # `failure_details`
               FAILED = 4
             end
+
+            # The processing mode of the job.
+            module ProcessingMode
+              # The job processing mode is not specified.
+              PROCESSING_MODE_UNSPECIFIED = 0
+
+              # The job processing mode is interactive mode.
+              # Interactive job will either be ran or rejected if quota does not allow
+              # for it.
+              PROCESSING_MODE_INTERACTIVE = 1
+
+              # The job processing mode is batch mode.
+              # Batch mode allows queuing of jobs.
+              PROCESSING_MODE_BATCH = 2
+            end
+
+            # The optimization strategy of the job. The default is `AUTODETECT`.
+            module OptimizationStrategy
+              # The optimization strategy is not specified.
+              OPTIMIZATION_STRATEGY_UNSPECIFIED = 0
+
+              # Prioritize job processing speed.
+              AUTODETECT = 1
+
+              # Disable all optimizations.
+              DISABLED = 2
+            end
           end
 
           # Transcoding job template resource.
@@ -105,9 +163,22 @@ module Google
           # @!attribute [rw] config
           #   @return [::Google::Cloud::Video::Transcoder::V1::JobConfig]
           #     The configuration for this template.
+          # @!attribute [rw] labels
+          #   @return [::Google::Protobuf::Map{::String => ::String}]
+          #     The labels associated with this job template. You can use these to organize
+          #     and group your job templates.
           class JobTemplate
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::String]
+            class LabelsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
           # Job configuration
@@ -140,9 +211,16 @@ module Google
           # @!attribute [rw] sprite_sheets
           #   @return [::Array<::Google::Cloud::Video::Transcoder::V1::SpriteSheet>]
           #     List of output sprite sheets.
+          #     Spritesheets require at least one VideoStream in the Jobconfig.
           # @!attribute [rw] overlays
           #   @return [::Array<::Google::Cloud::Video::Transcoder::V1::Overlay>]
           #     List of overlays on the output video, in descending Z-order.
+          # @!attribute [rw] encryptions
+          #   @return [::Array<::Google::Cloud::Video::Transcoder::V1::Encryption>]
+          #     List of encryption configurations for the content.
+          #     Each configuration has an ID. Specify this ID in the
+          #     {::Google::Cloud::Video::Transcoder::V1::MuxStream#encryption_id MuxStream.encryption_id}
+          #     field to indicate the configuration to use for that `MuxStream` output.
           class JobConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -157,7 +235,9 @@ module Google
           #   @return [::String]
           #     URI of the media. Input files must be at least 5 seconds in duration and
           #     stored in Cloud Storage (for example, `gs://bucket/inputs/file.mp4`).
-          #     If empty, the value will be populated from `Job.input_uri`.
+          #     If empty, the value is populated from `Job.input_uri`. See
+          #     [Supported input and output
+          #     formats](https://cloud.google.com/transcoder/docs/concepts/supported-input-and-output-formats).
           # @!attribute [rw] preprocessing_config
           #   @return [::Google::Cloud::Video::Transcoder::V1::PreprocessingConfig]
           #     Preprocessing configurations.
@@ -170,7 +250,9 @@ module Google
           # @!attribute [rw] uri
           #   @return [::String]
           #     URI for the output file(s). For example, `gs://my-bucket/outputs/`.
-          #     If empty the value is populated from `Job.output_uri`.
+          #     If empty, the value is populated from `Job.output_uri`. See
+          #     [Supported input and output
+          #     formats](https://cloud.google.com/transcoder/docs/concepts/supported-input-and-output-formats).
           class Output
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -218,12 +300,18 @@ module Google
           # @!attribute [rw] video_stream
           #   @return [::Google::Cloud::Video::Transcoder::V1::VideoStream]
           #     Encoding of a video stream.
+          #
+          #     Note: The following fields are mutually exclusive: `video_stream`, `audio_stream`, `text_stream`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] audio_stream
           #   @return [::Google::Cloud::Video::Transcoder::V1::AudioStream]
           #     Encoding of an audio stream.
+          #
+          #     Note: The following fields are mutually exclusive: `audio_stream`, `video_stream`, `text_stream`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] text_stream
           #   @return [::Google::Cloud::Video::Transcoder::V1::TextStream]
           #     Encoding of a text stream. For example, closed captions or subtitles.
+          #
+          #     Note: The following fields are mutually exclusive: `text_stream`, `video_stream`, `audio_stream`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class ElementaryStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -251,12 +339,20 @@ module Google
           #     - `fmp4`- the corresponding file extension is `.m4s`
           #     - `mp4`
           #     - `vtt`
+          #
+          #     See also:
+          #     [Supported input and output
+          #     formats](https://cloud.google.com/transcoder/docs/concepts/supported-input-and-output-formats)
           # @!attribute [rw] elementary_streams
           #   @return [::Array<::String>]
           #     List of `ElementaryStream.key`s multiplexed in this stream.
           # @!attribute [rw] segment_settings
           #   @return [::Google::Cloud::Video::Transcoder::V1::SegmentSettings]
           #     Segment settings for `ts`, `fmp4` and `vtt`.
+          # @!attribute [rw] encryption_id
+          #   @return [::String]
+          #     Identifier of the encryption configuration to use. If omitted, output will
+          #     be unencrypted.
           class MuxStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -269,27 +365,53 @@ module Google
           #     extension suffix corresponding to the `Manifest.type`.
           # @!attribute [rw] type
           #   @return [::Google::Cloud::Video::Transcoder::V1::Manifest::ManifestType]
-          #     Required. Type of the manifest, can be `HLS` or `DASH`.
+          #     Required. Type of the manifest.
           # @!attribute [rw] mux_streams
           #   @return [::Array<::String>]
-          #     Required. List of user given `MuxStream.key`s that should appear in this manifest.
+          #     Required. List of user given `MuxStream.key`s that should appear in this
+          #     manifest.
           #
           #     When `Manifest.type` is `HLS`, a media manifest with name `MuxStream.key`
           #     and `.m3u8` extension is generated for each element of the
           #     `Manifest.mux_streams`.
+          # @!attribute [rw] dash
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Manifest::DashConfig]
+          #     `DASH` manifest configuration.
           class Manifest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
-            # The manifest type can be either `HLS` or `DASH`.
+            # `DASH` manifest configuration.
+            # @!attribute [rw] segment_reference_scheme
+            #   @return [::Google::Cloud::Video::Transcoder::V1::Manifest::DashConfig::SegmentReferenceScheme]
+            #     The segment reference scheme for a `DASH` manifest. The default is
+            #     `SEGMENT_LIST`.
+            class DashConfig
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # The segment reference scheme for a `DASH` manifest.
+              module SegmentReferenceScheme
+                # The segment reference scheme is not specified.
+                SEGMENT_REFERENCE_SCHEME_UNSPECIFIED = 0
+
+                # Lists the URLs of media files for each segment.
+                SEGMENT_LIST = 1
+
+                # Lists each segment from a template with $Number$ variable.
+                SEGMENT_TEMPLATE_NUMBER = 2
+              end
+            end
+
+            # The manifest type, which corresponds to the adaptive streaming format used.
             module ManifestType
               # The manifest type is not specified.
               MANIFEST_TYPE_UNSPECIFIED = 0
 
-              # Create `HLS` manifest. The corresponding file extension is `.m3u8`.
+              # Create an HLS manifest. The corresponding file extension is `.m3u8`.
               HLS = 1
 
-              # Create `DASH` manifest. The corresponding file extension is `.mpd`.
+              # Create an MPEG-DASH manifest. The corresponding file extension is `.mpd`.
               DASH = 2
             end
           end
@@ -320,16 +442,32 @@ module Google
           #     from 0 before the extension, such as `sprite_sheet0000000123.jpeg`.
           # @!attribute [rw] sprite_width_pixels
           #   @return [::Integer]
-          #     Required. The width of sprite in pixels. Must be an even integer. To preserve the
-          #     source aspect ratio, set the {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_width_pixels SpriteSheet.sprite_width_pixels} field or
-          #     the {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_height_pixels SpriteSheet.sprite_height_pixels} field, but not both (the API will
-          #     automatically calculate the missing field).
+          #     Required. The width of sprite in pixels. Must be an even integer. To
+          #     preserve the source aspect ratio, set the
+          #     {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_width_pixels SpriteSheet.sprite_width_pixels}
+          #     field or the
+          #     {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_height_pixels SpriteSheet.sprite_height_pixels}
+          #     field, but not both (the API will automatically calculate the missing
+          #     field).
+          #
+          #     For portrait videos that contain horizontal ASR and rotation metadata,
+          #     provide the width, in pixels, per the horizontal ASR. The API calculates
+          #     the height per the horizontal ASR. The API detects any rotation metadata
+          #     and swaps the requested height and width for the output.
           # @!attribute [rw] sprite_height_pixels
           #   @return [::Integer]
-          #     Required. The height of sprite in pixels. Must be an even integer. To preserve the
-          #     source aspect ratio, set the {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_height_pixels SpriteSheet.sprite_height_pixels} field or
-          #     the {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_width_pixels SpriteSheet.sprite_width_pixels} field, but not both (the API will
-          #     automatically calculate the missing field).
+          #     Required. The height of sprite in pixels. Must be an even integer. To
+          #     preserve the source aspect ratio, set the
+          #     {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_height_pixels SpriteSheet.sprite_height_pixels}
+          #     field or the
+          #     {::Google::Cloud::Video::Transcoder::V1::SpriteSheet#sprite_width_pixels SpriteSheet.sprite_width_pixels}
+          #     field, but not both (the API will automatically calculate the missing
+          #     field).
+          #
+          #     For portrait videos that contain horizontal ASR and rotation metadata,
+          #     provide the height, in pixels, per the horizontal ASR. The API calculates
+          #     the width per the horizontal ASR. The API detects any rotation metadata
+          #     and swaps the requested height and width for the output.
           # @!attribute [rw] column_count
           #   @return [::Integer]
           #     The maximum number of sprites per row in a sprite sheet. The default is 0,
@@ -353,10 +491,14 @@ module Google
           #     Total number of sprites. Create the specified number of sprites
           #     distributed evenly across the timeline of the output media. The default
           #     is 100.
+          #
+          #     Note: The following fields are mutually exclusive: `total_count`, `interval`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] interval
           #   @return [::Google::Protobuf::Duration]
           #     Starting from `0s`, create sprites at regular intervals. Specify the
           #     interval value in seconds.
+          #
+          #     Note: The following fields are mutually exclusive: `interval`, `total_count`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] quality
           #   @return [::Integer]
           #     The quality of the generated sprite sheet. Enter a value between 1
@@ -392,11 +534,11 @@ module Google
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
 
-            # Overlaid jpeg image.
+            # Overlaid image.
             # @!attribute [rw] uri
             #   @return [::String]
-            #     Required. URI of the JPEG image in Cloud Storage. For example,
-            #     `gs://bucket/inputs/image.jpeg`. JPEG is the only supported image type.
+            #     Required. URI of the image in Cloud Storage. For example,
+            #     `gs://bucket/inputs/image.png`. Only PNG and JPEG images are supported.
             # @!attribute [rw] resolution
             #   @return [::Google::Cloud::Video::Transcoder::V1::Overlay::NormalizedCoordinate]
             #     Normalized image resolution, based on output video resolution. Valid
@@ -466,12 +608,18 @@ module Google
             # @!attribute [rw] animation_static
             #   @return [::Google::Cloud::Video::Transcoder::V1::Overlay::AnimationStatic]
             #     Display static overlay object.
+            #
+            #     Note: The following fields are mutually exclusive: `animation_static`, `animation_fade`, `animation_end`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] animation_fade
             #   @return [::Google::Cloud::Video::Transcoder::V1::Overlay::AnimationFade]
             #     Display overlay object with fade animation.
+            #
+            #     Note: The following fields are mutually exclusive: `animation_fade`, `animation_static`, `animation_end`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] animation_end
             #   @return [::Google::Cloud::Video::Transcoder::V1::Overlay::AnimationEnd]
             #     End previous animation.
+            #
+            #     Note: The following fields are mutually exclusive: `animation_end`, `animation_static`, `animation_fade`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class Animation
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -509,11 +657,16 @@ module Google
           # @!attribute [rw] pad
           #   @return [::Google::Cloud::Video::Transcoder::V1::PreprocessingConfig::Pad]
           #     Specify the video pad filter configuration.
+          # @!attribute [rw] deinterlace
+          #   @return [::Google::Cloud::Video::Transcoder::V1::PreprocessingConfig::Deinterlace]
+          #     Specify the video deinterlace configuration.
           class PreprocessingConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
             # Color preprocessing configuration.
+            #
+            # **Note:** This configuration is not supported.
             # @!attribute [rw] saturation
             #   @return [::Float]
             #     Control color saturation of the video. Enter a value between -1 and 1,
@@ -535,6 +688,8 @@ module Google
             end
 
             # Denoise preprocessing configuration.
+            #
+            # **Note:** This configuration is not supported.
             # @!attribute [rw] strength
             #   @return [::Float]
             #     Set strength of the denoise. Enter a value between 0 and 1. The higher
@@ -553,6 +708,8 @@ module Google
             end
 
             # Deblock preprocessing configuration.
+            #
+            # **Note:** This configuration is not supported.
             # @!attribute [rw] strength
             #   @return [::Float]
             #     Set strength of the deblocker. Enter a value between 0 and 1. The higher
@@ -583,9 +740,13 @@ module Google
             # @!attribute [rw] high_boost
             #   @return [::Boolean]
             #     Enable boosting high frequency components. The default is `false`.
+            #
+            #     **Note:** This field is not supported.
             # @!attribute [rw] low_boost
             #   @return [::Boolean]
             #     Enable boosting low frequency components. The default is `false`.
+            #
+            #     **Note:** This field is not supported.
             class Audio
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -628,18 +789,98 @@ module Google
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
+
+            # Deinterlace configuration for input video.
+            # @!attribute [rw] yadif
+            #   @return [::Google::Cloud::Video::Transcoder::V1::PreprocessingConfig::Deinterlace::YadifConfig]
+            #     Specifies the Yet Another Deinterlacing Filter Configuration.
+            #
+            #     Note: The following fields are mutually exclusive: `yadif`, `bwdif`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] bwdif
+            #   @return [::Google::Cloud::Video::Transcoder::V1::PreprocessingConfig::Deinterlace::BwdifConfig]
+            #     Specifies the Bob Weaver Deinterlacing Filter Configuration.
+            #
+            #     Note: The following fields are mutually exclusive: `bwdif`, `yadif`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            class Deinterlace
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Yet Another Deinterlacing Filter Configuration.
+              # @!attribute [rw] mode
+              #   @return [::String]
+              #     Specifies the deinterlacing mode to adopt.
+              #     The default is `send_frame`.
+              #     Supported values:
+              #
+              #     - `send_frame`: Output one frame for each frame
+              #     - `send_field`: Output one frame for each field
+              # @!attribute [rw] disable_spatial_interlacing
+              #   @return [::Boolean]
+              #     Disable spacial interlacing.
+              #     The default is `false`.
+              # @!attribute [rw] parity
+              #   @return [::String]
+              #     The picture field parity assumed for the input interlaced video.
+              #     The default is `auto`.
+              #     Supported values:
+              #
+              #     - `tff`: Assume the top field is first
+              #     - `bff`: Assume the bottom field is first
+              #     - `auto`: Enable automatic detection of field parity
+              # @!attribute [rw] deinterlace_all_frames
+              #   @return [::Boolean]
+              #     Deinterlace all frames rather than just the frames identified as
+              #     interlaced. The default is `false`.
+              class YadifConfig
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # Bob Weaver Deinterlacing Filter Configuration.
+              # @!attribute [rw] mode
+              #   @return [::String]
+              #     Specifies the deinterlacing mode to adopt.
+              #     The default is `send_frame`.
+              #     Supported values:
+              #
+              #     - `send_frame`: Output one frame for each frame
+              #     - `send_field`: Output one frame for each field
+              # @!attribute [rw] parity
+              #   @return [::String]
+              #     The picture field parity assumed for the input interlaced video.
+              #     The default is `auto`.
+              #     Supported values:
+              #
+              #     - `tff`: Assume the top field is first
+              #     - `bff`: Assume the bottom field is first
+              #     - `auto`: Enable automatic detection of field parity
+              # @!attribute [rw] deinterlace_all_frames
+              #   @return [::Boolean]
+              #     Deinterlace all frames rather than just the frames identified as
+              #     interlaced. The default is `false`.
+              class BwdifConfig
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
           end
 
           # Video stream resource.
           # @!attribute [rw] h264
           #   @return [::Google::Cloud::Video::Transcoder::V1::VideoStream::H264CodecSettings]
           #     H264 codec settings.
+          #
+          #     Note: The following fields are mutually exclusive: `h264`, `h265`, `vp9`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] h265
           #   @return [::Google::Cloud::Video::Transcoder::V1::VideoStream::H265CodecSettings]
           #     H265 codec settings.
+          #
+          #     Note: The following fields are mutually exclusive: `h265`, `h264`, `vp9`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] vp9
           #   @return [::Google::Cloud::Video::Transcoder::V1::VideoStream::Vp9CodecSettings]
           #     VP9 codec settings.
+          #
+          #     Note: The following fields are mutually exclusive: `vp9`, `h264`, `h265`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class VideoStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -650,24 +891,34 @@ module Google
             #     The width of the video in pixels. Must be an even integer.
             #     When not specified, the width is adjusted to match the specified height
             #     and input aspect ratio. If both are omitted, the input width is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the width, in pixels, per the horizontal ASR. The API calculates
+            #     the height per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] height_pixels
             #   @return [::Integer]
             #     The height of the video in pixels. Must be an even integer.
             #     When not specified, the height is adjusted to match the specified width
             #     and input aspect ratio. If both are omitted, the input height is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the height, in pixels, per the horizontal ASR. The API calculates
+            #     the width per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] frame_rate
             #   @return [::Float]
-            #     Required. The target video frame rate in frames per second (FPS). Must be less than
-            #     or equal to 120. Will default to the input frame rate if larger than the
-            #     input frame rate. The API will generate an output FPS that is divisible
-            #     by the input FPS, and smaller or equal to the target FPS. See
+            #     Required. The target video frame rate in frames per second (FPS). Must be
+            #     less than or equal to 120. Will default to the input frame rate if larger
+            #     than the input frame rate. The API will generate an output FPS that is
+            #     divisible by the input FPS, and smaller or equal to the target FPS. See
             #     [Calculating frame
             #     rate](https://cloud.google.com/transcoder/docs/concepts/frame-rate) for
             #     more information.
             # @!attribute [rw] bitrate_bps
             #   @return [::Integer]
-            #     Required. The video bitrate in bits per second. The minimum value is 1,000.
-            #     The maximum value is 800,000,000.
+            #     Required. The video bitrate in bits per second. The minimum value is
+            #     1,000. The maximum value is 800,000,000.
             # @!attribute [rw] pixel_format
             #   @return [::String]
             #     Pixel format to use. The default is `yuv420p`.
@@ -703,6 +954,8 @@ module Google
             #   @return [::Integer]
             #     Select the GOP size based on the specified frame count. Must be greater
             #     than zero.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_frame_count`, `gop_duration`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] gop_duration
             #   @return [::Google::Protobuf::Duration]
             #     Select the GOP size based on the specified duration. The default is
@@ -710,6 +963,8 @@ module Google
             #     [`segmentDuration`](#SegmentSettings), and
             #     [`segmentDuration`](#SegmentSettings) must be divisible by
             #     `gopDuration`.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_duration`, `gop_frame_count`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] enable_two_pass
             #   @return [::Boolean]
             #     Use two-pass encoding strategy to achieve better video quality.
@@ -785,24 +1040,34 @@ module Google
             #     The width of the video in pixels. Must be an even integer.
             #     When not specified, the width is adjusted to match the specified height
             #     and input aspect ratio. If both are omitted, the input width is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the width, in pixels, per the horizontal ASR. The API calculates
+            #     the height per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] height_pixels
             #   @return [::Integer]
             #     The height of the video in pixels. Must be an even integer.
             #     When not specified, the height is adjusted to match the specified width
             #     and input aspect ratio. If both are omitted, the input height is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the height, in pixels, per the horizontal ASR. The API calculates
+            #     the width per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] frame_rate
             #   @return [::Float]
-            #     Required. The target video frame rate in frames per second (FPS). Must be less than
-            #     or equal to 120. Will default to the input frame rate if larger than the
-            #     input frame rate. The API will generate an output FPS that is divisible
-            #     by the input FPS, and smaller or equal to the target FPS. See
+            #     Required. The target video frame rate in frames per second (FPS). Must be
+            #     less than or equal to 120. Will default to the input frame rate if larger
+            #     than the input frame rate. The API will generate an output FPS that is
+            #     divisible by the input FPS, and smaller or equal to the target FPS. See
             #     [Calculating frame
             #     rate](https://cloud.google.com/transcoder/docs/concepts/frame-rate) for
             #     more information.
             # @!attribute [rw] bitrate_bps
             #   @return [::Integer]
-            #     Required. The video bitrate in bits per second. The minimum value is 1,000.
-            #     The maximum value is 800,000,000.
+            #     Required. The video bitrate in bits per second. The minimum value is
+            #     1,000. The maximum value is 800,000,000.
             # @!attribute [rw] pixel_format
             #   @return [::String]
             #     Pixel format to use. The default is `yuv420p`.
@@ -838,6 +1103,8 @@ module Google
             #   @return [::Integer]
             #     Select the GOP size based on the specified frame count. Must be greater
             #     than zero.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_frame_count`, `gop_duration`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] gop_duration
             #   @return [::Google::Protobuf::Duration]
             #     Select the GOP size based on the specified duration. The default is
@@ -845,6 +1112,8 @@ module Google
             #     [`segmentDuration`](#SegmentSettings), and
             #     [`segmentDuration`](#SegmentSettings) must be divisible by
             #     `gopDuration`.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_duration`, `gop_frame_count`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] enable_two_pass
             #   @return [::Boolean]
             #     Use two-pass encoding strategy to achieve better video quality.
@@ -927,24 +1196,34 @@ module Google
             #     The width of the video in pixels. Must be an even integer.
             #     When not specified, the width is adjusted to match the specified height
             #     and input aspect ratio. If both are omitted, the input width is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the width, in pixels, per the horizontal ASR. The API calculates
+            #     the height per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] height_pixels
             #   @return [::Integer]
             #     The height of the video in pixels. Must be an even integer.
             #     When not specified, the height is adjusted to match the specified width
             #     and input aspect ratio. If both are omitted, the input height is used.
+            #
+            #     For portrait videos that contain horizontal ASR and rotation metadata,
+            #     provide the height, in pixels, per the horizontal ASR. The API calculates
+            #     the width per the horizontal ASR. The API detects any rotation metadata
+            #     and swaps the requested height and width for the output.
             # @!attribute [rw] frame_rate
             #   @return [::Float]
-            #     Required. The target video frame rate in frames per second (FPS). Must be less than
-            #     or equal to 120. Will default to the input frame rate if larger than the
-            #     input frame rate. The API will generate an output FPS that is divisible
-            #     by the input FPS, and smaller or equal to the target FPS. See
+            #     Required. The target video frame rate in frames per second (FPS). Must be
+            #     less than or equal to 120. Will default to the input frame rate if larger
+            #     than the input frame rate. The API will generate an output FPS that is
+            #     divisible by the input FPS, and smaller or equal to the target FPS. See
             #     [Calculating frame
             #     rate](https://cloud.google.com/transcoder/docs/concepts/frame-rate) for
             #     more information.
             # @!attribute [rw] bitrate_bps
             #   @return [::Integer]
-            #     Required. The video bitrate in bits per second. The minimum value is 1,000.
-            #     The maximum value is 480,000,000.
+            #     Required. The video bitrate in bits per second. The minimum value is
+            #     1,000. The maximum value is 480,000,000.
             # @!attribute [rw] pixel_format
             #   @return [::String]
             #     Pixel format to use. The default is `yuv420p`.
@@ -967,15 +1246,18 @@ module Google
             #     Supported rate control modes:
             #
             #     - `vbr` - variable bitrate
-            #     - `crf` - constant rate factor
             # @!attribute [rw] crf_level
             #   @return [::Integer]
             #     Target CRF level. Must be between 10 and 36, where 10 is the highest
             #     quality and 36 is the most efficient compression. The default is 21.
+            #
+            #     **Note:** This field is not supported.
             # @!attribute [rw] gop_frame_count
             #   @return [::Integer]
             #     Select the GOP size based on the specified frame count. Must be greater
             #     than zero.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_frame_count`, `gop_duration`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] gop_duration
             #   @return [::Google::Protobuf::Duration]
             #     Select the GOP size based on the specified duration. The default is
@@ -983,6 +1265,8 @@ module Google
             #     [`segmentDuration`](#SegmentSettings), and
             #     [`segmentDuration`](#SegmentSettings) must be divisible by
             #     `gopDuration`.
+            #
+            #     Note: The following fields are mutually exclusive: `gop_duration`, `gop_frame_count`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] profile
             #   @return [::String]
             #     Enforces the specified codec profile. The following profiles are
@@ -1019,7 +1303,8 @@ module Google
           #     - `eac3`
           # @!attribute [rw] bitrate_bps
           #   @return [::Integer]
-          #     Required. Audio bitrate in bits per second. Must be between 1 and 10,000,000.
+          #     Required. Audio bitrate in bits per second. Must be between 1 and
+          #     10,000,000.
           # @!attribute [rw] channel_count
           #   @return [::Integer]
           #     Number of audio channels. Must be between 1 and 6. The default is 2.
@@ -1043,6 +1328,16 @@ module Google
           # @!attribute [rw] sample_rate_hertz
           #   @return [::Integer]
           #     The audio sample rate in Hertz. The default is 48000 Hertz.
+          # @!attribute [rw] language_code
+          #   @return [::String]
+          #     The BCP-47 language code, such as `en-US` or `sr-Latn`. For more
+          #     information, see
+          #     https://www.unicode.org/reports/tr35/#Unicode_locale_identifier. Not
+          #     supported in MP4 files.
+          # @!attribute [rw] display_name
+          #   @return [::String]
+          #     The name for this particular audio stream that
+          #     will be added to the HLS/DASH manifest. Not supported in MP4 files.
           class AudioStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -1050,8 +1345,8 @@ module Google
             # The mapping for the `Job.edit_list` atoms with audio `EditAtom.inputs`.
             # @!attribute [rw] atom_key
             #   @return [::String]
-            #     Required. The `EditAtom.key` that references the atom with audio inputs in the
-            #     `Job.edit_list`.
+            #     Required. The `EditAtom.key` that references the atom with audio inputs
+            #     in the `Job.edit_list`.
             # @!attribute [rw] input_key
             #   @return [::String]
             #     Required. The `Input.key` that identifies the input file.
@@ -1086,9 +1381,19 @@ module Google
           #     - `cea608`
           #     - `cea708`
           #     - `webvtt`
+          # @!attribute [rw] language_code
+          #   @return [::String]
+          #     The BCP-47 language code, such as `en-US` or `sr-Latn`. For more
+          #     information, see
+          #     https://www.unicode.org/reports/tr35/#Unicode_locale_identifier. Not
+          #     supported in MP4 files.
           # @!attribute [rw] mapping
           #   @return [::Array<::Google::Cloud::Video::Transcoder::V1::TextStream::TextMapping>]
           #     The mapping for the `Job.edit_list` atoms with text `EditAtom.inputs`.
+          # @!attribute [rw] display_name
+          #   @return [::String]
+          #     The name for this particular text stream that
+          #     will be added to the HLS/DASH manifest. Not supported in MP4 files.
           class TextStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -1123,6 +1428,119 @@ module Google
           class SegmentSettings
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Encryption settings.
+          # @!attribute [rw] id
+          #   @return [::String]
+          #     Required. Identifier for this set of encryption options.
+          # @!attribute [rw] aes_128
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::Aes128Encryption]
+          #     Configuration for AES-128 encryption.
+          #
+          #     Note: The following fields are mutually exclusive: `aes_128`, `sample_aes`, `mpeg_cenc`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] sample_aes
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::SampleAesEncryption]
+          #     Configuration for SAMPLE-AES encryption.
+          #
+          #     Note: The following fields are mutually exclusive: `sample_aes`, `aes_128`, `mpeg_cenc`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] mpeg_cenc
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::MpegCommonEncryption]
+          #     Configuration for MPEG Common Encryption (MPEG-CENC).
+          #
+          #     Note: The following fields are mutually exclusive: `mpeg_cenc`, `aes_128`, `sample_aes`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] secret_manager_key_source
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::SecretManagerSource]
+          #     Keys are stored in Google Secret Manager.
+          # @!attribute [rw] drm_systems
+          #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::DrmSystems]
+          #     Required. DRM system(s) to use; at least one must be specified. If a
+          #     DRM system is omitted, it is considered disabled.
+          class Encryption
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Configuration for AES-128 encryption.
+            class Aes128Encryption
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Configuration for SAMPLE-AES encryption.
+            class SampleAesEncryption
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Configuration for MPEG Common Encryption (MPEG-CENC).
+            # @!attribute [rw] scheme
+            #   @return [::String]
+            #     Required. Specify the encryption scheme.
+            #
+            #     Supported encryption schemes:
+            #
+            #     - `cenc`
+            #     - `cbcs`
+            class MpegCommonEncryption
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Configuration for secrets stored in Google Secret Manager.
+            # @!attribute [rw] secret_version
+            #   @return [::String]
+            #     Required. The name of the Secret Version containing the encryption key in
+            #     the following format:
+            #     `projects/{project}/secrets/{secret_id}/versions/{version_number}`
+            #
+            #     Note that only numbered versions are supported. Aliases like "latest" are
+            #     not supported.
+            class SecretManagerSource
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Widevine configuration.
+            class Widevine
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Fairplay configuration.
+            class Fairplay
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Playready configuration.
+            class Playready
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Clearkey configuration.
+            class Clearkey
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Defines configuration for DRM systems in use.
+            # @!attribute [rw] widevine
+            #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::Widevine]
+            #     Widevine configuration.
+            # @!attribute [rw] fairplay
+            #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::Fairplay]
+            #     Fairplay configuration.
+            # @!attribute [rw] playready
+            #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::Playready]
+            #     Playready configuration.
+            # @!attribute [rw] clearkey
+            #   @return [::Google::Cloud::Video::Transcoder::V1::Encryption::Clearkey]
+            #     Clearkey configuration.
+            class DrmSystems
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
         end
       end

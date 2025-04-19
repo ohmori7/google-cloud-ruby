@@ -19,15 +19,29 @@
 # [START jobs_v4_generated_JobService_SearchJobs_sync]
 require "google/cloud/talent/v4"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Talent::V4::JobService::Client.new
+##
+# Snippet for the search_jobs call in the JobService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Talent::V4::JobService::Client#search_jobs.
+#
+def search_jobs
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Talent::V4::JobService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Talent::V4::SearchJobsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Talent::V4::SearchJobsRequest.new
 
-# Call the search_jobs method.
-result = client.search_jobs request
+  # Call the search_jobs method.
+  result = client.search_jobs request
 
-# The returned object is of type Google::Cloud::Talent::V4::SearchJobsResponse.
-p result
+  # The returned object is of type Google::Cloud::Talent::V4::SearchJobsResponse.
+  p result
+end
 # [END jobs_v4_generated_JobService_SearchJobs_sync]

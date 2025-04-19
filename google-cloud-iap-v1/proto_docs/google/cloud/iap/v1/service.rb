@@ -21,6 +21,118 @@ module Google
   module Cloud
     module Iap
       module V1
+        # The request to ListTunnelDestGroups.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. Google Cloud Project ID and location.
+        #     In the following format:
+        #     `projects/{project_number/id}/iap_tunnel/locations/{location}`.
+        #     A `-` can be used for the location to group across all locations.
+        # @!attribute [rw] page_size
+        #   @return [::Integer]
+        #     The maximum number of groups to return. The service might return fewer than
+        #     this value.
+        #     If unspecified, at most 100 groups are returned.
+        #     The maximum value is 1000; values above 1000 are coerced to 1000.
+        # @!attribute [rw] page_token
+        #   @return [::String]
+        #     A page token, received from a previous `ListTunnelDestGroups`
+        #     call. Provide this to retrieve the subsequent page.
+        #
+        #     When paginating, all other parameters provided to
+        #     `ListTunnelDestGroups` must match the call that provided the page
+        #     token.
+        class ListTunnelDestGroupsRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The response from ListTunnelDestGroups.
+        # @!attribute [rw] tunnel_dest_groups
+        #   @return [::Array<::Google::Cloud::Iap::V1::TunnelDestGroup>]
+        #     TunnelDestGroup existing in the project.
+        # @!attribute [rw] next_page_token
+        #   @return [::String]
+        #     A token that you can send as `page_token` to retrieve the next page.
+        #     If this field is omitted, there are no subsequent pages.
+        class ListTunnelDestGroupsResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to CreateTunnelDestGroup.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. Google Cloud Project ID and location.
+        #     In the following format:
+        #     `projects/{project_number/id}/iap_tunnel/locations/{location}`.
+        # @!attribute [rw] tunnel_dest_group
+        #   @return [::Google::Cloud::Iap::V1::TunnelDestGroup]
+        #     Required. The TunnelDestGroup to create.
+        # @!attribute [rw] tunnel_dest_group_id
+        #   @return [::String]
+        #     Required. The ID to use for the TunnelDestGroup, which becomes the final
+        #     component of the resource name.
+        #
+        #     This value must be 4-63 characters, and valid characters
+        #     are `[a-z]-`.
+        class CreateTunnelDestGroupRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to GetTunnelDestGroup.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the TunnelDestGroup to be fetched.
+        #     In the following format:
+        #     `projects/{project_number/id}/iap_tunnel/locations/{location}/destGroups/{dest_group}`.
+        class GetTunnelDestGroupRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to DeleteTunnelDestGroup.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the TunnelDestGroup to delete.
+        #     In the following format:
+        #     `projects/{project_number/id}/iap_tunnel/locations/{location}/destGroups/{dest_group}`.
+        class DeleteTunnelDestGroupRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request to UpdateTunnelDestGroup.
+        # @!attribute [rw] tunnel_dest_group
+        #   @return [::Google::Cloud::Iap::V1::TunnelDestGroup]
+        #     Required. The new values for the TunnelDestGroup.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     A field mask that specifies which IAP settings to update.
+        #     If omitted, then all of the settings are updated. See
+        #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+        class UpdateTunnelDestGroupRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A TunnelDestGroup.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. Identifier for the TunnelDestGroup. Must be unique within the
+        #     project and contain only lower case letters (a-z) and dashes (-).
+        # @!attribute [rw] cidrs
+        #   @return [::Array<::String>]
+        #     Optional. Unordered list. List of CIDRs that this group applies to.
+        # @!attribute [rw] fqdns
+        #   @return [::Array<::String>]
+        #     Optional. Unordered list. List of FQDNs that this group applies to.
+        class TunnelDestGroup
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # The request sent to GetIapSettings.
         # @!attribute [rw] name
         #   @return [::String]
@@ -41,8 +153,11 @@ module Google
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
         #     The field mask specifying which IAP settings should be updated.
-        #     If omitted, the all of the settings are updated. See
-        #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+        #     If omitted, then all of the settings are updated. See
+        #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask.
+        #
+        #     Note: All IAP reauth settings must always be set together, using the
+        #     field mask: `iapSettings.accessSettings.reauthSettings`.
         class UpdateIapSettingsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -54,10 +169,10 @@ module Google
         #     Required. The resource name of the IAP protected resource.
         # @!attribute [rw] access_settings
         #   @return [::Google::Cloud::Iap::V1::AccessSettings]
-        #     Top level wrapper for all access related setting in IAP
+        #     Optional. Top level wrapper for all access related setting in IAP
         # @!attribute [rw] application_settings
         #   @return [::Google::Cloud::Iap::V1::ApplicationSettings]
-        #     Top level wrapper for all application related settings in IAP
+        #     Optional. Top level wrapper for all application related settings in IAP
         class IapSettings
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -66,22 +181,51 @@ module Google
         # Access related settings for IAP protected apps.
         # @!attribute [rw] gcip_settings
         #   @return [::Google::Cloud::Iap::V1::GcipSettings]
-        #     GCIP claims and endpoint configurations for 3p identity providers.
+        #     Optional. GCIP claims and endpoint configurations for 3p identity
+        #     providers.
         # @!attribute [rw] cors_settings
         #   @return [::Google::Cloud::Iap::V1::CorsSettings]
-        #     Configuration to allow cross-origin requests via IAP.
+        #     Optional. Configuration to allow cross-origin requests via IAP.
         # @!attribute [rw] oauth_settings
         #   @return [::Google::Cloud::Iap::V1::OAuthSettings]
-        #     Settings to configure IAP's OAuth behavior.
+        #     Optional. Settings to configure IAP's OAuth behavior.
+        # @!attribute [rw] reauth_settings
+        #   @return [::Google::Cloud::Iap::V1::ReauthSettings]
+        #     Optional. Settings to configure reauthentication policies in IAP.
+        # @!attribute [rw] allowed_domains_settings
+        #   @return [::Google::Cloud::Iap::V1::AllowedDomainsSettings]
+        #     Optional. Settings to configure and enable allowed domains.
+        # @!attribute [rw] workforce_identity_settings
+        #   @return [::Google::Cloud::Iap::V1::WorkforceIdentitySettings]
+        #     Optional. Settings to configure the workforce identity federation,
+        #     including workforce pools and OAuth 2.0 settings.
+        # @!attribute [rw] identity_sources
+        #   @return [::Array<::Google::Cloud::Iap::V1::AccessSettings::IdentitySource>]
+        #     Optional. Identity sources that IAP can use to authenticate the end user.
+        #     Only one identity source can be configured.
         class AccessSettings
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Types of identity source supported by IAP.
+          module IdentitySource
+            # IdentitySource Unspecified.
+            # When selected, IAP relies on which identity settings are fully configured
+            # to redirect the traffic to. The precedence order is
+            # WorkforceIdentitySettings > GcipSettings. If none is set, default to use
+            # Google identity.
+            IDENTITY_SOURCE_UNSPECIFIED = 0
+
+            # Use external identities set up on Google Cloud Workforce Identity
+            # Federation.
+            WORKFORCE_IDENTITY_FEDERATION = 3
+          end
         end
 
         # Allows customers to configure tenant_id for GCIP instance per-app.
         # @!attribute [rw] tenant_ids
         #   @return [::Array<::String>]
-        #     GCIP tenant ids that are linked to the IAP resource.
+        #     Optional. GCIP tenant ids that are linked to the IAP resource.
         #     tenant_ids could be a string beginning with a number character to indicate
         #     authenticating with GCIP tenant flow, or in the format of _<ProjectNumber>
         #     to indicate authenticating with GCIP agent flow.
@@ -117,7 +261,104 @@ module Google
         #     https://developers.google.com/identity/protocols/OpenIDConnect#hd-param
         #     Note: IAP does not verify that the id token's hd claim matches this value
         #     since access behavior is managed by IAM policies.
+        # @!attribute [rw] programmatic_clients
+        #   @return [::Array<::String>]
+        #     Optional. List of client ids allowed to use IAP programmatically.
         class OAuthSettings
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # WorkforceIdentitySettings allows customers to configure workforce pools and
+        # OAuth 2.0 settings to gate their applications using a third-party IdP with
+        # access control.
+        # @!attribute [rw] workforce_pools
+        #   @return [::Array<::String>]
+        #     The workforce pool resources. Only one workforce pool is accepted.
+        # @!attribute [rw] oauth2
+        #   @return [::Google::Cloud::Iap::V1::OAuth2]
+        #     OAuth 2.0 settings for IAP to perform OIDC flow with workforce identity
+        #     federation services.
+        class WorkforceIdentitySettings
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The OAuth 2.0 Settings
+        # @!attribute [rw] client_id
+        #   @return [::String]
+        #     The OAuth 2.0 client ID registered in the workforce identity federation
+        #     OAuth 2.0 Server.
+        # @!attribute [rw] client_secret
+        #   @return [::String]
+        #     Input only. The OAuth 2.0 client secret created while registering the
+        #     client ID.
+        # @!attribute [r] client_secret_sha256
+        #   @return [::String]
+        #     Output only. SHA256 hash value for the client secret. This field is
+        #     returned by IAP when the settings are retrieved.
+        class OAuth2
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Configuration for IAP reauthentication policies.
+        # @!attribute [rw] method
+        #   @return [::Google::Cloud::Iap::V1::ReauthSettings::Method]
+        #     Optional. Reauth method requested.
+        # @!attribute [rw] max_age
+        #   @return [::Google::Protobuf::Duration]
+        #     Optional. Reauth session lifetime, how long before a user has to
+        #     reauthenticate again.
+        # @!attribute [rw] policy_type
+        #   @return [::Google::Cloud::Iap::V1::ReauthSettings::PolicyType]
+        #     Optional. How IAP determines the effective policy in cases of hierarchical
+        #     policies. Policies are merged from higher in the hierarchy to lower in the
+        #     hierarchy.
+        class ReauthSettings
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Types of reauthentication methods supported by IAP.
+          module Method
+            # Reauthentication disabled.
+            METHOD_UNSPECIFIED = 0
+
+            # Prompts the user to log in again.
+            LOGIN = 1
+
+            PASSWORD = 2
+
+            # User must use their secure key 2nd factor device.
+            SECURE_KEY = 3
+
+            # User can use any enabled 2nd factor.
+            ENROLLED_SECOND_FACTORS = 4
+          end
+
+          # Type of policy in the case of hierarchical policies.
+          module PolicyType
+            # Default value. This value is unused.
+            POLICY_TYPE_UNSPECIFIED = 0
+
+            # This policy acts as a minimum to other policies, lower in the hierarchy.
+            # Effective policy may only be the same or stricter.
+            MINIMUM = 1
+
+            # This policy acts as a default if no other reauth policy is set.
+            DEFAULT = 2
+          end
+        end
+
+        # Configuration for IAP allowed domains. Lets you to restrict access to an app
+        # and allow access to only the domains that you list.
+        # @!attribute [rw] enable
+        #   @return [::Boolean]
+        #     Optional. Configuration for customers to opt in for the feature.
+        # @!attribute [rw] domains
+        #   @return [::Array<::String>]
+        #     Optional. List of trusted domains.
+        class AllowedDomainsSettings
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -125,23 +366,26 @@ module Google
         # Wrapper over application specific settings for IAP.
         # @!attribute [rw] csm_settings
         #   @return [::Google::Cloud::Iap::V1::CsmSettings]
-        #     Settings to configure IAP's behavior for a CSM mesh.
+        #     Optional. Settings to configure IAP's behavior for a service mesh.
         # @!attribute [rw] access_denied_page_settings
         #   @return [::Google::Cloud::Iap::V1::AccessDeniedPageSettings]
-        #     Customization for Access Denied page.
+        #     Optional. Customization for Access Denied page.
         # @!attribute [rw] cookie_domain
         #   @return [::Google::Protobuf::StringValue]
         #     The Domain value to set for cookies generated by IAP. This value is not
         #     validated by the API, but will be ignored at runtime if invalid.
+        # @!attribute [rw] attribute_propagation_settings
+        #   @return [::Google::Cloud::Iap::V1::AttributePropagationSettings]
+        #     Optional. Settings to configure attribute propagation.
         class ApplicationSettings
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Configuration for RCTokens generated for CSM workloads protected by IAP.
-        # RCTokens are IAP generated JWTs that can be verified at the application. The
-        # RCToken is primarily used for ISTIO deployments, and can be scoped to a
-        # single mesh by configuring the audience field accordingly
+        # Configuration for RCToken generated for service mesh workloads protected by
+        # IAP. RCToken are IAP generated JWTs that can be verified at the application.
+        # The RCToken is primarily used for service mesh deployments, and can be scoped
+        # to a single mesh by configuring the audience field accordingly.
         # @!attribute [rw] rctoken_aud
         #   @return [::Google::Protobuf::StringValue]
         #     Audience claim set in the generated RCToken. This value is not validated by
@@ -162,7 +406,97 @@ module Google
         #   @return [::Google::Protobuf::BoolValue]
         #     Whether to generate a troubleshooting URL on access denied events to this
         #     application.
+        # @!attribute [rw] remediation_token_generation_enabled
+        #   @return [::Google::Protobuf::BoolValue]
+        #     Whether to generate remediation token on access denied events to this
+        #     application.
         class AccessDeniedPageSettings
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Configuration for propagating attributes to applications protected
+        # by IAP.
+        # @!attribute [rw] expression
+        #   @return [::String]
+        #     Optional. Raw string CEL expression. Must return a list of attributes. A
+        #     maximum of 45 attributes can be selected. Expressions can select different
+        #     attribute types from `attributes`: `attributes.saml_attributes`,
+        #     `attributes.iap_attributes`. The following functions are supported:
+        #
+        #      - filter `<list>.filter(<iter_var>, <predicate>)`: Returns a subset of
+        #      `<list>` where `<predicate>` is true for every item.
+        #
+        #      - in `<var> in <list>`: Returns true if `<list>` contains `<var>`.
+        #
+        #      - selectByName `<list>.selectByName(<string>)`: Returns the attribute
+        #      in
+        #      `<list>` with the given `<string>` name, otherwise returns empty.
+        #
+        #      - emitAs `<attribute>.emitAs(<string>)`: Sets the `<attribute>` name
+        #      field to the given `<string>` for propagation in selected output
+        #      credentials.
+        #
+        #      - strict `<attribute>.strict()`: Ignores the `x-goog-iap-attr-` prefix
+        #      for the provided `<attribute>` when propagating with the `HEADER` output
+        #      credential, such as request headers.
+        #
+        #      - append `<target_list>.append(<attribute>)` OR
+        #      `<target_list>.append(<list>)`: Appends the provided `<attribute>` or
+        #      `<list>` to the end of `<target_list>`.
+        #
+        #     Example expression: `attributes.saml_attributes.filter(x, x.name in
+        #     ['test']).append(attributes.iap_attributes.selectByName('exact').emitAs('custom').strict())`
+        # @!attribute [rw] output_credentials
+        #   @return [::Array<::Google::Cloud::Iap::V1::AttributePropagationSettings::OutputCredentials>]
+        #     Optional. Which output credentials attributes selected by the CEL
+        #     expression should be propagated in. All attributes will be fully duplicated
+        #     in each selected output credential.
+        # @!attribute [rw] enable
+        #   @return [::Boolean]
+        #     Optional. Whether the provided attribute propagation settings should be
+        #     evaluated on user requests. If set to true, attributes returned from the
+        #     expression will be propagated in the set output credentials.
+        class AttributePropagationSettings
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Supported output credentials for attribute propagation. Each output
+          # credential maps to a "field" in the response. For example, selecting JWT
+          # will propagate all attributes in the IAP JWT, header in the headers, etc.
+          module OutputCredentials
+            # An output credential is required.
+            OUTPUT_CREDENTIALS_UNSPECIFIED = 0
+
+            # Propagate attributes in the headers with "x-goog-iap-attr-" prefix.
+            HEADER = 1
+
+            # Propagate attributes in the JWT of the form: `"additional_claims": {
+            # "my_attribute": ["value1", "value2"] }`
+            JWT = 2
+
+            # Propagate attributes in the RCToken of the form: `"additional_claims": {
+            # "my_attribute": ["value1", "value2"] }`
+            RCTOKEN = 3
+          end
+        end
+
+        # Request sent to IAP Expression Linter endpoint.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The resource name of the IAP protected resource.
+        # @!attribute [rw] expression
+        #   @return [::String]
+        #     Required. User input string expression. Should be of the form
+        #     `attributes.saml_attributes.filter(attribute, attribute.name in
+        #     ['\\{attribute_name}', '\\{attribute_name}'])`
+        class ValidateIapAttributeExpressionRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # IAP Expression Linter endpoint returns empty response body.
+        class ValidateIapAttributeExpressionResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

@@ -30,12 +30,24 @@ module Google
         #     The version of the entity, a strictly positive number that monotonically
         #     increases with changes to the entity.
         #
-        #     This field is set for {::Google::Cloud::Datastore::V1::EntityResult::ResultType::FULL `FULL`} entity
-        #     results.
+        #     This field is set for
+        #     {::Google::Cloud::Datastore::V1::EntityResult::ResultType::FULL `FULL`} entity results.
         #
-        #     For {::Google::Cloud::Datastore::V1::LookupResponse#missing missing} entities in `LookupResponse`, this
-        #     is the version of the snapshot that was used to look up the entity, and it
-        #     is always set except for eventually consistent reads.
+        #     For {::Google::Cloud::Datastore::V1::LookupResponse#missing missing} entities in
+        #     `LookupResponse`, this is the version of the snapshot that was used to look
+        #     up the entity, and it is always set except for eventually consistent reads.
+        # @!attribute [rw] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time at which the entity was created.
+        #     This field is set for
+        #     {::Google::Cloud::Datastore::V1::EntityResult::ResultType::FULL `FULL`} entity results.
+        #     If this entity is missing, this field will not be set.
+        # @!attribute [rw] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time at which the entity was last changed.
+        #     This field is set for
+        #     {::Google::Cloud::Datastore::V1::EntityResult::ResultType::FULL `FULL`} entity results.
+        #     If this entity is missing, this field will not be set.
         # @!attribute [rw] cursor
         #   @return [::String]
         #     A cursor that points to the position after the result entity.
@@ -65,6 +77,15 @@ module Google
         end
 
         # A query for entities.
+        #
+        # The query stages are executed in the following order:
+        # 1. kind
+        # 2. filter
+        # 3. projection
+        # 4. order + start_cursor + end_cursor
+        # 5. offset
+        # 6. limit
+        # 7. find_nearest
         # @!attribute [rw] projection
         #   @return [::Array<::Google::Cloud::Datastore::V1::Projection>]
         #     The projection to return. Defaults to returning all properties.
@@ -83,6 +104,11 @@ module Google
         #     The properties to make distinct. The query results will contain the first
         #     result for each distinct combination of values for the given properties
         #     (if empty, all results are returned).
+        #
+        #     Requires:
+        #
+        #     * If `order` is specified, the set of distinct on properties must appear
+        #     before the non-distinct on properties in `order`.
         # @!attribute [rw] start_cursor
         #   @return [::String]
         #     A starting point for the query results. Query cursors are
@@ -105,9 +131,171 @@ module Google
         #     constraints. Optional.
         #     Unspecified is interpreted as no limit.
         #     Must be >= 0 if specified.
+        # @!attribute [rw] find_nearest
+        #   @return [::Google::Cloud::Datastore::V1::FindNearest]
+        #     Optional. A potential Nearest Neighbors Search.
+        #
+        #     Applies after all other filters and ordering.
+        #
+        #     Finds the closest vector embeddings to the given query vector.
         class Query
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Datastore query for running an aggregation over a
+        # {::Google::Cloud::Datastore::V1::Query Query}.
+        # @!attribute [rw] nested_query
+        #   @return [::Google::Cloud::Datastore::V1::Query]
+        #     Nested query for aggregation
+        # @!attribute [rw] aggregations
+        #   @return [::Array<::Google::Cloud::Datastore::V1::AggregationQuery::Aggregation>]
+        #     Optional. Series of aggregations to apply over the results of the
+        #     `nested_query`.
+        #
+        #     Requires:
+        #
+        #     * A minimum of one and maximum of five aggregations per query.
+        class AggregationQuery
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Defines an aggregation that produces a single result.
+          # @!attribute [rw] count
+          #   @return [::Google::Cloud::Datastore::V1::AggregationQuery::Aggregation::Count]
+          #     Count aggregator.
+          #
+          #     Note: The following fields are mutually exclusive: `count`, `sum`, `avg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] sum
+          #   @return [::Google::Cloud::Datastore::V1::AggregationQuery::Aggregation::Sum]
+          #     Sum aggregator.
+          #
+          #     Note: The following fields are mutually exclusive: `sum`, `count`, `avg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] avg
+          #   @return [::Google::Cloud::Datastore::V1::AggregationQuery::Aggregation::Avg]
+          #     Average aggregator.
+          #
+          #     Note: The following fields are mutually exclusive: `avg`, `count`, `sum`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] alias
+          #   @return [::String]
+          #     Optional. Optional name of the property to store the result of the
+          #     aggregation.
+          #
+          #     If not provided, Datastore will pick a default name following the format
+          #     `property_<incremental_id++>`. For example:
+          #
+          #     ```
+          #     AGGREGATE
+          #       COUNT_UP_TO(1) AS count_up_to_1,
+          #       COUNT_UP_TO(2),
+          #       COUNT_UP_TO(3) AS count_up_to_3,
+          #       COUNT(*)
+          #     OVER (
+          #       ...
+          #     );
+          #     ```
+          #
+          #     becomes:
+          #
+          #     ```
+          #     AGGREGATE
+          #       COUNT_UP_TO(1) AS count_up_to_1,
+          #       COUNT_UP_TO(2) AS property_1,
+          #       COUNT_UP_TO(3) AS count_up_to_3,
+          #       COUNT(*) AS property_2
+          #     OVER (
+          #       ...
+          #     );
+          #     ```
+          #
+          #     Requires:
+          #
+          #     * Must be unique across all aggregation aliases.
+          #     * Conform to [entity property
+          #     name][google.datastore.v1.Entity.properties] limitations.
+          class Aggregation
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Count of entities that match the query.
+            #
+            # The `COUNT(*)` aggregation function operates on the entire entity
+            # so it does not require a field reference.
+            # @!attribute [rw] up_to
+            #   @return [::Google::Protobuf::Int64Value]
+            #     Optional. Optional constraint on the maximum number of entities to
+            #     count.
+            #
+            #     This provides a way to set an upper bound on the number of entities
+            #     to scan, limiting latency, and cost.
+            #
+            #     Unspecified is interpreted as no bound.
+            #
+            #     If a zero value is provided, a count result of zero should always be
+            #     expected.
+            #
+            #     High-Level Example:
+            #
+            #     ```
+            #     AGGREGATE COUNT_UP_TO(1000) OVER ( SELECT * FROM k );
+            #     ```
+            #
+            #     Requires:
+            #
+            #     * Must be non-negative when present.
+            class Count
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Sum of the values of the requested property.
+            #
+            # * Only numeric values will be aggregated. All non-numeric values
+            # including `NULL` are skipped.
+            #
+            # * If the aggregated values contain `NaN`, returns `NaN`. Infinity math
+            # follows IEEE-754 standards.
+            #
+            # * If the aggregated value set is empty, returns 0.
+            #
+            # * Returns a 64-bit integer if all aggregated numbers are integers and the
+            # sum result does not overflow. Otherwise, the result is returned as a
+            # double. Note that even if all the aggregated values are integers, the
+            # result is returned as a double if it cannot fit within a 64-bit signed
+            # integer. When this occurs, the returned value will lose precision.
+            #
+            # * When underflow occurs, floating-point aggregation is non-deterministic.
+            # This means that running the same query repeatedly without any changes to
+            # the underlying values could produce slightly different results each
+            # time. In those cases, values should be stored as integers over
+            # floating-point numbers.
+            # @!attribute [rw] property
+            #   @return [::Google::Cloud::Datastore::V1::PropertyReference]
+            #     The property to aggregate on.
+            class Sum
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Average of the values of the requested property.
+            #
+            # * Only numeric values will be aggregated. All non-numeric values
+            # including `NULL` are skipped.
+            #
+            # * If the aggregated values contain `NaN`, returns `NaN`. Infinity math
+            # follows IEEE-754 standards.
+            #
+            # * If the aggregated value set is empty, returns `NULL`.
+            #
+            # * Always returns the result as a double.
+            # @!attribute [rw] property
+            #   @return [::Google::Cloud::Datastore::V1::PropertyReference]
+            #     The property to aggregate on.
+            class Avg
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
         end
 
         # A representation of a kind.
@@ -122,8 +310,13 @@ module Google
         # A reference to a property relative to the kind expressions.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The name of the property.
-        #     If name includes "."s, it may be interpreted as a property name path.
+        #     A reference to a property.
+        #
+        #     Requires:
+        #
+        #     * MUST be a dot-delimited (`.`) string of segments, where each segment
+        #     conforms to {::Google::Cloud::Datastore::V1::Entity#properties entity property name}
+        #     limitations.
         class PropertyReference
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -166,9 +359,13 @@ module Google
         # @!attribute [rw] composite_filter
         #   @return [::Google::Cloud::Datastore::V1::CompositeFilter]
         #     A composite filter.
+        #
+        #     Note: The following fields are mutually exclusive: `composite_filter`, `property_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] property_filter
         #   @return [::Google::Cloud::Datastore::V1::PropertyFilter]
         #     A filter on a property.
+        #
+        #     Note: The following fields are mutually exclusive: `property_filter`, `composite_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Filter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -181,7 +378,10 @@ module Google
         # @!attribute [rw] filters
         #   @return [::Array<::Google::Cloud::Datastore::V1::Filter>]
         #     The list of filters to combine.
-        #     Must contain at least one filter.
+        #
+        #     Requires:
+        #
+        #     * At least one filter is present.
         class CompositeFilter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -193,6 +393,9 @@ module Google
 
             # The results are required to satisfy each of the combined filters.
             AND = 1
+
+            # Documents are required to satisfy at least one of the combined filters.
+            OR = 2
           end
         end
 
@@ -215,23 +418,135 @@ module Google
             # Unspecified. This value must not be used.
             OPERATOR_UNSPECIFIED = 0
 
-            # Less than.
+            # The given `property` is less than the given `value`.
+            #
+            # Requires:
+            #
+            # * That `property` comes first in `order_by`.
             LESS_THAN = 1
 
-            # Less than or equal.
+            # The given `property` is less than or equal to the given `value`.
+            #
+            # Requires:
+            #
+            # * That `property` comes first in `order_by`.
             LESS_THAN_OR_EQUAL = 2
 
-            # Greater than.
+            # The given `property` is greater than the given `value`.
+            #
+            # Requires:
+            #
+            # * That `property` comes first in `order_by`.
             GREATER_THAN = 3
 
-            # Greater than or equal.
+            # The given `property` is greater than or equal to the given `value`.
+            #
+            # Requires:
+            #
+            # * That `property` comes first in `order_by`.
             GREATER_THAN_OR_EQUAL = 4
 
-            # Equal.
+            # The given `property` is equal to the given `value`.
             EQUAL = 5
 
-            # Has ancestor.
+            # The given `property` is equal to at least one value in the given array.
+            #
+            # Requires:
+            #
+            # * That `value` is a non-empty `ArrayValue`, subject to disjunction
+            #   limits.
+            # * No `NOT_IN` is in the same query.
+            IN = 6
+
+            # The given `property` is not equal to the given `value`.
+            #
+            # Requires:
+            #
+            # * No other `NOT_EQUAL` or `NOT_IN` is in the same query.
+            # * That `property` comes first in the `order_by`.
+            NOT_EQUAL = 9
+
+            # Limit the result set to the given entity and its descendants.
+            #
+            # Requires:
+            #
+            # * That `value` is an entity key.
+            # * All evaluated disjunctions must have the same `HAS_ANCESTOR` filter.
             HAS_ANCESTOR = 11
+
+            # The value of the `property` is not in the given array.
+            #
+            # Requires:
+            #
+            # * That `value` is a non-empty `ArrayValue` with at most 10 values.
+            # * No other `OR`, `IN`, `NOT_IN`, `NOT_EQUAL` is in the same query.
+            # * That `field` comes first in the `order_by`.
+            NOT_IN = 13
+          end
+        end
+
+        # Nearest Neighbors search config. The ordering provided by FindNearest
+        # supersedes the order_by stage. If multiple documents have the same vector
+        # distance, the returned document order is not guaranteed to be stable between
+        # queries.
+        # @!attribute [rw] vector_property
+        #   @return [::Google::Cloud::Datastore::V1::PropertyReference]
+        #     Required. An indexed vector property to search upon. Only documents which
+        #     contain vectors whose dimensionality match the query_vector can be
+        #     returned.
+        # @!attribute [rw] query_vector
+        #   @return [::Google::Cloud::Datastore::V1::Value]
+        #     Required. The query vector that we are searching on. Must be a vector of no
+        #     more than 2048 dimensions.
+        # @!attribute [rw] distance_measure
+        #   @return [::Google::Cloud::Datastore::V1::FindNearest::DistanceMeasure]
+        #     Required. The Distance Measure to use, required.
+        # @!attribute [rw] limit
+        #   @return [::Google::Protobuf::Int32Value]
+        #     Required. The number of nearest neighbors to return. Must be a positive
+        #     integer of no more than 100.
+        # @!attribute [rw] distance_result_property
+        #   @return [::String]
+        #     Optional. Optional name of the field to output the result of the vector
+        #     distance calculation. Must conform to [entity
+        #     property][google.datastore.v1.Entity.properties] limitations.
+        # @!attribute [rw] distance_threshold
+        #   @return [::Google::Protobuf::DoubleValue]
+        #     Optional. Option to specify a threshold for which no less similar documents
+        #     will be returned. The behavior of the specified `distance_measure` will
+        #     affect the meaning of the distance threshold. Since DOT_PRODUCT distances
+        #     increase when the vectors are more similar, the comparison is inverted.
+        #
+        #     For EUCLIDEAN, COSINE: WHERE distance <= distance_threshold
+        #     For DOT_PRODUCT:       WHERE distance >= distance_threshold
+        class FindNearest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The distance measure to use when comparing vectors.
+          module DistanceMeasure
+            # Should not be set.
+            DISTANCE_MEASURE_UNSPECIFIED = 0
+
+            # Measures the EUCLIDEAN distance between the vectors. See
+            # [Euclidean](https://en.wikipedia.org/wiki/Euclidean_distance) to learn
+            # more. The resulting distance decreases the more similar two vectors are.
+            EUCLIDEAN = 1
+
+            # COSINE distance compares vectors based on the angle between them, which
+            # allows you to measure similarity that isn't based on the vectors
+            # magnitude. We recommend using DOT_PRODUCT with unit normalized vectors
+            # instead of COSINE distance, which is mathematically equivalent with
+            # better performance. See [Cosine
+            # Similarity](https://en.wikipedia.org/wiki/Cosine_similarity) to learn
+            # more about COSINE similarity and COSINE distance. The resulting COSINE
+            # distance decreases the more similar two vectors are.
+            COSINE = 2
+
+            # Similar to cosine but is affected by the magnitude of the vectors. See
+            # [Dot Product](https://en.wikipedia.org/wiki/Dot_product) to learn more.
+            # The resulting distance increases the more similar two vectors are.
+            DOT_PRODUCT = 3
           end
         end
 
@@ -279,10 +594,14 @@ module Google
         # @!attribute [rw] value
         #   @return [::Google::Cloud::Datastore::V1::Value]
         #     A value parameter.
+        #
+        #     Note: The following fields are mutually exclusive: `value`, `cursor`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cursor
         #   @return [::String]
         #     A query cursor. Query cursors are returned in query
         #     result batches.
+        #
+        #     Note: The following fields are mutually exclusive: `cursor`, `value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class GqlQueryParameter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -319,6 +638,18 @@ module Google
         #     can have a greater snapshot version number. Each batch's snapshot version
         #     is valid for all preceding batches.
         #     The value will be zero for eventually consistent queries.
+        # @!attribute [rw] read_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Read timestamp this batch was returned from.
+        #     This applies to the range of results from the query's `start_cursor` (or
+        #     the beginning of the query if no cursor was given) to this batch's
+        #     `end_cursor` (not the query's `end_cursor`).
+        #
+        #     In a single transaction, subsequent query result batches for the same query
+        #     can have a greater timestamp. Each batch's read timestamp
+        #     is valid for all preceding batches.
+        #     This value will not be set for eventually consistent queries in Cloud
+        #     Datastore.
         class QueryResultBatch
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

@@ -22,7 +22,6 @@ module Google
     module Retail
       module V2
         # Google Cloud Storage location for input content.
-        # format.
         # @!attribute [rw] input_uris
         #   @return [::Array<::String>]
         #     Required. Google Cloud Storage URIs to input files. URI can be up to
@@ -51,6 +50,16 @@ module Google
         #     {::Google::Cloud::Retail::V2::UserEvent UserEvent} per line.
         #     * `user_event_ga360`: Using
         #       https://support.google.com/analytics/answer/3437719.
+        #
+        #     Supported values for control imports:
+        #
+        #     * `control` (default): One JSON {::Google::Cloud::Retail::V2::Control Control}
+        #     per line.
+        #
+        #     Supported values for catalog attribute imports:
+        #
+        #     * `catalog_attribute` (default): One CSV
+        #     {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} per line.
         class GcsSource
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -61,9 +70,8 @@ module Google
         #   @return [::Google::Type::Date]
         #     BigQuery time partitioned table's _PARTITIONDATE in YYYY-MM-DD format.
         #
-        #     Only supported when
-        #     {::Google::Cloud::Retail::V2::ImportProductsRequest#reconciliation_mode ImportProductsRequest.reconciliation_mode}
-        #     is set to `FULL`.
+        #     Only supported in
+        #     {::Google::Cloud::Retail::V2::ImportProductsRequest ImportProductsRequest}.
         # @!attribute [rw] project_id
         #   @return [::String]
         #     The project ID (can be project # or ID) that the BigQuery source is in with
@@ -98,8 +106,18 @@ module Google
         #
         #     * `user_event` (default): One JSON
         #     {::Google::Cloud::Retail::V2::UserEvent UserEvent} per line.
-        #     * `user_event_ga360`: Using
+        #     * `user_event_ga360`:
+        #       The schema is available here:
         #       https://support.google.com/analytics/answer/3437719.
+        #     * `user_event_ga4`:
+        #       The schema is available here:
+        #       https://support.google.com/analytics/answer/7029846.
+        #
+        #     Supported values for autocomplete imports:
+        #
+        #     * `suggestions` (default): One JSON completion suggestion per line.
+        #     * `denylist`:  One JSON deny suggestion per line.
+        #     * `allowlist`:  One JSON allow suggestion per line.
         class BigQuerySource
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -128,9 +146,9 @@ module Google
         # Configuration of destination for Import related errors.
         # @!attribute [rw] gcs_prefix
         #   @return [::String]
-        #     Google Cloud Storage path for import errors. This must be an empty,
-        #     existing Cloud Storage bucket. Import errors will be written to a file in
-        #     this bucket, one per line, as a JSON-encoded
+        #     Google Cloud Storage prefix for import errors. This must be an empty,
+        #     existing Cloud Storage directory. Import errors are written to
+        #     sharded files in this directory, one per line, as a JSON-encoded
         #     `google.rpc.Status` message.
         class ImportErrorsConfig
           include ::Google::Protobuf::MessageExts
@@ -146,16 +164,9 @@ module Google
         #     If no updateMask is specified, requires products.create permission.
         #     If updateMask is specified, requires products.update permission.
         # @!attribute [rw] request_id
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
-        #     Unique identifier provided by client, within the ancestor
-        #     dataset scope. Ensures idempotency and used for request deduplication.
-        #     Server-generated if unspecified. Up to 128 characters long and must match
-        #     the pattern: `[a-zA-Z0-9_]+`. This is returned as [Operation.name][] in
-        #     {::Google::Cloud::Retail::V2::ImportMetadata ImportMetadata}.
-        #
-        #     Only supported when
-        #     {::Google::Cloud::Retail::V2::ImportProductsRequest#reconciliation_mode ImportProductsRequest.reconciliation_mode}
-        #     is set to `FULL`.
+        #     Deprecated. This field has no effect.
         # @!attribute [rw] input_config
         #   @return [::Google::Cloud::Retail::V2::ProductInputConfig]
         #     Required. The desired input location of the data.
@@ -164,8 +175,9 @@ module Google
         #     The desired location of errors incurred during the Import.
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
-        #     Indicates which fields in the provided imported 'products' to update. If
-        #     not set, will by default update all fields.
+        #     Indicates which fields in the provided imported `products` to update. If
+        #     not set, all fields are updated. If provided, only the existing product
+        #     fields are updated. Missing products will not be created.
         # @!attribute [rw] reconciliation_mode
         #   @return [::Google::Cloud::Retail::V2::ImportProductsRequest::ReconciliationMode]
         #     The mode of reconciliation between existing products and the products to be
@@ -173,11 +185,18 @@ module Google
         #     {::Google::Cloud::Retail::V2::ImportProductsRequest::ReconciliationMode::INCREMENTAL ReconciliationMode.INCREMENTAL}.
         # @!attribute [rw] notification_pubsub_topic
         #   @return [::String]
-        #     Pub/Sub topic for receiving notification. If this field is set,
-        #     when the import is finished, a notification will be sent to
-        #     specified Pub/Sub topic. The message data will be JSON string of a
+        #     Full Pub/Sub topic name for receiving notification. If this field is set,
+        #     when the import is finished, a notification is sent to
+        #     specified Pub/Sub topic. The message data is JSON string of a
         #     {::Google::Longrunning::Operation Operation}.
-        #     Format of the Pub/Sub topic is `projects/{project}/topics/{topic}`.
+        #
+        #     Format of the Pub/Sub topic is `projects/{project}/topics/{topic}`. It has
+        #     to be within the same project as
+        #     {::Google::Cloud::Retail::V2::ImportProductsRequest#parent ImportProductsRequest.parent}.
+        #     Make sure that both
+        #     `cloud-retail-customer-data-access@system.gserviceaccount.com` and
+        #     `service-<project number>@gcp-sa-retail.iam.gserviceaccount.com`
+        #     have the `pubsub.topics.publish` IAM permission on the topic.
         #
         #     Only supported when
         #     {::Google::Cloud::Retail::V2::ImportProductsRequest#reconciliation_mode ImportProductsRequest.reconciliation_mode}
@@ -197,17 +216,6 @@ module Google
 
             # Calculates diff and replaces the entire product dataset. Existing
             # products may be deleted if they are not present in the source location.
-            #
-            # Can only be while using
-            # {::Google::Cloud::Retail::V2::BigQuerySource BigQuerySource}.
-            #
-            # Add the IAM permission "BigQuery Data Viewer" for
-            # cloud-retail-customer-data-access@system.gserviceaccount.com before
-            # using this feature otherwise an error is thrown.
-            #
-            # This feature is only available for users who have Retail Search enabled.
-            # Please submit a form [here](https://cloud.google.com/contact) to contact
-            # cloud sales if you are interested in using Retail Search.
             FULL = 2
           end
         end
@@ -240,8 +248,8 @@ module Google
         # @!attribute [rw] notification_pubsub_topic
         #   @return [::String]
         #     Pub/Sub topic for receiving notification. If this field is set,
-        #     when the import is finished, a notification will be sent to
-        #     specified Pub/Sub topic. The message data will be JSON string of a
+        #     when the import is finished, a notification is sent to
+        #     specified Pub/Sub topic. The message data is JSON string of a
         #     {::Google::Longrunning::Operation Operation}.
         #     Format of the Pub/Sub topic is `projects/{project}/topics/{topic}`.
         class ImportCompletionDataRequest
@@ -253,12 +261,18 @@ module Google
         # @!attribute [rw] product_inline_source
         #   @return [::Google::Cloud::Retail::V2::ProductInlineSource]
         #     The Inline source for the input content for products.
+        #
+        #     Note: The following fields are mutually exclusive: `product_inline_source`, `gcs_source`, `big_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] gcs_source
         #   @return [::Google::Cloud::Retail::V2::GcsSource]
         #     Google Cloud Storage location for the input content.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_source`, `product_inline_source`, `big_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] big_query_source
         #   @return [::Google::Cloud::Retail::V2::BigQuerySource]
         #     BigQuery input source.
+        #
+        #     Note: The following fields are mutually exclusive: `big_query_source`, `product_inline_source`, `gcs_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ProductInputConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -268,12 +282,18 @@ module Google
         # @!attribute [rw] user_event_inline_source
         #   @return [::Google::Cloud::Retail::V2::UserEventInlineSource]
         #     Required. The Inline source for the input content for UserEvents.
+        #
+        #     Note: The following fields are mutually exclusive: `user_event_inline_source`, `gcs_source`, `big_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] gcs_source
         #   @return [::Google::Cloud::Retail::V2::GcsSource]
         #     Required. Google Cloud Storage location for the input content.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_source`, `user_event_inline_source`, `big_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] big_query_source
         #   @return [::Google::Cloud::Retail::V2::BigQuerySource]
         #     Required. BigQuery input source.
+        #
+        #     Note: The following fields are mutually exclusive: `big_query_source`, `user_event_inline_source`, `gcs_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class UserEventInputConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -292,7 +312,7 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Metadata related to the progress of the Import operation. This will be
+        # Metadata related to the progress of the Import operation. This is
         # returned by the google.longrunning.Operation.metadata field.
         # @!attribute [rw] create_time
         #   @return [::Google::Protobuf::Timestamp]
@@ -308,14 +328,14 @@ module Google
         #   @return [::Integer]
         #     Count of entries that encountered errors while processing.
         # @!attribute [rw] request_id
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
-        #     Id of the request / operation. This is parroting back the requestId
-        #     that was passed in the request.
+        #     Deprecated. This field is never set.
         # @!attribute [rw] notification_pubsub_topic
         #   @return [::String]
         #     Pub/Sub topic for receiving notification. If this field is set,
-        #     when the import is finished, a notification will be sent to
-        #     specified Pub/Sub topic. The message data will be JSON string of a
+        #     when the import is finished, a notification is sent to
+        #     specified Pub/Sub topic. The message data is JSON string of a
         #     {::Google::Longrunning::Operation Operation}.
         #     Format of the Pub/Sub topic is `projects/{project}/topics/{topic}`.
         class ImportMetadata

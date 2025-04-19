@@ -3,6 +3,7 @@
     ".gitignore",
     ".repo-metadata.json",
     ".rubocop.yml",
+    ".toys.rb",
     ".yardopts",
     "AUTHENTICATION.md",
     "CHANGELOG.md",
@@ -21,6 +22,7 @@
   "static": [
     ".OwlBot.yaml",
     "MIGRATING.md",
-    "acceptance/google/cloud/automl/v1beta1/automl_service_smoke_test.rb"
+    "acceptance/google/cloud/automl/v1beta1/automl_service_smoke_test.rb",
+    "lib/google/cloud/automl/helpers.rb"
   ]
 }

@@ -1,5 +1,138 @@
 # Release History
 
+### 1.52.0 (2025-03-10)
+
+#### Features
+
+* Update minimum Ruby version to 3.0 ([#29261](https://github.com/googleapis/google-cloud-ruby/issues/29261)) 
+
+### 1.51.1 (2024-12-13)
+
+#### Bug Fixes
+
+* Allow inserts to a target dataset/table in another project ([#28097](https://github.com/googleapis/google-cloud-ruby/issues/28097)) 
+
+### 1.51.0 (2024-12-04)
+
+#### Features
+
+* load jobs with dest tables in another project ([#27681](https://github.com/googleapis/google-cloud-ruby/issues/27681)) 
+#### Bug Fixes
+
+* remove reload! call on patch_table ([#27684](https://github.com/googleapis/google-cloud-ruby/issues/27684)) 
+
+### 1.50.0 (2024-06-27)
+
+#### Features
+
+* add method in load_job to set column name character map ([#26135](https://github.com/googleapis/google-cloud-ruby/issues/26135)) 
+
+### 1.49.1 (2024-06-05)
+
+#### Bug Fixes
+
+* Added bigdecimal to the gem dependencies ([#26012](https://github.com/googleapis/google-cloud-ruby/issues/26012)) 
+
+### 1.49.0 (2024-03-10)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 1.48.1 (2024-02-10)
+
+#### Documentation
+
+* Correct an example snippet related to storage_billing_model ([#24796](https://github.com/googleapis/google-cloud-ruby/issues/24796)) 
+
+### 1.48.0 (2024-02-08)
+
+#### Features
+
+* Support accessing storage_ billing_model field in a dataset ([#24755](https://github.com/googleapis/google-cloud-ruby/issues/24755)) 
+
+### 1.47.0 (2024-02-05)
+
+#### Features
+
+* add json type support ([#24491](https://github.com/googleapis/google-cloud-ruby/issues/24491)) 
+
+### 1.46.1 (2024-01-26)
+
+#### Bug Fixes
+
+* Raise an error on mismatching universe domain ([#24485](https://github.com/googleapis/google-cloud-ruby/issues/24485)) 
+
+### 1.46.0 (2024-01-25)
+
+#### Features
+
+* Support for universe_domain ([#24448](https://github.com/googleapis/google-cloud-ruby/issues/24448)) 
+
+### 1.45.0 (2023-09-25)
+
+#### Features
+
+* support load job with session ([#23320](https://github.com/googleapis/google-cloud-ruby/issues/23320)) 
+
+### 1.44.2 (2023-09-12)
+
+#### Bug Fixes
+
+* Avoid dataset reload when accessing location ([#22905](https://github.com/googleapis/google-cloud-ruby/issues/22905)) 
+
+### 1.44.1 (2023-09-08)
+
+#### Bug Fixes
+
+* remove unnecessary warning ([#22904](https://github.com/googleapis/google-cloud-ruby/issues/22904)) 
+
+### 1.44.0 (2023-09-04)
+
+#### Features
+
+* support BIGQUERY_EMULATOR_HOST env variable for endpoint 
+
+### 1.43.1 (2023-05-19)
+
+#### Bug Fixes
+
+* ensure schema for data parsing ([#21616](https://github.com/googleapis/google-cloud-ruby/issues/21616)) 
+
+### 1.43.0 (2023-05-10)
+
+#### Features
+
+* Added support for default value expression ([#21540](https://github.com/googleapis/google-cloud-ruby/issues/21540)) 
+
+### 1.42.0 (2023-01-15)
+
+#### Features
+
+* Added support for authorized dataset ([#19442](https://github.com/googleapis/google-cloud-ruby/issues/19442)) 
+* Added support for tags in dataset ([#19350](https://github.com/googleapis/google-cloud-ruby/issues/19350)) 
+
+### 1.41.0 (2023-01-05)
+
+#### Features
+
+* Add support for partial projection of table metadata 
+#### Bug Fixes
+
+* Fix querying of array of structs in named parameters ([#19466](https://github.com/googleapis/google-cloud-ruby/issues/19466)) 
+
+### 1.40.0 (2022-12-14)
+
+#### Features
+
+* support table snapshot and clone ([#19354](https://github.com/googleapis/google-cloud-ruby/issues/19354)) 
+
+### 1.39.0 (2022-07-27)
+
+#### Features
+
+* Update minimum Ruby version to 2.6 ([#18871](https://github.com/googleapis/google-cloud-ruby/issues/18871)) 
+
 ### 1.38.1 / 2022-01-13
 
 #### Bug Fixes

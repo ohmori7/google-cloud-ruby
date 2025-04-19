@@ -18,6 +18,8 @@
 
 require "google/cloud/errors"
 require "google/cloud/kms/v1/ekm_service_pb"
+require "google/cloud/location"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -34,6 +36,12 @@ module Google
           # * {::Google::Cloud::Kms::V1::EkmConnection EkmConnection}
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudkms.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -115,6 +123,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @ekm_service_stub.universe_domain
+            end
+
+            ##
             # Create a new EkmService client object.
             #
             # @example
@@ -147,8 +164,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -159,11 +177,64 @@ module Google
 
               @ekm_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Kms::V1::EkmService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @ekm_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @ekm_service_stub.endpoint
+                config.universe_domain = @ekm_service_stub.universe_domain
+                config.logger = @ekm_service_stub.logger if config.respond_to? :logger=
+              end
+
+              @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @ekm_service_stub.endpoint
+                config.universe_domain = @ekm_service_stub.universe_domain
+                config.logger = @ekm_service_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # Get the associated client for mix-in of the IAMPolicy.
+            #
+            # @return [Google::Iam::V1::IAMPolicy::Client]
+            #
+            attr_reader :iam_policy_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @ekm_service_stub.logger
             end
 
             # Service calls
@@ -232,13 +303,11 @@ module Google
             #   # Call the list_ekm_connections method.
             #   result = client.list_ekm_connections request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Kms::V1::EkmConnection.
-            #     p response
+            #     p item
             #   end
             #
             def list_ekm_connections request, options = nil
@@ -252,10 +321,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_ekm_connections.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -277,7 +347,7 @@ module Google
               @ekm_service_stub.call_rpc :list_ekm_connections, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @ekm_service_stub, :list_ekm_connections, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -340,10 +410,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_ekm_connection.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -364,7 +435,6 @@ module Google
 
               @ekm_service_stub.call_rpc :get_ekm_connection, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -434,10 +504,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_ekm_connection.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -458,7 +529,6 @@ module Google
 
               @ekm_service_stub.call_rpc :create_ekm_connection, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -522,10 +592,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_ekm_connection.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -546,7 +617,271 @@ module Google
 
               @ekm_service_stub.call_rpc :update_ekm_connection, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Returns the {::Google::Cloud::Kms::V1::EkmConfig EkmConfig} singleton resource
+            # for a given project and location.
+            #
+            # @overload get_ekm_config(request, options = nil)
+            #   Pass arguments to `get_ekm_config` via a request object, either of type
+            #   {::Google::Cloud::Kms::V1::GetEkmConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Kms::V1::GetEkmConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_ekm_config(name: nil)
+            #   Pass arguments to `get_ekm_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The {::Google::Cloud::Kms::V1::EkmConfig#name name} of the
+            #     {::Google::Cloud::Kms::V1::EkmConfig EkmConfig} to get.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Kms::V1::EkmConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Kms::V1::EkmConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::EkmService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::GetEkmConfigRequest.new
+            #
+            #   # Call the get_ekm_config method.
+            #   result = client.get_ekm_config request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::EkmConfig.
+            #   p result
+            #
+            def get_ekm_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Kms::V1::GetEkmConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_ekm_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_ekm_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_ekm_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @ekm_service_stub.call_rpc :get_ekm_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates the {::Google::Cloud::Kms::V1::EkmConfig EkmConfig} singleton resource
+            # for a given project and location.
+            #
+            # @overload update_ekm_config(request, options = nil)
+            #   Pass arguments to `update_ekm_config` via a request object, either of type
+            #   {::Google::Cloud::Kms::V1::UpdateEkmConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Kms::V1::UpdateEkmConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_ekm_config(ekm_config: nil, update_mask: nil)
+            #   Pass arguments to `update_ekm_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param ekm_config [::Google::Cloud::Kms::V1::EkmConfig, ::Hash]
+            #     Required. {::Google::Cloud::Kms::V1::EkmConfig EkmConfig} with updated values.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     Required. List of fields to be updated in this request.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Kms::V1::EkmConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Kms::V1::EkmConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::EkmService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::UpdateEkmConfigRequest.new
+            #
+            #   # Call the update_ekm_config method.
+            #   result = client.update_ekm_config request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::EkmConfig.
+            #   p result
+            #
+            def update_ekm_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Kms::V1::UpdateEkmConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_ekm_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.ekm_config&.name
+                header_params["ekm_config.name"] = request.ekm_config.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_ekm_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_ekm_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @ekm_service_stub.call_rpc :update_ekm_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Verifies that Cloud KMS can successfully connect to the external key
+            # manager specified by an {::Google::Cloud::Kms::V1::EkmConnection EkmConnection}.
+            # If there is an error connecting to the EKM, this method returns a
+            # FAILED_PRECONDITION status containing structured information as described
+            # at https://cloud.google.com/kms/docs/reference/ekm_errors.
+            #
+            # @overload verify_connectivity(request, options = nil)
+            #   Pass arguments to `verify_connectivity` via a request object, either of type
+            #   {::Google::Cloud::Kms::V1::VerifyConnectivityRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Kms::V1::VerifyConnectivityRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload verify_connectivity(name: nil)
+            #   Pass arguments to `verify_connectivity` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The {::Google::Cloud::Kms::V1::EkmConnection#name name} of the
+            #     {::Google::Cloud::Kms::V1::EkmConnection EkmConnection} to verify.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Kms::V1::VerifyConnectivityResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Kms::V1::VerifyConnectivityResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::EkmService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::VerifyConnectivityRequest.new
+            #
+            #   # Call the verify_connectivity method.
+            #   result = client.verify_connectivity request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::VerifyConnectivityResponse.
+            #   p result
+            #
+            def verify_connectivity request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Kms::V1::VerifyConnectivityRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.verify_connectivity.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.verify_connectivity.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.verify_connectivity.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @ekm_service_stub.call_rpc :verify_connectivity, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -582,20 +917,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudkms.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -630,11 +972,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudkms.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudkms.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -649,6 +1005,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -667,6 +1025,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -707,6 +1073,21 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :update_ekm_connection
+                ##
+                # RPC-specific configuration for `get_ekm_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_ekm_config
+                ##
+                # RPC-specific configuration for `update_ekm_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_ekm_config
+                ##
+                # RPC-specific configuration for `verify_connectivity`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :verify_connectivity
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -718,6 +1099,12 @@ module Google
                   @create_ekm_connection = ::Gapic::Config::Method.new create_ekm_connection_config
                   update_ekm_connection_config = parent_rpcs.update_ekm_connection if parent_rpcs.respond_to? :update_ekm_connection
                   @update_ekm_connection = ::Gapic::Config::Method.new update_ekm_connection_config
+                  get_ekm_config_config = parent_rpcs.get_ekm_config if parent_rpcs.respond_to? :get_ekm_config
+                  @get_ekm_config = ::Gapic::Config::Method.new get_ekm_config_config
+                  update_ekm_config_config = parent_rpcs.update_ekm_config if parent_rpcs.respond_to? :update_ekm_config
+                  @update_ekm_config = ::Gapic::Config::Method.new update_ekm_config_config
+                  verify_connectivity_config = parent_rpcs.verify_connectivity if parent_rpcs.respond_to? :verify_connectivity
+                  @verify_connectivity = ::Gapic::Config::Method.new verify_connectivity_config
 
                   yield self if block_given?
                 end

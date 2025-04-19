@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/datacatalog/v1/datacatalog_pb"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -27,10 +28,18 @@ module Google
           ##
           # Client for the DataCatalog service.
           #
+          # Deprecated: Please use Dataplex Catalog instead.
+          #
           # Data Catalog API service allows you to discover, understand, and manage
           # your data.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "datacatalog.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -41,6 +50,8 @@ module Google
             #
             # See {::Google::Cloud::DataCatalog::V1::DataCatalog::Client::Configuration}
             # for a description of the configuration fields.
+            #
+            # @deprecated This service is deprecated and may be removed in the next major version update.
             #
             # @example
             #
@@ -66,45 +77,8 @@ module Google
                 default_config = Client::Configuration.new parent_config
 
                 default_config.timeout = 60.0
-
-                default_config.rpcs.search_catalog.timeout = 60.0
-                default_config.rpcs.search_catalog.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.get_entry_group.timeout = 60.0
-                default_config.rpcs.get_entry_group.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.list_entry_groups.timeout = 60.0
-                default_config.rpcs.list_entry_groups.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.get_entry.timeout = 60.0
-                default_config.rpcs.get_entry.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.lookup_entry.timeout = 60.0
-                default_config.rpcs.lookup_entry.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.list_entries.timeout = 60.0
-                default_config.rpcs.list_entries.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.list_tags.timeout = 60.0
-                default_config.rpcs.list_tags.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
-                }
-
-                default_config.rpcs.get_iam_policy.timeout = 60.0
-                default_config.rpcs.get_iam_policy.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
+                default_config.retry_policy = {
+                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14, 8, 13]
                 }
 
                 default_config
@@ -131,6 +105,15 @@ module Google
             def configure
               yield @config if block_given?
               @config
+            end
+
+            ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @data_catalog_stub.universe_domain
             end
 
             ##
@@ -166,8 +149,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -176,13 +160,65 @@ module Google
               @quota_project_id = @config.quota_project
               @quota_project_id ||= credentials.quota_project_id if credentials.respond_to? :quota_project_id
 
+              @operations_client = Operations.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
+              end
+
               @data_catalog_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::DataCatalog::V1::DataCatalog::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @data_catalog_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @data_catalog_stub.endpoint
+                config.universe_domain = @data_catalog_stub.universe_domain
+                config.logger = @data_catalog_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for long-running operations.
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::DataCatalog::Operations]
+            #
+            attr_reader :operations_client
+
+            ##
+            # Get the associated client for mix-in of the IAMPolicy.
+            #
+            # @return [Google::Iam::V1::IAMPolicy::Client]
+            #
+            attr_reader :iam_policy_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @data_catalog_stub.logger
             end
 
             # Service calls
@@ -204,6 +240,8 @@ module Google
             # For more information, see [Data Catalog search syntax]
             # (https://cloud.google.com/data-catalog/docs/how-to/search-reference).
             #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
             # @overload search_catalog(request, options = nil)
             #   Pass arguments to `search_catalog` via a request object, either of type
             #   {::Google::Cloud::DataCatalog::V1::SearchCatalogRequest} or an equivalent Hash.
@@ -214,7 +252,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_catalog(scope: nil, query: nil, page_size: nil, page_token: nil, order_by: nil)
+            # @overload search_catalog(scope: nil, query: nil, page_size: nil, page_token: nil, order_by: nil, admin_search: nil)
             #   Pass arguments to `search_catalog` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -226,9 +264,8 @@ module Google
             #     empty AND `include_gcp_public_datasets` is set to `false`. In this case,
             #     the request returns an error.
             #   @param query [::String]
-            #     Optional. The query string with a minimum of 3 characters and specific syntax.
-            #     For more information, see
-            #     [Data Catalog search
+            #     Optional. The query string with a minimum of 3 characters and specific
+            #     syntax. For more information, see [Data Catalog search
             #     syntax](https://cloud.google.com/data-catalog/docs/how-to/search-reference).
             #
             #     An empty query string returns all data assets (in the specified scope)
@@ -240,16 +277,17 @@ module Google
             #     * `column:y`
             #     * `description:z`
             #   @param page_size [::Integer]
-            #     Number of results to return in a single search page.
+            #     Upper bound on the number of results you can get in a single response.
             #
             #     Can't be negative or 0, defaults to 10 in this case.
             #     The maximum number is 1000. If exceeded, throws an "invalid argument"
             #     exception.
             #   @param page_token [::String]
-            #     Optional. Pagination token that, if specified, returns the next page of search
-            #     results. If empty, returns the first page.
+            #     Optional. Pagination token that, if specified, returns the next page of
+            #     search results. If empty, returns the first page.
             #
-            #     This token is returned in the {::Google::Cloud::DataCatalog::V1::SearchCatalogResponse#next_page_token SearchCatalogResponse.next_page_token}
+            #     This token is returned in the
+            #     {::Google::Cloud::DataCatalog::V1::SearchCatalogResponse#next_page_token SearchCatalogResponse.next_page_token}
             #     field of the response to a previous
             #     {::Google::Cloud::DataCatalog::V1::DataCatalog::Client#search_catalog SearchCatalogRequest}
             #     call.
@@ -260,8 +298,22 @@ module Google
             #
             #     * `relevance` that can only be descending
             #     * `last_modified_timestamp [asc|desc]` with descending (`desc`) as default
+            #     * `default` that can only be descending
+            #
+            #     Search queries don't guarantee full recall. Results that match your query
+            #     might not be returned, even in subsequent result pages. Additionally,
+            #     returned (and not returned) results can vary if you repeat search queries.
+            #     If you are experiencing recall issues and you don't have to fetch the
+            #     results in any specific order, consider setting this parameter to
+            #     `default`.
             #
             #     If this parameter is omitted, it defaults to the descending `relevance`.
+            #   @param admin_search [::Boolean]
+            #     Optional. If set, use searchAll permission granted on organizations from
+            #     `include_org_ids` and projects from `include_project_ids` instead of the
+            #     fine grained per resource permissions when filtering the search results.
+            #     The only allowed `order_by` criteria for admin_search mode is `default`.
+            #     Using this flags guarantees a full recall of the search results.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::DataCatalog::V1::SearchCatalogResult>]
@@ -283,13 +335,11 @@ module Google
             #   # Call the search_catalog method.
             #   result = client.search_catalog request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::DataCatalog::V1::SearchCatalogResult.
-            #     p response
+            #     p item
             #   end
             #
             def search_catalog request, options = nil
@@ -303,10 +353,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_catalog.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.search_catalog.timeout,
@@ -320,7 +371,7 @@ module Google
               @data_catalog_stub.call_rpc :search_catalog, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @data_catalog_stub, :search_catalog, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -355,6 +406,8 @@ module Google
             # the `parent` parameter. For more information, see [Data Catalog resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
             #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
             # @overload create_entry_group(request, options = nil)
             #   Pass arguments to `create_entry_group` via a request object, either of type
             #   {::Google::Cloud::DataCatalog::V1::CreateEntryGroupRequest} or an equivalent Hash.
@@ -371,7 +424,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The names of the project and location that the new entry group belongs to.
+            #     Required. The names of the project and location that the new entry group
+            #     belongs to.
             #
             #     Note: The entry group itself and its child resources might not be
             #     stored in the location specified in its name.
@@ -418,10 +472,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_entry_group.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -442,7 +497,6 @@ module Google
 
               @data_catalog_stub.call_rpc :create_entry_group, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -450,6 +504,8 @@ module Google
 
             ##
             # Gets an entry group.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload get_entry_group(request, options = nil)
             #   Pass arguments to `get_entry_group` via a request object, either of type
@@ -505,10 +561,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_entry_group.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -529,7 +586,6 @@ module Google
 
               @data_catalog_stub.call_rpc :get_entry_group, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -542,6 +598,8 @@ module Google
             # the `entry_group.name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload update_entry_group(request, options = nil)
             #   Pass arguments to `update_entry_group` via a request object, either of type
@@ -601,10 +659,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_entry_group.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -625,7 +684,6 @@ module Google
 
               @data_catalog_stub.call_rpc :update_entry_group, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -638,6 +696,8 @@ module Google
             # identified by the `name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload delete_entry_group(request, options = nil)
             #   Pass arguments to `delete_entry_group` via a request object, either of type
@@ -693,10 +753,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_entry_group.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -717,7 +778,6 @@ module Google
 
               @data_catalog_stub.call_rpc :delete_entry_group, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -725,6 +785,8 @@ module Google
 
             ##
             # Lists entry groups.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload list_entry_groups(request, options = nil)
             #   Pass arguments to `list_entry_groups` via a request object, either of type
@@ -774,13 +836,11 @@ module Google
             #   # Call the list_entry_groups method.
             #   result = client.list_entry_groups request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::DataCatalog::V1::EntryGroup.
-            #     p response
+            #     p item
             #   end
             #
             def list_entry_groups request, options = nil
@@ -794,10 +854,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_entry_groups.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -819,7 +880,7 @@ module Google
               @data_catalog_stub.call_rpc :list_entry_groups, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @data_catalog_stub, :list_entry_groups, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -837,6 +898,8 @@ module Google
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
             #
             # An entry group can have a maximum of 100,000 entries.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload create_entry(request, options = nil)
             #   Pass arguments to `create_entry` via a request object, either of type
@@ -901,10 +964,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_entry.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -925,7 +989,6 @@ module Google
 
               @data_catalog_stub.call_rpc :create_entry, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -938,6 +1001,8 @@ module Google
             # the `entry.name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload update_entry(request, options = nil)
             #   Pass arguments to `update_entry` via a request object, either of type
@@ -1021,10 +1086,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_entry.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1045,7 +1111,6 @@ module Google
 
               @data_catalog_stub.call_rpc :update_entry, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1062,6 +1127,8 @@ module Google
             # the `name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload delete_entry(request, options = nil)
             #   Pass arguments to `delete_entry` via a request object, either of type
@@ -1115,10 +1182,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_entry.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1139,7 +1207,6 @@ module Google
 
               @data_catalog_stub.call_rpc :delete_entry, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1147,6 +1214,8 @@ module Google
 
             ##
             # Gets an entry.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload get_entry(request, options = nil)
             #   Pass arguments to `get_entry` via a request object, either of type
@@ -1200,10 +1269,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_entry.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1224,7 +1294,6 @@ module Google
 
               @data_catalog_stub.call_rpc :get_entry, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1234,6 +1303,8 @@ module Google
             # Gets an entry by its target resource name.
             #
             # The resource name comes from the source Google Cloud Platform service.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload lookup_entry(request, options = nil)
             #   Pass arguments to `lookup_entry` via a request object, either of type
@@ -1245,7 +1316,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload lookup_entry(linked_resource: nil, sql_resource: nil, fully_qualified_name: nil)
+            # @overload lookup_entry(linked_resource: nil, sql_resource: nil, fully_qualified_name: nil, project: nil, location: nil)
             #   Pass arguments to `lookup_entry` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1259,6 +1330,8 @@ module Google
             #
             #      * `//bigquery.googleapis.com/projects/{PROJECT_ID}/datasets/{DATASET_ID}/tables/{TABLE_ID}`
             #      * `//pubsub.googleapis.com/projects/{PROJECT_ID}/topics/{TOPIC_ID}`
+            #
+            #     Note: The following fields are mutually exclusive: `linked_resource`, `sql_resource`, `fully_qualified_name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param sql_resource [::String]
             #     The SQL name of the entry. SQL names are case-sensitive.
             #
@@ -1271,10 +1344,14 @@ module Google
             #     * `datacatalog.entry.{PROJECT_ID}.{LOCATION_ID}.{ENTRY_GROUP_ID}.{ENTRY_ID}`
             #
             #     Identifiers (`*_ID`) should comply with the
-            #     [Lexical structure in Standard SQL]
+            #     [Lexical structure in GoogleSQL]
             #     (https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical).
+            #
+            #     Note: The following fields are mutually exclusive: `sql_resource`, `linked_resource`, `fully_qualified_name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             #   @param fully_qualified_name [::String]
-            #     Fully qualified name (FQN) of the resource.
+            #     [Fully Qualified Name
+            #     (FQN)](https://cloud.google.com//data-catalog/docs/fully-qualified-names)
+            #     of the resource.
             #
             #     FQNs take two forms:
             #
@@ -1289,6 +1366,16 @@ module Google
             #     Example for a DPMS table:
             #
             #     `dataproc_metastore:{PROJECT_ID}.{LOCATION_ID}.{INSTANCE_ID}.{DATABASE_ID}.{TABLE_ID}`
+            #
+            #     Note: The following fields are mutually exclusive: `fully_qualified_name`, `linked_resource`, `sql_resource`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            #   @param project [::String]
+            #     Project where the lookup should be performed. Required to lookup
+            #     entry that is not a part of `DPMS` or `DATAPLEX` `integrated_system`
+            #     using its `fully_qualified_name`. Ignored in other cases.
+            #   @param location [::String]
+            #     Location where the lookup should be performed. Required to lookup
+            #     entry that is not a part of `DPMS` or `DATAPLEX` `integrated_system`
+            #     using its `fully_qualified_name`. Ignored in other cases.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::DataCatalog::V1::Entry]
@@ -1324,10 +1411,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.lookup_entry.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.lookup_entry.timeout,
@@ -1340,7 +1428,6 @@ module Google
 
               @data_catalog_stub.call_rpc :lookup_entry, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1352,6 +1439,8 @@ module Google
             # Note: Currently, this method can list only custom entries.
             # To get a list of both custom and automatically created entries, use
             # {::Google::Cloud::DataCatalog::V1::DataCatalog::Client#search_catalog SearchCatalog}.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload list_entries(request, options = nil)
             #   Pass arguments to `list_entries` via a request object, either of type
@@ -1405,13 +1494,11 @@ module Google
             #   # Call the list_entries method.
             #   result = client.list_entries request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::DataCatalog::V1::Entry.
-            #     p response
+            #     p item
             #   end
             #
             def list_entries request, options = nil
@@ -1425,10 +1512,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_entries.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1450,7 +1538,193 @@ module Google
               @data_catalog_stub.call_rpc :list_entries, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @data_catalog_stub, :list_entries, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Modifies entry overview, part of the business context of an
+            # {::Google::Cloud::DataCatalog::V1::Entry Entry}.
+            #
+            # To call this method, you must have the `datacatalog.entries.updateOverview`
+            # IAM permission on the corresponding project.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload modify_entry_overview(request, options = nil)
+            #   Pass arguments to `modify_entry_overview` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::ModifyEntryOverviewRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::ModifyEntryOverviewRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload modify_entry_overview(name: nil, entry_overview: nil)
+            #   Pass arguments to `modify_entry_overview` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The full resource name of the entry.
+            #   @param entry_overview [::Google::Cloud::DataCatalog::V1::EntryOverview, ::Hash]
+            #     Required. The new value for the Entry Overview.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::EntryOverview]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::EntryOverview]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::ModifyEntryOverviewRequest.new
+            #
+            #   # Call the modify_entry_overview method.
+            #   result = client.modify_entry_overview request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::EntryOverview.
+            #   p result
+            #
+            def modify_entry_overview request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::ModifyEntryOverviewRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.modify_entry_overview.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.modify_entry_overview.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.modify_entry_overview.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :modify_entry_overview, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Modifies contacts, part of the business context of an
+            # {::Google::Cloud::DataCatalog::V1::Entry Entry}.
+            #
+            # To call this method, you must have the `datacatalog.entries.updateContacts`
+            # IAM permission on the corresponding project.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload modify_entry_contacts(request, options = nil)
+            #   Pass arguments to `modify_entry_contacts` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::ModifyEntryContactsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::ModifyEntryContactsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload modify_entry_contacts(name: nil, contacts: nil)
+            #   Pass arguments to `modify_entry_contacts` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The full resource name of the entry.
+            #   @param contacts [::Google::Cloud::DataCatalog::V1::Contacts, ::Hash]
+            #     Required. The new value for the Contacts.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::Contacts]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::Contacts]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::ModifyEntryContactsRequest.new
+            #
+            #   # Call the modify_entry_contacts method.
+            #   result = client.modify_entry_contacts request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::Contacts.
+            #   p result
+            #
+            def modify_entry_contacts request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::ModifyEntryContactsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.modify_entry_contacts.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.modify_entry_contacts.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.modify_entry_contacts.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :modify_entry_contacts, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1463,6 +1737,8 @@ module Google
             # `parent` parameter.
             # For more information, see [Data Catalog resource project]
             # (https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload create_tag_template(request, options = nil)
             #   Pass arguments to `create_tag_template` via a request object, either of type
@@ -1525,10 +1801,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_tag_template.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1549,7 +1826,6 @@ module Google
 
               @data_catalog_stub.call_rpc :create_tag_template, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1557,6 +1833,8 @@ module Google
 
             ##
             # Gets a tag template.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload get_tag_template(request, options = nil)
             #   Pass arguments to `get_tag_template` via a request object, either of type
@@ -1610,10 +1888,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_tag_template.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1634,7 +1913,6 @@ module Google
 
               @data_catalog_stub.call_rpc :get_tag_template, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1650,6 +1928,8 @@ module Google
             # the `tag_template.name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload update_tag_template(request, options = nil)
             #   Pass arguments to `update_tag_template` via a request object, either of type
@@ -1677,9 +1957,7 @@ module Google
             #     request body, their values are emptied.
             #
             #     Note: Updating the `is_publicly_readable` field may require up to 12
-            #     hours to take effect in search results. Additionally, it also requires
-            #     the `tagTemplates.getIamPolicy` and `tagTemplates.setIamPolicy`
-            #     permissions.
+            #     hours to take effect in search results.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::DataCatalog::V1::TagTemplate]
@@ -1715,10 +1993,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_tag_template.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1739,7 +2018,6 @@ module Google
 
               @data_catalog_stub.call_rpc :update_tag_template, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1751,6 +2029,8 @@ module Google
             # You must enable the Data Catalog API in the project identified by
             # the `name` parameter. For more information, see [Data Catalog resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload delete_tag_template(request, options = nil)
             #   Pass arguments to `delete_tag_template` via a request object, either of type
@@ -1808,10 +2088,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_tag_template.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1832,7 +2113,6 @@ module Google
 
               @data_catalog_stub.call_rpc :delete_tag_template, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1844,6 +2124,8 @@ module Google
             # You must enable the Data Catalog API in the project identified by
             # the `parent` parameter. For more information, see [Data Catalog resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload create_tag_template_field(request, options = nil)
             #   Pass arguments to `create_tag_template_field` via a request object, either of type
@@ -1909,10 +2191,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_tag_template_field.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1933,7 +2216,6 @@ module Google
 
               @data_catalog_stub.call_rpc :create_tag_template_field, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1948,6 +2230,8 @@ module Google
             # identified by the `name` parameter. For more information, see [Data Catalog
             # resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload update_tag_template_field(request, options = nil)
             #   Pass arguments to `update_tag_template_field` via a request object, either of type
@@ -1969,8 +2253,8 @@ module Google
             #   @param tag_template_field [::Google::Cloud::DataCatalog::V1::TagTemplateField, ::Hash]
             #     Required. The template to update.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
-            #     Optional. Names of fields whose values to overwrite on an individual field of a tag
-            #     template. The following fields are modifiable:
+            #     Optional. Names of fields whose values to overwrite on an individual field
+            #     of a tag template. The following fields are modifiable:
             #
             #     * `display_name`
             #     * `type.enum_type`
@@ -2020,10 +2304,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_tag_template_field.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2044,7 +2329,6 @@ module Google
 
               @data_catalog_stub.call_rpc :update_tag_template_field, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2056,6 +2340,8 @@ module Google
             # You must enable the Data Catalog API in the project identified by the
             # `name` parameter. For more information, see [Data Catalog resource project]
             # (https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload rename_tag_template_field(request, options = nil)
             #   Pass arguments to `rename_tag_template_field` via a request object, either of type
@@ -2075,7 +2361,8 @@ module Google
             #   @param name [::String]
             #     Required. The name of the tag template field.
             #   @param new_tag_template_field_id [::String]
-            #     Required. The new ID of this tag template field. For example, `my_new_field`.
+            #     Required. The new ID of this tag template field. For example,
+            #     `my_new_field`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::DataCatalog::V1::TagTemplateField]
@@ -2111,10 +2398,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.rename_tag_template_field.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2135,7 +2423,6 @@ module Google
 
               @data_catalog_stub.call_rpc :rename_tag_template_field, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2145,6 +2432,8 @@ module Google
             # Renames an enum value in a tag template.
             #
             # Within a single enum field, enum values must be unique.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload rename_tag_template_field_enum_value(request, options = nil)
             #   Pass arguments to `rename_tag_template_field_enum_value` via a request object, either of type
@@ -2164,7 +2453,8 @@ module Google
             #   @param name [::String]
             #     Required. The name of the enum field value.
             #   @param new_enum_value_display_name [::String]
-            #     Required. The new display name of the enum value. For example, `my_new_enum_value`.
+            #     Required. The new display name of the enum value. For example,
+            #     `my_new_enum_value`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::DataCatalog::V1::TagTemplateField]
@@ -2200,10 +2490,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.rename_tag_template_field_enum_value.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2224,7 +2515,6 @@ module Google
 
               @data_catalog_stub.call_rpc :rename_tag_template_field_enum_value, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2237,6 +2527,8 @@ module Google
             # You must enable the Data Catalog API in the project identified by
             # the `name` parameter. For more information, see [Data Catalog resource
             # project](https://cloud.google.com/data-catalog/docs/concepts/resource-project).
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload delete_tag_template_field(request, options = nil)
             #   Pass arguments to `delete_tag_template_field` via a request object, either of type
@@ -2294,10 +2586,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_tag_template_field.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2318,7 +2611,6 @@ module Google
 
               @data_catalog_stub.call_rpc :delete_tag_template_field, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2337,6 +2629,8 @@ module Google
             # and the [tag template]
             # (https://cloud.google.com/data-catalog/docs/reference/rest/v1/projects.locations.tagTemplates/create#path-parameters)
             # used to create the tag must be in the same organization.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload create_tag(request, options = nil)
             #   Pass arguments to `create_tag` via a request object, either of type
@@ -2398,10 +2692,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_tag.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2422,7 +2717,6 @@ module Google
 
               @data_catalog_stub.call_rpc :create_tag, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2430,6 +2724,8 @@ module Google
 
             ##
             # Updates an existing tag.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload update_tag(request, options = nil)
             #   Pass arguments to `update_tag` via a request object, either of type
@@ -2490,10 +2786,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_tag.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2514,7 +2811,6 @@ module Google
 
               @data_catalog_stub.call_rpc :update_tag, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2522,6 +2818,8 @@ module Google
 
             ##
             # Deletes a tag.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload delete_tag(request, options = nil)
             #   Pass arguments to `delete_tag` via a request object, either of type
@@ -2575,10 +2873,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_tag.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2599,7 +2898,6 @@ module Google
 
               @data_catalog_stub.call_rpc :delete_tag, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2607,6 +2905,10 @@ module Google
 
             ##
             # Lists tags assigned to an {::Google::Cloud::DataCatalog::V1::Entry Entry}.
+            # The {::Google::Cloud::DataCatalog::V1::Tag#column columns} in the response are
+            # lowercased.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload list_tags(request, options = nil)
             #   Pass arguments to `list_tags` via a request object, either of type
@@ -2655,13 +2957,11 @@ module Google
             #   # Call the list_tags method.
             #   result = client.list_tags request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::DataCatalog::V1::Tag.
-            #     p response
+            #     p item
             #   end
             #
             def list_tags request, options = nil
@@ -2675,10 +2975,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_tags.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2700,7 +3001,302 @@ module Google
               @data_catalog_stub.call_rpc :list_tags, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @data_catalog_stub, :list_tags, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # `ReconcileTags` creates or updates a list of tags on the entry.
+            # If the
+            # {::Google::Cloud::DataCatalog::V1::ReconcileTagsRequest#force_delete_missing ReconcileTagsRequest.force_delete_missing}
+            # parameter is set, the operation deletes tags not included in the input tag
+            # list.
+            #
+            # `ReconcileTags` returns a [long-running operation]
+            # [google.longrunning.Operation] resource that can be queried with
+            # Operations.GetOperation
+            # to return [ReconcileTagsMetadata]
+            # [google.cloud.datacatalog.v1.ReconcileTagsMetadata] and
+            # a [ReconcileTagsResponse]
+            # [google.cloud.datacatalog.v1.ReconcileTagsResponse] message.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload reconcile_tags(request, options = nil)
+            #   Pass arguments to `reconcile_tags` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::ReconcileTagsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::ReconcileTagsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload reconcile_tags(parent: nil, tag_template: nil, force_delete_missing: nil, tags: nil)
+            #   Pass arguments to `reconcile_tags` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. Name of {::Google::Cloud::DataCatalog::V1::Entry Entry} to be tagged.
+            #   @param tag_template [::String]
+            #     Required. The name of the tag template, which is used for reconciliation.
+            #   @param force_delete_missing [::Boolean]
+            #     If set to `true`, deletes entry tags related to a tag template
+            #     not listed in the tags source from an entry. If set to `false`,
+            #     unlisted tags are retained.
+            #   @param tags [::Array<::Google::Cloud::DataCatalog::V1::Tag, ::Hash>]
+            #     A list of tags to apply to an entry. A tag can specify a
+            #     tag template, which must be the template specified in the
+            #     `ReconcileTagsRequest`.
+            #     The sole entry and each of its columns must be mentioned at most once.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::Operation]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::Operation]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::ReconcileTagsRequest.new
+            #
+            #   # Call the reconcile_tags method.
+            #   result = client.reconcile_tags request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "No response received."
+            #   end
+            #
+            def reconcile_tags request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::ReconcileTagsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.reconcile_tags.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.reconcile_tags.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.reconcile_tags.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :reconcile_tags, request, options: options do |response, operation|
+                response = ::Gapic::Operation.new response, @operations_client, options: options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Marks an {::Google::Cloud::DataCatalog::V1::Entry Entry} as starred by
+            # the current user. Starring information is private to each user.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload star_entry(request, options = nil)
+            #   Pass arguments to `star_entry` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::StarEntryRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::StarEntryRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload star_entry(name: nil)
+            #   Pass arguments to `star_entry` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the entry to mark as starred.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::StarEntryResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::StarEntryResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::StarEntryRequest.new
+            #
+            #   # Call the star_entry method.
+            #   result = client.star_entry request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::StarEntryResponse.
+            #   p result
+            #
+            def star_entry request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::StarEntryRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.star_entry.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.star_entry.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.star_entry.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :star_entry, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Marks an {::Google::Cloud::DataCatalog::V1::Entry Entry} as NOT starred by
+            # the current user. Starring information is private to each user.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload unstar_entry(request, options = nil)
+            #   Pass arguments to `unstar_entry` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::UnstarEntryRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::UnstarEntryRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload unstar_entry(name: nil)
+            #   Pass arguments to `unstar_entry` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the entry to mark as **not** starred.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::UnstarEntryResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::UnstarEntryResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::UnstarEntryRequest.new
+            #
+            #   # Call the unstar_entry method.
+            #   result = client.unstar_entry request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::UnstarEntryResponse.
+            #   p result
+            #
+            def unstar_entry request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::UnstarEntryRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.unstar_entry.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.unstar_entry.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.unstar_entry.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :unstar_entry, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2725,6 +3321,8 @@ module Google
             #   templates.
             # - `datacatalog.entryGroups.setIamPolicy` to set policies on entry groups.
             #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
             # @overload set_iam_policy(request, options = nil)
             #   Pass arguments to `set_iam_policy` via a request object, either of type
             #   {::Google::Iam::V1::SetIamPolicyRequest} or an equivalent Hash.
@@ -2735,7 +3333,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_iam_policy(resource: nil, policy: nil)
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
             #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -2748,6 +3346,12 @@ module Google
             #     the policy is limited to a few 10s of KB. An empty policy is a
             #     valid policy but certain Cloud Platform services (such as Projects)
             #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -2783,10 +3387,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2807,7 +3412,6 @@ module Google
 
               @data_catalog_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2836,6 +3440,8 @@ module Google
             #   templates.
             # - `datacatalog.entryGroups.getIamPolicy` to get policies on entry groups.
             #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
             # @overload get_iam_policy(request, options = nil)
             #   Pass arguments to `get_iam_policy` via a request object, either of type
             #   {::Google::Iam::V1::GetIamPolicyRequest} or an equivalent Hash.
@@ -2856,7 +3462,7 @@ module Google
             #     See the operation documentation for the appropriate value for this field.
             #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
             #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
-            #     `GetIamPolicy`. This field is only used by Cloud IAM.
+            #     `GetIamPolicy`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -2892,10 +3498,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2916,7 +3523,6 @@ module Google
 
               @data_catalog_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2937,6 +3543,8 @@ module Google
             # external Google Cloud Platform resources ingested into Data Catalog.
             #
             # No Google IAM permissions are required to call this method.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload test_iam_permissions(request, options = nil)
             #   Pass arguments to `test_iam_permissions` via a request object, either of type
@@ -2996,10 +3604,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.test_iam_permissions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3020,7 +3629,400 @@ module Google
 
               @data_catalog_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Imports entries from a source, such as data previously dumped into a
+            # Cloud Storage bucket, into Data Catalog. Import of entries
+            # is a sync operation that reconciles the state of the third-party system
+            # with the Data Catalog.
+            #
+            # `ImportEntries` accepts source data snapshots of a third-party system.
+            # Snapshot should be delivered as a .wire or base65-encoded .txt file
+            # containing a sequence of Protocol Buffer messages of
+            # {::Google::Cloud::DataCatalog::V1::DumpItem DumpItem} type.
+            #
+            # `ImportEntries` returns a [long-running operation]
+            # [google.longrunning.Operation] resource that can be queried with
+            # Operations.GetOperation
+            # to return
+            # {::Google::Cloud::DataCatalog::V1::ImportEntriesMetadata ImportEntriesMetadata}
+            # and an
+            # {::Google::Cloud::DataCatalog::V1::ImportEntriesResponse ImportEntriesResponse}
+            # message.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload import_entries(request, options = nil)
+            #   Pass arguments to `import_entries` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::ImportEntriesRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::ImportEntriesRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload import_entries(parent: nil, gcs_bucket_path: nil, job_id: nil)
+            #   Pass arguments to `import_entries` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. Target entry group for ingested entries.
+            #   @param gcs_bucket_path [::String]
+            #     Path to a Cloud Storage bucket that contains a dump ready for ingestion.
+            #   @param job_id [::String]
+            #     Optional. (Optional) Dataplex task job id, if specified will be used as
+            #     part of ImportEntries LRO ID
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::Operation]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::Operation]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::ImportEntriesRequest.new
+            #
+            #   # Call the import_entries method.
+            #   result = client.import_entries request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "No response received."
+            #   end
+            #
+            def import_entries request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::ImportEntriesRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.import_entries.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.import_entries.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.import_entries.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :import_entries, request, options: options do |response, operation|
+                response = ::Gapic::Operation.new response, @operations_client, options: options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Sets the configuration related to the migration to Dataplex for an
+            # organization or project.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload set_config(request, options = nil)
+            #   Pass arguments to `set_config` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::SetConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::SetConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload set_config(name: nil, tag_template_migration: nil, catalog_ui_experience: nil)
+            #   Pass arguments to `set_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The organization or project whose config is being specified.
+            #   @param tag_template_migration [::Google::Cloud::DataCatalog::V1::TagTemplateMigration]
+            #     Opt-in status for the migration of Tag Templates to Dataplex.
+            #
+            #     Note: The following fields are mutually exclusive: `tag_template_migration`, `catalog_ui_experience`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            #   @param catalog_ui_experience [::Google::Cloud::DataCatalog::V1::CatalogUIExperience]
+            #     Opt-in status for the UI switch to Dataplex.
+            #
+            #     Note: The following fields are mutually exclusive: `catalog_ui_experience`, `tag_template_migration`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::MigrationConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::MigrationConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::SetConfigRequest.new
+            #
+            #   # Call the set_config method.
+            #   result = client.set_config request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::MigrationConfig.
+            #   p result
+            #
+            def set_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::SetConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.set_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.set_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.set_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :set_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Retrieves the configuration related to the migration from Data Catalog to
+            # Dataplex for a specific organization, including all the projects under it
+            # which have a separate configuration set.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload retrieve_config(request, options = nil)
+            #   Pass arguments to `retrieve_config` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::RetrieveConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::RetrieveConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload retrieve_config(name: nil)
+            #   Pass arguments to `retrieve_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The organization whose config is being retrieved.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::OrganizationConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::OrganizationConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::RetrieveConfigRequest.new
+            #
+            #   # Call the retrieve_config method.
+            #   result = client.retrieve_config request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::OrganizationConfig.
+            #   p result
+            #
+            def retrieve_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::RetrieveConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.retrieve_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.retrieve_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.retrieve_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :retrieve_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Retrieves the effective configuration related to the migration from Data
+            # Catalog to Dataplex for a specific organization or project. If there is no
+            # specific configuration set for the resource, the setting is checked
+            # hierarchicahlly through the ancestors of the resource, starting from the
+            # resource itself.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
+            #
+            # @overload retrieve_effective_config(request, options = nil)
+            #   Pass arguments to `retrieve_effective_config` via a request object, either of type
+            #   {::Google::Cloud::DataCatalog::V1::RetrieveEffectiveConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::DataCatalog::V1::RetrieveEffectiveConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload retrieve_effective_config(name: nil)
+            #   Pass arguments to `retrieve_effective_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource whose effective config is being retrieved.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::DataCatalog::V1::MigrationConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::DataCatalog::V1::MigrationConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/data_catalog/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::DataCatalog::V1::RetrieveEffectiveConfigRequest.new
+            #
+            #   # Call the retrieve_effective_config method.
+            #   result = client.retrieve_effective_config request
+            #
+            #   # The returned object is of type Google::Cloud::DataCatalog::V1::MigrationConfig.
+            #   p result
+            #
+            def retrieve_effective_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::DataCatalog::V1::RetrieveEffectiveConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.retrieve_effective_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::DataCatalog::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.retrieve_effective_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.retrieve_effective_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @data_catalog_stub.call_rpc :retrieve_effective_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3056,20 +4058,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"datacatalog.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -3104,11 +4113,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "datacatalog.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "datacatalog.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -3123,6 +4146,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -3141,6 +4166,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -3222,6 +4255,16 @@ module Google
                 #
                 attr_reader :list_entries
                 ##
+                # RPC-specific configuration for `modify_entry_overview`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :modify_entry_overview
+                ##
+                # RPC-specific configuration for `modify_entry_contacts`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :modify_entry_contacts
+                ##
                 # RPC-specific configuration for `create_tag_template`
                 # @return [::Gapic::Config::Method]
                 #
@@ -3287,6 +4330,21 @@ module Google
                 #
                 attr_reader :list_tags
                 ##
+                # RPC-specific configuration for `reconcile_tags`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :reconcile_tags
+                ##
+                # RPC-specific configuration for `star_entry`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :star_entry
+                ##
+                # RPC-specific configuration for `unstar_entry`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :unstar_entry
+                ##
                 # RPC-specific configuration for `set_iam_policy`
                 # @return [::Gapic::Config::Method]
                 #
@@ -3301,6 +4359,26 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :test_iam_permissions
+                ##
+                # RPC-specific configuration for `import_entries`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :import_entries
+                ##
+                # RPC-specific configuration for `set_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :set_config
+                ##
+                # RPC-specific configuration for `retrieve_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :retrieve_config
+                ##
+                # RPC-specific configuration for `retrieve_effective_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :retrieve_effective_config
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -3328,6 +4406,10 @@ module Google
                   @lookup_entry = ::Gapic::Config::Method.new lookup_entry_config
                   list_entries_config = parent_rpcs.list_entries if parent_rpcs.respond_to? :list_entries
                   @list_entries = ::Gapic::Config::Method.new list_entries_config
+                  modify_entry_overview_config = parent_rpcs.modify_entry_overview if parent_rpcs.respond_to? :modify_entry_overview
+                  @modify_entry_overview = ::Gapic::Config::Method.new modify_entry_overview_config
+                  modify_entry_contacts_config = parent_rpcs.modify_entry_contacts if parent_rpcs.respond_to? :modify_entry_contacts
+                  @modify_entry_contacts = ::Gapic::Config::Method.new modify_entry_contacts_config
                   create_tag_template_config = parent_rpcs.create_tag_template if parent_rpcs.respond_to? :create_tag_template
                   @create_tag_template = ::Gapic::Config::Method.new create_tag_template_config
                   get_tag_template_config = parent_rpcs.get_tag_template if parent_rpcs.respond_to? :get_tag_template
@@ -3354,12 +4436,26 @@ module Google
                   @delete_tag = ::Gapic::Config::Method.new delete_tag_config
                   list_tags_config = parent_rpcs.list_tags if parent_rpcs.respond_to? :list_tags
                   @list_tags = ::Gapic::Config::Method.new list_tags_config
+                  reconcile_tags_config = parent_rpcs.reconcile_tags if parent_rpcs.respond_to? :reconcile_tags
+                  @reconcile_tags = ::Gapic::Config::Method.new reconcile_tags_config
+                  star_entry_config = parent_rpcs.star_entry if parent_rpcs.respond_to? :star_entry
+                  @star_entry = ::Gapic::Config::Method.new star_entry_config
+                  unstar_entry_config = parent_rpcs.unstar_entry if parent_rpcs.respond_to? :unstar_entry
+                  @unstar_entry = ::Gapic::Config::Method.new unstar_entry_config
                   set_iam_policy_config = parent_rpcs.set_iam_policy if parent_rpcs.respond_to? :set_iam_policy
                   @set_iam_policy = ::Gapic::Config::Method.new set_iam_policy_config
                   get_iam_policy_config = parent_rpcs.get_iam_policy if parent_rpcs.respond_to? :get_iam_policy
                   @get_iam_policy = ::Gapic::Config::Method.new get_iam_policy_config
                   test_iam_permissions_config = parent_rpcs.test_iam_permissions if parent_rpcs.respond_to? :test_iam_permissions
                   @test_iam_permissions = ::Gapic::Config::Method.new test_iam_permissions_config
+                  import_entries_config = parent_rpcs.import_entries if parent_rpcs.respond_to? :import_entries
+                  @import_entries = ::Gapic::Config::Method.new import_entries_config
+                  set_config_config = parent_rpcs.set_config if parent_rpcs.respond_to? :set_config
+                  @set_config = ::Gapic::Config::Method.new set_config_config
+                  retrieve_config_config = parent_rpcs.retrieve_config if parent_rpcs.respond_to? :retrieve_config
+                  @retrieve_config = ::Gapic::Config::Method.new retrieve_config_config
+                  retrieve_effective_config_config = parent_rpcs.retrieve_effective_config if parent_rpcs.respond_to? :retrieve_effective_config
+                  @retrieve_effective_config = ::Gapic::Config::Method.new retrieve_effective_config_config
 
                   yield self if block_given?
                 end

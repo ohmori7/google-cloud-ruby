@@ -19,15 +19,29 @@
 # [START automl_v1beta1_generated_AutoML_GetColumnSpec_sync]
 require "google/cloud/automl/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AutoML::V1beta1::AutoML::Client.new
+##
+# Snippet for the get_column_spec call in the AutoML service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AutoML::V1beta1::AutoML::Client#get_column_spec.
+#
+def get_column_spec
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AutoML::V1beta1::AutoML::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AutoML::V1beta1::GetColumnSpecRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AutoML::V1beta1::GetColumnSpecRequest.new
 
-# Call the get_column_spec method.
-result = client.get_column_spec request
+  # Call the get_column_spec method.
+  result = client.get_column_spec request
 
-# The returned object is of type Google::Cloud::AutoML::V1beta1::ColumnSpec.
-p result
+  # The returned object is of type Google::Cloud::AutoML::V1beta1::ColumnSpec.
+  p result
+end
 # [END automl_v1beta1_generated_AutoML_GetColumnSpec_sync]

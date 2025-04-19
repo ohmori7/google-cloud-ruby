@@ -1,5 +1,71 @@
 # Release History
 
+### 2.11.0 (2025-03-04)
+
+#### Features
+
+* Update minimum Ruby version to 3.0 ([#29261](https://github.com/googleapis/google-cloud-ruby/issues/29261)) 
+
+### 2.10.0 (2024-07-09)
+
+#### Features
+
+* compatibility with GA releases of underlying versioned clients ([#26361](https://github.com/googleapis/google-cloud-ruby/issues/26361)) 
+
+### 2.9.0 (2024-03-10)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 2.8.0 (2023-09-12)
+
+#### Features
+
+* Support sum & avg aggregate functions ([#22884](https://github.com/googleapis/google-cloud-ruby/issues/22884)) 
+
+### 2.7.1 (2023-05-18)
+
+#### Documentation
+
+* Fixed broken links in authentication documentation ([#21619](https://github.com/googleapis/google-cloud-ruby/issues/21619)) 
+
+### 2.7.0 (2023-04-12)
+
+#### Features
+
+* Support OR filter ([#21002](https://github.com/googleapis/google-cloud-ruby/issues/21002)) 
+
+### 2.6.0 (2023-02-13)
+
+#### Features
+
+* Added support for snapshot read ([#19422](https://github.com/googleapis/google-cloud-ruby/issues/19422)) 
+
+### 2.5.0 (2023-02-09)
+
+#### Features
+
+* Added support for multiple database ([#20038](https://github.com/googleapis/google-cloud-ruby/issues/20038)) 
+
+### 2.4.0 (2023-02-02)
+
+#### Features
+
+* Support query count for Datastore ([#20039](https://github.com/googleapis/google-cloud-ruby/issues/20039)) 
+
+### 2.3.1 (2022-12-14)
+
+#### Bug Fixes
+
+* fixed request limit 
+
+### 2.3.0 (2022-06-28)
+
+#### Features
+
+* Add support for operators "!=", "in" and "not_in" in datastore ([#18401](https://github.com/googleapis/google-cloud-ruby/issues/18401)) 
+
 ### 2.2.4 / 2022-01-11
 
 #### Documentation

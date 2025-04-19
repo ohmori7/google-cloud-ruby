@@ -37,6 +37,11 @@ module Google
             # parent can be either an organization, folder or project. The findings
             # matched by the filter will be muted after the LRO is done.
             rpc :BulkMuteFindings, ::Google::Cloud::SecurityCenter::V1::BulkMuteFindingsRequest, ::Google::Longrunning::Operation
+            # Creates a resident SecurityHealthAnalyticsCustomModule at the scope of the
+            # given CRM parent, and also creates inherited
+            # SecurityHealthAnalyticsCustomModules for all CRM descendants of the given
+            # parent. These modules are enabled by default.
+            rpc :CreateSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::CreateSecurityHealthAnalyticsCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::SecurityHealthAnalyticsCustomModule
             # Creates a source.
             rpc :CreateSource, ::Google::Cloud::SecurityCenter::V1::CreateSourceRequest, ::Google::Cloud::SecurityCenter::V1::Source
             # Creates a finding. The corresponding source must exist for finding creation
@@ -50,6 +55,17 @@ module Google
             rpc :DeleteMuteConfig, ::Google::Cloud::SecurityCenter::V1::DeleteMuteConfigRequest, ::Google::Protobuf::Empty
             # Deletes a notification config.
             rpc :DeleteNotificationConfig, ::Google::Cloud::SecurityCenter::V1::DeleteNotificationConfigRequest, ::Google::Protobuf::Empty
+            # Deletes the specified SecurityHealthAnalyticsCustomModule and all of its
+            # descendants in the CRM hierarchy. This method is only supported for
+            # resident custom modules.
+            rpc :DeleteSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::DeleteSecurityHealthAnalyticsCustomModuleRequest, ::Google::Protobuf::Empty
+            # Get the simulation by name or the latest simulation for the given
+            # organization.
+            rpc :GetSimulation, ::Google::Cloud::SecurityCenter::V1::GetSimulationRequest, ::Google::Cloud::SecurityCenter::V1::Simulation
+            # Get the valued resource by name
+            rpc :GetValuedResource, ::Google::Cloud::SecurityCenter::V1::GetValuedResourceRequest, ::Google::Cloud::SecurityCenter::V1::ValuedResource
+            # Gets a BigQuery export.
+            rpc :GetBigQueryExport, ::Google::Cloud::SecurityCenter::V1::GetBigQueryExportRequest, ::Google::Cloud::SecurityCenter::V1::BigQueryExport
             # Gets the access control policy on the specified Source.
             rpc :GetIamPolicy, ::Google::Iam::V1::GetIamPolicyRequest, ::Google::Iam::V1::Policy
             # Gets a mute config.
@@ -58,6 +74,10 @@ module Google
             rpc :GetNotificationConfig, ::Google::Cloud::SecurityCenter::V1::GetNotificationConfigRequest, ::Google::Cloud::SecurityCenter::V1::NotificationConfig
             # Gets the settings for an organization.
             rpc :GetOrganizationSettings, ::Google::Cloud::SecurityCenter::V1::GetOrganizationSettingsRequest, ::Google::Cloud::SecurityCenter::V1::OrganizationSettings
+            # Retrieves an EffectiveSecurityHealthAnalyticsCustomModule.
+            rpc :GetEffectiveSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::GetEffectiveSecurityHealthAnalyticsCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::EffectiveSecurityHealthAnalyticsCustomModule
+            # Retrieves a SecurityHealthAnalyticsCustomModule.
+            rpc :GetSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::GetSecurityHealthAnalyticsCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::SecurityHealthAnalyticsCustomModule
             # Gets a source.
             rpc :GetSource, ::Google::Cloud::SecurityCenter::V1::GetSourceRequest, ::Google::Cloud::SecurityCenter::V1::Source
             # Filters an organization's assets and  groups them by their specified
@@ -73,6 +93,9 @@ module Google
             rpc :GroupFindings, ::Google::Cloud::SecurityCenter::V1::GroupFindingsRequest, ::Google::Cloud::SecurityCenter::V1::GroupFindingsResponse
             # Lists an organization's assets.
             rpc :ListAssets, ::Google::Cloud::SecurityCenter::V1::ListAssetsRequest, ::Google::Cloud::SecurityCenter::V1::ListAssetsResponse
+            # Returns a list of all resident SecurityHealthAnalyticsCustomModules under
+            # the given CRM parent and all of the parent’s CRM descendants.
+            rpc :ListDescendantSecurityHealthAnalyticsCustomModules, ::Google::Cloud::SecurityCenter::V1::ListDescendantSecurityHealthAnalyticsCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListDescendantSecurityHealthAnalyticsCustomModulesResponse
             # Lists an organization or source's findings.
             #
             # To list across all sources provide a `-` as the source id.
@@ -82,6 +105,14 @@ module Google
             rpc :ListMuteConfigs, ::Google::Cloud::SecurityCenter::V1::ListMuteConfigsRequest, ::Google::Cloud::SecurityCenter::V1::ListMuteConfigsResponse
             # Lists notification configs.
             rpc :ListNotificationConfigs, ::Google::Cloud::SecurityCenter::V1::ListNotificationConfigsRequest, ::Google::Cloud::SecurityCenter::V1::ListNotificationConfigsResponse
+            # Returns a list of all EffectiveSecurityHealthAnalyticsCustomModules for the
+            # given parent. This includes resident modules defined at the scope of the
+            # parent, and inherited modules, inherited from CRM ancestors.
+            rpc :ListEffectiveSecurityHealthAnalyticsCustomModules, ::Google::Cloud::SecurityCenter::V1::ListEffectiveSecurityHealthAnalyticsCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListEffectiveSecurityHealthAnalyticsCustomModulesResponse
+            # Returns a list of all SecurityHealthAnalyticsCustomModules for the given
+            # parent. This includes resident modules defined at the scope of the parent,
+            # and inherited modules, inherited from CRM ancestors.
+            rpc :ListSecurityHealthAnalyticsCustomModules, ::Google::Cloud::SecurityCenter::V1::ListSecurityHealthAnalyticsCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListSecurityHealthAnalyticsCustomModulesResponse
             # Lists all sources belonging to an organization.
             rpc :ListSources, ::Google::Cloud::SecurityCenter::V1::ListSourcesRequest, ::Google::Cloud::SecurityCenter::V1::ListSourcesResponse
             # Runs asset discovery. The discovery is tracked with a long-running
@@ -99,6 +130,8 @@ module Google
             rpc :SetIamPolicy, ::Google::Iam::V1::SetIamPolicyRequest, ::Google::Iam::V1::Policy
             # Returns the permissions that a caller has on the specified source.
             rpc :TestIamPermissions, ::Google::Iam::V1::TestIamPermissionsRequest, ::Google::Iam::V1::TestIamPermissionsResponse
+            # Simulates a given SecurityHealthAnalyticsCustomModule and Resource.
+            rpc :SimulateSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::SimulateSecurityHealthAnalyticsCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::SimulateSecurityHealthAnalyticsCustomModuleResponse
             # Updates external system. This is for a given finding.
             rpc :UpdateExternalSystem, ::Google::Cloud::SecurityCenter::V1::UpdateExternalSystemRequest, ::Google::Cloud::SecurityCenter::V1::ExternalSystem
             # Creates or updates a finding. The corresponding source must exist for a
@@ -112,10 +145,77 @@ module Google
             rpc :UpdateNotificationConfig, ::Google::Cloud::SecurityCenter::V1::UpdateNotificationConfigRequest, ::Google::Cloud::SecurityCenter::V1::NotificationConfig
             # Updates an organization's settings.
             rpc :UpdateOrganizationSettings, ::Google::Cloud::SecurityCenter::V1::UpdateOrganizationSettingsRequest, ::Google::Cloud::SecurityCenter::V1::OrganizationSettings
+            # Updates the SecurityHealthAnalyticsCustomModule under the given name based
+            # on the given update mask. Updating the enablement state is supported on
+            # both resident and inherited modules (though resident modules cannot have an
+            # enablement state of "inherited"). Updating the display name and custom
+            # config of a module is supported on resident modules only.
+            rpc :UpdateSecurityHealthAnalyticsCustomModule, ::Google::Cloud::SecurityCenter::V1::UpdateSecurityHealthAnalyticsCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::SecurityHealthAnalyticsCustomModule
             # Updates a source.
             rpc :UpdateSource, ::Google::Cloud::SecurityCenter::V1::UpdateSourceRequest, ::Google::Cloud::SecurityCenter::V1::Source
             # Updates security marks.
             rpc :UpdateSecurityMarks, ::Google::Cloud::SecurityCenter::V1::UpdateSecurityMarksRequest, ::Google::Cloud::SecurityCenter::V1::SecurityMarks
+            # Creates a BigQuery export.
+            rpc :CreateBigQueryExport, ::Google::Cloud::SecurityCenter::V1::CreateBigQueryExportRequest, ::Google::Cloud::SecurityCenter::V1::BigQueryExport
+            # Deletes an existing BigQuery export.
+            rpc :DeleteBigQueryExport, ::Google::Cloud::SecurityCenter::V1::DeleteBigQueryExportRequest, ::Google::Protobuf::Empty
+            # Updates a BigQuery export.
+            rpc :UpdateBigQueryExport, ::Google::Cloud::SecurityCenter::V1::UpdateBigQueryExportRequest, ::Google::Cloud::SecurityCenter::V1::BigQueryExport
+            # Lists BigQuery exports. Note that when requesting BigQuery exports at a
+            # given level all exports under that level are also returned e.g. if
+            # requesting BigQuery exports under a folder, then all BigQuery exports
+            # immediately under the folder plus the ones created under the projects
+            # within the folder are returned.
+            rpc :ListBigQueryExports, ::Google::Cloud::SecurityCenter::V1::ListBigQueryExportsRequest, ::Google::Cloud::SecurityCenter::V1::ListBigQueryExportsResponse
+            # Creates a resident Event Threat Detection custom module at the scope of the
+            # given Resource Manager parent, and also creates inherited custom modules
+            # for all descendants of the given parent. These modules are enabled by
+            # default.
+            rpc :CreateEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::CreateEventThreatDetectionCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::EventThreatDetectionCustomModule
+            # Deletes the specified Event Threat Detection custom module and all of its
+            # descendants in the Resource Manager hierarchy. This method is only
+            # supported for resident custom modules.
+            rpc :DeleteEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::DeleteEventThreatDetectionCustomModuleRequest, ::Google::Protobuf::Empty
+            # Gets an Event Threat Detection custom module.
+            rpc :GetEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::GetEventThreatDetectionCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::EventThreatDetectionCustomModule
+            # Lists all resident Event Threat Detection custom modules under the
+            # given Resource Manager parent and its descendants.
+            rpc :ListDescendantEventThreatDetectionCustomModules, ::Google::Cloud::SecurityCenter::V1::ListDescendantEventThreatDetectionCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListDescendantEventThreatDetectionCustomModulesResponse
+            # Lists all Event Threat Detection custom modules for the given
+            # Resource Manager parent. This includes resident modules defined at the
+            # scope of the parent along with modules inherited from ancestors.
+            rpc :ListEventThreatDetectionCustomModules, ::Google::Cloud::SecurityCenter::V1::ListEventThreatDetectionCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListEventThreatDetectionCustomModulesResponse
+            # Updates the Event Threat Detection custom module with the given name based
+            # on the given update mask. Updating the enablement state is supported for
+            # both resident and inherited modules (though resident modules cannot have an
+            # enablement state of "inherited"). Updating the display name or
+            # configuration of a module is supported for resident modules only. The type
+            # of a module cannot be changed.
+            rpc :UpdateEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::UpdateEventThreatDetectionCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::EventThreatDetectionCustomModule
+            # Validates the given Event Threat Detection custom module.
+            rpc :ValidateEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::ValidateEventThreatDetectionCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::ValidateEventThreatDetectionCustomModuleResponse
+            # Gets an effective Event Threat Detection custom module at the given level.
+            rpc :GetEffectiveEventThreatDetectionCustomModule, ::Google::Cloud::SecurityCenter::V1::GetEffectiveEventThreatDetectionCustomModuleRequest, ::Google::Cloud::SecurityCenter::V1::EffectiveEventThreatDetectionCustomModule
+            # Lists all effective Event Threat Detection custom modules for the
+            # given parent. This includes resident modules defined at the scope of the
+            # parent along with modules inherited from its ancestors.
+            rpc :ListEffectiveEventThreatDetectionCustomModules, ::Google::Cloud::SecurityCenter::V1::ListEffectiveEventThreatDetectionCustomModulesRequest, ::Google::Cloud::SecurityCenter::V1::ListEffectiveEventThreatDetectionCustomModulesResponse
+            # Creates a ResourceValueConfig for an organization. Maps user's tags to
+            # difference resource values for use by the attack path simulation.
+            rpc :BatchCreateResourceValueConfigs, ::Google::Cloud::SecurityCenter::V1::BatchCreateResourceValueConfigsRequest, ::Google::Cloud::SecurityCenter::V1::BatchCreateResourceValueConfigsResponse
+            # Deletes a ResourceValueConfig.
+            rpc :DeleteResourceValueConfig, ::Google::Cloud::SecurityCenter::V1::DeleteResourceValueConfigRequest, ::Google::Protobuf::Empty
+            # Gets a ResourceValueConfig.
+            rpc :GetResourceValueConfig, ::Google::Cloud::SecurityCenter::V1::GetResourceValueConfigRequest, ::Google::Cloud::SecurityCenter::V1::ResourceValueConfig
+            # Lists all ResourceValueConfigs.
+            rpc :ListResourceValueConfigs, ::Google::Cloud::SecurityCenter::V1::ListResourceValueConfigsRequest, ::Google::Cloud::SecurityCenter::V1::ListResourceValueConfigsResponse
+            # Updates an existing ResourceValueConfigs with new rules.
+            rpc :UpdateResourceValueConfig, ::Google::Cloud::SecurityCenter::V1::UpdateResourceValueConfigRequest, ::Google::Cloud::SecurityCenter::V1::ResourceValueConfig
+            # Lists the valued resources for a set of simulation results and filter.
+            rpc :ListValuedResources, ::Google::Cloud::SecurityCenter::V1::ListValuedResourcesRequest, ::Google::Cloud::SecurityCenter::V1::ListValuedResourcesResponse
+            # Lists the attack paths for a set of simulation results or valued resources
+            # and filter.
+            rpc :ListAttackPaths, ::Google::Cloud::SecurityCenter::V1::ListAttackPathsRequest, ::Google::Cloud::SecurityCenter::V1::ListAttackPathsResponse
           end
 
           Stub = Service.rpc_stub_class

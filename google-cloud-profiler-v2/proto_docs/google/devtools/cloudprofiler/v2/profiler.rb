@@ -40,7 +40,7 @@ module Google
         end
 
         # CreateOfflineProfileRequest describes a profile resource offline creation
-        # request. Profile field must be set.
+        # request.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Parent project to create the profile in.
@@ -55,7 +55,7 @@ module Google
         # UpdateProfileRequest contains the profile to update.
         # @!attribute [rw] profile
         #   @return [::Google::Cloud::Profiler::V2::Profile]
-        #     Profile to update
+        #     Profile to update.
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
         #     Field mask used to specify the fields to be overwritten. Currently only
@@ -68,7 +68,7 @@ module Google
         end
 
         # Profile resource.
-        # @!attribute [rw] name
+        # @!attribute [r] name
         #   @return [::String]
         #     Output only. Opaque, server-assigned, unique ID for this profile.
         # @!attribute [rw] profile_type
@@ -94,8 +94,12 @@ module Google
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Input only. Labels associated to this specific profile. These labels will
-        #     get merged with the deployment labels for the final data set.  See
+        #     get merged with the deployment labels for the final data set. See
         #     documentation on deployment labels for validation rules and limits.
+        # @!attribute [r] start_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. Start time for the profile.
+        #     This output is only present in response from the ListProfiles method.
         class Profile
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -118,11 +122,11 @@ module Google
         # @!attribute [rw] target
         #   @return [::String]
         #     Target is the service name used to group related deployments:
-        #     * Service name for GAE Flex / Standard.
+        #     * Service name for App Engine Flex / Standard.
         #     * Cluster and container name for GKE.
-        #     * User-specified string for direct GCE profiling (e.g. Java).
+        #     * User-specified string for direct Compute Engine profiling (e.g. Java).
         #     * Job name for Dataflow.
-        #     Validation regex: `^[a-z]([-a-z0-9_.]{0,253}[a-z0-9])?$`.
+        #     Validation regex: `^[a-z0-9]([-a-z0-9_.]{0,253}[a-z0-9])?$`.
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Labels identify the deployment within the user universe and same target.
@@ -150,6 +154,47 @@ module Google
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
+        end
+
+        # ListProfilesRequest contains request parameters for listing profiles for
+        # deployments in projects which the user has permissions to view.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The parent, which owns this collection of profiles.
+        #     Format: projects/\\{user_project_id}
+        # @!attribute [rw] page_size
+        #   @return [::Integer]
+        #     The maximum number of items to return.
+        #     Default page_size is 1000.
+        #     Max limit is 1000.
+        # @!attribute [rw] page_token
+        #   @return [::String]
+        #     The token to continue pagination and get profiles from a particular page.
+        #     When paginating, all other parameters provided to `ListProfiles` must match
+        #     the call that provided the page token.
+        class ListProfilesRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # ListProfileResponse contains the list of collected profiles for deployments
+        # in projects which the user has permissions to view.
+        # @!attribute [rw] profiles
+        #   @return [::Array<::Google::Cloud::Profiler::V2::Profile>]
+        #     List of profiles fetched.
+        # @!attribute [rw] next_page_token
+        #   @return [::String]
+        #     Token to receive the next page of results.
+        #     This field maybe empty if there are no more profiles to fetch.
+        # @!attribute [rw] skipped_profiles
+        #   @return [::Integer]
+        #     Number of profiles that were skipped in the current page since they were
+        #     not able to be fetched successfully. This should typically be zero. A
+        #     non-zero value may indicate a transient failure, in which case if the
+        #     number is too high for your use case, the call may be retried.
+        class ListProfilesResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # ProfileType is type of profiling data.

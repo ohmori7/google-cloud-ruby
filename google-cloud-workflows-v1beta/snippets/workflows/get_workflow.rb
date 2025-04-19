@@ -19,15 +19,29 @@
 # [START workflows_v1beta_generated_Workflows_GetWorkflow_sync]
 require "google/cloud/workflows/v1beta"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Workflows::V1beta::Workflows::Client.new
+##
+# Snippet for the get_workflow call in the Workflows service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Workflows::V1beta::Workflows::Client#get_workflow.
+#
+def get_workflow
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Workflows::V1beta::Workflows::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Workflows::V1beta::GetWorkflowRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Workflows::V1beta::GetWorkflowRequest.new
 
-# Call the get_workflow method.
-result = client.get_workflow request
+  # Call the get_workflow method.
+  result = client.get_workflow request
 
-# The returned object is of type Google::Cloud::Workflows::V1beta::Workflow.
-p result
+  # The returned object is of type Google::Cloud::Workflows::V1beta::Workflow.
+  p result
+end
 # [END workflows_v1beta_generated_Workflows_GetWorkflow_sync]

@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/dialogflow/cx/v3/test_case_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -32,6 +33,12 @@ module Google
             # {::Google::Cloud::Dialogflow::CX::V3::TestCaseResult Test Case Results}.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "dialogflow.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -98,6 +105,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @test_cases_stub.universe_domain
+              end
+
+              ##
               # Create a new TestCases client object.
               #
               # @example
@@ -130,8 +146,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -144,15 +161,38 @@ module Google
                   config.credentials = credentials
                   config.quota_project = @quota_project_id
                   config.endpoint = @config.endpoint
+                  config.universe_domain = @config.universe_domain
                 end
 
                 @test_cases_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Dialogflow::CX::V3::TestCases::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @test_cases_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+
+                @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @test_cases_stub.endpoint
+                  config.universe_domain = @test_cases_stub.universe_domain
+                  config.logger = @test_cases_stub.logger if config.respond_to? :logger=
+                end
               end
 
               ##
@@ -161,6 +201,22 @@ module Google
               # @return [::Google::Cloud::Dialogflow::CX::V3::TestCases::Operations]
               #
               attr_reader :operations_client
+
+              ##
+              # Get the associated client for mix-in of the Locations.
+              #
+              # @return [Google::Cloud::Location::Locations::Client]
+              #
+              attr_reader :location_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @test_cases_stub.logger
+              end
 
               # Service calls
 
@@ -184,7 +240,7 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The agent to list all pages for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param page_size [::Integer]
               #     The maximum number of items to return in a single page. By default 20.
               #     Note that when TestCaseView = FULL, the maximum page size allowed is 20.
@@ -214,13 +270,11 @@ module Google
               #   # Call the list_test_cases method.
               #   result = client.list_test_cases request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Dialogflow::CX::V3::TestCase.
-              #     p response
+              #     p item
               #   end
               #
               def list_test_cases request, options = nil
@@ -234,10 +288,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_test_cases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -259,7 +314,7 @@ module Google
                 @test_cases_stub.call_rpc :list_test_cases, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @test_cases_stub, :list_test_cases, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -285,10 +340,10 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The agent to delete test cases from.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param names [::Array<::String>]
-              #     Required. Format of test case names: `projects/<Project ID>/locations/
-              #     <Location ID>/agents/<AgentID>/testCases/<TestCase ID>`.
+              #     Required. Format of test case names:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Protobuf::Empty]
@@ -324,10 +379,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.batch_delete_test_cases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -348,7 +404,6 @@ module Google
 
                 @test_cases_stub.call_rpc :batch_delete_test_cases, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -374,8 +429,8 @@ module Google
               #
               #   @param name [::String]
               #     Required. The name of the testcase.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/testCases/<TestCase ID>`.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::TestCase]
@@ -411,10 +466,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_test_case.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -435,7 +491,6 @@ module Google
 
                 @test_cases_stub.call_rpc :get_test_case, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -461,7 +516,7 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The agent to create the test case for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param test_case [::Google::Cloud::Dialogflow::CX::V3::TestCase, ::Hash]
               #     Required. The test case to create.
               #
@@ -499,10 +554,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_test_case.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -523,7 +579,6 @@ module Google
 
                 @test_cases_stub.call_rpc :create_test_case, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -552,7 +607,8 @@ module Google
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. The mask to specify which fields should be updated. The
               #     {::Google::Cloud::Dialogflow::CX::V3::TestCase#creation_time `creationTime`} and
-              #     {::Google::Cloud::Dialogflow::CX::V3::TestCase#last_test_result `lastTestResult`} cannot be updated.
+              #     {::Google::Cloud::Dialogflow::CX::V3::TestCase#last_test_result `lastTestResult`}
+              #     cannot be updated.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::TestCase]
@@ -588,10 +644,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_test_case.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -612,7 +669,6 @@ module Google
 
                 @test_cases_stub.call_rpc :update_test_case, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -625,8 +681,10 @@ module Google
               # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
               # The returned `Operation` type has the following method-specific fields:
               #
-              # - `metadata`: {::Google::Cloud::Dialogflow::CX::V3::RunTestCaseMetadata RunTestCaseMetadata}
-              # - `response`: {::Google::Cloud::Dialogflow::CX::V3::RunTestCaseResponse RunTestCaseResponse}
+              # - `metadata`:
+              # {::Google::Cloud::Dialogflow::CX::V3::RunTestCaseMetadata RunTestCaseMetadata}
+              # - `response`:
+              # {::Google::Cloud::Dialogflow::CX::V3::RunTestCaseResponse RunTestCaseResponse}
               #
               # @overload run_test_case(request, options = nil)
               #   Pass arguments to `run_test_case` via a request object, either of type
@@ -644,12 +702,12 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. Format of test case name to run: `projects/<Project ID>/locations/
-              #     <Location ID>/agents/<AgentID>/testCases/<TestCase ID>`.
+              #     Required. Format of test case name to run:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>`.
               #   @param environment [::String]
               #     Optional. Environment name. If not set, draft environment is assumed.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/environments/<Environment ID>`.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -671,14 +729,14 @@ module Google
               #   # Call the run_test_case method.
               #   result = client.run_test_case request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def run_test_case request, options = nil
@@ -692,10 +750,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.run_test_case.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -717,7 +776,7 @@ module Google
                 @test_cases_stub.call_rpc :run_test_case, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -730,8 +789,10 @@ module Google
               # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
               # The returned `Operation` type has the following method-specific fields:
               #
-              # - `metadata`: {::Google::Cloud::Dialogflow::CX::V3::BatchRunTestCasesMetadata BatchRunTestCasesMetadata}
-              # - `response`: {::Google::Cloud::Dialogflow::CX::V3::BatchRunTestCasesResponse BatchRunTestCasesResponse}
+              # - `metadata`:
+              # {::Google::Cloud::Dialogflow::CX::V3::BatchRunTestCasesMetadata BatchRunTestCasesMetadata}
+              # - `response`:
+              # {::Google::Cloud::Dialogflow::CX::V3::BatchRunTestCasesResponse BatchRunTestCasesResponse}
               #
               # @overload batch_run_test_cases(request, options = nil)
               #   Pass arguments to `batch_run_test_cases` via a request object, either of type
@@ -749,15 +810,14 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. Agent name. Format: `projects/<Project ID>/locations/<Location ID>/agents/
-              #     <AgentID>`.
+              #     Required. Agent name. Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param environment [::String]
-              #     Optional. If not set, draft environment is assumed. Format: `projects/<Project
-              #     ID>/locations/<Location ID>/agents/<Agent ID>/environments/<Environment
-              #     ID>`.
+              #     Optional. If not set, draft environment is assumed. Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>`.
               #   @param test_cases [::Array<::String>]
-              #     Required. Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/testCases/<TestCase ID>`.
+              #     Required. Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -779,14 +839,14 @@ module Google
               #   # Call the batch_run_test_cases method.
               #   result = client.batch_run_test_cases request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def batch_run_test_cases request, options = nil
@@ -800,10 +860,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.batch_run_test_cases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -825,7 +886,7 @@ module Google
                 @test_cases_stub.call_rpc :batch_run_test_cases, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -851,7 +912,7 @@ module Google
               #
               #   @param agent [::String]
               #     Required. The agent to calculate coverage for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param type [::Google::Cloud::Dialogflow::CX::V3::CalculateCoverageRequest::CoverageType]
               #     Required. The type of coverage requested.
               #
@@ -889,10 +950,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.calculate_coverage.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -913,7 +975,6 @@ module Google
 
                 @test_cases_stub.call_rpc :calculate_coverage, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -921,15 +982,17 @@ module Google
 
               ##
               # Imports the test cases from a Cloud Storage bucket or a local file. It
-              # always creates new test cases and won't overwite any existing ones. The
+              # always creates new test cases and won't overwrite any existing ones. The
               # provided ID in the imported test case is neglected.
               #
               # This method is a [long-running
               # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
               # The returned `Operation` type has the following method-specific fields:
               #
-              # - `metadata`: {::Google::Cloud::Dialogflow::CX::V3::ImportTestCasesMetadata ImportTestCasesMetadata}
-              # - `response`: {::Google::Cloud::Dialogflow::CX::V3::ImportTestCasesResponse ImportTestCasesResponse}
+              # - `metadata`:
+              # {::Google::Cloud::Dialogflow::CX::V3::ImportTestCasesMetadata ImportTestCasesMetadata}
+              # - `response`:
+              # {::Google::Cloud::Dialogflow::CX::V3::ImportTestCasesResponse ImportTestCasesResponse}
               #
               # @overload import_test_cases(request, options = nil)
               #   Pass arguments to `import_test_cases` via a request object, either of type
@@ -948,13 +1011,23 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The agent to import test cases to.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param gcs_uri [::String]
               #     The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI
               #     to import test cases from. The format of this URI must be
               #     `gs://<bucket-name>/<object-name>`.
+              #
+              #     Dialogflow performs a read operation for the Cloud Storage object
+              #     on the caller's behalf, so your request authentication must
+              #     have read permissions for the object. For more information, see
+              #     [Dialogflow access
+              #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+              #
+              #     Note: The following fields are mutually exclusive: `gcs_uri`, `content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #   @param content [::String]
               #     Uncompressed raw byte content for test cases.
+              #
+              #     Note: The following fields are mutually exclusive: `content`, `gcs_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -976,14 +1049,14 @@ module Google
               #   # Call the import_test_cases method.
               #   result = client.import_test_cases request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def import_test_cases request, options = nil
@@ -997,10 +1070,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.import_test_cases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1022,7 +1096,7 @@ module Google
                 @test_cases_stub.call_rpc :import_test_cases, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1036,8 +1110,10 @@ module Google
               # operation](https://cloud.google.com/dialogflow/cx/docs/how/long-running-operation).
               # The returned `Operation` type has the following method-specific fields:
               #
-              # - `metadata`: {::Google::Cloud::Dialogflow::CX::V3::ExportTestCasesMetadata ExportTestCasesMetadata}
-              # - `response`: {::Google::Cloud::Dialogflow::CX::V3::ExportTestCasesResponse ExportTestCasesResponse}
+              # - `metadata`:
+              # {::Google::Cloud::Dialogflow::CX::V3::ExportTestCasesMetadata ExportTestCasesMetadata}
+              # - `response`:
+              # {::Google::Cloud::Dialogflow::CX::V3::ExportTestCasesResponse ExportTestCasesResponse}
               #
               # @overload export_test_cases(request, options = nil)
               #   Pass arguments to `export_test_cases` via a request object, either of type
@@ -1056,12 +1132,18 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The agent where to export test cases from.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param gcs_uri [::String]
               #     The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI to
               #     export the test cases to. The format of this URI must be
               #     `gs://<bucket-name>/<object-name>`. If unspecified, the serialized test
               #     cases is returned inline.
+              #
+              #     Dialogflow performs a write operation for the Cloud Storage object
+              #     on the caller's behalf, so your request authentication must
+              #     have write permissions for the object. For more information, see
+              #     [Dialogflow access
+              #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
               #   @param data_format [::Google::Cloud::Dialogflow::CX::V3::ExportTestCasesRequest::DataFormat]
               #     The data format of the exported test cases. If not specified, `BLOB` is
               #     assumed.
@@ -1097,14 +1179,14 @@ module Google
               #   # Call the export_test_cases method.
               #   result = client.export_test_cases request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def export_test_cases request, options = nil
@@ -1118,10 +1200,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.export_test_cases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1143,14 +1226,15 @@ module Google
                 @test_cases_stub.call_rpc :export_test_cases, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Fetches a list of results for a given test case.
+              # Fetches the list of run results for the given test case. A maximum of 100
+              # results are kept for each test case.
               #
               # @overload list_test_case_results(request, options = nil)
               #   Pass arguments to `list_test_case_results` via a request object, either of type
@@ -1169,9 +1253,10 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The test case to list results for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/
-              #     testCases/<TestCase ID>`. Specify a `-` as a wildcard for TestCase ID to
-              #     list results across multiple test cases.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>`.
+              #     Specify a `-` as a wildcard for TestCase ID to
+              #      list results across multiple test cases.
               #   @param page_size [::Integer]
               #     The maximum number of items to return in a single page. By default 100 and
               #     at most 1000.
@@ -1223,13 +1308,11 @@ module Google
               #   # Call the list_test_case_results method.
               #   result = client.list_test_case_results request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Dialogflow::CX::V3::TestCaseResult.
-              #     p response
+              #     p item
               #   end
               #
               def list_test_case_results request, options = nil
@@ -1243,10 +1326,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_test_case_results.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1268,7 +1352,7 @@ module Google
                 @test_cases_stub.call_rpc :list_test_case_results, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @test_cases_stub, :list_test_case_results, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1294,8 +1378,8 @@ module Google
               #
               #   @param name [::String]
               #     Required. The name of the testcase.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/testCases/<TestCase ID>/results/<TestCaseResult ID>`.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/testCases/<TestCaseID>/results/<TestCaseResultID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::TestCaseResult]
@@ -1331,10 +1415,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_test_case_result.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1355,7 +1440,6 @@ module Google
 
                 @test_cases_stub.call_rpc :get_test_case_result, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1391,20 +1475,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"dialogflow.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -1439,11 +1530,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "dialogflow.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "dialogflow.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1458,6 +1563,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -1476,6 +1583,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##

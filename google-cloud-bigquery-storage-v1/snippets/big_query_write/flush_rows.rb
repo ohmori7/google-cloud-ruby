@@ -19,15 +19,29 @@
 # [START bigquerystorage_v1_generated_BigQueryWrite_FlushRows_sync]
 require "google/cloud/bigquery/storage/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigquery::Storage::V1::BigQueryWrite::Client.new
+##
+# Snippet for the flush_rows call in the BigQueryWrite service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigquery::Storage::V1::BigQueryWrite::Client#flush_rows.
+#
+def flush_rows
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigquery::Storage::V1::BigQueryWrite::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigquery::Storage::V1::FlushRowsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigquery::Storage::V1::FlushRowsRequest.new
 
-# Call the flush_rows method.
-result = client.flush_rows request
+  # Call the flush_rows method.
+  result = client.flush_rows request
 
-# The returned object is of type Google::Cloud::Bigquery::Storage::V1::FlushRowsResponse.
-p result
+  # The returned object is of type Google::Cloud::Bigquery::Storage::V1::FlushRowsResponse.
+  p result
+end
 # [END bigquerystorage_v1_generated_BigQueryWrite_FlushRows_sync]

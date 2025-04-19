@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/retail/v2/catalog_service_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -30,6 +31,12 @@ module Google
           # Service for managing catalog configuration.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "retail.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -96,6 +103,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @catalog_service_stub.universe_domain
+            end
+
+            ##
             # Create a new CatalogService client object.
             #
             # @example
@@ -128,8 +144,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -140,11 +157,49 @@ module Google
 
               @catalog_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Retail::V2::CatalogService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @catalog_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @catalog_service_stub.endpoint
+                config.universe_domain = @catalog_service_stub.universe_domain
+                config.logger = @catalog_service_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @catalog_service_stub.logger
             end
 
             # Service calls
@@ -213,13 +268,11 @@ module Google
             #   # Call the list_catalogs method.
             #   result = client.list_catalogs request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Retail::V2::Catalog.
-            #     p response
+            #     p item
             #   end
             #
             def list_catalogs request, options = nil
@@ -233,10 +286,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_catalogs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -258,7 +312,7 @@ module Google
               @catalog_service_stub.call_rpc :list_catalogs, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @catalog_service_stub, :list_catalogs, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -332,10 +386,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_catalog.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -356,7 +411,6 @@ module Google
 
               @catalog_service_stub.call_rpc :update_catalog, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -397,10 +451,6 @@ module Google
             # * UserEventService will only join events with products from branch
             #   \\{newBranch}.
             #
-            # This feature is only available for users who have Retail Search enabled.
-            # Please submit a form [here](https://cloud.google.com/contact) to contact
-            # cloud sales if you are interested in using Retail Search.
-            #
             # @overload set_default_branch(request, options = nil)
             #   Pass arguments to `set_default_branch` via a request object, either of type
             #   {::Google::Cloud::Retail::V2::SetDefaultBranchRequest} or an equivalent Hash.
@@ -411,7 +461,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_default_branch(catalog: nil, branch_id: nil, note: nil)
+            # @overload set_default_branch(catalog: nil, branch_id: nil, note: nil, force: nil)
             #   Pass arguments to `set_default_branch` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -424,6 +474,10 @@ module Google
             #
             #     This field must be one of "0", "1" or "2". Otherwise, an INVALID_ARGUMENT
             #     error is returned.
+            #
+            #     If there are no sufficient active products in the targeted branch and
+            #     {::Google::Cloud::Retail::V2::SetDefaultBranchRequest#force force} is not set, a
+            #     FAILED_PRECONDITION error is returned.
             #   @param note [::String]
             #     Some note on this request, this can be retrieved by
             #     {::Google::Cloud::Retail::V2::CatalogService::Client#get_default_branch CatalogService.GetDefaultBranch}
@@ -431,6 +485,10 @@ module Google
             #
             #     This field must be a UTF-8 encoded string with a length limit of 1,000
             #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
+            #   @param force [::Boolean]
+            #     If set to true, it permits switching to a branch with
+            #     {::Google::Cloud::Retail::V2::SetDefaultBranchRequest#branch_id branch_id} even
+            #     if it has no sufficient active products.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Protobuf::Empty]
@@ -466,10 +524,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_default_branch.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -490,7 +549,6 @@ module Google
 
               @catalog_service_stub.call_rpc :set_default_branch, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -500,10 +558,6 @@ module Google
             # Get which branch is currently default branch set by
             # {::Google::Cloud::Retail::V2::CatalogService::Client#set_default_branch CatalogService.SetDefaultBranch}
             # method under a specified parent catalog.
-            #
-            # This feature is only available for users who have Retail Search enabled.
-            # Please submit a form [here](https://cloud.google.com/contact) to contact
-            # cloud sales if you are interested in using Retail Search.
             #
             # @overload get_default_branch(request, options = nil)
             #   Pass arguments to `get_default_branch` via a request object, either of type
@@ -558,10 +612,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_default_branch.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -582,7 +637,675 @@ module Google
 
               @catalog_service_stub.call_rpc :get_default_branch, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Gets a {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig}.
+            #
+            # @overload get_completion_config(request, options = nil)
+            #   Pass arguments to `get_completion_config` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::GetCompletionConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::GetCompletionConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_completion_config(name: nil)
+            #   Pass arguments to `get_completion_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. Full CompletionConfig resource name. Format:
+            #     `projects/{project_number}/locations/{location_id}/catalogs/{catalog_id}/completionConfig`
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::CompletionConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::CompletionConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::GetCompletionConfigRequest.new
+            #
+            #   # Call the get_completion_config method.
+            #   result = client.get_completion_config request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::CompletionConfig.
+            #   p result
+            #
+            def get_completion_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::GetCompletionConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_completion_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_completion_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_completion_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :get_completion_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates the {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig}s.
+            #
+            # @overload update_completion_config(request, options = nil)
+            #   Pass arguments to `update_completion_config` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::UpdateCompletionConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::UpdateCompletionConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_completion_config(completion_config: nil, update_mask: nil)
+            #   Pass arguments to `update_completion_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param completion_config [::Google::Cloud::Retail::V2::CompletionConfig, ::Hash]
+            #     Required. The {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig}
+            #     to update.
+            #
+            #     If the caller does not have permission to update the
+            #     {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig}, then a
+            #     PERMISSION_DENIED error is returned.
+            #
+            #     If the {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig} to
+            #     update does not exist, a NOT_FOUND error is returned.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     Indicates which fields in the provided
+            #     {::Google::Cloud::Retail::V2::CompletionConfig CompletionConfig} to update. The
+            #     following are the only supported fields:
+            #
+            #     * {::Google::Cloud::Retail::V2::CompletionConfig#matching_order CompletionConfig.matching_order}
+            #     * {::Google::Cloud::Retail::V2::CompletionConfig#max_suggestions CompletionConfig.max_suggestions}
+            #     * {::Google::Cloud::Retail::V2::CompletionConfig#min_prefix_length CompletionConfig.min_prefix_length}
+            #     * {::Google::Cloud::Retail::V2::CompletionConfig#auto_learning CompletionConfig.auto_learning}
+            #
+            #     If not set, all supported fields are updated.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::CompletionConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::CompletionConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::UpdateCompletionConfigRequest.new
+            #
+            #   # Call the update_completion_config method.
+            #   result = client.update_completion_config request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::CompletionConfig.
+            #   p result
+            #
+            def update_completion_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::UpdateCompletionConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_completion_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.completion_config&.name
+                header_params["completion_config.name"] = request.completion_config.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_completion_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_completion_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :update_completion_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Gets an {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig}.
+            #
+            # @overload get_attributes_config(request, options = nil)
+            #   Pass arguments to `get_attributes_config` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::GetAttributesConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::GetAttributesConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_attributes_config(name: nil)
+            #   Pass arguments to `get_attributes_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. Full AttributesConfig resource name. Format:
+            #     `projects/{project_number}/locations/{location_id}/catalogs/{catalog_id}/attributesConfig`
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::AttributesConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::AttributesConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::GetAttributesConfigRequest.new
+            #
+            #   # Call the get_attributes_config method.
+            #   result = client.get_attributes_config request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::AttributesConfig.
+            #   p result
+            #
+            def get_attributes_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::GetAttributesConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_attributes_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_attributes_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_attributes_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :get_attributes_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates the {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig}.
+            #
+            # The catalog attributes in the request will be updated in the catalog, or
+            # inserted if they do not exist. Existing catalog attributes not included in
+            # the request will remain unchanged. Attributes that are assigned to
+            # products, but do not exist at the catalog level, are always included in the
+            # response. The product attribute is assigned default values for missing
+            # catalog attribute fields, e.g., searchable and dynamic facetable options.
+            #
+            # @overload update_attributes_config(request, options = nil)
+            #   Pass arguments to `update_attributes_config` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::UpdateAttributesConfigRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::UpdateAttributesConfigRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_attributes_config(attributes_config: nil, update_mask: nil)
+            #   Pass arguments to `update_attributes_config` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param attributes_config [::Google::Cloud::Retail::V2::AttributesConfig, ::Hash]
+            #     Required. The {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig}
+            #     to update.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     Indicates which fields in the provided
+            #     {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig} to update. The
+            #     following is the only supported field:
+            #
+            #     * {::Google::Cloud::Retail::V2::AttributesConfig#catalog_attributes AttributesConfig.catalog_attributes}
+            #
+            #     If not set, all supported fields are updated.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::AttributesConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::AttributesConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::UpdateAttributesConfigRequest.new
+            #
+            #   # Call the update_attributes_config method.
+            #   result = client.update_attributes_config request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::AttributesConfig.
+            #   p result
+            #
+            def update_attributes_config request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::UpdateAttributesConfigRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_attributes_config.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.attributes_config&.name
+                header_params["attributes_config.name"] = request.attributes_config.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_attributes_config.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_attributes_config.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :update_attributes_config, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Adds the specified
+            # {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to the
+            # {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig}.
+            #
+            # If the {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to add
+            # already exists, an ALREADY_EXISTS error is returned.
+            #
+            # @overload add_catalog_attribute(request, options = nil)
+            #   Pass arguments to `add_catalog_attribute` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::AddCatalogAttributeRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::AddCatalogAttributeRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload add_catalog_attribute(attributes_config: nil, catalog_attribute: nil)
+            #   Pass arguments to `add_catalog_attribute` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param attributes_config [::String]
+            #     Required. Full AttributesConfig resource name. Format:
+            #     `projects/{project_number}/locations/{location_id}/catalogs/{catalog_id}/attributesConfig`
+            #   @param catalog_attribute [::Google::Cloud::Retail::V2::CatalogAttribute, ::Hash]
+            #     Required. The {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute}
+            #     to add.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::AttributesConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::AttributesConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::AddCatalogAttributeRequest.new
+            #
+            #   # Call the add_catalog_attribute method.
+            #   result = client.add_catalog_attribute request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::AttributesConfig.
+            #   p result
+            #
+            def add_catalog_attribute request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::AddCatalogAttributeRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.add_catalog_attribute.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.attributes_config
+                header_params["attributes_config"] = request.attributes_config
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.add_catalog_attribute.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.add_catalog_attribute.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :add_catalog_attribute, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Removes the specified
+            # {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} from the
+            # {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig}.
+            #
+            # If the {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to
+            # remove does not exist, a NOT_FOUND error is returned.
+            #
+            # @overload remove_catalog_attribute(request, options = nil)
+            #   Pass arguments to `remove_catalog_attribute` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::RemoveCatalogAttributeRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::RemoveCatalogAttributeRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload remove_catalog_attribute(attributes_config: nil, key: nil)
+            #   Pass arguments to `remove_catalog_attribute` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param attributes_config [::String]
+            #     Required. Full AttributesConfig resource name. Format:
+            #     `projects/{project_number}/locations/{location_id}/catalogs/{catalog_id}/attributesConfig`
+            #   @param key [::String]
+            #     Required. The attribute name key of the
+            #     {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to remove.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::AttributesConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::AttributesConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::RemoveCatalogAttributeRequest.new
+            #
+            #   # Call the remove_catalog_attribute method.
+            #   result = client.remove_catalog_attribute request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::AttributesConfig.
+            #   p result
+            #
+            def remove_catalog_attribute request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::RemoveCatalogAttributeRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.remove_catalog_attribute.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.attributes_config
+                header_params["attributes_config"] = request.attributes_config
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.remove_catalog_attribute.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.remove_catalog_attribute.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :remove_catalog_attribute, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Replaces the specified
+            # {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} in the
+            # {::Google::Cloud::Retail::V2::AttributesConfig AttributesConfig} by updating the
+            # catalog attribute with the same
+            # {::Google::Cloud::Retail::V2::CatalogAttribute#key CatalogAttribute.key}.
+            #
+            # If the {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to
+            # replace does not exist, a NOT_FOUND error is returned.
+            #
+            # @overload replace_catalog_attribute(request, options = nil)
+            #   Pass arguments to `replace_catalog_attribute` via a request object, either of type
+            #   {::Google::Cloud::Retail::V2::ReplaceCatalogAttributeRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Retail::V2::ReplaceCatalogAttributeRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload replace_catalog_attribute(attributes_config: nil, catalog_attribute: nil, update_mask: nil)
+            #   Pass arguments to `replace_catalog_attribute` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param attributes_config [::String]
+            #     Required. Full AttributesConfig resource name. Format:
+            #     `projects/{project_number}/locations/{location_id}/catalogs/{catalog_id}/attributesConfig`
+            #   @param catalog_attribute [::Google::Cloud::Retail::V2::CatalogAttribute, ::Hash]
+            #     Required. The updated
+            #     {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute}.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     Indicates which fields in the provided
+            #     {::Google::Cloud::Retail::V2::CatalogAttribute CatalogAttribute} to update. The
+            #     following are NOT supported:
+            #
+            #     * {::Google::Cloud::Retail::V2::CatalogAttribute#key CatalogAttribute.key}
+            #
+            #     If not set, all supported fields are updated.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Retail::V2::AttributesConfig]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Retail::V2::AttributesConfig]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/retail/v2"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Retail::V2::CatalogService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Retail::V2::ReplaceCatalogAttributeRequest.new
+            #
+            #   # Call the replace_catalog_attribute method.
+            #   result = client.replace_catalog_attribute request
+            #
+            #   # The returned object is of type Google::Cloud::Retail::V2::AttributesConfig.
+            #   p result
+            #
+            def replace_catalog_attribute request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Retail::V2::ReplaceCatalogAttributeRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.replace_catalog_attribute.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.attributes_config
+                header_params["attributes_config"] = request.attributes_config
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.replace_catalog_attribute.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.replace_catalog_attribute.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @catalog_service_stub.call_rpc :replace_catalog_attribute, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -618,20 +1341,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"retail.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -666,11 +1396,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "retail.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "retail.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -685,6 +1429,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -703,6 +1449,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -743,6 +1497,41 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :get_default_branch
+                ##
+                # RPC-specific configuration for `get_completion_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_completion_config
+                ##
+                # RPC-specific configuration for `update_completion_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_completion_config
+                ##
+                # RPC-specific configuration for `get_attributes_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_attributes_config
+                ##
+                # RPC-specific configuration for `update_attributes_config`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_attributes_config
+                ##
+                # RPC-specific configuration for `add_catalog_attribute`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :add_catalog_attribute
+                ##
+                # RPC-specific configuration for `remove_catalog_attribute`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :remove_catalog_attribute
+                ##
+                # RPC-specific configuration for `replace_catalog_attribute`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :replace_catalog_attribute
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -754,6 +1543,20 @@ module Google
                   @set_default_branch = ::Gapic::Config::Method.new set_default_branch_config
                   get_default_branch_config = parent_rpcs.get_default_branch if parent_rpcs.respond_to? :get_default_branch
                   @get_default_branch = ::Gapic::Config::Method.new get_default_branch_config
+                  get_completion_config_config = parent_rpcs.get_completion_config if parent_rpcs.respond_to? :get_completion_config
+                  @get_completion_config = ::Gapic::Config::Method.new get_completion_config_config
+                  update_completion_config_config = parent_rpcs.update_completion_config if parent_rpcs.respond_to? :update_completion_config
+                  @update_completion_config = ::Gapic::Config::Method.new update_completion_config_config
+                  get_attributes_config_config = parent_rpcs.get_attributes_config if parent_rpcs.respond_to? :get_attributes_config
+                  @get_attributes_config = ::Gapic::Config::Method.new get_attributes_config_config
+                  update_attributes_config_config = parent_rpcs.update_attributes_config if parent_rpcs.respond_to? :update_attributes_config
+                  @update_attributes_config = ::Gapic::Config::Method.new update_attributes_config_config
+                  add_catalog_attribute_config = parent_rpcs.add_catalog_attribute if parent_rpcs.respond_to? :add_catalog_attribute
+                  @add_catalog_attribute = ::Gapic::Config::Method.new add_catalog_attribute_config
+                  remove_catalog_attribute_config = parent_rpcs.remove_catalog_attribute if parent_rpcs.respond_to? :remove_catalog_attribute
+                  @remove_catalog_attribute = ::Gapic::Config::Method.new remove_catalog_attribute_config
+                  replace_catalog_attribute_config = parent_rpcs.replace_catalog_attribute if parent_rpcs.respond_to? :replace_catalog_attribute
+                  @replace_catalog_attribute = ::Gapic::Config::Method.new replace_catalog_attribute_config
 
                   yield self if block_given?
                 end

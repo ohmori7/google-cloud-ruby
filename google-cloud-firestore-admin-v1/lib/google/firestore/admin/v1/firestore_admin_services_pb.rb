@@ -61,9 +61,11 @@ module Google
               self.unmarshal_class_method = :decode
               self.service_name = 'google.firestore.admin.v1.FirestoreAdmin'
 
-              # Creates a composite index. This returns a [google.longrunning.Operation][google.longrunning.Operation]
-              # which may be used to track the status of the creation. The metadata for
-              # the operation will be the type [IndexOperationMetadata][google.firestore.admin.v1.IndexOperationMetadata].
+              # Creates a composite index. This returns a
+              # [google.longrunning.Operation][google.longrunning.Operation] which may be
+              # used to track the status of the creation. The metadata for the operation
+              # will be the type
+              # [IndexOperationMetadata][google.firestore.admin.v1.IndexOperationMetadata].
               rpc :CreateIndex, ::Google::Cloud::Firestore::Admin::V1::CreateIndexRequest, ::Google::Longrunning::Operation
               # Lists composite indexes.
               rpc :ListIndexes, ::Google::Cloud::Firestore::Admin::V1::ListIndexesRequest, ::Google::Cloud::Firestore::Admin::V1::ListIndexesResponse
@@ -75,13 +77,16 @@ module Google
               rpc :GetField, ::Google::Cloud::Firestore::Admin::V1::GetFieldRequest, ::Google::Cloud::Firestore::Admin::V1::Field
               # Updates a field configuration. Currently, field updates apply only to
               # single field index configuration. However, calls to
-              # [FirestoreAdmin.UpdateField][google.firestore.admin.v1.FirestoreAdmin.UpdateField] should provide a field mask to avoid
-              # changing any configuration that the caller isn't aware of. The field mask
-              # should be specified as: `{ paths: "index_config" }`.
+              # [FirestoreAdmin.UpdateField][google.firestore.admin.v1.FirestoreAdmin.UpdateField]
+              # should provide a field mask to avoid changing any configuration that the
+              # caller isn't aware of. The field mask should be specified as: `{ paths:
+              # "index_config" }`.
               #
-              # This call returns a [google.longrunning.Operation][google.longrunning.Operation] which may be used to
-              # track the status of the field update. The metadata for
-              # the operation will be the type [FieldOperationMetadata][google.firestore.admin.v1.FieldOperationMetadata].
+              # This call returns a
+              # [google.longrunning.Operation][google.longrunning.Operation] which may be
+              # used to track the status of the field update. The metadata for the
+              # operation will be the type
+              # [FieldOperationMetadata][google.firestore.admin.v1.FieldOperationMetadata].
               #
               # To configure the default field settings for the database, use
               # the special `Field` with resource name:
@@ -89,10 +94,13 @@ module Google
               rpc :UpdateField, ::Google::Cloud::Firestore::Admin::V1::UpdateFieldRequest, ::Google::Longrunning::Operation
               # Lists the field configuration and metadata for this database.
               #
-              # Currently, [FirestoreAdmin.ListFields][google.firestore.admin.v1.FirestoreAdmin.ListFields] only supports listing fields
-              # that have been explicitly overridden. To issue this query, call
-              # [FirestoreAdmin.ListFields][google.firestore.admin.v1.FirestoreAdmin.ListFields] with the filter set to
-              # `indexConfig.usesAncestorConfig:false` .
+              # Currently,
+              # [FirestoreAdmin.ListFields][google.firestore.admin.v1.FirestoreAdmin.ListFields]
+              # only supports listing fields that have been explicitly overridden. To issue
+              # this query, call
+              # [FirestoreAdmin.ListFields][google.firestore.admin.v1.FirestoreAdmin.ListFields]
+              # with the filter set to `indexConfig.usesAncestorConfig:false` or
+              # `ttlConfig:*`.
               rpc :ListFields, ::Google::Cloud::Firestore::Admin::V1::ListFieldsRequest, ::Google::Cloud::Firestore::Admin::V1::ListFieldsResponse
               # Exports a copy of all or a subset of documents from Google Cloud Firestore
               # to another storage system, such as Google Cloud Storage. Recent updates to
@@ -112,12 +120,77 @@ module Google
               # created. If an ImportDocuments operation is cancelled, it is possible
               # that a subset of the data has already been imported to Cloud Firestore.
               rpc :ImportDocuments, ::Google::Cloud::Firestore::Admin::V1::ImportDocumentsRequest, ::Google::Longrunning::Operation
+              # Bulk deletes a subset of documents from Google Cloud Firestore.
+              # Documents created or updated after the underlying system starts to process
+              # the request will not be deleted. The bulk delete occurs in the background
+              # and its progress can be monitored and managed via the Operation resource
+              # that is created.
+              #
+              # For more details on bulk delete behavior, refer to:
+              # https://cloud.google.com/firestore/docs/manage-data/bulk-delete
+              rpc :BulkDeleteDocuments, ::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest, ::Google::Longrunning::Operation
+              # Create a database.
+              rpc :CreateDatabase, ::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest, ::Google::Longrunning::Operation
               # Gets information about a database.
               rpc :GetDatabase, ::Google::Cloud::Firestore::Admin::V1::GetDatabaseRequest, ::Google::Cloud::Firestore::Admin::V1::Database
               # List all the databases in the project.
               rpc :ListDatabases, ::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest, ::Google::Cloud::Firestore::Admin::V1::ListDatabasesResponse
               # Updates a database.
               rpc :UpdateDatabase, ::Google::Cloud::Firestore::Admin::V1::UpdateDatabaseRequest, ::Google::Longrunning::Operation
+              # Deletes a database.
+              rpc :DeleteDatabase, ::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest, ::Google::Longrunning::Operation
+              # Create a user creds.
+              rpc :CreateUserCreds, ::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest, ::Google::Cloud::Firestore::Admin::V1::UserCreds
+              # Gets a user creds resource. Note that the returned resource does not
+              # contain the secret value itself.
+              rpc :GetUserCreds, ::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest, ::Google::Cloud::Firestore::Admin::V1::UserCreds
+              # List all user creds in the database. Note that the returned resource
+              # does not contain the secret value itself.
+              rpc :ListUserCreds, ::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest, ::Google::Cloud::Firestore::Admin::V1::ListUserCredsResponse
+              # Enables a user creds. No-op if the user creds are already enabled.
+              rpc :EnableUserCreds, ::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest, ::Google::Cloud::Firestore::Admin::V1::UserCreds
+              # Disables a user creds. No-op if the user creds are already disabled.
+              rpc :DisableUserCreds, ::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest, ::Google::Cloud::Firestore::Admin::V1::UserCreds
+              # Resets the password of a user creds.
+              rpc :ResetUserPassword, ::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest, ::Google::Cloud::Firestore::Admin::V1::UserCreds
+              # Deletes a user creds.
+              rpc :DeleteUserCreds, ::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest, ::Google::Protobuf::Empty
+              # Gets information about a backup.
+              rpc :GetBackup, ::Google::Cloud::Firestore::Admin::V1::GetBackupRequest, ::Google::Cloud::Firestore::Admin::V1::Backup
+              # Lists all the backups.
+              rpc :ListBackups, ::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest, ::Google::Cloud::Firestore::Admin::V1::ListBackupsResponse
+              # Deletes a backup.
+              rpc :DeleteBackup, ::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest, ::Google::Protobuf::Empty
+              # Creates a new database by restoring from an existing backup.
+              #
+              # The new database must be in the same cloud region or multi-region location
+              # as the existing backup. This behaves similar to
+              # [FirestoreAdmin.CreateDatabase][google.firestore.admin.v1.FirestoreAdmin.CreateDatabase]
+              # except instead of creating a new empty database, a new database is created
+              # with the database type, index configuration, and documents from an existing
+              # backup.
+              #
+              # The [long-running operation][google.longrunning.Operation] can be used to
+              # track the progress of the restore, with the Operation's
+              # [metadata][google.longrunning.Operation.metadata] field type being the
+              # [RestoreDatabaseMetadata][google.firestore.admin.v1.RestoreDatabaseMetadata].
+              # The [response][google.longrunning.Operation.response] type is the
+              # [Database][google.firestore.admin.v1.Database] if the restore was
+              # successful. The new database is not readable or writeable until the LRO has
+              # completed.
+              rpc :RestoreDatabase, ::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest, ::Google::Longrunning::Operation
+              # Creates a backup schedule on a database.
+              # At most two backup schedules can be configured on a database, one daily
+              # backup schedule and one weekly backup schedule.
+              rpc :CreateBackupSchedule, ::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest, ::Google::Cloud::Firestore::Admin::V1::BackupSchedule
+              # Gets information about a backup schedule.
+              rpc :GetBackupSchedule, ::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest, ::Google::Cloud::Firestore::Admin::V1::BackupSchedule
+              # List backup schedules.
+              rpc :ListBackupSchedules, ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest, ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesResponse
+              # Updates a backup schedule.
+              rpc :UpdateBackupSchedule, ::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest, ::Google::Cloud::Firestore::Admin::V1::BackupSchedule
+              # Deletes a backup schedule.
+              rpc :DeleteBackupSchedule, ::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest, ::Google::Protobuf::Empty
             end
 
             Stub = Service.rpc_stub_class

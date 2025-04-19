@@ -1,5 +1,48 @@
 # Release History
 
+### 0.16.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28531](https://github.com/googleapis/google-cloud-ruby/issues/28531)) 
+* Update Ruby version requirement to 3.0 
+
+### 0.15.2 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26689](https://github.com/googleapis/google-cloud-ruby/issues/26689)) 
+
+### 0.15.1 (2024-06-05)
+
+#### Documentation
+
+* Update reference documentation URL for phishing protection ([#26024](https://github.com/googleapis/google-cloud-ruby/issues/26024)) 
+
+### 0.15.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24874](https://github.com/googleapis/google-cloud-ruby/issues/24874)) 
+
+### 0.14.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24264](https://github.com/googleapis/google-cloud-ruby/issues/24264)) 
+
+### 0.13.0 (2023-03-09)
+
+#### Features
+
+* Support REST transport ([#20768](https://github.com/googleapis/google-cloud-ruby/issues/20768)) 
+
+### 0.12.0 (2022-07-07)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
 ### 0.11.3 / 2022-01-11
 
 #### Documentation

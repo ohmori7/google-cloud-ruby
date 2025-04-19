@@ -25,26 +25,28 @@ require "google/cloud/dlp/v2/version"
 require "google/cloud/dlp/v2/dlp_service/credentials"
 require "google/cloud/dlp/v2/dlp_service/paths"
 require "google/cloud/dlp/v2/dlp_service/client"
+require "google/cloud/dlp/v2/dlp_service/rest"
 
 module Google
   module Cloud
     module Dlp
       module V2
         ##
-        # The Cloud Data Loss Prevention (DLP) API is a service that allows clients
-        # to detect the presence of Personally Identifiable Information (PII) and other
-        # privacy-sensitive data in user-supplied, unstructured data streams, like text
-        # blocks or images.
-        # The service also includes methods for sensitive data redaction and
-        # scheduling of data scans on Google Cloud Platform based data sets.
-        #
+        # Sensitive Data Protection provides access to a powerful sensitive data
+        # inspection, classification, and de-identification platform that works
+        # on text, images, and Google Cloud storage repositories.
         # To learn more about concepts and find how-to guides see
-        # https://cloud.google.com/dlp/docs/.
+        # https://cloud.google.com/sensitive-data-protection/docs/.
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/cloud/dlp/v2/dlp_service"
         #     client = ::Google::Cloud::Dlp::V2::DlpService::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/dlp/v2/dlp_service/rest"
+        #     client = ::Google::Cloud::Dlp::V2::DlpService::Rest::Client.new
         #
         module DlpService
         end

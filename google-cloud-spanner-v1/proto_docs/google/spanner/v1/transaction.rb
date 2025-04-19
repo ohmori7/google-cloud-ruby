@@ -29,7 +29,8 @@ module Google
         # completed, the session can immediately be re-used for the next transaction.
         # It is not necessary to create a new session for each transaction.
         #
-        # Transaction Modes:
+        # Transaction modes:
+        #
         # Cloud Spanner supports three transaction modes:
         #
         #   1. Locking read-write. This type of transaction is the only way
@@ -38,11 +39,19 @@ module Google
         #      Locking read-write transactions may abort, requiring the
         #      application to retry.
         #
-        #   2. Snapshot read-only. This transaction type provides guaranteed
-        #      consistency across several reads, but does not allow
-        #      writes. Snapshot read-only transactions can be configured to
-        #      read at timestamps in the past. Snapshot read-only
-        #      transactions do not need to be committed.
+        #   2. Snapshot read-only. Snapshot read-only transactions provide guaranteed
+        #      consistency across several reads, but do not allow
+        #      writes. Snapshot read-only transactions can be configured to read at
+        #      timestamps in the past, or configured to perform a strong read
+        #      (where Spanner will select a timestamp such that the read is
+        #      guaranteed to see the effects of all transactions that have committed
+        #      before the start of the read). Snapshot read-only transactions do not
+        #      need to be committed.
+        #
+        #      Queries on change streams must be performed with the snapshot read-only
+        #      transaction mode, specifying a strong read. Please see
+        #      {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#strong TransactionOptions.ReadOnly.strong}
+        #      for more details.
         #
         #   3. Partitioned DML. This type of transaction is used to execute
         #      a single Partitioned DML statement. Partitioned DML partitions
@@ -57,11 +66,12 @@ module Google
         # not conflict with read-write transactions. As a consequence of not
         # taking locks, they also do not abort, so retry loops are not needed.
         #
-        # Transactions may only read/write data in a single database. They
-        # may, however, read/write data in different tables within that
+        # Transactions may only read-write data in a single database. They
+        # may, however, read-write data in different tables within that
         # database.
         #
-        # Locking Read-Write Transactions:
+        # Locking read-write transactions:
+        #
         # Locking transactions may be used to atomically read-modify-write
         # data anywhere in a database. This type of transaction is externally
         # consistent.
@@ -72,7 +82,7 @@ module Google
         # active as long as the transaction continues to do reads, and the
         # transaction has not been terminated by
         # {::Google::Cloud::Spanner::V1::Spanner::Client#commit Commit} or
-        # {::Google::Cloud::Spanner::V1::Spanner::Client#rollback Rollback}.  Long periods of
+        # {::Google::Cloud::Spanner::V1::Spanner::Client#rollback Rollback}. Long periods of
         # inactivity at the client may cause Cloud Spanner to release a
         # transaction's locks and abort it.
         #
@@ -84,6 +94,7 @@ module Google
         # transaction.
         #
         # Semantics:
+        #
         # Cloud Spanner can commit the transaction if all read locks it acquired
         # are still valid at commit time, and it is able to acquire write
         # locks for all writes. Cloud Spanner can abort the transaction for any
@@ -95,7 +106,8 @@ module Google
         # use Cloud Spanner locks for any sort of mutual exclusion other than
         # between Cloud Spanner transactions themselves.
         #
-        # Retrying Aborted Transactions:
+        # Retrying aborted transactions:
+        #
         # When a transaction aborts, the application can choose to retry the
         # whole transaction again. To maximize the chances of successfully
         # committing the retry, the client should execute the retry in the
@@ -110,7 +122,8 @@ module Google
         # instead, it is better to limit the total amount of time spent
         # retrying.
         #
-        # Idle Transactions:
+        # Idle transactions:
+        #
         # A transaction is considered idle if it has no outstanding reads or
         # SQL queries and has not started a read or SQL query within the last 10
         # seconds. Idle transactions can be aborted by Cloud Spanner so that they
@@ -121,7 +134,8 @@ module Google
         # SQL query in the transaction (for example, `SELECT 1`) prevents the
         # transaction from becoming idle.
         #
-        # Snapshot Read-Only Transactions:
+        # Snapshot read-only transactions:
+        #
         # Snapshot read-only transactions provides a simpler method than
         # locking read-write transactions for doing several consistent
         # reads. However, this type of transaction does not support writes.
@@ -153,13 +167,12 @@ module Google
         #
         # If the Cloud Spanner database to be read is geographically distributed,
         # stale read-only transactions can execute more quickly than strong
-        # or read-write transaction, because they are able to execute far
+        # or read-write transactions, because they are able to execute far
         # from the leader replica.
         #
         # Each type of timestamp bound is discussed in detail below.
         #
-        # Strong:
-        # Strong reads are guaranteed to see the effects of all transactions
+        # Strong: Strong reads are guaranteed to see the effects of all transactions
         # that have committed before the start of the read. Furthermore, all
         # rows yielded by a single read are consistent with each other -- if
         # any part of the read observes a transaction, all parts of the read
@@ -171,9 +184,14 @@ module Google
         # reads should be executed within a transaction or at an exact read
         # timestamp.
         #
-        # See {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#strong TransactionOptions.ReadOnly.strong}.
+        # Queries on change streams (see below for more details) must also specify
+        # the strong read timestamp bound.
         #
-        # Exact Staleness:
+        # See
+        # {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#strong TransactionOptions.ReadOnly.strong}.
+        #
+        # Exact staleness:
+        #
         # These timestamp bounds execute reads at a user-specified
         # timestamp. Reads at a timestamp are guaranteed to see a consistent
         # prefix of the global transaction history: they observe
@@ -191,10 +209,13 @@ module Google
         # equivalent boundedly stale concurrency modes. On the other hand,
         # boundedly stale reads usually return fresher results.
         #
-        # See {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#read_timestamp TransactionOptions.ReadOnly.read_timestamp} and
+        # See
+        # {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#read_timestamp TransactionOptions.ReadOnly.read_timestamp}
+        # and
         # {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#exact_staleness TransactionOptions.ReadOnly.exact_staleness}.
         #
-        # Bounded Staleness:
+        # Bounded staleness:
+        #
         # Bounded staleness modes allow Cloud Spanner to pick the read timestamp,
         # subject to a user-provided staleness bound. Cloud Spanner chooses the
         # newest timestamp within the staleness bound that allows execution
@@ -220,10 +241,13 @@ module Google
         # which rows will be read, it can only be used with single-use
         # read-only transactions.
         #
-        # See {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#max_staleness TransactionOptions.ReadOnly.max_staleness} and
+        # See
+        # {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#max_staleness TransactionOptions.ReadOnly.max_staleness}
+        # and
         # {::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly#min_read_timestamp TransactionOptions.ReadOnly.min_read_timestamp}.
         #
-        # Old Read Timestamps and Garbage Collection:
+        # Old read timestamps and garbage collection:
+        #
         # Cloud Spanner continuously garbage collects deleted and overwritten data
         # in the background to reclaim storage space. This process is known
         # as "version GC". By default, version GC reclaims versions after they
@@ -233,7 +257,41 @@ module Google
         # timestamp become too old while executing. Reads and SQL queries with
         # too-old read timestamps fail with the error `FAILED_PRECONDITION`.
         #
-        # Partitioned DML Transactions:
+        # You can configure and extend the `VERSION_RETENTION_PERIOD` of a
+        # database up to a period as long as one week, which allows Cloud Spanner
+        # to perform reads up to one week in the past.
+        #
+        # Querying change Streams:
+        #
+        # A Change Stream is a schema object that can be configured to watch data
+        # changes on the entire database, a set of tables, or a set of columns
+        # in a database.
+        #
+        # When a change stream is created, Spanner automatically defines a
+        # corresponding SQL Table-Valued Function (TVF) that can be used to query
+        # the change records in the associated change stream using the
+        # ExecuteStreamingSql API. The name of the TVF for a change stream is
+        # generated from the name of the change stream: READ_<change_stream_name>.
+        #
+        # All queries on change stream TVFs must be executed using the
+        # ExecuteStreamingSql API with a single-use read-only transaction with a
+        # strong read-only timestamp_bound. The change stream TVF allows users to
+        # specify the start_timestamp and end_timestamp for the time range of
+        # interest. All change records within the retention period is accessible
+        # using the strong read-only timestamp_bound. All other TransactionOptions
+        # are invalid for change stream queries.
+        #
+        # In addition, if TransactionOptions.read_only.return_read_timestamp is set
+        # to true, a special value of 2^63 - 2 will be returned in the
+        # {::Google::Cloud::Spanner::V1::Transaction Transaction} message that describes the
+        # transaction, instead of a valid read timestamp. This special value should be
+        # discarded and not used for any subsequent queries.
+        #
+        # Please see https://cloud.google.com/spanner/docs/change-streams
+        # for more details on how to query the change stream TVFs.
+        #
+        # Partitioned DML transactions:
+        #
         # Partitioned DML transactions are used to execute DML statements with a
         # different execution strategy that provides different, and often better,
         # scalability properties for large, table-wide operations than DML in a
@@ -294,6 +352,8 @@ module Google
         #     Authorization to begin a read-write transaction requires
         #     `spanner.databases.beginOrRollbackReadWriteTransaction` permission
         #     on the `session` resource.
+        #
+        #     Note: The following fields are mutually exclusive: `read_write`, `partitioned_dml`, `read_only`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] partitioned_dml
         #   @return [::Google::Cloud::Spanner::V1::TransactionOptions::PartitionedDml]
         #     Partitioned DML transaction.
@@ -301,6 +361,8 @@ module Google
         #     Authorization to begin a Partitioned DML transaction requires
         #     `spanner.databases.beginPartitionedDmlTransaction` permission
         #     on the `session` resource.
+        #
+        #     Note: The following fields are mutually exclusive: `partitioned_dml`, `read_write`, `read_only`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_only
         #   @return [::Google::Cloud::Spanner::V1::TransactionOptions::ReadOnly]
         #     Transaction will not write.
@@ -308,15 +370,79 @@ module Google
         #     Authorization to begin a read-only transaction requires
         #     `spanner.databases.beginReadOnlyTransaction` permission
         #     on the `session` resource.
+        #
+        #     Note: The following fields are mutually exclusive: `read_only`, `read_write`, `partitioned_dml`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] exclude_txn_from_change_streams
+        #   @return [::Boolean]
+        #     When `exclude_txn_from_change_streams` is set to `true`:
+        #      * Mutations from this transaction will not be recorded in change streams
+        #      with DDL option `allow_txn_exclusion=true` that are tracking columns
+        #      modified by these transactions.
+        #      * Mutations from this transaction will be recorded in change streams with
+        #      DDL option `allow_txn_exclusion=false or not set` that are tracking
+        #      columns modified by these transactions.
+        #
+        #     When `exclude_txn_from_change_streams` is set to `false` or not set,
+        #     mutations from this transaction will be recorded in all change streams that
+        #     are tracking columns modified by these transactions.
+        #     `exclude_txn_from_change_streams` may only be specified for read-write or
+        #     partitioned-dml transactions, otherwise the API will return an
+        #     `INVALID_ARGUMENT` error.
+        # @!attribute [rw] isolation_level
+        #   @return [::Google::Cloud::Spanner::V1::TransactionOptions::IsolationLevel]
+        #     Isolation level for the transaction.
         class TransactionOptions
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # Message type to initiate a read-write transaction. Currently this
           # transaction type has no options.
+          # @!attribute [rw] read_lock_mode
+          #   @return [::Google::Cloud::Spanner::V1::TransactionOptions::ReadWrite::ReadLockMode]
+          #     Read lock mode for the transaction.
+          # @!attribute [rw] multiplexed_session_previous_transaction_id
+          #   @return [::String]
+          #     Optional. Clients should pass the transaction ID of the previous
+          #     transaction attempt that was aborted if this transaction is being
+          #     executed on a multiplexed session.
+          #     This feature is not yet supported and will result in an UNIMPLEMENTED
+          #     error.
           class ReadWrite
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # `ReadLockMode` is used to set the read lock mode for read-write
+            # transactions.
+            module ReadLockMode
+              # Default value.
+              #
+              # * If isolation level is `REPEATABLE_READ`, then it is an error to
+              #   specify `read_lock_mode`. Locking semantics default to `OPTIMISTIC`.
+              #   No validation checks are done for reads, except for:
+              #     1. reads done as part of queries that use `SELECT FOR UPDATE`
+              #     2. reads done as part of statements with a `LOCK_SCANNED_RANGES`
+              #        hint
+              #     3. reads done as part of DML statements
+              #   to validate that the data that was served at the snapshot time is
+              #   unchanged at commit time.
+              # * At all other isolation levels, if `read_lock_mode` is the default
+              #   value, then pessimistic read lock is used.
+              READ_LOCK_MODE_UNSPECIFIED = 0
+
+              # Pessimistic lock mode.
+              #
+              # Read locks are acquired immediately on read.
+              # Semantics described only applies to `SERIALIZABLE` isolation.
+              PESSIMISTIC = 1
+
+              # Optimistic lock mode.
+              #
+              # Locks for reads within the transaction are not acquired on read.
+              # Instead the locks are acquired on a commit to validate that
+              # read/queried data has not changed since the transaction started.
+              # Semantics described only applies to `SERIALIZABLE` isolation.
+              OPTIMISTIC = 2
+            end
           end
 
           # Message type to initiate a Partitioned DML transaction.
@@ -330,6 +456,8 @@ module Google
           #   @return [::Boolean]
           #     Read at a timestamp where all previously committed transactions
           #     are visible.
+          #
+          #     Note: The following fields are mutually exclusive: `strong`, `min_read_timestamp`, `max_staleness`, `read_timestamp`, `exact_staleness`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] min_read_timestamp
           #   @return [::Google::Protobuf::Timestamp]
           #     Executes all reads at a timestamp >= `min_read_timestamp`.
@@ -342,6 +470,8 @@ module Google
           #
           #     A timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.
           #     Example: `"2014-10-02T15:01:23.045123456Z"`.
+          #
+          #     Note: The following fields are mutually exclusive: `min_read_timestamp`, `strong`, `max_staleness`, `read_timestamp`, `exact_staleness`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] max_staleness
           #   @return [::Google::Protobuf::Duration]
           #     Read data at a timestamp >= `NOW - max_staleness`
@@ -357,6 +487,8 @@ module Google
           #
           #     Note that this option can only be used in single-use
           #     transactions.
+          #
+          #     Note: The following fields are mutually exclusive: `max_staleness`, `strong`, `min_read_timestamp`, `read_timestamp`, `exact_staleness`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] read_timestamp
           #   @return [::Google::Protobuf::Timestamp]
           #     Executes all reads at the given timestamp. Unlike other modes,
@@ -371,6 +503,8 @@ module Google
           #
           #     A timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.
           #     Example: `"2014-10-02T15:01:23.045123456Z"`.
+          #
+          #     Note: The following fields are mutually exclusive: `read_timestamp`, `strong`, `min_read_timestamp`, `max_staleness`, `exact_staleness`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] exact_staleness
           #   @return [::Google::Protobuf::Duration]
           #     Executes all reads at a timestamp that is `exact_staleness`
@@ -384,13 +518,48 @@ module Google
           #
           #     Useful for reading at nearby replicas without the distributed
           #     timestamp negotiation overhead of `max_staleness`.
+          #
+          #     Note: The following fields are mutually exclusive: `exact_staleness`, `strong`, `min_read_timestamp`, `max_staleness`, `read_timestamp`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] return_read_timestamp
           #   @return [::Boolean]
           #     If true, the Cloud Spanner-selected read timestamp is included in
-          #     the {::Google::Cloud::Spanner::V1::Transaction Transaction} message that describes the transaction.
+          #     the {::Google::Cloud::Spanner::V1::Transaction Transaction} message that describes
+          #     the transaction.
           class ReadOnly
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # `IsolationLevel` is used when setting `isolation_level` for a transaction.
+          module IsolationLevel
+            # Default value.
+            #
+            # If the value is not specified, the `SERIALIZABLE` isolation level is
+            # used.
+            ISOLATION_LEVEL_UNSPECIFIED = 0
+
+            # All transactions appear as if they executed in a serial order, even if
+            # some of the reads, writes, and other operations of distinct transactions
+            # actually occurred in parallel. Spanner assigns commit timestamps that
+            # reflect the order of committed transactions to implement this property.
+            # Spanner offers a stronger guarantee than serializability called external
+            # consistency. For further details, please refer to
+            # https://cloud.google.com/spanner/docs/true-time-external-consistency#serializability.
+            SERIALIZABLE = 1
+
+            # All reads performed during the transaction observe a consistent snapshot
+            # of the database, and the transaction will only successfully commit in the
+            # absence of conflicts between its updates and any concurrent updates that
+            # have occurred since that snapshot. Consequently, in contrast to
+            # `SERIALIZABLE` transactions, only write-write conflicts are detected in
+            # snapshot transactions.
+            #
+            # This isolation level does not support Read-only and Partitioned DML
+            # transactions.
+            #
+            # When `REPEATABLE_READ` is specified on a read-write transaction, the
+            # locking semantics default to `OPTIMISTIC`.
+            REPEATABLE_READ = 2
           end
         end
 
@@ -413,6 +582,17 @@ module Google
         #
         #     A timestamp in RFC3339 UTC \"Zulu\" format, accurate to nanoseconds.
         #     Example: `"2014-10-02T15:01:23.045123456Z"`.
+        # @!attribute [rw] precommit_token
+        #   @return [::Google::Cloud::Spanner::V1::MultiplexedSessionPrecommitToken]
+        #     A precommit token will be included in the response of a BeginTransaction
+        #     request if the read-write transaction is on a multiplexed session and
+        #     a mutation_key was specified in the
+        #     {::Google::Cloud::Spanner::V1::BeginTransactionRequest BeginTransaction}.
+        #     The precommit token with the highest sequence number from this transaction
+        #     attempt should be passed to the {::Google::Cloud::Spanner::V1::Spanner::Client#commit Commit}
+        #     request for this transaction.
+        #     This feature is not yet supported and will result in an UNIMPLEMENTED
+        #     error.
         class Transaction
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -422,21 +602,46 @@ module Google
         # {::Google::Cloud::Spanner::V1::Spanner::Client#read Read} or
         # {::Google::Cloud::Spanner::V1::Spanner::Client#execute_sql ExecuteSql} call runs.
         #
-        # See {::Google::Cloud::Spanner::V1::TransactionOptions TransactionOptions} for more information about transactions.
+        # See {::Google::Cloud::Spanner::V1::TransactionOptions TransactionOptions} for more
+        # information about transactions.
         # @!attribute [rw] single_use
         #   @return [::Google::Cloud::Spanner::V1::TransactionOptions]
         #     Execute the read or SQL query in a temporary transaction.
         #     This is the most efficient way to execute a transaction that
         #     consists of a single SQL query.
+        #
+        #     Note: The following fields are mutually exclusive: `single_use`, `id`, `begin`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] id
         #   @return [::String]
         #     Execute the read or SQL query in a previously-started transaction.
+        #
+        #     Note: The following fields are mutually exclusive: `id`, `single_use`, `begin`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] begin
         #   @return [::Google::Cloud::Spanner::V1::TransactionOptions]
         #     Begin a new transaction and execute this read or SQL query in
         #     it. The transaction ID of the new transaction is returned in
-        #     {::Google::Cloud::Spanner::V1::ResultSetMetadata#transaction ResultSetMetadata.transaction}, which is a {::Google::Cloud::Spanner::V1::Transaction Transaction}.
+        #     {::Google::Cloud::Spanner::V1::ResultSetMetadata#transaction ResultSetMetadata.transaction},
+        #     which is a {::Google::Cloud::Spanner::V1::Transaction Transaction}.
+        #
+        #     Note: The following fields are mutually exclusive: `begin`, `single_use`, `id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class TransactionSelector
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # When a read-write transaction is executed on a multiplexed session,
+        # this precommit token is sent back to the client
+        # as a part of the [Transaction] message in the BeginTransaction response and
+        # also as a part of the [ResultSet] and [PartialResultSet] responses.
+        # @!attribute [rw] precommit_token
+        #   @return [::String]
+        #     Opaque precommit token.
+        # @!attribute [rw] seq_num
+        #   @return [::Integer]
+        #     An incrementing seq number is generated on every precommit token
+        #     that is returned. Clients should remember the precommit token with the
+        #     highest sequence number from the current transaction attempt.
+        class MultiplexedSessionPrecommitToken
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

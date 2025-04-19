@@ -41,9 +41,26 @@ class ::Google::Cloud::Workflows::V1::Workflows::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -127,11 +144,13 @@ class ::Google::Cloud::Workflows::V1::Workflows::ClientTest < Minitest::Test
 
     # Create request parameters for a unary method.
     name = "hello world"
+    revision_id = "hello world"
 
     get_workflow_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :get_workflow, name
       assert_kind_of ::Google::Cloud::Workflows::V1::GetWorkflowRequest, request
       assert_equal "hello world", request["name"]
+      assert_equal "hello world", request["revision_id"]
       refute_nil options
     end
 
@@ -142,31 +161,31 @@ class ::Google::Cloud::Workflows::V1::Workflows::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.get_workflow({ name: name }) do |response, operation|
+      client.get_workflow({ name: name, revision_id: revision_id }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.get_workflow name: name do |response, operation|
+      client.get_workflow name: name, revision_id: revision_id do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.get_workflow ::Google::Cloud::Workflows::V1::GetWorkflowRequest.new(name: name) do |response, operation|
+      client.get_workflow ::Google::Cloud::Workflows::V1::GetWorkflowRequest.new(name: name, revision_id: revision_id) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.get_workflow({ name: name }, grpc_options) do |response, operation|
+      client.get_workflow({ name: name, revision_id: revision_id }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.get_workflow(::Google::Cloud::Workflows::V1::GetWorkflowRequest.new(name: name), grpc_options) do |response, operation|
+      client.get_workflow(::Google::Cloud::Workflows::V1::GetWorkflowRequest.new(name: name, revision_id: revision_id), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -371,11 +390,79 @@ class ::Google::Cloud::Workflows::V1::Workflows::ClientTest < Minitest::Test
     end
   end
 
+  def test_list_workflow_revisions
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Workflows::V1::ListWorkflowRevisionsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_workflow_revisions_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_workflow_revisions, name
+      assert_kind_of ::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_workflow_revisions_client_stub do
+      # Create client
+      client = ::Google::Cloud::Workflows::V1::Workflows::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_workflow_revisions({ name: name, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_workflow_revisions name: name, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_workflow_revisions ::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest.new(name: name, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_workflow_revisions({ name: name, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_workflow_revisions(::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest.new(name: name, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_workflow_revisions_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Workflows::V1::Workflows::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -393,7 +480,8 @@ class ::Google::Cloud::Workflows::V1::Workflows::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Workflows::V1::Workflows::Client.new do |config|
         config.credentials = grpc_channel
       end

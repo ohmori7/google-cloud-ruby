@@ -19,15 +19,29 @@
 # [START monitoring_v3_generated_ServiceMonitoringService_GetServiceLevelObjective_sync]
 require "google/cloud/monitoring/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Monitoring::V3::ServiceMonitoringService::Client.new
+##
+# Snippet for the get_service_level_objective call in the ServiceMonitoringService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Monitoring::V3::ServiceMonitoringService::Client#get_service_level_objective.
+#
+def get_service_level_objective
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Monitoring::V3::ServiceMonitoringService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Monitoring::V3::GetServiceLevelObjectiveRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Monitoring::V3::GetServiceLevelObjectiveRequest.new
 
-# Call the get_service_level_objective method.
-result = client.get_service_level_objective request
+  # Call the get_service_level_objective method.
+  result = client.get_service_level_objective request
 
-# The returned object is of type Google::Cloud::Monitoring::V3::ServiceLevelObjective.
-p result
+  # The returned object is of type Google::Cloud::Monitoring::V3::ServiceLevelObjective.
+  p result
+end
 # [END monitoring_v3_generated_ServiceMonitoringService_GetServiceLevelObjective_sync]

@@ -23,9 +23,39 @@ require "gapic/grpc/service_stub"
 require "google/cloud/bigquery/connection/v1/connection_service"
 
 class ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_cluster_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.cluster_path project: "value0", region: "value1", cluster: "value2"
+      assert_equal "projects/value0/regions/value1/clusters/value2", path
+    end
+  end
+
   def test_connection_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,13 +67,25 @@ class ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::ClientPathsT
 
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new do |config|
         config.credentials = grpc_channel
       end
 
       path = client.location_path project: "value0", location: "value1"
       assert_equal "projects/value0/locations/value1", path
+    end
+  end
+
+  def test_service_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.service_path project: "value0", location: "value1", service: "value2"
+      assert_equal "projects/value0/locations/value1/services/value2", path
     end
   end
 end

@@ -19,15 +19,29 @@
 # [START cloudtasks_v2_generated_CloudTasks_CreateTask_sync]
 require "google/cloud/tasks/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Tasks::V2::CloudTasks::Client.new
+##
+# Snippet for the create_task call in the CloudTasks service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Tasks::V2::CloudTasks::Client#create_task.
+#
+def create_task
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Tasks::V2::CloudTasks::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Tasks::V2::CreateTaskRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Tasks::V2::CreateTaskRequest.new
 
-# Call the create_task method.
-result = client.create_task request
+  # Call the create_task method.
+  result = client.create_task request
 
-# The returned object is of type Google::Cloud::Tasks::V2::Task.
-p result
+  # The returned object is of type Google::Cloud::Tasks::V2::Task.
+  p result
+end
 # [END cloudtasks_v2_generated_CloudTasks_CreateTask_sync]

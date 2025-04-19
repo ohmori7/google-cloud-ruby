@@ -15,16 +15,16 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.YOSHI_CODE_BOT_TOKEN }}
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
-    - name: Install Ruby 3.0
+      uses: actions/checkout@v4
+    - name: Install Ruby 3.3
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: "3.0"
+        ruby-version: "3.3"
+    - name: Install Bazel
+      uses: bazel-contrib/setup-bazel@0.9.1
     - name: Install tools
       run: |
-        git config --global user.email "70984784+yoshi-code-bot@users.noreply.github.com"
-        git config --global user.name "Yoshi Code Bot"
         gem install --no-document toys
     - name: Create library
       run: |
-        toys new-library -v --pull --test --remote=origin ${{ github.event.inputs.protoPath }}
+        toys new-library -v --bazelisk --pull --pull-googleapis --test --fork --bootstrap-releases ${{ github.event.inputs.protoPath }}

@@ -19,15 +19,29 @@
 # [START cloudkms_v1_generated_KeyManagementService_GetCryptoKey_sync]
 require "google/cloud/kms/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+##
+# Snippet for the get_crypto_key call in the KeyManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Kms::V1::KeyManagementService::Client#get_crypto_key.
+#
+def get_crypto_key
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Kms::V1::GetCryptoKeyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Kms::V1::GetCryptoKeyRequest.new
 
-# Call the get_crypto_key method.
-result = client.get_crypto_key request
+  # Call the get_crypto_key method.
+  result = client.get_crypto_key request
 
-# The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
-p result
+  # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+  p result
+end
 # [END cloudkms_v1_generated_KeyManagementService_GetCryptoKey_sync]

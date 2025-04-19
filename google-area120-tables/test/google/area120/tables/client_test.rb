@@ -20,15 +20,45 @@ require "helper"
 require "google/area120/tables"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Area120::Tables::ClientConstructionMinitest < Minitest::Test
-  def test_tables_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_tables_service_grpc
+    skip unless Google::Area120::Tables.tables_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Area120::Tables.tables_service do |config|
+      client = Google::Area120::Tables.tables_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Area120::Tables::V1alpha1::TablesService::Client, client
+    end
+  end
+
+  def test_tables_service_rest
+    skip unless Google::Area120::Tables.tables_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Area120::Tables.tables_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Area120::Tables::V1alpha1::TablesService::Rest::Client, client
     end
   end
 end

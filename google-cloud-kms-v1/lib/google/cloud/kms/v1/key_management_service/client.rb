@@ -18,6 +18,8 @@
 
 require "google/cloud/errors"
 require "google/cloud/kms/v1/service_pb"
+require "google/cloud/location"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -41,6 +43,12 @@ module Google
           # [Using gRPC with Cloud KMS](https://cloud.google.com/kms/docs/grpc).
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudkms.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -226,6 +234,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @key_management_service_stub.universe_domain
+            end
+
+            ##
             # Create a new KeyManagementService client object.
             #
             # @example
@@ -258,8 +275,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -270,11 +288,64 @@ module Google
 
               @key_management_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Kms::V1::KeyManagementService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @key_management_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @key_management_service_stub.endpoint
+                config.universe_domain = @key_management_service_stub.universe_domain
+                config.logger = @key_management_service_stub.logger if config.respond_to? :logger=
+              end
+
+              @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @key_management_service_stub.endpoint
+                config.universe_domain = @key_management_service_stub.universe_domain
+                config.logger = @key_management_service_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # Get the associated client for mix-in of the IAMPolicy.
+            #
+            # @return [Google::Iam::V1::IAMPolicy::Client]
+            #
+            attr_reader :iam_policy_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @key_management_service_stub.logger
             end
 
             # Service calls
@@ -343,13 +414,11 @@ module Google
             #   # Call the list_key_rings method.
             #   result = client.list_key_rings request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Kms::V1::KeyRing.
-            #     p response
+            #     p item
             #   end
             #
             def list_key_rings request, options = nil
@@ -363,10 +432,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_key_rings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -388,7 +458,7 @@ module Google
               @key_management_service_stub.call_rpc :list_key_rings, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @key_management_service_stub, :list_key_rings, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -459,13 +529,11 @@ module Google
             #   # Call the list_crypto_keys method.
             #   result = client.list_crypto_keys request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Kms::V1::CryptoKey.
-            #     p response
+            #     p item
             #   end
             #
             def list_crypto_keys request, options = nil
@@ -479,10 +547,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_crypto_keys.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -504,7 +573,7 @@ module Google
               @key_management_service_stub.call_rpc :list_crypto_keys, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @key_management_service_stub, :list_crypto_keys, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -576,13 +645,11 @@ module Google
             #   # Call the list_crypto_key_versions method.
             #   result = client.list_crypto_key_versions request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Kms::V1::CryptoKeyVersion.
-            #     p response
+            #     p item
             #   end
             #
             def list_crypto_key_versions request, options = nil
@@ -596,10 +663,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_crypto_key_versions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -621,7 +689,7 @@ module Google
               @key_management_service_stub.call_rpc :list_crypto_key_versions, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @key_management_service_stub, :list_crypto_key_versions, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -690,13 +758,11 @@ module Google
             #   # Call the list_import_jobs method.
             #   result = client.list_import_jobs request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Kms::V1::ImportJob.
-            #     p response
+            #     p item
             #   end
             #
             def list_import_jobs request, options = nil
@@ -710,10 +776,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_import_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -735,7 +802,7 @@ module Google
               @key_management_service_stub.call_rpc :list_import_jobs, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @key_management_service_stub, :list_import_jobs, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -797,10 +864,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_key_ring.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -821,7 +889,6 @@ module Google
 
               @key_management_service_stub.call_rpc :get_key_ring, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -885,10 +952,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_crypto_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -909,7 +977,6 @@ module Google
 
               @key_management_service_stub.call_rpc :get_crypto_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -972,10 +1039,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -996,7 +1064,6 @@ module Google
 
               @key_management_service_stub.call_rpc :get_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1020,7 +1087,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload get_public_key(name: nil)
+            # @overload get_public_key(name: nil, public_key_format: nil)
             #   Pass arguments to `get_public_key` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1028,6 +1095,14 @@ module Google
             #   @param name [::String]
             #     Required. The {::Google::Cloud::Kms::V1::CryptoKeyVersion#name name} of the
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} public key to get.
+            #   @param public_key_format [::Google::Cloud::Kms::V1::PublicKey::PublicKeyFormat]
+            #     Optional. The {::Google::Cloud::Kms::V1::PublicKey PublicKey} format specified
+            #     by the user. This field is required for PQC algorithms. If specified, the
+            #     public key will be exported through the
+            #     {::Google::Cloud::Kms::V1::PublicKey#public_key public_key} field in the
+            #     requested format. Otherwise, the {::Google::Cloud::Kms::V1::PublicKey#pem pem}
+            #     field will be populated for non-PQC algorithms, and an error will be
+            #     returned for PQC algorithms.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::PublicKey]
@@ -1063,10 +1138,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_public_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1087,7 +1163,6 @@ module Google
 
               @key_management_service_stub.call_rpc :get_public_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1149,10 +1224,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_import_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1173,7 +1249,6 @@ module Google
 
               @key_management_service_stub.call_rpc :get_import_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1243,10 +1318,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_key_ring.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1267,7 +1343,6 @@ module Google
 
               @key_management_service_stub.call_rpc :create_key_ring, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1349,10 +1424,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_crypto_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1373,7 +1449,6 @@ module Google
 
               @key_management_service_stub.call_rpc :create_crypto_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1444,10 +1519,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1468,7 +1544,6 @@ module Google
 
               @key_management_service_stub.call_rpc :create_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1494,7 +1569,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload import_crypto_key_version(parent: nil, crypto_key_version: nil, algorithm: nil, import_job: nil, rsa_aes_wrapped_key: nil)
+            # @overload import_crypto_key_version(parent: nil, crypto_key_version: nil, algorithm: nil, import_job: nil, wrapped_key: nil, rsa_aes_wrapped_key: nil)
             #   Pass arguments to `import_crypto_key_version` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1518,7 +1593,9 @@ module Google
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}, the
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} must be a child of
             #     {::Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest#parent ImportCryptoKeyVersionRequest.parent},
-            #     have been previously created via [ImportCryptoKeyVersion][], and be in
+            #     have been previously created via
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client#import_crypto_key_version ImportCryptoKeyVersion},
+            #     and be in
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED}
             #     or
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::IMPORT_FAILED IMPORT_FAILED}
@@ -1536,31 +1613,51 @@ module Google
             #     Required. The {::Google::Cloud::Kms::V1::ImportJob#name name} of the
             #     {::Google::Cloud::Kms::V1::ImportJob ImportJob} that was used to wrap this key
             #     material.
-            #   @param rsa_aes_wrapped_key [::String]
-            #     Wrapped key material produced with
-            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_3072_SHA1_AES_256 RSA_OAEP_3072_SHA1_AES_256}
-            #     or
-            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_4096_SHA1_AES_256 RSA_OAEP_4096_SHA1_AES_256}.
+            #   @param wrapped_key [::String]
+            #     Optional. The wrapped key material to import.
             #
-            #     This field contains the concatenation of two wrapped keys:
+            #     Before wrapping, key material must be formatted. If importing symmetric key
+            #     material, the expected key material format is plain bytes. If importing
+            #     asymmetric key material, the expected key material format is PKCS#8-encoded
+            #     DER (the PrivateKeyInfo structure from RFC 5208).
+            #
+            #     When wrapping with import methods
+            #     ({::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_3072_SHA1_AES_256 RSA_OAEP_3072_SHA1_AES_256}
+            #     or
+            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_4096_SHA1_AES_256 RSA_OAEP_4096_SHA1_AES_256}
+            #     or
+            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_3072_SHA256_AES_256 RSA_OAEP_3072_SHA256_AES_256}
+            #     or
+            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_4096_SHA256_AES_256 RSA_OAEP_4096_SHA256_AES_256}),
+            #
+            #     this field must contain the concatenation of:
             #     <ol>
             #       <li>An ephemeral AES-256 wrapping key wrapped with the
             #           {::Google::Cloud::Kms::V1::ImportJob#public_key public_key} using
-            #           RSAES-OAEP with SHA-1/SHA-256, MGF1 with SHA-1/SHA-256, and an
-            #           empty label.
+            #           RSAES-OAEP with SHA-1/SHA-256, MGF1 with SHA-1/SHA-256, and an empty
+            #           label.
             #       </li>
-            #       <li>The key to be imported, wrapped with the ephemeral AES-256 key
-            #           using AES-KWP (RFC 5649).
+            #       <li>The formatted key to be imported, wrapped with the ephemeral AES-256
+            #           key using AES-KWP (RFC 5649).
             #       </li>
             #     </ol>
             #
-            #     If importing symmetric key material, it is expected that the unwrapped
-            #     key contains plain bytes. If importing asymmetric key material, it is
-            #     expected that the unwrapped key is in PKCS#8-encoded DER format (the
-            #     PrivateKeyInfo structure from RFC 5208).
-            #
             #     This format is the same as the format produced by PKCS#11 mechanism
             #     CKM_RSA_AES_KEY_WRAP.
+            #
+            #     When wrapping with import methods
+            #     ({::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_3072_SHA256 RSA_OAEP_3072_SHA256}
+            #     or
+            #     {::Google::Cloud::Kms::V1::ImportJob::ImportMethod::RSA_OAEP_4096_SHA256 RSA_OAEP_4096_SHA256}),
+            #
+            #     this field must contain the formatted key to be imported, wrapped with the
+            #     {::Google::Cloud::Kms::V1::ImportJob#public_key public_key} using RSAES-OAEP
+            #     with SHA-256, MGF1 with SHA-256, and an empty label.
+            #   @param rsa_aes_wrapped_key [::String]
+            #     Optional. This field has the same meaning as
+            #     {::Google::Cloud::Kms::V1::ImportCryptoKeyVersionRequest#wrapped_key wrapped_key}.
+            #     Prefer to use that field in new work. Either that field or this field
+            #     (but not both) must be specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Kms::V1::CryptoKeyVersion]
@@ -1596,10 +1693,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.import_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1620,7 +1718,6 @@ module Google
 
               @key_management_service_stub.call_rpc :import_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1693,10 +1790,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_import_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1717,7 +1815,6 @@ module Google
 
               @key_management_service_stub.call_rpc :create_import_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1780,10 +1877,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_crypto_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1804,7 +1902,6 @@ module Google
 
               @key_management_service_stub.call_rpc :update_crypto_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1879,10 +1976,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1903,7 +2001,6 @@ module Google
 
               @key_management_service_stub.call_rpc :update_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1973,10 +2070,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_crypto_key_primary_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1997,7 +2095,6 @@ module Google
 
               @key_management_service_stub.call_rpc :update_crypto_key_primary_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2079,10 +2176,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.destroy_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2103,7 +2201,6 @@ module Google
 
               @key_management_service_stub.call_rpc :destroy_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2173,10 +2270,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.restore_crypto_key_version.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2197,7 +2295,6 @@ module Google
 
               @key_management_service_stub.call_rpc :restore_crypto_key_version, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2237,7 +2334,9 @@ module Google
             #
             #     The maximum size depends on the key version's
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
-            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE},
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::EXTERNAL EXTERNAL}, and
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::EXTERNAL_VPC EXTERNAL_VPC} keys, the
             #     plaintext must be no larger than 64KiB. For
             #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
             #     the plaintext and additional_authenticated_data fields must be no larger
@@ -2249,8 +2348,10 @@ module Google
             #
             #     The maximum size depends on the key version's
             #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
-            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the AAD
-            #     must be no larger than 64KiB. For
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE},
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::EXTERNAL EXTERNAL}, and
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::EXTERNAL_VPC EXTERNAL_VPC} keys the
+            #     AAD must be no larger than 64KiB. For
             #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
             #     the plaintext and additional_authenticated_data fields must be no larger
             #     than 8KiB.
@@ -2329,10 +2430,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.encrypt.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2353,7 +2455,6 @@ module Google
 
               @key_management_service_stub.call_rpc :encrypt, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2465,10 +2566,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.decrypt.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2489,7 +2591,332 @@ module Google
 
               @key_management_service_stub.call_rpc :decrypt, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Encrypts data using portable cryptographic primitives. Most users should
+            # choose {::Google::Cloud::Kms::V1::KeyManagementService::Client#encrypt Encrypt} and
+            # {::Google::Cloud::Kms::V1::KeyManagementService::Client#decrypt Decrypt} rather than
+            # their raw counterparts. The
+            # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose} must be
+            # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::RAW_ENCRYPT_DECRYPT RAW_ENCRYPT_DECRYPT}.
+            #
+            # @overload raw_encrypt(request, options = nil)
+            #   Pass arguments to `raw_encrypt` via a request object, either of type
+            #   {::Google::Cloud::Kms::V1::RawEncryptRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Kms::V1::RawEncryptRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload raw_encrypt(name: nil, plaintext: nil, additional_authenticated_data: nil, plaintext_crc32c: nil, additional_authenticated_data_crc32c: nil, initialization_vector: nil, initialization_vector_crc32c: nil)
+            #   Pass arguments to `raw_encrypt` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     encryption.
+            #   @param plaintext [::String]
+            #     Required. The data to encrypt. Must be no larger than 64KiB.
+            #
+            #     The maximum size depends on the key version's
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the
+            #     plaintext must be no larger than 64KiB. For
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
+            #     the plaintext and additional_authenticated_data fields must be no larger
+            #     than 8KiB.
+            #   @param additional_authenticated_data [::String]
+            #     Optional. Optional data that, if specified, must also be provided during
+            #     decryption through
+            #     {::Google::Cloud::Kms::V1::RawDecryptRequest#additional_authenticated_data RawDecryptRequest.additional_authenticated_data}.
+            #
+            #     This field may only be used in conjunction with an
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion#algorithm algorithm} that accepts
+            #     additional authenticated data (for example, AES-GCM).
+            #
+            #     The maximum size depends on the key version's
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersionTemplate#protection_level protection_level}.
+            #     For {::Google::Cloud::Kms::V1::ProtectionLevel::SOFTWARE SOFTWARE} keys, the
+            #     plaintext must be no larger than 64KiB. For
+            #     {::Google::Cloud::Kms::V1::ProtectionLevel::HSM HSM} keys, the combined length of
+            #     the plaintext and additional_authenticated_data fields must be no larger
+            #     than 8KiB.
+            #   @param plaintext_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawEncryptRequest#plaintext RawEncryptRequest.plaintext}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received plaintext using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that CRC32C(plaintext) is equal
+            #     to plaintext_crc32c, and if so, perform a limited number of retries. A
+            #     persistent mismatch may indicate an issue in your computation of the CRC32C
+            #     checksum. Note: This field is defined as int64 for reasons of compatibility
+            #     across different languages. However, it is a non-negative integer, which
+            #     will never exceed 2^32-1, and can be safely downconverted to uint32 in
+            #     languages that support this type.
+            #   @param additional_authenticated_data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawEncryptRequest#additional_authenticated_data RawEncryptRequest.additional_authenticated_data}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received additional_authenticated_data using
+            #     this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C(additional_authenticated_data) is equal to
+            #     additional_authenticated_data_crc32c, and if so, perform
+            #     a limited number of retries. A persistent mismatch may indicate an issue in
+            #     your computation of the CRC32C checksum.
+            #     Note: This field is defined as int64 for reasons of compatibility across
+            #     different languages. However, it is a non-negative integer, which will
+            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
+            #     that support this type.
+            #   @param initialization_vector [::String]
+            #     Optional. A customer-supplied initialization vector that will be used for
+            #     encryption. If it is not provided for AES-CBC and AES-CTR, one will be
+            #     generated. It will be returned in
+            #     {::Google::Cloud::Kms::V1::RawEncryptResponse#initialization_vector RawEncryptResponse.initialization_vector}.
+            #   @param initialization_vector_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawEncryptRequest#initialization_vector RawEncryptRequest.initialization_vector}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received initialization_vector using this
+            #     checksum. {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C(initialization_vector) is equal to
+            #     initialization_vector_crc32c, and if so, perform
+            #     a limited number of retries. A persistent mismatch may indicate an issue in
+            #     your computation of the CRC32C checksum.
+            #     Note: This field is defined as int64 for reasons of compatibility across
+            #     different languages. However, it is a non-negative integer, which will
+            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
+            #     that support this type.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Kms::V1::RawEncryptResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Kms::V1::RawEncryptResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::RawEncryptRequest.new
+            #
+            #   # Call the raw_encrypt method.
+            #   result = client.raw_encrypt request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::RawEncryptResponse.
+            #   p result
+            #
+            def raw_encrypt request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Kms::V1::RawEncryptRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.raw_encrypt.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.raw_encrypt.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.raw_encrypt.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @key_management_service_stub.call_rpc :raw_encrypt, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Decrypts data that was originally encrypted using a raw cryptographic
+            # mechanism. The {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
+            # must be
+            # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::RAW_ENCRYPT_DECRYPT RAW_ENCRYPT_DECRYPT}.
+            #
+            # @overload raw_decrypt(request, options = nil)
+            #   Pass arguments to `raw_decrypt` via a request object, either of type
+            #   {::Google::Cloud::Kms::V1::RawDecryptRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Kms::V1::RawDecryptRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload raw_decrypt(name: nil, ciphertext: nil, additional_authenticated_data: nil, initialization_vector: nil, tag_length: nil, ciphertext_crc32c: nil, additional_authenticated_data_crc32c: nil, initialization_vector_crc32c: nil)
+            #   Pass arguments to `raw_decrypt` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the
+            #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} to use for
+            #     decryption.
+            #   @param ciphertext [::String]
+            #     Required. The encrypted data originally returned in
+            #     {::Google::Cloud::Kms::V1::RawEncryptResponse#ciphertext RawEncryptResponse.ciphertext}.
+            #   @param additional_authenticated_data [::String]
+            #     Optional. Optional data that must match the data originally supplied in
+            #     {::Google::Cloud::Kms::V1::RawEncryptRequest#additional_authenticated_data RawEncryptRequest.additional_authenticated_data}.
+            #   @param initialization_vector [::String]
+            #     Required. The initialization vector (IV) used during encryption, which must
+            #     match the data originally provided in
+            #     {::Google::Cloud::Kms::V1::RawEncryptResponse#initialization_vector RawEncryptResponse.initialization_vector}.
+            #   @param tag_length [::Integer]
+            #     The length of the authentication tag that is appended to the end of
+            #     the ciphertext. If unspecified (0), the default value for the key's
+            #     algorithm will be used (for AES-GCM, the default value is 16).
+            #   @param ciphertext_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawDecryptRequest#ciphertext RawDecryptRequest.ciphertext}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received ciphertext using this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that CRC32C(ciphertext) is equal
+            #     to ciphertext_crc32c, and if so, perform a limited number of retries. A
+            #     persistent mismatch may indicate an issue in your computation of the CRC32C
+            #     checksum. Note: This field is defined as int64 for reasons of compatibility
+            #     across different languages. However, it is a non-negative integer, which
+            #     will never exceed 2^32-1, and can be safely downconverted to uint32 in
+            #     languages that support this type.
+            #   @param additional_authenticated_data_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawDecryptRequest#additional_authenticated_data RawDecryptRequest.additional_authenticated_data}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received additional_authenticated_data using
+            #     this checksum.
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C(additional_authenticated_data) is equal to
+            #     additional_authenticated_data_crc32c, and if so, perform
+            #     a limited number of retries. A persistent mismatch may indicate an issue in
+            #     your computation of the CRC32C checksum.
+            #     Note: This field is defined as int64 for reasons of compatibility across
+            #     different languages. However, it is a non-negative integer, which will
+            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
+            #     that support this type.
+            #   @param initialization_vector_crc32c [::Google::Protobuf::Int64Value, ::Hash]
+            #     Optional. An optional CRC32C checksum of the
+            #     {::Google::Cloud::Kms::V1::RawDecryptRequest#initialization_vector RawDecryptRequest.initialization_vector}.
+            #     If specified,
+            #     {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService} will
+            #     verify the integrity of the received initialization_vector using this
+            #     checksum. {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
+            #     will report an error if the checksum verification fails. If you receive a
+            #     checksum error, your client should verify that
+            #     CRC32C(initialization_vector) is equal to initialization_vector_crc32c, and
+            #     if so, perform a limited number of retries. A persistent mismatch may
+            #     indicate an issue in your computation of the CRC32C checksum.
+            #     Note: This field is defined as int64 for reasons of compatibility across
+            #     different languages. However, it is a non-negative integer, which will
+            #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
+            #     that support this type.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Kms::V1::RawDecryptResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Kms::V1::RawDecryptResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/kms/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Kms::V1::RawDecryptRequest.new
+            #
+            #   # Call the raw_decrypt method.
+            #   result = client.raw_decrypt request
+            #
+            #   # The returned object is of type Google::Cloud::Kms::V1::RawDecryptResponse.
+            #   p result
+            #
+            def raw_decrypt request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Kms::V1::RawDecryptRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.raw_decrypt.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.raw_decrypt.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.raw_decrypt.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @key_management_service_stub.call_rpc :raw_decrypt, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2609,10 +3036,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.asymmetric_sign.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2633,7 +3061,6 @@ module Google
 
               @key_management_service_stub.call_rpc :asymmetric_sign, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2724,10 +3151,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.asymmetric_decrypt.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2748,7 +3176,6 @@ module Google
 
               @key_management_service_stub.call_rpc :asymmetric_decrypt, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2834,10 +3261,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.mac_sign.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2858,7 +3286,6 @@ module Google
 
               @key_management_service_stub.call_rpc :mac_sign, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2923,7 +3350,8 @@ module Google
             #     checksum. {::Google::Cloud::Kms::V1::KeyManagementService::Client KeyManagementService}
             #     will report an error if the checksum verification fails. If you receive a
             #     checksum error, your client should verify that
-            #     CRC32C([MacVerifyRequest.tag][]) is equal to
+            #     CRC32C({::Google::Cloud::Kms::V1::MacVerifyRequest#mac MacVerifyRequest.mac}) is
+            #     equal to
             #     {::Google::Cloud::Kms::V1::MacVerifyRequest#mac_crc32c MacVerifyRequest.mac_crc32c},
             #     and if so, perform a limited number of retries. A persistent mismatch may
             #     indicate an issue in your computation of the CRC32C checksum. Note: This
@@ -2966,10 +3394,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.mac_verify.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2990,7 +3419,6 @@ module Google
 
               @key_management_service_stub.call_rpc :mac_verify, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3061,10 +3489,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.generate_random_bytes.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Kms::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -3085,7 +3514,6 @@ module Google
 
               @key_management_service_stub.call_rpc :generate_random_bytes, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -3121,20 +3549,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudkms.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -3169,11 +3604,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudkms.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudkms.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -3188,6 +3637,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -3206,6 +3657,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -3332,6 +3791,16 @@ module Google
                 #
                 attr_reader :decrypt
                 ##
+                # RPC-specific configuration for `raw_encrypt`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :raw_encrypt
+                ##
+                # RPC-specific configuration for `raw_decrypt`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :raw_decrypt
+                ##
                 # RPC-specific configuration for `asymmetric_sign`
                 # @return [::Gapic::Config::Method]
                 #
@@ -3401,6 +3870,10 @@ module Google
                   @encrypt = ::Gapic::Config::Method.new encrypt_config
                   decrypt_config = parent_rpcs.decrypt if parent_rpcs.respond_to? :decrypt
                   @decrypt = ::Gapic::Config::Method.new decrypt_config
+                  raw_encrypt_config = parent_rpcs.raw_encrypt if parent_rpcs.respond_to? :raw_encrypt
+                  @raw_encrypt = ::Gapic::Config::Method.new raw_encrypt_config
+                  raw_decrypt_config = parent_rpcs.raw_decrypt if parent_rpcs.respond_to? :raw_decrypt
+                  @raw_decrypt = ::Gapic::Config::Method.new raw_decrypt_config
                   asymmetric_sign_config = parent_rpcs.asymmetric_sign if parent_rpcs.respond_to? :asymmetric_sign
                   @asymmetric_sign = ::Gapic::Config::Method.new asymmetric_sign_config
                   asymmetric_decrypt_config = parent_rpcs.asymmetric_decrypt if parent_rpcs.respond_to? :asymmetric_decrypt

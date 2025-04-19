@@ -82,6 +82,82 @@ module Google
             end
 
             ##
+            # Create a fully-qualified CryptoKey resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param key_ring [String]
+            # @param crypto_key [String]
+            #
+            # @return [::String]
+            def crypto_key_path project:, location:, key_ring:, crypto_key:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "key_ring cannot contain /" if key_ring.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/keyRings/#{key_ring}/cryptoKeys/#{crypto_key}"
+            end
+
+            ##
+            # Create a fully-qualified Enrollment resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/enrollments/{enrollment}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param enrollment [String]
+            #
+            # @return [::String]
+            def enrollment_path project:, location:, enrollment:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/enrollments/#{enrollment}"
+            end
+
+            ##
+            # Create a fully-qualified GoogleApiSource resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/googleApiSources/{google_api_source}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param google_api_source [String]
+            #
+            # @return [::String]
+            def google_api_source_path project:, location:, google_api_source:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/googleApiSources/#{google_api_source}"
+            end
+
+            ##
+            # Create a fully-qualified GoogleChannelConfig resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/googleChannelConfig`
+            #
+            # @param project [String]
+            # @param location [String]
+            #
+            # @return [::String]
+            def google_channel_config_path project:, location:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/googleChannelConfig"
+            end
+
+            ##
             # Create a fully-qualified Location resource string.
             #
             # The resource will be in the following format:
@@ -96,6 +172,82 @@ module Google
               raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}"
+            end
+
+            ##
+            # Create a fully-qualified MessageBus resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/messageBuses/{message_bus}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param message_bus [String]
+            #
+            # @return [::String]
+            def message_bus_path project:, location:, message_bus:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/messageBuses/#{message_bus}"
+            end
+
+            ##
+            # Create a fully-qualified NetworkAttachment resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/regions/{region}/networkAttachments/{networkattachment}`
+            #
+            # @param project [String]
+            # @param region [String]
+            # @param networkattachment [String]
+            #
+            # @return [::String]
+            def network_attachment_path project:, region:, networkattachment:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "region cannot contain /" if region.to_s.include? "/"
+
+              "projects/#{project}/regions/#{region}/networkAttachments/#{networkattachment}"
+            end
+
+            ##
+            # Create a fully-qualified Pipeline resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/pipelines/{pipeline}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param pipeline [String]
+            #
+            # @return [::String]
+            def pipeline_path project:, location:, pipeline:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/pipelines/#{pipeline}"
+            end
+
+            ##
+            # Create a fully-qualified Provider resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/providers/{provider}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param provider [String]
+            #
+            # @return [::String]
+            def provider_path project:, location:, provider:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/providers/#{provider}"
             end
 
             ##
@@ -116,6 +268,23 @@ module Google
             end
 
             ##
+            # Create a fully-qualified Topic resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/topics/{topic}`
+            #
+            # @param project [String]
+            # @param topic [String]
+            #
+            # @return [::String]
+            def topic_path project:, topic:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+
+              "projects/#{project}/topics/#{topic}"
+            end
+
+            ##
             # Create a fully-qualified Trigger resource string.
             #
             # The resource will be in the following format:
@@ -132,6 +301,25 @@ module Google
               raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}/triggers/#{trigger}"
+            end
+
+            ##
+            # Create a fully-qualified Workflow resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/workflows/{workflow}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param workflow [String]
+            #
+            # @return [::String]
+            def workflow_path project:, location:, workflow:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/workflows/#{workflow}"
             end
 
             extend self

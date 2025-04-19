@@ -10,6 +10,11 @@
         "grpc": {
           "libraryClient": "::Google::Cloud::OsLogin::V1beta::OsLoginService::Client",
           "rpcs": {
+            "CreateSshPublicKey": {
+              "methods": [
+                "create_ssh_public_key"
+              ]
+            },
             "DeletePosixAccount": {
               "methods": [
                 "delete_posix_account"
@@ -38,6 +43,11 @@
             "UpdateSshPublicKey": {
               "methods": [
                 "update_ssh_public_key"
+              ]
+            },
+            "SignSshPublicKey": {
+              "methods": [
+                "sign_ssh_public_key"
               ]
             }
           }

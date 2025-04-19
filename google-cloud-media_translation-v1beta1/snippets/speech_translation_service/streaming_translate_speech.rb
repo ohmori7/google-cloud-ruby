@@ -19,24 +19,38 @@
 # [START mediatranslation_v1beta1_generated_SpeechTranslationService_StreamingTranslateSpeech_sync]
 require "google/cloud/media_translation/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::MediaTranslation::V1beta1::SpeechTranslationService::Client.new
+##
+# Snippet for the streaming_translate_speech call in the SpeechTranslationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::MediaTranslation::V1beta1::SpeechTranslationService::Client#streaming_translate_speech.
+#
+def streaming_translate_speech
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::MediaTranslation::V1beta1::SpeechTranslationService::Client.new
 
-# Create an input stream
-input = Gapic::StreamInput.new
+  # Create an input stream.
+  input = Gapic::StreamInput.new
 
-# Call the streaming_translate_speech method to start streaming.
-output = client.streaming_translate_speech input
+  # Call the streaming_translate_speech method to start streaming.
+  output = client.streaming_translate_speech input
 
-# Send requests on the stream. For each request, pass in keyword
-# arguments to set fields. Be sure to close the stream when done.
-input << Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechRequest.new
-input << Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechRequest.new
-input.close
+  # Send requests on the stream. For each request object, set fields by
+  # passing keyword arguments. Be sure to close the stream when done.
+  input << Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechRequest.new
+  input << Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechRequest.new
+  input.close
 
-# Handle streamed responses. These may be interleaved with inputs.
-# Each response is of type ::Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechResponse.
-output.each do |response|
-  p response
+  # The returned object is a streamed enumerable yielding elements of type
+  # ::Google::Cloud::MediaTranslation::V1beta1::StreamingTranslateSpeechResponse
+  output.each do |current_response|
+    p current_response
+  end
 end
 # [END mediatranslation_v1beta1_generated_SpeechTranslationService_StreamingTranslateSpeech_sync]

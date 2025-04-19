@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/scheduler/v1/cloudscheduler_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -31,6 +32,12 @@ module Google
           # schedule asynchronous jobs.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudscheduler.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -117,6 +124,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @cloud_scheduler_stub.universe_domain
+            end
+
+            ##
             # Create a new CloudScheduler client object.
             #
             # @example
@@ -149,8 +165,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -161,11 +178,49 @@ module Google
 
               @cloud_scheduler_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Scheduler::V1::CloudScheduler::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @cloud_scheduler_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @cloud_scheduler_stub.endpoint
+                config.universe_domain = @cloud_scheduler_stub.universe_domain
+                config.logger = @cloud_scheduler_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @cloud_scheduler_stub.logger
             end
 
             # Service calls
@@ -202,10 +257,9 @@ module Google
             #     A token identifying a page of results the server will return. To
             #     request the first page results, page_token must be empty. To
             #     request the next page of results, page_token must be the value of
-            #     {::Google::Cloud::Scheduler::V1::ListJobsResponse#next_page_token next_page_token} returned from
-            #     the previous call to {::Google::Cloud::Scheduler::V1::CloudScheduler::Client#list_jobs ListJobs}. It is an error to
-            #     switch the value of [filter][google.cloud.scheduler.v1.ListJobsRequest.filter] or
-            #     [order_by][google.cloud.scheduler.v1.ListJobsRequest.order_by] while iterating through pages.
+            #     {::Google::Cloud::Scheduler::V1::ListJobsResponse#next_page_token next_page_token}
+            #     returned from the previous call to
+            #     {::Google::Cloud::Scheduler::V1::CloudScheduler::Client#list_jobs ListJobs}.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Scheduler::V1::Job>]
@@ -227,13 +281,11 @@ module Google
             #   # Call the list_jobs method.
             #   result = client.list_jobs request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Scheduler::V1::Job.
-            #     p response
+            #     p item
             #   end
             #
             def list_jobs request, options = nil
@@ -247,10 +299,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -272,7 +325,7 @@ module Google
               @cloud_scheduler_stub.call_rpc :list_jobs, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cloud_scheduler_stub, :list_jobs, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -334,10 +387,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -358,7 +412,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :get_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -387,7 +440,8 @@ module Google
             #     `projects/PROJECT_ID/locations/LOCATION_ID`.
             #   @param job [::Google::Cloud::Scheduler::V1::Job, ::Hash]
             #     Required. The job to add. The user can optionally specify a name for the
-            #     job in {::Google::Cloud::Scheduler::V1::Job#name name}. {::Google::Cloud::Scheduler::V1::Job#name name} cannot be the same as an
+            #     job in {::Google::Cloud::Scheduler::V1::Job#name name}.
+            #     {::Google::Cloud::Scheduler::V1::Job#name name} cannot be the same as an
             #     existing job. If a name is not specified then the system will
             #     generate a random unique name that will be returned
             #     ({::Google::Cloud::Scheduler::V1::Job#name name}) in the response.
@@ -426,10 +480,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -450,7 +505,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :create_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -459,13 +513,14 @@ module Google
             ##
             # Updates a job.
             #
-            # If successful, the updated {::Google::Cloud::Scheduler::V1::Job Job} is returned. If the job does
-            # not exist, `NOT_FOUND` is returned.
+            # If successful, the updated {::Google::Cloud::Scheduler::V1::Job Job} is
+            # returned. If the job does not exist, `NOT_FOUND` is returned.
             #
             # If UpdateJob does not successfully return, it is possible for the
-            # job to be in an {::Google::Cloud::Scheduler::V1::Job::State::UPDATE_FAILED Job.State.UPDATE_FAILED} state. A job in this state may
-            # not be executed. If this happens, retry the UpdateJob request
-            # until a successful response is received.
+            # job to be in an
+            # {::Google::Cloud::Scheduler::V1::Job::State::UPDATE_FAILED Job.State.UPDATE_FAILED}
+            # state. A job in this state may not be executed. If this happens, retry the
+            # UpdateJob request until a successful response is received.
             #
             # @overload update_job(request, options = nil)
             #   Pass arguments to `update_job` via a request object, either of type
@@ -483,7 +538,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param job [::Google::Cloud::Scheduler::V1::Job, ::Hash]
-            #     Required. The new job properties. {::Google::Cloud::Scheduler::V1::Job#name name} must be specified.
+            #     Required. The new job properties.
+            #     {::Google::Cloud::Scheduler::V1::Job#name name} must be specified.
             #
             #     Output only fields cannot be modified using UpdateJob.
             #     Any value specified for an output only field will be ignored.
@@ -524,10 +580,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -548,7 +605,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :update_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -610,10 +666,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -634,7 +691,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :delete_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -644,10 +700,13 @@ module Google
             # Pauses a job.
             #
             # If a job is paused then the system will stop executing the job
-            # until it is re-enabled via {::Google::Cloud::Scheduler::V1::CloudScheduler::Client#resume_job ResumeJob}. The
-            # state of the job is stored in {::Google::Cloud::Scheduler::V1::Job#state state}; if paused it
-            # will be set to {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED}. A job must be in {::Google::Cloud::Scheduler::V1::Job::State::ENABLED Job.State.ENABLED}
-            # to be paused.
+            # until it is re-enabled via
+            # {::Google::Cloud::Scheduler::V1::CloudScheduler::Client#resume_job ResumeJob}. The state
+            # of the job is stored in {::Google::Cloud::Scheduler::V1::Job#state state}; if
+            # paused it will be set to
+            # {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED}. A job must
+            # be in {::Google::Cloud::Scheduler::V1::Job::State::ENABLED Job.State.ENABLED} to
+            # be paused.
             #
             # @overload pause_job(request, options = nil)
             #   Pass arguments to `pause_job` via a request object, either of type
@@ -702,10 +761,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.pause_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -726,7 +786,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :pause_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -735,10 +794,13 @@ module Google
             ##
             # Resume a job.
             #
-            # This method reenables a job after it has been {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED}. The
-            # state of a job is stored in {::Google::Cloud::Scheduler::V1::Job#state Job.state}; after calling this method it
-            # will be set to {::Google::Cloud::Scheduler::V1::Job::State::ENABLED Job.State.ENABLED}. A job must be in
-            # {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED} to be resumed.
+            # This method reenables a job after it has been
+            # {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED}. The state
+            # of a job is stored in {::Google::Cloud::Scheduler::V1::Job#state Job.state};
+            # after calling this method it will be set to
+            # {::Google::Cloud::Scheduler::V1::Job::State::ENABLED Job.State.ENABLED}. A job
+            # must be in {::Google::Cloud::Scheduler::V1::Job::State::PAUSED Job.State.PAUSED}
+            # to be resumed.
             #
             # @overload resume_job(request, options = nil)
             #   Pass arguments to `resume_job` via a request object, either of type
@@ -793,10 +855,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.resume_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -817,7 +880,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :resume_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -882,10 +944,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.run_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Scheduler::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -906,7 +969,6 @@ module Google
 
               @cloud_scheduler_stub.call_rpc :run_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -942,20 +1004,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudscheduler.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -990,11 +1059,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudscheduler.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudscheduler.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1009,6 +1092,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1027,6 +1112,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

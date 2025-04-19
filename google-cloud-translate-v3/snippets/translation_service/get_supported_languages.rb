@@ -19,15 +19,29 @@
 # [START translate_v3_generated_TranslationService_GetSupportedLanguages_sync]
 require "google/cloud/translate/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Translate::V3::TranslationService::Client.new
+##
+# Snippet for the get_supported_languages call in the TranslationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Translate::V3::TranslationService::Client#get_supported_languages.
+#
+def get_supported_languages
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Translate::V3::TranslationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Translate::V3::GetSupportedLanguagesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Translate::V3::GetSupportedLanguagesRequest.new
 
-# Call the get_supported_languages method.
-result = client.get_supported_languages request
+  # Call the get_supported_languages method.
+  result = client.get_supported_languages request
 
-# The returned object is of type Google::Cloud::Translate::V3::SupportedLanguages.
-p result
+  # The returned object is of type Google::Cloud::Translate::V3::SupportedLanguages.
+  p result
+end
 # [END translate_v3_generated_TranslationService_GetSupportedLanguages_sync]

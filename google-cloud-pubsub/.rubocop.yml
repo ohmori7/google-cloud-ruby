@@ -17,6 +17,7 @@ Metrics/BlockLength:
   Exclude:
     - "google-cloud-pubsub.gemspec"
     - "Rakefile"
+    - ".toys.rb"
 Metrics/ClassLength:
   Enabled: false
 Metrics/CyclomaticComplexity:
@@ -24,7 +25,10 @@ Metrics/CyclomaticComplexity:
 Metrics/MethodLength:
   Max: 35
 Metrics/PerceivedComplexity:
-  Max: 15
+  Max: 20
 Naming/FileName:
   Exclude:
     - "lib/google-cloud-pubsub.rb"
+Style/ReturnNilInPredicateMethodDefinition:
+  Exclude:
+    - "lib/google/cloud/pubsub/subscriber/stream.rb"

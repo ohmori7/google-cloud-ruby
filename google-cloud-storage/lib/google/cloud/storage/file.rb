@@ -764,6 +764,30 @@ module Google
         end
 
         ##
+        # This soft delete time is the time when the object became
+        # soft-deleted.
+        #
+        # @return [DateTime, nil] A DateTime representing the time at
+        #   which the object became soft-deleted, or `nil` if the file was
+        #   not deleted.
+        #
+        def soft_delete_time
+          @gapi.soft_delete_time
+        end
+
+        ##
+        # This hard delete time is The time when the file will be permanently
+        # deleted.
+        #
+        # @return [DateTime, nil] A DateTime representing the time at
+        #   which the file will be permanently deleted, or `nil` if the file is
+        #   not soft deleted.
+        #
+        def hard_delete_time
+          @gapi.hard_delete_time
+        end
+
+        ##
         # Retrieves a list of versioned files for the current object.
         #
         # Useful for listing archived versions of the file, restoring the live
@@ -825,6 +849,9 @@ module Google
         # @param [Integer] if_metageneration_not_match Makes the operation
         #   conditional on whether the file's current metageneration does not
         #   match the given value.
+        # @param [Boolean] override_unlocked_retention
+        #   Must be true to remove the retention configuration, reduce its unlocked
+        #   retention period, or change its mode from unlocked to locked.
         #
         # @yield [file] a block yielding a delegate object for updating the file
         #
@@ -865,7 +892,8 @@ module Google
                    if_generation_match: nil,
                    if_generation_not_match: nil,
                    if_metageneration_match: nil,
-                   if_metageneration_not_match: nil
+                   if_metageneration_not_match: nil,
+                   override_unlocked_retention: nil
           updater = Updater.new gapi
           yield updater
           updater.check_for_changed_metadata!
@@ -875,7 +903,8 @@ module Google
                        if_generation_match: if_generation_match,
                        if_generation_not_match: if_generation_not_match,
                        if_metageneration_match: if_metageneration_match,
-                       if_metageneration_not_match: if_metageneration_not_match
+                       if_metageneration_not_match: if_metageneration_not_match,
+                       override_unlocked_retention: override_unlocked_retention
         end
 
         ##
@@ -1560,6 +1589,64 @@ module Google
           true
         end
 
+        # Mode of object level retention configuration.
+        # Valid values are 'Locked' or 'Unlocked'
+        #
+        # @return [String]
+        def retention_mode
+          @gapi.retention&.mode
+        end
+
+        # The earliest time in RFC 3339 UTC "Zulu" format that the object can
+        # be deleted or replaced.
+        #
+        # @return [DateTime]
+        def retention_retain_until_time
+          @gapi.retention&.retain_until_time
+        end
+
+        # A collection of object level retention parameters.
+        # The full list of available options are outlined at the [JSON API docs]
+        # (https://cloud.google.com/storage/docs/json_api/v1/objects/insert#request-body).
+        #
+        # @return [Google::Apis::StorageV1::Object::Retention]
+        def retention
+          @gapi.retention
+        end
+
+        ##
+        # Update method to update retention parameter of an object / file
+        # It accepts params as a Hash of attributes in the following format:
+        #
+        #     { mode: 'Locked|Unlocked', retain_until_time: '2023-12-19T03:22:23+00:00' }
+        #
+        # @param [Hash(String => String)] new_retention_attributes
+        #
+        # @example Update retention parameters for the File / Object
+        #   require "google/cloud/storage"
+        #   storage = Google::Cloud::Storage.new
+        #   bucket = storage.bucket "my-bucket"
+        #   file = bucket.file "avatars/heidi/400x400.png"
+        #   retention_params = { mode: 'Unlocked', retain_until_time: '2023-12-19T03:22:23+00:00'.to_datetime }
+        #   file.retention = retention_params
+        #
+        # @example Update retention parameters for the File / Object with override enabled
+        #   require "google/cloud/storage"
+        #   storage = Google::Cloud::Storage.new
+        #   bucket = storage.bucket "my-bucket"
+        #   file = bucket.file "avatars/heidi/400x400.png"
+        #   retention_params = { mode: 'Unlocked',
+        #                        retain_until_time: '2023-12-19T03:22:23+00:00'.to_datetime,
+        #                        override_unlocked_retention: true }
+        #   file.retention = retention_params
+        #
+        def retention= new_retention_attributes
+          @gapi.retention ||= Google::Apis::StorageV1::Object::Retention.new
+          @gapi.retention.mode = new_retention_attributes[:mode]
+          @gapi.retention.retain_until_time = new_retention_attributes[:retain_until_time]
+          update_gapi! :retention, override_unlocked_retention: new_retention_attributes[:override_unlocked_retention]
+        end
+
         ##
         # Public URL to access the file. If the file is not public, requests to
         # the URL will return an error. (See {File::Acl#public!} and
@@ -1985,13 +2072,57 @@ module Google
         def self.gapi_from_attrs gapi, attributes
           attributes.flatten!
           return nil if attributes.empty?
-          attr_params = Hash[attributes.map do |attr|
-                               [attr, gapi.send(attr)]
-                             end]
+          attr_params = attributes.to_h do |attr|
+            [attr, gapi.send(attr)]
+          end
           # Sending nil metadata results in an Apiary runtime error:
           # NoMethodError: undefined method `each' for nil:NilClass
           attr_params.reject! { |k, v| k == :metadata && v.nil? }
           Google::Apis::StorageV1::Object.new(**attr_params)
+        end
+
+        ##
+        # from_gs_url is a method to fetch bucket details and file details from a gs url
+        #
+        # @return [Hash(String => String)]
+        #
+        # @example Fetch bucket_name and file_Path from gs url:
+        #   require "google/cloud/storage"
+        #   gs_url= "gs://my-todo-app/avatars/heidi.jpeg"
+        #   file=Google::Cloud::Storage::File
+        #   file.from_gs_url(gs_url)
+        #   =>
+        #   {"bucket_name"=>"my-todo-app", "file_path"=>"avatars/heidi.jpeg"}
+        #
+        # @example Fetch bucket_name , file_Path and other query params from gs url:
+        #   require "google/cloud/storage"
+        #   gs_url= "gs://my-todo-app/test_sub_folder/heidi.jpeg?params1=test1&params2=test2"
+        #   file=Google::Cloud::Storage::File
+        #   file.from_gs_url(gs_url)
+        #   =>{
+        #     "bucket_name"=>"my-todo-app",
+        #     "file_path"=>"test_sub_folder/heidi.jpeg",
+        #     "options" => {
+        #       "params1"=>"test1",
+        #       "params2"=>"test2"
+        #       }
+        #      }
+
+        def self.from_gs_url gs_url
+          prefix = "gs://".freeze
+          raise ArgumentError, "Invalid GCS URL" unless gs_url.start_with? prefix
+          # seprating params from input url
+          path, query = gs_url.sub(prefix, "").split("?", 2)
+          # parsing the url
+          bucket_name, file_path = path.split "/", 2
+          query_params = URI.decode_www_form(query).to_h if query
+          url_items = {
+            "bucket_name" => bucket_name,
+            "file_path" => file_path
+          }
+          # adding url params to output hash
+          url_items.merge! "options" => query_params if query
+          url_items
         end
 
         protected
@@ -2015,7 +2146,8 @@ module Google
                          if_generation_match: nil,
                          if_generation_not_match: nil,
                          if_metageneration_match: nil,
-                         if_metageneration_not_match: nil
+                         if_metageneration_not_match: nil,
+                         override_unlocked_retention: nil
           attributes = Array(attributes)
           attributes.flatten!
           return if attributes.empty?
@@ -2044,7 +2176,8 @@ module Google
                                        if_generation_not_match: if_generation_not_match,
                                        if_metageneration_match: if_metageneration_match,
                                        if_metageneration_not_match: if_metageneration_not_match,
-                                       user_project: user_project
+                                       user_project: user_project,
+                                       override_unlocked_retention: override_unlocked_retention
                   end
         end
 
@@ -2107,10 +2240,8 @@ module Google
           [dest_bucket, dest_path]
         end
 
-        # rubocop:disable Style/MultipleComparison
-
         def verify_file! file, verify = :md5
-          verify_md5    = verify == :md5    || verify == :all
+          verify_md5    = verify == :md5 || verify == :all
           verify_crc32c = verify == :crc32c || verify == :all
           Verifier.verify_md5! self, file    if verify_md5    && md5
           Verifier.verify_crc32c! self, file if verify_crc32c && crc32c

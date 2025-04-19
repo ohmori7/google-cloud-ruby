@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_Intents_UpdateIntent_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::Intents::Client.new
+##
+# Snippet for the update_intent call in the Intents service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::Intents::Client#update_intent.
+#
+def update_intent
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::Intents::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::UpdateIntentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::UpdateIntentRequest.new
 
-# Call the update_intent method.
-result = client.update_intent request
+  # Call the update_intent method.
+  result = client.update_intent request
 
-# The returned object is of type Google::Cloud::Dialogflow::V2::Intent.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::V2::Intent.
+  p result
+end
 # [END dialogflow_v2_generated_Intents_UpdateIntent_sync]

@@ -27,13 +27,21 @@ module Google
           ##
           # Client for the TraceService service.
           #
-          # This file describes an API for collecting and viewing traces and spans
-          # within a trace.  A Trace is a collection of spans corresponding to a single
-          # operation or set of operations for an application. A span is an individual
-          # timed event which forms a node of the trace tree. A single trace may
-          # contain span(s) from multiple services.
+          # Service for collecting and viewing traces and spans within a trace.
+          #
+          # A trace is a collection of spans corresponding to a single
+          # operation or a set of operations in an application.
+          #
+          # A span is an individual timed event which forms a node of the trace tree.
+          # A single trace can contain spans from multiple services.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudtrace.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -69,6 +77,9 @@ module Google
                 default_config = Client::Configuration.new parent_config
 
                 default_config.rpcs.batch_write_spans.timeout = 120.0
+                default_config.rpcs.batch_write_spans.retry_policy = {
+                  initial_delay: 0.1, max_delay: 30.0, multiplier: 2, retry_codes: [14, 4]
+                }
 
                 default_config.rpcs.create_span.timeout = 120.0
                 default_config.rpcs.create_span.retry_policy = {
@@ -99,6 +110,15 @@ module Google
             def configure
               yield @config if block_given?
               @config
+            end
+
+            ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @trace_service_stub.universe_domain
             end
 
             ##
@@ -134,8 +154,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -146,17 +167,40 @@ module Google
 
               @trace_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Trace::V2::TraceService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @trace_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @trace_service_stub.logger
             end
 
             # Service calls
 
             ##
-            # Sends new spans to new or existing traces. You cannot update
+            # Batch writes new spans to new or existing traces. You cannot update
             # existing spans.
             #
             # @overload batch_write_spans(request, options = nil)
@@ -179,7 +223,7 @@ module Google
             #     `projects/[PROJECT_ID]`.
             #   @param spans [::Array<::Google::Cloud::Trace::V2::Span, ::Hash>]
             #     Required. A list of new spans. The span names must not match existing
-            #     spans, or the results are undefined.
+            #     spans, otherwise the results are undefined.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Protobuf::Empty]
@@ -215,10 +259,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.batch_write_spans.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Trace::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -239,7 +284,6 @@ module Google
 
               @trace_service_stub.call_rpc :batch_write_spans, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -266,34 +310,38 @@ module Google
             #   @param name [::String]
             #     Required. The resource name of the span in the following format:
             #
-            #         projects/[PROJECT_ID]/traces/[TRACE_ID]/spans/[SPAN_ID]
+            #      * `projects/[PROJECT_ID]/traces/[TRACE_ID]/spans/[SPAN_ID]`
             #
-            #     [TRACE_ID] is a unique identifier for a trace within a project;
-            #     it is a 32-character hexadecimal encoding of a 16-byte array.
+            #     `[TRACE_ID]` is a unique identifier for a trace within a project;
+            #     it is a 32-character hexadecimal encoding of a 16-byte array. It should
+            #     not be zero.
             #
-            #     [SPAN_ID] is a unique identifier for a span within a trace; it
-            #     is a 16-character hexadecimal encoding of an 8-byte array.
+            #     `[SPAN_ID]` is a unique identifier for a span within a trace; it
+            #     is a 16-character hexadecimal encoding of an 8-byte array. It should not
+            #     be zero.
+            #     .
             #   @param span_id [::String]
-            #     Required. The [SPAN_ID] portion of the span's resource name.
+            #     Required. The `[SPAN_ID]` portion of the span's resource name.
             #   @param parent_span_id [::String]
-            #     The [SPAN_ID] of this span's parent span. If this is a root span,
+            #     The `[SPAN_ID]` of this span's parent span. If this is a root span,
             #     then this field must be empty.
             #   @param display_name [::Google::Cloud::Trace::V2::TruncatableString, ::Hash]
             #     Required. A description of the span's operation (up to 128 bytes).
-            #     Stackdriver Trace displays the description in the
-            #     Google Cloud Platform Console.
+            #     Cloud Trace displays the description in the
+            #     Cloud console.
             #     For example, the display name can be a qualified method name or a file name
             #     and a line number where the operation is called. A best practice is to use
             #     the same display name within an application and at the same call point.
             #     This makes it easier to correlate spans in different traces.
             #   @param start_time [::Google::Protobuf::Timestamp, ::Hash]
-            #     Required. The start time of the span. On the client side, this is the time kept by
-            #     the local machine where the span execution starts. On the server side, this
-            #     is the time when the server's application handler starts running.
+            #     Required. The start time of the span. On the client side, this is the time
+            #     kept by the local machine where the span execution starts. On the server
+            #     side, this is the time when the server's application handler starts
+            #     running.
             #   @param end_time [::Google::Protobuf::Timestamp, ::Hash]
-            #     Required. The end time of the span. On the client side, this is the time kept by
-            #     the local machine where the span execution ends. On the server side, this
-            #     is the time when the server application handler stops running.
+            #     Required. The end time of the span. On the client side, this is the time
+            #     kept by the local machine where the span execution ends. On the server
+            #     side, this is the time when the server application handler stops running.
             #   @param attributes [::Google::Cloud::Trace::V2::Span::Attributes, ::Hash]
             #     A set of attributes on the span. You can have up to 32 attributes per
             #     span.
@@ -309,15 +357,14 @@ module Google
             #   @param same_process_as_parent_span [::Google::Protobuf::BoolValue, ::Hash]
             #     Optional. Set this parameter to indicate whether this span is in
             #     the same process as its parent. If you do not set this parameter,
-            #     Stackdriver Trace is unable to take advantage of this helpful
-            #     information.
+            #     Trace is unable to take advantage of this helpful information.
             #   @param child_span_count [::Google::Protobuf::Int32Value, ::Hash]
             #     Optional. The number of child spans that were generated while this span
             #     was active. If set, allows implementation to detect missing child spans.
             #   @param span_kind [::Google::Cloud::Trace::V2::Span::SpanKind]
-            #     Optional. Distinguishes between spans generated in a particular context. For example,
-            #     two spans with the same name may be distinguished using `CLIENT` (caller)
-            #     and `SERVER` (callee) to identify an RPC call.
+            #     Optional. Distinguishes between spans generated in a particular context.
+            #     For example, two spans with the same name may be distinguished using
+            #     `CLIENT` (caller) and `SERVER` (callee) to identify an RPC call.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Trace::V2::Span]
@@ -353,10 +400,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_span.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Trace::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -377,7 +425,6 @@ module Google
 
               @trace_service_stub.call_rpc :create_span, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -413,20 +460,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudtrace.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -461,11 +515,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudtrace.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudtrace.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -480,6 +548,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -498,6 +568,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

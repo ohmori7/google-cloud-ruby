@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/pubsub/v1/pubsub_pb"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -31,6 +32,12 @@ module Google
           # messages to a topic.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "pubsub.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -77,7 +84,7 @@ module Google
 
                 default_config.rpcs.publish.timeout = 60.0
                 default_config.rpcs.publish.retry_policy = {
-                  initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [10, 1, 13, 8, 2, 14, 4]
+                  initial_delay: 0.1, max_delay: 60.0, multiplier: 4, retry_codes: [10, 1, 13, 8, 2, 14, 4]
                 }
 
                 default_config.rpcs.get_topic.timeout = 60.0
@@ -137,6 +144,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @publisher_stub.universe_domain
+            end
+
+            ##
             # Create a new Publisher client object.
             #
             # @example
@@ -169,8 +185,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -181,18 +198,56 @@ module Google
 
               @publisher_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::PubSub::V1::Publisher::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @publisher_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @publisher_stub.endpoint
+                config.universe_domain = @publisher_stub.universe_domain
+                config.logger = @publisher_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the IAMPolicy.
+            #
+            # @return [Google::Iam::V1::IAMPolicy::Client]
+            #
+            attr_reader :iam_policy_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @publisher_stub.logger
             end
 
             # Service calls
 
             ##
             # Creates the given topic with the given name. See the [resource name rules]
-            # (https://cloud.google.com/pubsub/docs/admin#resource_names).
+            # (https://cloud.google.com/pubsub/docs/pubsub-basics#resource_names).
             #
             # @overload create_topic(request, options = nil)
             #   Pass arguments to `create_topic` via a request object, either of type
@@ -204,7 +259,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload create_topic(name: nil, labels: nil, message_storage_policy: nil, kms_key_name: nil, schema_settings: nil, satisfies_pzs: nil, message_retention_duration: nil)
+            # @overload create_topic(name: nil, labels: nil, message_storage_policy: nil, kms_key_name: nil, schema_settings: nil, satisfies_pzs: nil, message_retention_duration: nil, ingestion_data_source_settings: nil, message_transforms: nil)
             #   Pass arguments to `create_topic` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -217,31 +272,37 @@ module Google
             #     signs (`%`). It must be between 3 and 255 characters in length, and it
             #     must not start with `"goog"`.
             #   @param labels [::Hash{::String => ::String}]
-            #     See [Creating and managing labels]
+            #     Optional. See [Creating and managing labels]
             #     (https://cloud.google.com/pubsub/docs/labels).
             #   @param message_storage_policy [::Google::Cloud::PubSub::V1::MessageStoragePolicy, ::Hash]
-            #     Policy constraining the set of Google Cloud Platform regions where messages
-            #     published to the topic may be stored. If not present, then no constraints
-            #     are in effect.
+            #     Optional. Policy constraining the set of Google Cloud Platform regions
+            #     where messages published to the topic may be stored. If not present, then
+            #     no constraints are in effect.
             #   @param kms_key_name [::String]
-            #     The resource name of the Cloud KMS CryptoKey to be used to protect access
-            #     to messages published on this topic.
+            #     Optional. The resource name of the Cloud KMS CryptoKey to be used to
+            #     protect access to messages published on this topic.
             #
             #     The expected format is `projects/*/locations/*/keyRings/*/cryptoKeys/*`.
             #   @param schema_settings [::Google::Cloud::PubSub::V1::SchemaSettings, ::Hash]
-            #     Settings for validating messages published against a schema.
+            #     Optional. Settings for validating messages published against a schema.
             #   @param satisfies_pzs [::Boolean]
-            #     Reserved for future use. This field is set only in responses from the
-            #     server; it is ignored if it is set in any requests.
+            #     Optional. Reserved for future use. This field is set only in responses from
+            #     the server; it is ignored if it is set in any requests.
             #   @param message_retention_duration [::Google::Protobuf::Duration, ::Hash]
-            #     Indicates the minimum duration to retain a message after it is published to
-            #     the topic. If this field is set, messages published to the topic in the
-            #     last `message_retention_duration` are always available to subscribers. For
-            #     instance, it allows any attached subscription to [seek to a
+            #     Optional. Indicates the minimum duration to retain a message after it is
+            #     published to the topic. If this field is set, messages published to the
+            #     topic in the last `message_retention_duration` are always available to
+            #     subscribers. For instance, it allows any attached subscription to [seek to
+            #     a
             #     timestamp](https://cloud.google.com/pubsub/docs/replay-overview#seek_to_a_time)
             #     that is up to `message_retention_duration` in the past. If this field is
             #     not set, message retention is controlled by settings on individual
-            #     subscriptions. Cannot be more than 7 days or less than 10 minutes.
+            #     subscriptions. Cannot be more than 31 days or less than 10 minutes.
+            #   @param ingestion_data_source_settings [::Google::Cloud::PubSub::V1::IngestionDataSourceSettings, ::Hash]
+            #     Optional. Settings for ingestion from a data source into this topic.
+            #   @param message_transforms [::Array<::Google::Cloud::PubSub::V1::MessageTransform, ::Hash>]
+            #     Optional. Transforms to be applied to messages published to the topic.
+            #     Transforms are applied in the order specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::PubSub::V1::Topic]
@@ -277,10 +338,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_topic.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -301,15 +363,14 @@ module Google
 
               @publisher_stub.call_rpc :create_topic, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Updates an existing topic. Note that certain properties of a
-            # topic are not modifiable.
+            # Updates an existing topic by updating the fields specified in the update
+            # mask. Note that certain properties of a topic are not modifiable.
             #
             # @overload update_topic(request, options = nil)
             #   Pass arguments to `update_topic` via a request object, either of type
@@ -369,10 +430,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_topic.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -393,7 +455,6 @@ module Google
 
               @publisher_stub.call_rpc :update_topic, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -458,10 +519,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.publish.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -482,7 +544,6 @@ module Google
 
               @publisher_stub.call_rpc :publish, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -544,10 +605,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_topic.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -568,7 +630,6 @@ module Google
 
               @publisher_stub.call_rpc :get_topic, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -596,11 +657,11 @@ module Google
             #     Required. The name of the project in which to list topics.
             #     Format is `projects/{project-id}`.
             #   @param page_size [::Integer]
-            #     Maximum number of topics to return.
+            #     Optional. Maximum number of topics to return.
             #   @param page_token [::String]
-            #     The value returned by the last `ListTopicsResponse`; indicates that this is
-            #     a continuation of a prior `ListTopics` call, and that the system should
-            #     return the next page of data.
+            #     Optional. The value returned by the last `ListTopicsResponse`; indicates
+            #     that this is a continuation of a prior `ListTopics` call, and that the
+            #     system should return the next page of data.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::PubSub::V1::Topic>]
@@ -622,13 +683,11 @@ module Google
             #   # Call the list_topics method.
             #   result = client.list_topics request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::PubSub::V1::Topic.
-            #     p response
+            #     p item
             #   end
             #
             def list_topics request, options = nil
@@ -642,10 +701,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_topics.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -667,7 +727,7 @@ module Google
               @publisher_stub.call_rpc :list_topics, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @publisher_stub, :list_topics, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -695,11 +755,11 @@ module Google
             #     Required. The name of the topic that subscriptions are attached to.
             #     Format is `projects/{project}/topics/{topic}`.
             #   @param page_size [::Integer]
-            #     Maximum number of subscription names to return.
+            #     Optional. Maximum number of subscription names to return.
             #   @param page_token [::String]
-            #     The value returned by the last `ListTopicSubscriptionsResponse`; indicates
-            #     that this is a continuation of a prior `ListTopicSubscriptions` call, and
-            #     that the system should return the next page of data.
+            #     Optional. The value returned by the last `ListTopicSubscriptionsResponse`;
+            #     indicates that this is a continuation of a prior `ListTopicSubscriptions`
+            #     call, and that the system should return the next page of data.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::PubSub::V1::ListTopicSubscriptionsResponse]
@@ -735,10 +795,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_topic_subscriptions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -759,7 +820,6 @@ module Google
 
               @publisher_stub.call_rpc :list_topic_subscriptions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -791,11 +851,11 @@ module Google
             #     Required. The name of the topic that snapshots are attached to.
             #     Format is `projects/{project}/topics/{topic}`.
             #   @param page_size [::Integer]
-            #     Maximum number of snapshot names to return.
+            #     Optional. Maximum number of snapshot names to return.
             #   @param page_token [::String]
-            #     The value returned by the last `ListTopicSnapshotsResponse`; indicates
-            #     that this is a continuation of a prior `ListTopicSnapshots` call, and
-            #     that the system should return the next page of data.
+            #     Optional. The value returned by the last `ListTopicSnapshotsResponse`;
+            #     indicates that this is a continuation of a prior `ListTopicSnapshots` call,
+            #     and that the system should return the next page of data.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::PubSub::V1::ListTopicSnapshotsResponse]
@@ -831,10 +891,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_topic_snapshots.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -855,7 +916,6 @@ module Google
 
               @publisher_stub.call_rpc :list_topic_snapshots, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -921,10 +981,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_topic.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -945,7 +1006,6 @@ module Google
 
               @publisher_stub.call_rpc :delete_topic, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1010,10 +1070,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.detach_subscription.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::PubSub::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1034,7 +1095,6 @@ module Google
 
               @publisher_stub.call_rpc :detach_subscription, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1070,20 +1130,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"pubsub.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1118,11 +1185,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "pubsub.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "pubsub.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1137,6 +1218,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1155,6 +1238,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

@@ -1,5 +1,47 @@
 # Release History
 
+### 2.6.0 (2025-03-04)
+
+#### Features
+
+* Update minimum Ruby version to 3.0 ([#29261](https://github.com/googleapis/google-cloud-ruby/issues/29261)) 
+
+### 2.5.0 (2024-07-09)
+
+#### Features
+
+* compatibility with GA releases of underlying versioned clients ([#26361](https://github.com/googleapis/google-cloud-ruby/issues/26361)) 
+
+### 2.4.0 (2024-03-07)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 2.3.3 (2023-05-19)
+
+#### Documentation
+
+* Fixed broken links in authentication documentation ([#21619](https://github.com/googleapis/google-cloud-ruby/issues/21619)) 
+
+### 2.3.2 (2022-10-18)
+
+#### Bug Fixes
+
+* update list logs response  ([#19285](https://github.com/googleapis/google-cloud-ruby/issues/19285)) 
+
+### 2.3.1 (2022-07-24)
+
+#### Bug Fixes
+
+* update resource descriptor to handle paged enum ([#18856](https://github.com/googleapis/google-cloud-ruby/issues/18856)) 
+
+### 2.3.0 (2022-06-30)
+
+#### Features
+
+* Update minimum Ruby version to 2.6 ([#18444](https://github.com/googleapis/google-cloud-ruby/issues/18444)) 
+
 ### 2.2.2 / 2021-10-21
 
 #### Documentation

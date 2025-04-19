@@ -25,6 +25,48 @@ module Google
           # Path helper methods for the CloudDeploy API.
           module Paths
             ##
+            # Create a fully-qualified Automation resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/deliveryPipelines/{delivery_pipeline}/automations/{automation}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param delivery_pipeline [String]
+            # @param automation [String]
+            #
+            # @return [::String]
+            def automation_path project:, location:, delivery_pipeline:, automation:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "delivery_pipeline cannot contain /" if delivery_pipeline.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/deliveryPipelines/#{delivery_pipeline}/automations/#{automation}"
+            end
+
+            ##
+            # Create a fully-qualified AutomationRun resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/deliveryPipelines/{delivery_pipeline}/automationRuns/{automation_run}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param delivery_pipeline [String]
+            # @param automation_run [String]
+            #
+            # @return [::String]
+            def automation_run_path project:, location:, delivery_pipeline:, automation_run:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "delivery_pipeline cannot contain /" if delivery_pipeline.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/deliveryPipelines/#{delivery_pipeline}/automationRuns/#{automation_run}"
+            end
+
+            ##
             # Create a fully-qualified Build resource string.
             #
             # The resource will be in the following format:
@@ -80,6 +122,25 @@ module Google
             end
 
             ##
+            # Create a fully-qualified CustomTargetType resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/customTargetTypes/{custom_target_type}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param custom_target_type [String]
+            #
+            # @return [::String]
+            def custom_target_type_path project:, location:, custom_target_type:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/customTargetTypes/#{custom_target_type}"
+            end
+
+            ##
             # Create a fully-qualified DeliveryPipeline resource string.
             #
             # The resource will be in the following format:
@@ -99,6 +160,69 @@ module Google
             end
 
             ##
+            # Create a fully-qualified DeployPolicy resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/deployPolicies/{deploy_policy}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param deploy_policy [String]
+            #
+            # @return [::String]
+            def deploy_policy_path project:, location:, deploy_policy:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/deployPolicies/#{deploy_policy}"
+            end
+
+            ##
+            # Create a fully-qualified Job resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/jobs/{job}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param job [String]
+            #
+            # @return [::String]
+            def job_path project:, location:, job:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/jobs/#{job}"
+            end
+
+            ##
+            # Create a fully-qualified JobRun resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/deliveryPipelines/{delivery_pipeline}/releases/{release}/rollouts/{rollout}/jobRuns/{job_run}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param delivery_pipeline [String]
+            # @param release [String]
+            # @param rollout [String]
+            # @param job_run [String]
+            #
+            # @return [::String]
+            def job_run_path project:, location:, delivery_pipeline:, release:, rollout:, job_run:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "delivery_pipeline cannot contain /" if delivery_pipeline.to_s.include? "/"
+              raise ::ArgumentError, "release cannot contain /" if release.to_s.include? "/"
+              raise ::ArgumentError, "rollout cannot contain /" if rollout.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/deliveryPipelines/#{delivery_pipeline}/releases/#{release}/rollouts/#{rollout}/jobRuns/#{job_run}"
+            end
+
+            ##
             # Create a fully-qualified Location resource string.
             #
             # The resource will be in the following format:
@@ -113,6 +237,25 @@ module Google
               raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}"
+            end
+
+            ##
+            # Create a fully-qualified Membership resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/memberships/{membership}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param membership [String]
+            #
+            # @return [::String]
+            def membership_path project:, location:, membership:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/memberships/#{membership}"
             end
 
             ##
@@ -137,6 +280,27 @@ module Google
             end
 
             ##
+            # Create a fully-qualified Repository resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/connections/{connection}/repositories/{repository}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param connection [String]
+            # @param repository [String]
+            #
+            # @return [::String]
+            def repository_path project:, location:, connection:, repository:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "connection cannot contain /" if connection.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/connections/#{connection}/repositories/#{repository}"
+            end
+
+            ##
             # Create a fully-qualified Rollout resource string.
             #
             # The resource will be in the following format:
@@ -157,6 +321,25 @@ module Google
               raise ::ArgumentError, "release cannot contain /" if release.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}/deliveryPipelines/#{delivery_pipeline}/releases/#{release}/rollouts/#{rollout}"
+            end
+
+            ##
+            # Create a fully-qualified Service resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/services/{service}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param service [String]
+            #
+            # @return [::String]
+            def service_path project:, location:, service:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/services/#{service}"
             end
 
             ##

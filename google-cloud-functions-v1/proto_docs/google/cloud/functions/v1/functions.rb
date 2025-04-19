@@ -23,7 +23,6 @@ module Google
       module V1
         # Describes a Cloud Function that contains user computation executed in
         # response to an event. It encapsulate function and triggers configurations.
-        # Next tag: 36
         # @!attribute [rw] name
         #   @return [::String]
         #     A user-defined name of the function. Function names must be unique
@@ -35,11 +34,15 @@ module Google
         #   @return [::String]
         #     The Google Cloud Storage URL, starting with `gs://`, pointing to the zip
         #     archive which contains the function.
+        #
+        #     Note: The following fields are mutually exclusive: `source_archive_url`, `source_repository`, `source_upload_url`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] source_repository
         #   @return [::Google::Cloud::Functions::V1::SourceRepository]
         #     **Beta Feature**
         #
         #     The source repository where a function is hosted.
+        #
+        #     Note: The following fields are mutually exclusive: `source_repository`, `source_archive_url`, `source_upload_url`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] source_upload_url
         #   @return [::String]
         #     The Google Cloud Storage signed URL used for source uploading, generated
@@ -48,23 +51,26 @@ module Google
         #     The signature is validated on write methods (Create, Update)
         #     The signature is stripped from the Function object on read methods (Get,
         #     List)
+        #
+        #     Note: The following fields are mutually exclusive: `source_upload_url`, `source_archive_url`, `source_repository`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] https_trigger
         #   @return [::Google::Cloud::Functions::V1::HttpsTrigger]
         #     An HTTPS endpoint type of source that can be triggered via URL.
+        #
+        #     Note: The following fields are mutually exclusive: `https_trigger`, `event_trigger`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] event_trigger
         #   @return [::Google::Cloud::Functions::V1::EventTrigger]
         #     A source that fires events in response to a condition in another service.
+        #
+        #     Note: The following fields are mutually exclusive: `event_trigger`, `https_trigger`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] status
         #   @return [::Google::Cloud::Functions::V1::CloudFunctionStatus]
         #     Output only. Status of the function deployment.
         # @!attribute [rw] entry_point
         #   @return [::String]
         #     The name of the function (as defined in source code) that will be
-        #     executed. Defaults to the resource name suffix, if not specified. For
-        #     backward compatibility, if function with given name is not found, then the
-        #     system will try to use function named "function".
-        #     For Node.js this is name of a function exported by the module specified
-        #     in `source_location`.
+        #     executed. Defaults to the resource name suffix (ID of the function), if not
+        #     specified.
         # @!attribute [rw] runtime
         #   @return [::String]
         #     The runtime in which to run the function. Required when deploying a new
@@ -90,8 +96,8 @@ module Google
         #     Output only. The last update timestamp of a Cloud Function.
         # @!attribute [r] version_id
         #   @return [::Integer]
-        #     Output only. The version identifier of the Cloud Function. Each deployment attempt
-        #     results in a new version of a function being created.
+        #     Output only. The version identifier of the Cloud Function. Each deployment
+        #     attempt results in a new version of a function being created.
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Labels associated with this Cloud Function.
@@ -102,21 +108,9 @@ module Google
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Build environment variables that shall be available during build time.
         # @!attribute [rw] network
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
-        #     The VPC Network that this cloud function can connect to. It can be
-        #     either the fully-qualified URI, or the short name of the network resource.
-        #     If the short network name is used, the network must belong to the same
-        #     project. Otherwise, it must belong to a project within the same
-        #     organization. The format of this field is either
-        #     `projects/{project}/global/networks/{network}` or `{network}`, where
-        #     `{project}` is a project id where the network is defined, and `{network}`
-        #     is the short name of the network.
-        #
-        #     This field is mutually exclusive with `vpc_connector` and will be replaced
-        #     by it.
-        #
-        #     See [the VPC documentation](https://cloud.google.com/compute/docs/vpc) for
-        #     more information on connecting Cloud projects.
+        #     Deprecated: use vpc_connector
         # @!attribute [rw] max_instances
         #   @return [::Integer]
         #     The limit on the maximum number of function instances that may coexist at a
@@ -167,8 +161,9 @@ module Google
         #     the `docker_repository` field that was created with the same KMS crypto
         #     key.
         #
-        #     The following service accounts need to be granted Cloud KMS crypto key
-        #     encrypter/decrypter roles on the key.
+        #     The following service accounts need to be granted the role 'Cloud KMS
+        #     CryptoKey Encrypter/Decrypter (roles/cloudkms.cryptoKeyEncrypterDecrypter)'
+        #     on the Key/KeyRing/Project/Organization (least access preferred).
         #
         #     1. Google Cloud Functions service account
         #        (service-\\{project_number}@gcf-admin-robot.iam.gserviceaccount.com) -
@@ -215,16 +210,16 @@ module Google
         #     Secret volumes configuration.
         # @!attribute [rw] source_token
         #   @return [::String]
-        #     Input only. An identifier for Firebase function sources. Disclaimer: This field is only
-        #     supported for Firebase function deployments.
+        #     Input only. An identifier for Firebase function sources. Disclaimer: This
+        #     field is only supported for Firebase function deployments.
         # @!attribute [rw] docker_repository
         #   @return [::String]
-        #     User managed repository created in Artifact Registry optionally with a
-        #     customer managed encryption key. If specified, deployments will use
-        #     Artifact Registry. If unspecified and the deployment is eligible to use
-        #     Artifact Registry, GCF will create and use a repository named
-        #     'gcf-artifacts' for every deployed region. This is the repository to which
-        #     the function docker image will be pushed after it is built by Cloud Build.
+        #     User-managed repository created in Artifact Registry to which the
+        #     function's Docker image will be pushed after it is built by Cloud Build.
+        #     May optionally be encrypted with a customer-managed encryption key (CMEK).
+        #     If unspecified and `docker_registry` is not explicitly set to
+        #     `CONTAINER_REGISTRY`, GCF will create and use a default Artifact Registry
+        #     repository named 'gcf-artifacts' in the region.
         #
         #     It must match the pattern
         #     `projects/{project}/locations/{location}/repositories/{repository}`.
@@ -232,9 +227,49 @@ module Google
         #     Cross-project repositories are not supported.
         #     Cross-location repositories are not supported.
         #     Repository format must be 'DOCKER'.
+        # @!attribute [rw] docker_registry
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::Google::Cloud::Functions::V1::CloudFunction::DockerRegistry]
+        #     Docker Registry to use for this deployment.
+        #     As of March 2025, `CONTAINER_REGISTRY` option is no longer
+        #     available in response to Container Registry's deprecation:
+        #     https://cloud.google.com/artifact-registry/docs/transition/transition-from-gcr
+        #     Please use Artifact Registry instead, which is the default choice.
+        #
+        #     If unspecified, it defaults to `ARTIFACT_REGISTRY`.
+        #     If `docker_repository` field is specified, this field should either be left
+        #     unspecified or set to `ARTIFACT_REGISTRY`.
+        # @!attribute [rw] automatic_update_policy
+        #   @return [::Google::Cloud::Functions::V1::CloudFunction::AutomaticUpdatePolicy]
+        #     Note: The following fields are mutually exclusive: `automatic_update_policy`, `on_deploy_update_policy`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] on_deploy_update_policy
+        #   @return [::Google::Cloud::Functions::V1::CloudFunction::OnDeployUpdatePolicy]
+        #     Note: The following fields are mutually exclusive: `on_deploy_update_policy`, `automatic_update_policy`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] build_service_account
+        #   @return [::String]
+        #     A service account the user provides for use with Cloud Build. The format of
+        #     this field is
+        #     `projects/{projectId}/serviceAccounts/{serviceAccountEmail}`.
         class CloudFunction
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Security patches are applied automatically to the runtime without requiring
+          # the function to be redeployed.
+          class AutomaticUpdatePolicy
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Security patches are only applied when a function is redeployed.
+          # @!attribute [r] runtime_version
+          #   @return [::String]
+          #     Output only. Contains the runtime version which was used during latest
+          #     function deployment.
+          class OnDeployUpdatePolicy
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
 
           # @!attribute [rw] key
           #   @return [::String]
@@ -297,6 +332,23 @@ module Google
             # Allow HTTP traffic from private VPC sources and through GCLB.
             ALLOW_INTERNAL_AND_GCLB = 3
           end
+
+          # Docker Registry to use for storing function Docker images.
+          module DockerRegistry
+            # Unspecified.
+            DOCKER_REGISTRY_UNSPECIFIED = 0
+
+            # Docker images will be stored in multi-regional Container Registry
+            # repositories named `gcf`.
+            CONTAINER_REGISTRY = 1
+
+            # Docker images will be stored in regional Artifact Registry repositories.
+            # By default, GCF will create and use repositories named `gcf-artifacts`
+            # in every region in which a function is deployed. But the repository to
+            # use can also be specified by the user using the `docker_repository`
+            # field.
+            ARTIFACT_REGISTRY = 2
+          end
         end
 
         # Describes SourceRepository, used to represent parameters related to
@@ -315,7 +367,8 @@ module Google
         #     To refer to a specific fixed alias (tag):
         #     `https://source.developers.google.com/projects/*/repos/*/fixed-aliases/*/paths/*`
         #
-        #     You may omit `paths/*` if you want to use the main directory.
+        #     You may omit `paths/*` if you want to use the main directory. The function
+        #     response may add an empty `/paths/` to the URL.
         # @!attribute [r] deployed_url
         #   @return [::String]
         #     Output only. The URL pointing to the hosted repository where the function
@@ -434,14 +487,13 @@ module Google
 
         # Configuration for a secret environment variable. It has the information
         # necessary to fetch the secret value from secret manager and expose it as an
-        # environment variable. Secret value is not a part of the configuration. Secret
-        # values are only fetched when a new clone starts.
+        # environment variable.
         # @!attribute [rw] key
         #   @return [::String]
         #     Name of the environment variable.
         # @!attribute [rw] project_id
         #   @return [::String]
-        #     Project identifier (preferrably project number but can also be the project
+        #     Project identifier (preferably project number but can also be the project
         #     ID) of the project that contains the secret. If not set, it will be
         #     populated with the function's project assuming that the secret exists in
         #     the same project as of the function.
@@ -452,7 +504,7 @@ module Google
         #   @return [::String]
         #     Version of the secret (version number or the string 'latest'). It is
         #     recommended to use a numeric version for secret environment variables as
-        #     any updates to the secret value is not reflected until new clones start.
+        #     any updates to the secret value is not reflected until new instances start.
         class SecretEnvVar
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -494,7 +546,7 @@ module Google
           # @!attribute [rw] version
           #   @return [::String]
           #     Version of the secret (version number or the string 'latest'). It is
-          #     preferrable to use `latest` version with secret volumes as secret value
+          #     preferable to use `latest` version with secret volumes as secret value
           #     changes are reflected immediately.
           # @!attribute [rw] path
           #   @return [::String]
@@ -511,8 +563,8 @@ module Google
         # Request for the `CreateFunction` method.
         # @!attribute [rw] location
         #   @return [::String]
-        #     Required. The project and location in which the function should be created, specified
-        #     in the format `projects/*/locations/*`
+        #     Required. The project and location in which the function should be created,
+        #     specified in the format `projects/*/locations/*`
         # @!attribute [rw] function
         #   @return [::Google::Cloud::Functions::V1::CloudFunction]
         #     Required. Function to be created.
@@ -527,7 +579,7 @@ module Google
         #     Required. New version of the function.
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
-        #     Required list of fields to be updated in this request.
+        #     Required. The list of fields in `CloudFunction` that have to be updated.
         class UpdateFunctionRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -537,6 +589,14 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the function which details should be obtained.
+        # @!attribute [rw] version_id
+        #   @return [::Integer]
+        #     Optional. The optional version of the function whose details should be
+        #     obtained. The version of a 1st Gen function is an integer that starts from
+        #     1 and gets incremented on redeployments. Each deployment creates a config
+        #     version of the underlying function. GCF may keep historical configs for old
+        #     versions. This field can be specified to fetch the historical configs.
+        #     Leave it blank or set to 0 to get the latest version of the function.
         class GetFunctionRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -627,6 +687,25 @@ module Google
         #   @return [::String]
         #     The project and location in which the Google Cloud Storage signed URL
         #     should be generated, specified in the format `projects/*/locations/*`.
+        # @!attribute [rw] kms_key_name
+        #   @return [::String]
+        #     Resource name of a KMS crypto key (managed by the user) used to
+        #     encrypt/decrypt function source code objects in intermediate Cloud Storage
+        #     buckets. When you generate an upload url and upload your source code, it
+        #     gets copied to an intermediate Cloud Storage bucket. The source code is
+        #     then copied to a versioned directory in the sources bucket in the consumer
+        #     project during the function deployment.
+        #
+        #     It must match the pattern
+        #     `projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}`.
+        #
+        #     The Google Cloud Functions service account
+        #     (service-\\{project_number}@gcf-admin-robot.iam.gserviceaccount.com) must be
+        #     granted the role 'Cloud KMS CryptoKey Encrypter/Decrypter
+        #     (roles/cloudkms.cryptoKeyEncrypterDecrypter)' on the
+        #     Key/KeyRing/Project/Organization (least access preferred). GCF will
+        #     delegate access to the Google Storage service account in the internal
+        #     project.
         class GenerateUploadUrlRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

@@ -35,6 +35,19 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
+          # Change stream configuration.
+          # @!attribute [rw] retention_period
+          #   @return [::Google::Protobuf::Duration]
+          #     How long the change stream should be retained. Change stream data older
+          #     than the retention period will not be returned when reading the change
+          #     stream from the table.
+          #     Values must be at least 1 day and at most 7 days, and will be truncated to
+          #     microsecond granularity.
+          class ChangeStreamConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # A collection of user data indexed by row, column, and timestamp.
           # Each table is served using the resources of its parent cluster.
           # @!attribute [rw] name
@@ -42,7 +55,7 @@ module Google
           #     The unique name of the table. Values are of the form
           #     `projects/{project}/instances/{instance}/tables/[_a-zA-Z0-9][-_.a-zA-Z0-9]*`.
           #     Views: `NAME_ONLY`, `SCHEMA_VIEW`, `REPLICATION_VIEW`, `FULL`
-          # @!attribute [rw] cluster_states
+          # @!attribute [r] cluster_states
           #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::Admin::V2::Table::ClusterState}]
           #     Output only. Map from cluster ID to per-cluster table state.
           #     If it could not be determined whether or not the table has data in a
@@ -51,26 +64,101 @@ module Google
           #     Views: `REPLICATION_VIEW`, `ENCRYPTION_VIEW`, `FULL`
           # @!attribute [rw] column_families
           #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::Admin::V2::ColumnFamily}]
-          #     (`CreationOnly`)
           #     The column families configured for this table, mapped by column family ID.
-          #     Views: `SCHEMA_VIEW`, `FULL`
+          #     Views: `SCHEMA_VIEW`, `STATS_VIEW`, `FULL`
           # @!attribute [rw] granularity
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Table::TimestampGranularity]
-          #     (`CreationOnly`)
-          #     The granularity (i.e. `MILLIS`) at which timestamps are stored in
-          #     this table. Timestamps not matching the granularity will be rejected.
-          #     If unspecified at creation time, the value will be set to `MILLIS`.
-          #     Views: `SCHEMA_VIEW`, `FULL`.
-          # @!attribute [rw] restore_info
+          #     Immutable. The granularity (i.e. `MILLIS`) at which timestamps are stored
+          #     in this table. Timestamps not matching the granularity will be rejected. If
+          #     unspecified at creation time, the value will be set to `MILLIS`. Views:
+          #     `SCHEMA_VIEW`, `FULL`.
+          # @!attribute [r] restore_info
           #   @return [::Google::Cloud::Bigtable::Admin::V2::RestoreInfo]
           #     Output only. If this table was restored from another data source (e.g. a
           #     backup), this field will be populated with information about the restore.
+          # @!attribute [rw] change_stream_config
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::ChangeStreamConfig]
+          #     If specified, enable the change stream on this table.
+          #     Otherwise, the change stream is disabled and the change stream is not
+          #     retained.
+          # @!attribute [rw] deletion_protection
+          #   @return [::Boolean]
+          #     Set to true to make the table protected against data loss. i.e. deleting
+          #     the following resources through Admin APIs are prohibited:
+          #
+          #     * The table.
+          #     * The column families in the table.
+          #     * The instance containing the table.
+          #
+          #     Note one can still delete the data stored in the table through Data APIs.
+          # @!attribute [rw] automated_backup_policy
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::Table::AutomatedBackupPolicy]
+          #     If specified, automated backups are enabled for this table.
+          #     Otherwise, automated backups are disabled.
+          # @!attribute [rw] row_key_schema
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::Type::Struct]
+          #     The row key schema for this table. The schema is used to decode the raw row
+          #     key bytes into a structured format. The order of field declarations in this
+          #     schema is important, as it reflects how the raw row key bytes are
+          #     structured. Currently, this only affects how the key is read via a
+          #     GoogleSQL query from the ExecuteQuery API.
+          #
+          #     For a SQL query, the _key column is still read as raw bytes. But queries
+          #     can reference the key fields by name, which will be decoded from _key using
+          #     provided type and encoding. Queries that reference key fields will fail if
+          #     they encounter an invalid row key.
+          #
+          #     For example, if _key = "some_id#2024-04-30#\x00\x13\x00\xf3" with the
+          #     following schema:
+          #     {
+          #       fields {
+          #         field_name: "id"
+          #         type { string { encoding: utf8_bytes \\{} } }
+          #       }
+          #       fields {
+          #         field_name: "date"
+          #         type { string { encoding: utf8_bytes \\{} } }
+          #       }
+          #       fields {
+          #         field_name: "product_code"
+          #         type { int64 { encoding: big_endian_bytes \\{} } }
+          #       }
+          #       encoding { delimited_bytes { delimiter: "#" } }
+          #     }
+          #
+          #     The decoded key parts would be:
+          #       id = "some_id", date = "2024-04-30", product_code = 1245427
+          #     The query "SELECT _key, product_code FROM table" will return two columns:
+          #     /------------------------------------------------------\
+          #     |              _key                     | product_code |
+          #     | --------------------------------------|--------------|
+          #     | "some_id#2024-04-30#\x00\x13\x00\xf3" |   1245427    |
+          #     \------------------------------------------------------/
+          #
+          #     The schema has the following invariants:
+          #     (1) The decoded field values are order-preserved. For read, the field
+          #     values will be decoded in sorted mode from the raw bytes.
+          #     (2) Every field in the schema must specify a non-empty name.
+          #     (3) Every field must specify a type with an associated encoding. The type
+          #     is limited to scalar types only: Array, Map, Aggregate, and Struct are not
+          #     allowed.
+          #     (4) The field names must not collide with existing column family
+          #     names and reserved keywords "_key" and "_timestamp".
+          #
+          #     The following update operations are allowed for row_key_schema:
+          #     - Update from an empty schema to a new schema.
+          #     - Remove the existing schema. This operation requires setting the
+          #       `ignore_warnings` flag to `true`, since it might be a backward
+          #       incompatible change. Without the flag, the update request will fail with
+          #       an INVALID_ARGUMENT error.
+          #     Any other row key schema update operation (e.g. update existing schema
+          #     columns names or types) is currently unsupported.
           class Table
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
             # The state of a table's data in a particular cluster.
-            # @!attribute [rw] replication_state
+            # @!attribute [r] replication_state
             #   @return [::Google::Cloud::Bigtable::Admin::V2::Table::ClusterState::ReplicationState]
             #     Output only. The state of replication for the table in this cluster.
             # @!attribute [r] encryption_info
@@ -112,6 +200,20 @@ module Google
                 # table will transition to `READY` state.
                 READY_OPTIMIZING = 5
               end
+            end
+
+            # Defines an automated backup policy for a table
+            # @!attribute [rw] retention_period
+            #   @return [::Google::Protobuf::Duration]
+            #     Required. How long the automated backups should be retained. The only
+            #     supported value at this time is 3 days.
+            # @!attribute [rw] frequency
+            #   @return [::Google::Protobuf::Duration]
+            #     Required. How frequently automated backups should occur. The only
+            #     supported value at this time is 24 hours.
+            class AutomatedBackupPolicy
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
             end
 
             # @!attribute [rw] key
@@ -158,11 +260,92 @@ module Google
               # state.
               REPLICATION_VIEW = 3
 
-              # Only populates 'name' and fields related to the table's encryption state.
+              # Only populates `name` and fields related to the table's encryption state.
               ENCRYPTION_VIEW = 5
 
               # Populates all fields.
               FULL = 4
+            end
+          end
+
+          # AuthorizedViews represent subsets of a particular Cloud Bigtable table. Users
+          # can configure access to each Authorized View independently from the table and
+          # use the existing Data APIs to access the subset of data.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Identifier. The name of this AuthorizedView.
+          #     Values are of the form
+          #     `projects/{project}/instances/{instance}/tables/{table}/authorizedViews/{authorized_view}`
+          # @!attribute [rw] subset_view
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::AuthorizedView::SubsetView]
+          #     An AuthorizedView permitting access to an explicit subset of a Table.
+          # @!attribute [rw] etag
+          #   @return [::String]
+          #     The etag for this AuthorizedView.
+          #     If this is provided on update, it must match the server's etag. The server
+          #     returns ABORTED error on a mismatched etag.
+          # @!attribute [rw] deletion_protection
+          #   @return [::Boolean]
+          #     Set to true to make the AuthorizedView protected against deletion.
+          #     The parent Table and containing Instance cannot be deleted if an
+          #     AuthorizedView has this bit set.
+          class AuthorizedView
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Subsets of a column family that are included in this AuthorizedView.
+            # @!attribute [rw] qualifiers
+            #   @return [::Array<::String>]
+            #     Individual exact column qualifiers to be included in the AuthorizedView.
+            # @!attribute [rw] qualifier_prefixes
+            #   @return [::Array<::String>]
+            #     Prefixes for qualifiers to be included in the AuthorizedView. Every
+            #     qualifier starting with one of these prefixes is included in the
+            #     AuthorizedView. To provide access to all qualifiers, include the empty
+            #     string as a prefix
+            #     ("").
+            class FamilySubsets
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Defines a simple AuthorizedView that is a subset of the underlying Table.
+            # @!attribute [rw] row_prefixes
+            #   @return [::Array<::String>]
+            #     Row prefixes to be included in the AuthorizedView.
+            #     To provide access to all rows, include the empty string as a prefix ("").
+            # @!attribute [rw] family_subsets
+            #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::Admin::V2::AuthorizedView::FamilySubsets}]
+            #     Map from column family name to the columns in this family to be included
+            #     in the AuthorizedView.
+            class SubsetView
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # @!attribute [rw] key
+              #   @return [::String]
+              # @!attribute [rw] value
+              #   @return [::Google::Cloud::Bigtable::Admin::V2::AuthorizedView::FamilySubsets]
+              class FamilySubsetsEntry
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
+
+            # Defines a subset of an AuthorizedView's fields.
+            module ResponseView
+              # Uses the default view for each method as documented in the request.
+              RESPONSE_VIEW_UNSPECIFIED = 0
+
+              # Only populates `name`.
+              NAME_ONLY = 1
+
+              # Only populates the AuthorizedView's basic metadata. This includes:
+              # name, deletion_protection, etag.
+              BASIC = 2
+
+              # Populates every fields.
+              FULL = 3
             end
           end
 
@@ -175,6 +358,18 @@ module Google
           #     NOTE: Garbage collection executes opportunistically in the background, and
           #     so it's possible for reads to return a cell even if it matches the active
           #     GC expression for its family.
+          # @!attribute [rw] value_type
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::Type]
+          #     The type of data stored in each of this family's cell values, including its
+          #     full encoding. If omitted, the family only serves raw untyped bytes.
+          #
+          #     For now, only the `Aggregate` type is supported.
+          #
+          #     `Aggregate` can only be set at family creation and is immutable afterwards.
+          #
+          #
+          #     If `value_type` is `Aggregate`, written data must be compatible with:
+          #      * `value_type.input_type` for `AddInput` mutations
           class ColumnFamily
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -184,17 +379,25 @@ module Google
           # @!attribute [rw] max_num_versions
           #   @return [::Integer]
           #     Delete all cells in a column except the most recent N.
+          #
+          #     Note: The following fields are mutually exclusive: `max_num_versions`, `max_age`, `intersection`, `union`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] max_age
           #   @return [::Google::Protobuf::Duration]
           #     Delete cells in a column older than the given age.
           #     Values must be at least one millisecond, and will be truncated to
           #     microsecond granularity.
+          #
+          #     Note: The following fields are mutually exclusive: `max_age`, `max_num_versions`, `intersection`, `union`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] intersection
           #   @return [::Google::Cloud::Bigtable::Admin::V2::GcRule::Intersection]
           #     Delete cells that would be deleted by every nested rule.
+          #
+          #     Note: The following fields are mutually exclusive: `intersection`, `max_num_versions`, `max_age`, `union`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] union
           #   @return [::Google::Cloud::Bigtable::Admin::V2::GcRule::Union]
           #     Delete cells that would be deleted by any nested rule.
+          #
+          #     Note: The following fields are mutually exclusive: `union`, `max_num_versions`, `max_age`, `intersection`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class GcRule
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -268,32 +471,32 @@ module Google
           # for production use. It is not subject to any SLA or deprecation policy.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Output only. The unique name of the snapshot.
+          #     The unique name of the snapshot.
           #     Values are of the form
           #     `projects/{project}/instances/{instance}/clusters/{cluster}/snapshots/{snapshot}`.
-          # @!attribute [rw] source_table
+          # @!attribute [r] source_table
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Table]
           #     Output only. The source table at the time the snapshot was taken.
-          # @!attribute [rw] data_size_bytes
+          # @!attribute [r] data_size_bytes
           #   @return [::Integer]
           #     Output only. The size of the data in the source table at the time the
           #     snapshot was taken. In some cases, this value may be computed
           #     asynchronously via a background process and a placeholder of 0 will be used
           #     in the meantime.
-          # @!attribute [rw] create_time
+          # @!attribute [r] create_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Output only. The time when the snapshot is created.
           # @!attribute [rw] delete_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Output only. The time when the snapshot will be deleted. The maximum amount
-          #     of time a snapshot can stay active is 365 days. If 'ttl' is not specified,
+          #     The time when the snapshot will be deleted. The maximum amount of time a
+          #     snapshot can stay active is 365 days. If 'ttl' is not specified,
           #     the default maximum of 365 days will be used.
-          # @!attribute [rw] state
+          # @!attribute [r] state
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Snapshot::State]
           #     Output only. The current state of the snapshot.
           # @!attribute [rw] description
           #   @return [::String]
-          #     Output only. Description of the snapshot.
+          #     Description of the snapshot.
           class Snapshot
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -314,9 +517,9 @@ module Google
           end
 
           # A backup of a Cloud Bigtable table.
-          # @!attribute [r] name
+          # @!attribute [rw] name
           #   @return [::String]
-          #     Output only. A globally unique identifier for the backup which cannot be
+          #     A globally unique identifier for the backup which cannot be
           #     changed. Values are of the form
           #     `projects/{project}/instances/{instance}/clusters/{cluster}/
           #        backups/[_a-zA-Z0-9][-_.a-zA-Z0-9]*`
@@ -331,13 +534,21 @@ module Google
           #     Required. Immutable. Name of the table from which this backup was created.
           #     This needs to be in the same instance as the backup. Values are of the form
           #     `projects/{project}/instances/{instance}/tables/{source_table}`.
+          # @!attribute [r] source_backup
+          #   @return [::String]
+          #     Output only. Name of the backup from which this backup was copied. If a
+          #     backup is not created by copying a backup, this field will be empty. Values
+          #     are of the form:
+          #     projects/<project>/instances/<instance>/clusters/<cluster>/backups/<backup>
           # @!attribute [rw] expire_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Required. The expiration time of the backup, with microseconds
-          #     granularity that must be at least 6 hours and at most 30 days
-          #     from the time the request is received. Once the `expire_time`
-          #     has passed, Cloud Bigtable will delete the backup and free the
-          #     resources used by the backup.
+          #     Required. The expiration time of the backup.
+          #     When creating a backup or updating its `expire_time`, the value must be
+          #     greater than the backup creation time by:
+          #     - At least 6 hours
+          #     - At most 90 days
+          #
+          #     Once the `expire_time` has passed, Cloud Bigtable will delete the backup.
           # @!attribute [r] start_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Output only. `start_time` is the time that the backup was started
@@ -358,6 +569,19 @@ module Google
           # @!attribute [r] encryption_info
           #   @return [::Google::Cloud::Bigtable::Admin::V2::EncryptionInfo]
           #     Output only. The encryption information for the backup.
+          # @!attribute [rw] backup_type
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::Backup::BackupType]
+          #     Indicates the backup type of the backup.
+          # @!attribute [rw] hot_to_standard_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The time at which the hot backup will be converted to a standard backup.
+          #     Once the `hot_to_standard_time` has passed, Cloud Bigtable will convert the
+          #     hot backup to a standard backup. This value must be greater than the backup
+          #     creation time by:
+          #     - At least 24 hours
+          #
+          #     This field only applies for hot backups. When creating or updating a
+          #     standard backup, attempting to set this field will fail the request.
           class Backup
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -373,6 +597,23 @@ module Google
 
               # The backup is complete and ready for use.
               READY = 2
+            end
+
+            # The type of the backup.
+            module BackupType
+              # Not specified.
+              BACKUP_TYPE_UNSPECIFIED = 0
+
+              # The default type for Cloud Bigtable managed backups. Supported for
+              # backups created in both HDD and SSD instances. Requires optimization when
+              # restored to a table in an SSD instance.
+              STANDARD = 1
+
+              # A backup type with faster restore to SSD performance. Only supported for
+              # backups created in SSD instances. A new SSD table restored from a hot
+              # backup reaches production performance more quickly than a standard
+              # backup.
+              HOT = 2
             end
           end
 
@@ -391,6 +632,12 @@ module Google
           # @!attribute [r] source_table
           #   @return [::String]
           #     Output only. Name of the table the backup was created from.
+          # @!attribute [r] source_backup
+          #   @return [::String]
+          #     Output only. Name of the backup from which this backup was copied. If a
+          #     backup is not created by copying a backup, this field will be empty. Values
+          #     are of the form:
+          #     projects/<project>/instances/<instance>/clusters/<cluster>/backups/<backup>
           class BackupInfo
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods

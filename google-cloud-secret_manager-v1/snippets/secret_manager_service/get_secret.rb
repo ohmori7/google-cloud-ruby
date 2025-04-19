@@ -19,15 +19,29 @@
 # [START secretmanager_v1_generated_SecretManagerService_GetSecret_sync]
 require "google/cloud/secret_manager/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::SecretManager::V1::SecretManagerService::Client.new
+##
+# Snippet for the get_secret call in the SecretManagerService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::SecretManager::V1::SecretManagerService::Client#get_secret.
+#
+def get_secret
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::SecretManager::V1::SecretManagerService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::SecretManager::V1::GetSecretRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::SecretManager::V1::GetSecretRequest.new
 
-# Call the get_secret method.
-result = client.get_secret request
+  # Call the get_secret method.
+  result = client.get_secret request
 
-# The returned object is of type Google::Cloud::SecretManager::V1::Secret.
-p result
+  # The returned object is of type Google::Cloud::SecretManager::V1::Secret.
+  p result
+end
 # [END secretmanager_v1_generated_SecretManagerService_GetSecret_sync]

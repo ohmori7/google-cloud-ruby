@@ -1,5 +1,142 @@
 # Release History
 
+### 2.22.0 (2025-03-27)
+
+#### Features
+
+* Support list schema revisions ([#29174](https://github.com/googleapis/google-cloud-ruby/issues/29174)) 
+
+### 2.21.0 (2025-03-14)
+
+#### Features
+
+* Support revision_id in Schema 
+
+### 2.20.0 (2025-02-13)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 ([#29071](https://github.com/googleapis/google-cloud-ruby/issues/29071)) 
+
+### 2.19.0 (2024-07-09)
+
+#### Features
+
+* compatibility with GA releases of underlying versioned clients ([#26361](https://github.com/googleapis/google-cloud-ruby/issues/26361)) 
+
+### 2.18.1 (2024-06-05)
+
+#### Bug Fixes
+
+* Added bigdecimal to the gem dependencies ([#26012](https://github.com/googleapis/google-cloud-ruby/issues/26012)) 
+
+### 2.18.0 (2024-03-26)
+
+#### Features
+
+* support ingestion_data_source_settings for create_topic ([#25418](https://github.com/googleapis/google-cloud-ruby/issues/25418)) 
+
+### 2.17.0 (2024-03-07)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 2.16.0 (2024-01-25)
+
+#### Features
+
+* Support for universe_domain ([#24437](https://github.com/googleapis/google-cloud-ruby/issues/24437)) 
+
+### 2.15.5 (2023-11-06)
+
+#### Bug Fixes
+
+* set x-goog-request-params for streaming pull request ([#23508](https://github.com/googleapis/google-cloud-ruby/issues/23508)) 
+
+### 2.15.4 (2023-05-19)
+
+#### Documentation
+
+* Fixed broken links in authentication documentation ([#21619](https://github.com/googleapis/google-cloud-ruby/issues/21619)) 
+
+### 2.15.4 (2023-05-18)
+
+#### Documentation
+
+* Fixed broken links in authentication documentation ([#21619](https://github.com/googleapis/google-cloud-ruby/issues/21619)) 
+
+### 2.15.3 (2023-04-19)
+
+#### Bug Fixes
+
+* wait for successful receipt modack when exactly once delivery enabled ([#21431](https://github.com/googleapis/google-cloud-ruby/issues/21431)) 
+
+### 2.15.2 (2023-03-19)
+
+#### Bug Fixes
+
+* make batch handle publish interval ([#20913](https://github.com/googleapis/google-cloud-ruby/issues/20913)) 
+
+### 2.15.1 (2023-02-23)
+
+#### Documentation
+
+* Correct default value for streams ([#20485](https://github.com/googleapis/google-cloud-ruby/issues/20485)) 
+
+### 2.15.0 (2023-01-22)
+
+#### Features
+
+* support publisher compression ([#19910](https://github.com/googleapis/google-cloud-ruby/issues/19910)) 
+
+### 2.14.0 (2023-01-12)
+
+#### Features
+
+* Added support for schema evolution, including managing schema revisions, and schema commit and rollback ([#19981](https://github.com/googleapis/google-cloud-ruby/issues/19981)) 
+
+### 2.13.0 (2022-10-18)
+
+#### Features
+
+* Added support for bigquery subscription ([#19221](https://github.com/googleapis/google-cloud-ruby/issues/19221)) 
+
+### 2.12.1 (2022-08-21)
+
+#### Bug Fixes
+
+* update non EOS ack to return Success always ([#19023](https://github.com/googleapis/google-cloud-ruby/issues/19023)) 
+
+### 2.12.0 (2022-08-09)
+
+#### Features
+
+* bump the minimum required version of pubsub v1 ([#18983](https://github.com/googleapis/google-cloud-ruby/issues/18983)) 
+#### Bug Fixes
+
+* honour async options of topic ([#18953](https://github.com/googleapis/google-cloud-ruby/issues/18953)) 
+
+### 2.11.0 (2022-08-01)
+
+#### Features
+
+* create exactly once delivery enabled subscription ([#18824](https://github.com/googleapis/google-cloud-ruby/issues/18824)) 
+* Let user register callback and get acknowledgement result ([#18702](https://github.com/googleapis/google-cloud-ruby/issues/18702)) 
+* retry transient failures in ack/modack in timed unary buffer ([#18395](https://github.com/googleapis/google-cloud-ruby/issues/18395)) 
+
+### 2.10.0 (2022-06-14)
+
+#### Features
+
+* introduce min_duration_per_lease_extension
+
+### 2.9.2 (2022-04-28)
+
+#### Bug Fixes
+
+* ignore grpc errors on ack/modack   
+
 ### 2.9.1 / 2022-01-11
 
 #### Documentation

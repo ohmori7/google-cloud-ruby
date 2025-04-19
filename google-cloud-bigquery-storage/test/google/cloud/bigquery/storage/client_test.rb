@@ -22,8 +22,27 @@ require "gapic/common"
 require "gapic/grpc"
 
 class Google::Cloud::Bigquery::Storage::ClientConstructionMinitest < Minitest::Test
-  def test_big_query_read
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_big_query_read_grpc
+    skip unless Google::Cloud::Bigquery::Storage.big_query_read_available?
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
       client = Google::Cloud::Bigquery::Storage.big_query_read do |config|
         config.credentials = grpc_channel
@@ -32,8 +51,9 @@ class Google::Cloud::Bigquery::Storage::ClientConstructionMinitest < Minitest::T
     end
   end
 
-  def test_big_query_write
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_big_query_write_grpc
+    skip unless Google::Cloud::Bigquery::Storage.big_query_write_available?
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
       client = Google::Cloud::Bigquery::Storage.big_query_write do |config|
         config.credentials = grpc_channel

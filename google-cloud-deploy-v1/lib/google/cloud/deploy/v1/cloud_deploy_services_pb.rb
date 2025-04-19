@@ -46,6 +46,8 @@ module Google
             rpc :DeleteDeliveryPipeline, ::Google::Cloud::Deploy::V1::DeleteDeliveryPipelineRequest, ::Google::Longrunning::Operation
             # Lists Targets in a given project and location.
             rpc :ListTargets, ::Google::Cloud::Deploy::V1::ListTargetsRequest, ::Google::Cloud::Deploy::V1::ListTargetsResponse
+            # Creates a `Rollout` to roll back the specified target.
+            rpc :RollbackTarget, ::Google::Cloud::Deploy::V1::RollbackTargetRequest, ::Google::Cloud::Deploy::V1::RollbackTargetResponse
             # Gets details of a single Target.
             rpc :GetTarget, ::Google::Cloud::Deploy::V1::GetTargetRequest, ::Google::Cloud::Deploy::V1::Target
             # Creates a new Target in a given project and location.
@@ -54,22 +56,77 @@ module Google
             rpc :UpdateTarget, ::Google::Cloud::Deploy::V1::UpdateTargetRequest, ::Google::Longrunning::Operation
             # Deletes a single Target.
             rpc :DeleteTarget, ::Google::Cloud::Deploy::V1::DeleteTargetRequest, ::Google::Longrunning::Operation
+            # Lists CustomTargetTypes in a given project and location.
+            rpc :ListCustomTargetTypes, ::Google::Cloud::Deploy::V1::ListCustomTargetTypesRequest, ::Google::Cloud::Deploy::V1::ListCustomTargetTypesResponse
+            # Gets details of a single CustomTargetType.
+            rpc :GetCustomTargetType, ::Google::Cloud::Deploy::V1::GetCustomTargetTypeRequest, ::Google::Cloud::Deploy::V1::CustomTargetType
+            # Creates a new CustomTargetType in a given project and location.
+            rpc :CreateCustomTargetType, ::Google::Cloud::Deploy::V1::CreateCustomTargetTypeRequest, ::Google::Longrunning::Operation
+            # Updates a single CustomTargetType.
+            rpc :UpdateCustomTargetType, ::Google::Cloud::Deploy::V1::UpdateCustomTargetTypeRequest, ::Google::Longrunning::Operation
+            # Deletes a single CustomTargetType.
+            rpc :DeleteCustomTargetType, ::Google::Cloud::Deploy::V1::DeleteCustomTargetTypeRequest, ::Google::Longrunning::Operation
             # Lists Releases in a given project and location.
             rpc :ListReleases, ::Google::Cloud::Deploy::V1::ListReleasesRequest, ::Google::Cloud::Deploy::V1::ListReleasesResponse
             # Gets details of a single Release.
             rpc :GetRelease, ::Google::Cloud::Deploy::V1::GetReleaseRequest, ::Google::Cloud::Deploy::V1::Release
             # Creates a new Release in a given project and location.
             rpc :CreateRelease, ::Google::Cloud::Deploy::V1::CreateReleaseRequest, ::Google::Longrunning::Operation
+            # Abandons a Release in the Delivery Pipeline.
+            rpc :AbandonRelease, ::Google::Cloud::Deploy::V1::AbandonReleaseRequest, ::Google::Cloud::Deploy::V1::AbandonReleaseResponse
+            # Creates a new DeployPolicy in a given project and location.
+            rpc :CreateDeployPolicy, ::Google::Cloud::Deploy::V1::CreateDeployPolicyRequest, ::Google::Longrunning::Operation
+            # Updates the parameters of a single DeployPolicy.
+            rpc :UpdateDeployPolicy, ::Google::Cloud::Deploy::V1::UpdateDeployPolicyRequest, ::Google::Longrunning::Operation
+            # Deletes a single DeployPolicy.
+            rpc :DeleteDeployPolicy, ::Google::Cloud::Deploy::V1::DeleteDeployPolicyRequest, ::Google::Longrunning::Operation
+            # Lists DeployPolicies in a given project and location.
+            rpc :ListDeployPolicies, ::Google::Cloud::Deploy::V1::ListDeployPoliciesRequest, ::Google::Cloud::Deploy::V1::ListDeployPoliciesResponse
+            # Gets details of a single DeployPolicy.
+            rpc :GetDeployPolicy, ::Google::Cloud::Deploy::V1::GetDeployPolicyRequest, ::Google::Cloud::Deploy::V1::DeployPolicy
             # Approves a Rollout.
             rpc :ApproveRollout, ::Google::Cloud::Deploy::V1::ApproveRolloutRequest, ::Google::Cloud::Deploy::V1::ApproveRolloutResponse
+            # Advances a Rollout in a given project and location.
+            rpc :AdvanceRollout, ::Google::Cloud::Deploy::V1::AdvanceRolloutRequest, ::Google::Cloud::Deploy::V1::AdvanceRolloutResponse
+            # Cancels a Rollout in a given project and location.
+            rpc :CancelRollout, ::Google::Cloud::Deploy::V1::CancelRolloutRequest, ::Google::Cloud::Deploy::V1::CancelRolloutResponse
             # Lists Rollouts in a given project and location.
             rpc :ListRollouts, ::Google::Cloud::Deploy::V1::ListRolloutsRequest, ::Google::Cloud::Deploy::V1::ListRolloutsResponse
             # Gets details of a single Rollout.
             rpc :GetRollout, ::Google::Cloud::Deploy::V1::GetRolloutRequest, ::Google::Cloud::Deploy::V1::Rollout
             # Creates a new Rollout in a given project and location.
             rpc :CreateRollout, ::Google::Cloud::Deploy::V1::CreateRolloutRequest, ::Google::Longrunning::Operation
+            # Ignores the specified Job in a Rollout.
+            rpc :IgnoreJob, ::Google::Cloud::Deploy::V1::IgnoreJobRequest, ::Google::Cloud::Deploy::V1::IgnoreJobResponse
+            # Retries the specified Job in a Rollout.
+            rpc :RetryJob, ::Google::Cloud::Deploy::V1::RetryJobRequest, ::Google::Cloud::Deploy::V1::RetryJobResponse
+            # Lists JobRuns in a given project and location.
+            rpc :ListJobRuns, ::Google::Cloud::Deploy::V1::ListJobRunsRequest, ::Google::Cloud::Deploy::V1::ListJobRunsResponse
+            # Gets details of a single JobRun.
+            rpc :GetJobRun, ::Google::Cloud::Deploy::V1::GetJobRunRequest, ::Google::Cloud::Deploy::V1::JobRun
+            # Terminates a Job Run in a given project and location.
+            rpc :TerminateJobRun, ::Google::Cloud::Deploy::V1::TerminateJobRunRequest, ::Google::Cloud::Deploy::V1::TerminateJobRunResponse
             # Gets the configuration for a location.
             rpc :GetConfig, ::Google::Cloud::Deploy::V1::GetConfigRequest, ::Google::Cloud::Deploy::V1::Config
+            # Creates a new Automation in a given project and location.
+            rpc :CreateAutomation, ::Google::Cloud::Deploy::V1::CreateAutomationRequest, ::Google::Longrunning::Operation
+            # Updates the parameters of a single Automation resource.
+            rpc :UpdateAutomation, ::Google::Cloud::Deploy::V1::UpdateAutomationRequest, ::Google::Longrunning::Operation
+            # Deletes a single Automation resource.
+            rpc :DeleteAutomation, ::Google::Cloud::Deploy::V1::DeleteAutomationRequest, ::Google::Longrunning::Operation
+            # Gets details of a single Automation.
+            rpc :GetAutomation, ::Google::Cloud::Deploy::V1::GetAutomationRequest, ::Google::Cloud::Deploy::V1::Automation
+            # Lists Automations in a given project and location.
+            rpc :ListAutomations, ::Google::Cloud::Deploy::V1::ListAutomationsRequest, ::Google::Cloud::Deploy::V1::ListAutomationsResponse
+            # Gets details of a single AutomationRun.
+            rpc :GetAutomationRun, ::Google::Cloud::Deploy::V1::GetAutomationRunRequest, ::Google::Cloud::Deploy::V1::AutomationRun
+            # Lists AutomationRuns in a given project and location.
+            rpc :ListAutomationRuns, ::Google::Cloud::Deploy::V1::ListAutomationRunsRequest, ::Google::Cloud::Deploy::V1::ListAutomationRunsResponse
+            # Cancels an AutomationRun. The `state` of the `AutomationRun` after
+            # cancelling is `CANCELLED`. `CancelAutomationRun` can be called on
+            # AutomationRun in the state `IN_PROGRESS` and `PENDING`; AutomationRun
+            # in a different state returns an `FAILED_PRECONDITION` error.
+            rpc :CancelAutomationRun, ::Google::Cloud::Deploy::V1::CancelAutomationRunRequest, ::Google::Cloud::Deploy::V1::CancelAutomationRunResponse
           end
 
           Stub = Service.rpc_stub_class

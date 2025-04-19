@@ -19,22 +19,36 @@
 # [START memcache_v1beta2_generated_CloudMemcache_DeleteInstance_sync]
 require "google/cloud/memcache/v1beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Memcache::V1beta2::CloudMemcache::Client.new
+##
+# Snippet for the delete_instance call in the CloudMemcache service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Memcache::V1beta2::CloudMemcache::Client#delete_instance.
+#
+def delete_instance
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Memcache::V1beta2::CloudMemcache::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Memcache::V1beta2::DeleteInstanceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Memcache::V1beta2::DeleteInstanceRequest.new
 
-# Call the delete_instance method.
-result = client.delete_instance request
+  # Call the delete_instance method.
+  result = client.delete_instance request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END memcache_v1beta2_generated_CloudMemcache_DeleteInstance_sync]

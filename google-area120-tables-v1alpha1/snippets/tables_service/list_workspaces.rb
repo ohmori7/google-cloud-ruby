@@ -19,21 +19,33 @@
 # [START area120tables_v1alpha1_generated_TablesService_ListWorkspaces_sync]
 require "google/area120/tables/v1alpha1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Area120::Tables::V1alpha1::TablesService::Client.new
+##
+# Snippet for the list_workspaces call in the TablesService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Area120::Tables::V1alpha1::TablesService::Client#list_workspaces.
+#
+def list_workspaces
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Area120::Tables::V1alpha1::TablesService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Area120::Tables::V1alpha1::ListWorkspacesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Area120::Tables::V1alpha1::ListWorkspacesRequest.new
 
-# Call the list_workspaces method.
-result = client.list_workspaces request
+  # Call the list_workspaces method.
+  result = client.list_workspaces request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Area120::Tables::V1alpha1::Workspace.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Area120::Tables::V1alpha1::Workspace.
+    p item
+  end
 end
 # [END area120tables_v1alpha1_generated_TablesService_ListWorkspaces_sync]

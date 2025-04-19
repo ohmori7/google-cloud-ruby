@@ -176,10 +176,14 @@ module Google
         #     Value for the `path` field. Will be set for actions:'add'/'replace'.
         #     Maybe set for action: 'test'. Either this or `value_matcher` will be set
         #     for 'test' operation. An exact match must be performed.
+        #
+        #     Note: The following fields are mutually exclusive: `value`, `value_matcher`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] value_matcher
         #   @return [::Google::Cloud::Recommender::V1::ValueMatcher]
         #     Can be set for action 'test' for advanced matching for the value of
         #     'path' field. Either this or `value` will be set for 'test' operation.
+        #
+        #     Note: The following fields are mutually exclusive: `value_matcher`, `value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] path_filters
         #   @return [::Google::Protobuf::Map{::String => ::Google::Protobuf::Value}]
         #     Set of filters to apply if `path` refers to array elements or nested array
@@ -264,6 +268,9 @@ module Google
         # @!attribute [rw] duration
         #   @return [::Google::Protobuf::Duration]
         #     Duration for which this cost applies.
+        # @!attribute [rw] cost_in_local_currency
+        #   @return [::Google::Type::Money]
+        #     The approximate cost savings in the billing account's local currency.
         class CostProjection
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -278,6 +285,48 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Contains metadata about how much sustainability a recommendation can save or
+        # incur.
+        # @!attribute [rw] kg_c_o2e
+        #   @return [::Float]
+        #     Carbon Footprint generated in kg of CO2 equivalent.
+        #     Chose kg_c_o2e so that the name renders correctly in camelCase (kgCO2e).
+        # @!attribute [rw] duration
+        #   @return [::Google::Protobuf::Duration]
+        #     Duration for which this sustainability applies.
+        class SustainabilityProjection
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Contains information on the impact of a reliability recommendation.
+        # @!attribute [rw] risks
+        #   @return [::Array<::Google::Cloud::Recommender::V1::ReliabilityProjection::RiskType>]
+        #     Reliability risks mitigated by this recommendation.
+        # @!attribute [rw] details
+        #   @return [::Google::Protobuf::Struct]
+        #     Per-recommender projection.
+        class ReliabilityProjection
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The risk associated with the reliability issue.
+          module RiskType
+            # Default unspecified risk. Don't use directly.
+            RISK_TYPE_UNSPECIFIED = 0
+
+            # Potential service downtime.
+            SERVICE_DISRUPTION = 1
+
+            # Potential data loss.
+            DATA_LOSS = 2
+
+            # Potential access denial. The service is still up but some or all clients
+            # can't access it.
+            ACCESS_DENY = 3
+          end
+        end
+
         # Contains the impact a recommendation can have for a given category.
         # @!attribute [rw] category
         #   @return [::Google::Cloud::Recommender::V1::Impact::Category]
@@ -285,9 +334,23 @@ module Google
         # @!attribute [rw] cost_projection
         #   @return [::Google::Cloud::Recommender::V1::CostProjection]
         #     Use with CategoryType.COST
+        #
+        #     Note: The following fields are mutually exclusive: `cost_projection`, `security_projection`, `sustainability_projection`, `reliability_projection`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] security_projection
         #   @return [::Google::Cloud::Recommender::V1::SecurityProjection]
         #     Use with CategoryType.SECURITY
+        #
+        #     Note: The following fields are mutually exclusive: `security_projection`, `cost_projection`, `sustainability_projection`, `reliability_projection`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] sustainability_projection
+        #   @return [::Google::Cloud::Recommender::V1::SustainabilityProjection]
+        #     Use with CategoryType.SUSTAINABILITY
+        #
+        #     Note: The following fields are mutually exclusive: `sustainability_projection`, `cost_projection`, `security_projection`, `reliability_projection`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] reliability_projection
+        #   @return [::Google::Cloud::Recommender::V1::ReliabilityProjection]
+        #     Use with CategoryType.RELIABILITY
+        #
+        #     Note: The following fields are mutually exclusive: `reliability_projection`, `cost_projection`, `security_projection`, `sustainability_projection`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Impact
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -308,6 +371,12 @@ module Google
 
             # Indicates a potential increase or decrease in manageability.
             MANAGEABILITY = 4
+
+            # Indicates a potential increase or decrease in sustainability.
+            SUSTAINABILITY = 5
+
+            # Indicates a potential increase or decrease in reliability.
+            RELIABILITY = 6
           end
         end
 

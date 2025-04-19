@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_Fulfillments_UpdateFulfillment_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::Fulfillments::Client.new
+##
+# Snippet for the update_fulfillment call in the Fulfillments service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::Fulfillments::Client#update_fulfillment.
+#
+def update_fulfillment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::Fulfillments::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::UpdateFulfillmentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::UpdateFulfillmentRequest.new
 
-# Call the update_fulfillment method.
-result = client.update_fulfillment request
+  # Call the update_fulfillment method.
+  result = client.update_fulfillment request
 
-# The returned object is of type Google::Cloud::Dialogflow::V2::Fulfillment.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::V2::Fulfillment.
+  p result
+end
 # [END dialogflow_v2_generated_Fulfillments_UpdateFulfillment_sync]

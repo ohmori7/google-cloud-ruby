@@ -32,6 +32,12 @@ module Google
             # [Workflows][google.cloud.workflows.v1.Workflow] called executions.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "workflowexecutions.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -93,6 +99,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @executions_stub.universe_domain
+              end
+
+              ##
               # Create a new Executions client object.
               #
               # @example
@@ -125,8 +140,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -137,11 +153,34 @@ module Google
 
                 @executions_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Workflows::Executions::V1::Executions::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @executions_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+              end
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @executions_stub.logger
               end
 
               # Service calls
@@ -162,7 +201,7 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload list_executions(parent: nil, page_size: nil, page_token: nil, view: nil)
+              # @overload list_executions(parent: nil, page_size: nil, page_token: nil, view: nil, filter: nil, order_by: nil)
               #   Pass arguments to `list_executions` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -172,7 +211,7 @@ module Google
               #     Format: projects/\\{project}/locations/\\{location}/workflows/\\{workflow}
               #   @param page_size [::Integer]
               #     Maximum number of executions to return per call.
-              #     Max supported value depends on the selected Execution view: it's 10000 for
+              #     Max supported value depends on the selected Execution view: it's 1000 for
               #     BASIC and 100 for FULL. The default value used if the field is not
               #     specified is 100, regardless of the selected view. Values greater than
               #     the max value will be coerced down to it.
@@ -182,9 +221,22 @@ module Google
               #
               #     When paginating, all other parameters provided to `ListExecutions` must
               #     match the call that provided the page token.
+              #
+              #     Note that pagination is applied to dynamic data. The list of executions
+              #     returned can change between page requests.
               #   @param view [::Google::Cloud::Workflows::Executions::V1::ExecutionView]
-              #     Optional. A view defining which fields should be filled in the returned executions.
-              #     The API will default to the BASIC view.
+              #     Optional. A view defining which fields should be filled in the returned
+              #     executions. The API will default to the BASIC view.
+              #   @param filter [::String]
+              #     Optional. Filters applied to the [Executions.ListExecutions] results.
+              #     The following fields are supported for filtering:
+              #     executionID, state, startTime, endTime, duration, workflowRevisionID,
+              #     stepName, and label.
+              #   @param order_by [::String]
+              #     Optional. The ordering applied to the [Executions.ListExecutions] results.
+              #     By default the ordering is based on descending start time.
+              #     The following fields are supported for order by:
+              #     executionID, startTime, endTime, duration, state, and workflowRevisionID.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Workflows::Executions::V1::Execution>]
@@ -206,13 +258,11 @@ module Google
               #   # Call the list_executions method.
               #   result = client.list_executions request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Workflows::Executions::V1::Execution.
-              #     p response
+              #     p item
               #   end
               #
               def list_executions request, options = nil
@@ -226,10 +276,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_executions.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Workflows::Executions::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -251,7 +302,7 @@ module Google
                 @executions_stub.call_rpc :list_executions, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @executions_stub, :list_executions, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -316,10 +367,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_execution.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Workflows::Executions::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -340,7 +392,6 @@ module Google
 
                 @executions_stub.call_rpc :create_execution, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -369,8 +420,8 @@ module Google
               #     Format:
               #     projects/\\{project}/locations/\\{location}/workflows/\\{workflow}/executions/\\{execution}
               #   @param view [::Google::Cloud::Workflows::Executions::V1::ExecutionView]
-              #     Optional. A view defining which fields should be filled in the returned execution.
-              #     The API will default to the FULL view.
+              #     Optional. A view defining which fields should be filled in the returned
+              #     execution. The API will default to the FULL view.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Workflows::Executions::V1::Execution]
@@ -406,10 +457,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_execution.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Workflows::Executions::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -430,7 +482,6 @@ module Google
 
                 @executions_stub.call_rpc :get_execution, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -493,10 +544,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.cancel_execution.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Workflows::Executions::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -517,7 +569,6 @@ module Google
 
                 @executions_stub.call_rpc :cancel_execution, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -553,20 +604,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"workflowexecutions.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -601,11 +659,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "workflowexecutions.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "workflowexecutions.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -620,6 +692,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -638,6 +712,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##

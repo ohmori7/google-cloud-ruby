@@ -124,7 +124,7 @@ module Google
         #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROY_SCHEDULED DESTROY_SCHEDULED}
         #     state before transitioning to
         #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::DESTROYED DESTROYED}.
-        #     If not specified at creation time, the default duration is 24 hours.
+        #     If not specified at creation time, the default duration is 30 days.
         # @!attribute [rw] crypto_key_backend
         #   @return [::String]
         #     Immutable. The resource name of the backend environment where the key
@@ -133,10 +133,20 @@ module Google
         #     where all related cryptographic operations are performed. Only applicable
         #     if {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersions} have a
         #     {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevel} of
-        #     [EXTERNAL_VPC][CryptoKeyVersion.ProtectionLevel.EXTERNAL_VPC], with the
+        #     {::Google::Cloud::Kms::V1::ProtectionLevel::EXTERNAL_VPC EXTERNAL_VPC}, with the
         #     resource name in the format `projects/*/locations/*/ekmConnections/*`.
         #     Note, this list is non-exhaustive and may apply to additional
         #     {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevels} in the future.
+        # @!attribute [rw] key_access_justifications_policy
+        #   @return [::Google::Cloud::Kms::V1::KeyAccessJustificationsPolicy]
+        #     Optional. The policy used for Key Access Justifications Policy Enforcement.
+        #     If this field is present and this key is enrolled in Key Access
+        #     Justifications Policy Enforcement, the policy will be evaluated in encrypt,
+        #     decrypt, and sign operations, and the operation will fail if rejected by
+        #     the policy. The policy is defined by specifying zero or more allowed
+        #     justification codes.
+        #     https://cloud.google.com/assured-workloads/key-access-justifications/docs/justification-codes
+        #     By default, this field is absent, and all justification codes are allowed.
         class CryptoKey
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -177,6 +187,13 @@ module Google
             # and
             # {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey}.
             ASYMMETRIC_DECRYPT = 6
+
+            # {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} with this purpose may be used
+            # with {::Google::Cloud::Kms::V1::KeyManagementService::Client#raw_encrypt RawEncrypt}
+            # and {::Google::Cloud::Kms::V1::KeyManagementService::Client#raw_decrypt RawDecrypt}.
+            # This purpose is meant to be used for interoperable symmetric
+            # encryption and does not support automatic CryptoKey rotation.
+            RAW_ENCRYPT_DECRYPT = 7
 
             # {::Google::Cloud::Kms::V1::CryptoKey CryptoKeys} with this purpose may be used
             # with {::Google::Cloud::Kms::V1::KeyManagementService::Client#mac_sign MacSign}.
@@ -254,6 +271,9 @@ module Google
 
             # Cavium HSM attestation compressed with gzip. Note that this format is
             # defined by Cavium and subject to change at any time.
+            #
+            # See
+            # https://www.marvell.com/products/security-solutions/nitrox-hs-adapters/software-key-attestation.html.
             CAVIUM_V1_COMPRESSED = 3
 
             # Cavium HSM attestation V2 compressed with gzip. This is a new format
@@ -338,6 +358,17 @@ module Google
         #     Output only. The root cause of the most recent import failure. Only present
         #     if {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} is
         #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::IMPORT_FAILED IMPORT_FAILED}.
+        # @!attribute [r] generation_failure_reason
+        #   @return [::String]
+        #     Output only. The root cause of the most recent generation failure. Only
+        #     present if {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} is
+        #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::GENERATION_FAILED GENERATION_FAILED}.
+        # @!attribute [r] external_destruction_failure_reason
+        #   @return [::String]
+        #     Output only. The root cause of the most recent external destruction
+        #     failure. Only present if
+        #     {::Google::Cloud::Kms::V1::CryptoKeyVersion#state state} is
+        #     {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionState::EXTERNAL_DESTRUCTION_FAILED EXTERNAL_DESTRUCTION_FAILED}.
         # @!attribute [rw] external_protection_level_options
         #   @return [::Google::Cloud::Kms::V1::ExternalProtectionLevelOptions]
         #     ExternalProtectionLevelOptions stores a group of additional fields for
@@ -365,11 +396,11 @@ module Google
           # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
           # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ENCRYPT_DECRYPT ENCRYPT_DECRYPT}.
           #
-          # Algorithms beginning with "RSA_SIGN_" are usable with
+          # Algorithms beginning with `RSA_SIGN_` are usable with
           # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
           # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_SIGN ASYMMETRIC_SIGN}.
           #
-          # The fields in the name after "RSA_SIGN_" correspond to the following
+          # The fields in the name after `RSA_SIGN_` correspond to the following
           # parameters: padding algorithm, modulus bit length, and digest algorithm.
           #
           # For PSS, the salt length used is equal to the length of digest
@@ -377,26 +408,27 @@ module Google
           # {::Google::Cloud::Kms::V1::CryptoKeyVersion::CryptoKeyVersionAlgorithm::RSA_SIGN_PSS_2048_SHA256 RSA_SIGN_PSS_2048_SHA256}
           # will use PSS with a salt length of 256 bits or 32 bytes.
           #
-          # Algorithms beginning with "RSA_DECRYPT_" are usable with
+          # Algorithms beginning with `RSA_DECRYPT_` are usable with
           # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
           # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_DECRYPT ASYMMETRIC_DECRYPT}.
           #
-          # The fields in the name after "RSA_DECRYPT_" correspond to the following
+          # The fields in the name after `RSA_DECRYPT_` correspond to the following
           # parameters: padding algorithm, modulus bit length, and digest algorithm.
           #
-          # Algorithms beginning with "EC_SIGN_" are usable with
+          # Algorithms beginning with `EC_SIGN_` are usable with
           # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
           # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::ASYMMETRIC_SIGN ASYMMETRIC_SIGN}.
           #
-          # The fields in the name after "EC_SIGN_" correspond to the following
+          # The fields in the name after `EC_SIGN_` correspond to the following
           # parameters: elliptic curve, digest algorithm.
           #
-          # Algorithms beginning with "HMAC_" are usable with
+          # Algorithms beginning with `HMAC_` are usable with
           # {::Google::Cloud::Kms::V1::CryptoKey#purpose CryptoKey.purpose}
           # {::Google::Cloud::Kms::V1::CryptoKey::CryptoKeyPurpose::MAC MAC}.
           #
-          # The suffix following "HMAC_" corresponds to the hash algorithm being used
+          # The suffix following `HMAC_` corresponds to the hash algorithm being used
           # (eg. SHA256).
+          #
           #
           # For more information, see [Key purposes and algorithms]
           # (https://cloud.google.com/kms/docs/algorithms).
@@ -406,6 +438,24 @@ module Google
 
             # Creates symmetric encryption keys.
             GOOGLE_SYMMETRIC_ENCRYPTION = 1
+
+            # AES-GCM (Galois Counter Mode) using 128-bit keys.
+            AES_128_GCM = 41
+
+            # AES-GCM (Galois Counter Mode) using 256-bit keys.
+            AES_256_GCM = 19
+
+            # AES-CBC (Cipher Block Chaining Mode) using 128-bit keys.
+            AES_128_CBC = 42
+
+            # AES-CBC (Cipher Block Chaining Mode) using 256-bit keys.
+            AES_256_CBC = 43
+
+            # AES-CTR (Counter Mode) using 128-bit keys.
+            AES_128_CTR = 44
+
+            # AES-CTR (Counter Mode) using 256-bit keys.
+            AES_256_CTR = 45
 
             # RSASSA-PSS 2048 bit key with a SHA256 digest.
             RSA_SIGN_PSS_2048_SHA256 = 2
@@ -462,20 +512,49 @@ module Google
             RSA_DECRYPT_OAEP_4096_SHA1 = 39
 
             # ECDSA on the NIST P-256 curve with a SHA256 digest.
+            # Other hash functions can also be used:
+            # https://cloud.google.com/kms/docs/create-validate-signatures#ecdsa_support_for_other_hash_algorithms
             EC_SIGN_P256_SHA256 = 12
 
             # ECDSA on the NIST P-384 curve with a SHA384 digest.
+            # Other hash functions can also be used:
+            # https://cloud.google.com/kms/docs/create-validate-signatures#ecdsa_support_for_other_hash_algorithms
             EC_SIGN_P384_SHA384 = 13
 
             # ECDSA on the non-NIST secp256k1 curve. This curve is only supported for
             # HSM protection level.
+            # Other hash functions can also be used:
+            # https://cloud.google.com/kms/docs/create-validate-signatures#ecdsa_support_for_other_hash_algorithms
             EC_SIGN_SECP256K1_SHA256 = 31
+
+            # EdDSA on the Curve25519 in pure mode (taking data as input).
+            EC_SIGN_ED25519 = 40
 
             # HMAC-SHA256 signing with a 256 bit key.
             HMAC_SHA256 = 32
 
+            # HMAC-SHA1 signing with a 160 bit key.
+            HMAC_SHA1 = 33
+
+            # HMAC-SHA384 signing with a 384 bit key.
+            HMAC_SHA384 = 34
+
+            # HMAC-SHA512 signing with a 512 bit key.
+            HMAC_SHA512 = 35
+
+            # HMAC-SHA224 signing with a 224 bit key.
+            HMAC_SHA224 = 36
+
             # Algorithm representing symmetric encryption by an external key manager.
             EXTERNAL_SYMMETRIC_ENCRYPTION = 18
+
+            # The post-quantum Module-Lattice-Based Digital Signature Algorithm, at
+            # security level 3. Randomized version.
+            PQ_SIGN_ML_DSA_65 = 56
+
+            # The post-quantum stateless hash-based digital signature algorithm, at
+            # security level 1. Randomized version.
+            PQ_SIGN_SLH_DSA_SHA2_128S = 57
           end
 
           # The state of a {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion},
@@ -529,6 +608,23 @@ module Google
             # Additional details can be found in
             # {::Google::Cloud::Kms::V1::CryptoKeyVersion#import_failure_reason CryptoKeyVersion.import_failure_reason}.
             IMPORT_FAILED = 7
+
+            # This version was not generated successfully. It may not be used, enabled,
+            # disabled, or destroyed. Additional details can be found in
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#generation_failure_reason CryptoKeyVersion.generation_failure_reason}.
+            GENERATION_FAILED = 8
+
+            # This version was destroyed, and it may not be used or enabled again.
+            # Cloud KMS is waiting for the corresponding key material residing in an
+            # external key manager to be destroyed.
+            PENDING_EXTERNAL_DESTRUCTION = 9
+
+            # This version was destroyed, and it may not be used or enabled again.
+            # However, Cloud KMS could not confirm that the corresponding key material
+            # residing in an external key manager was destroyed. Additional details can
+            # be found in
+            # {::Google::Cloud::Kms::V1::CryptoKeyVersion#external_destruction_failure_reason CryptoKeyVersion.external_destruction_failure_reason}.
+            EXTERNAL_DESTRUCTION_FAILED = 10
           end
 
           # A view for {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}s.
@@ -551,7 +647,32 @@ module Google
           end
         end
 
-        # The public key for a given
+        # Data with integrity verification field.
+        # @!attribute [rw] data
+        #   @return [::String]
+        #     Raw Data.
+        # @!attribute [rw] crc32c_checksum
+        #   @return [::Google::Protobuf::Int64Value]
+        #     Integrity verification field. A CRC32C
+        #     checksum of the returned
+        #     {::Google::Cloud::Kms::V1::ChecksummedData#data ChecksummedData.data}. An
+        #     integrity check of
+        #     {::Google::Cloud::Kms::V1::ChecksummedData#data ChecksummedData.data} can be
+        #     performed by computing the CRC32C checksum of
+        #     {::Google::Cloud::Kms::V1::ChecksummedData#data ChecksummedData.data} and
+        #     comparing your results to this field. Discard the response in case of
+        #     non-matching checksum values, and perform a limited number of retries. A
+        #     persistent mismatch may indicate an issue in your computation of the CRC32C
+        #     checksum. Note: This field is defined as int64 for reasons of compatibility
+        #     across different languages. However, it is a non-negative integer, which
+        #     will never exceed `2^32-1`, and can be safely downconverted to uint32 in
+        #     languages that support this type.
+        class ChecksummedData
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The public keys for a given
         # {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion}. Obtained via
         # {::Google::Cloud::Kms::V1::KeyManagementService::Client#get_public_key GetPublicKey}.
         # @!attribute [rw] pem
@@ -578,8 +699,8 @@ module Google
         #     mismatch may indicate an issue in your computation of the CRC32C checksum.
         #     Note: This field is defined as int64 for reasons of compatibility across
         #     different languages. However, it is a non-negative integer, which will
-        #     never exceed 2^32-1, and can be safely downconverted to uint32 in languages
-        #     that support this type.
+        #     never exceed `2^32-1`, and can be safely downconverted to uint32 in
+        #     languages that support this type.
         #
         #     NOTE: This field is in Beta.
         # @!attribute [rw] name
@@ -593,9 +714,47 @@ module Google
         #   @return [::Google::Cloud::Kms::V1::ProtectionLevel]
         #     The {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevel} of the
         #     {::Google::Cloud::Kms::V1::CryptoKeyVersion CryptoKeyVersion} public key.
+        # @!attribute [rw] public_key_format
+        #   @return [::Google::Cloud::Kms::V1::PublicKey::PublicKeyFormat]
+        #     The {::Google::Cloud::Kms::V1::PublicKey PublicKey} format specified by the
+        #     customer through the
+        #     {::Google::Cloud::Kms::V1::GetPublicKeyRequest#public_key_format public_key_format}
+        #     field.
+        # @!attribute [rw] public_key
+        #   @return [::Google::Cloud::Kms::V1::ChecksummedData]
+        #     This field contains the public key (with integrity verification), formatted
+        #     according to the
+        #     {::Google::Cloud::Kms::V1::PublicKey#public_key_format public_key_format} field.
         class PublicKey
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The supported {::Google::Cloud::Kms::V1::PublicKey PublicKey} formats.
+          module PublicKeyFormat
+            # If the
+            # {::Google::Cloud::Kms::V1::GetPublicKeyRequest#public_key_format public_key_format}
+            # field is not specified:
+            # - For PQC algorithms, an error will be returned.
+            # - For non-PQC algorithms, the default format is PEM, and the field
+            #   {::Google::Cloud::Kms::V1::PublicKey#pem pem} will be populated.
+            #
+            # Otherwise, the public key will be exported through the
+            # {::Google::Cloud::Kms::V1::PublicKey#public_key public_key} field in the
+            # requested format.
+            PUBLIC_KEY_FORMAT_UNSPECIFIED = 0
+
+            # The returned public key will be encoded in PEM format.
+            # See the [RFC7468](https://tools.ietf.org/html/rfc7468) sections for
+            # [General Considerations](https://tools.ietf.org/html/rfc7468#section-2)
+            # and [Textual Encoding of Subject Public Key Info]
+            # (https://tools.ietf.org/html/rfc7468#section-13) for more information.
+            PEM = 1
+
+            # This is supported only for PQC algorithms.
+            # The key material is returned in the format defined by NIST PQC
+            # standards (FIPS 203, FIPS 204, and FIPS 205).
+            NIST_PQC = 3
+          end
         end
 
         # An {::Google::Cloud::Kms::V1::ImportJob ImportJob} can be used to create
@@ -724,6 +883,34 @@ module Google
             # [RSA AES key wrap
             # mechanism](http://docs.oasis-open.org/pkcs11/pkcs11-curr/v2.40/cos01/pkcs11-curr-v2.40-cos01.html#_Toc408226908).
             RSA_OAEP_4096_SHA1_AES_256 = 2
+
+            # This ImportMethod represents the CKM_RSA_AES_KEY_WRAP key wrapping
+            # scheme defined in the PKCS #11 standard. In summary, this involves
+            # wrapping the raw key with an ephemeral AES key, and wrapping the
+            # ephemeral AES key with a 3072 bit RSA key. For more details, see
+            # [RSA AES key wrap
+            # mechanism](http://docs.oasis-open.org/pkcs11/pkcs11-curr/v2.40/cos01/pkcs11-curr-v2.40-cos01.html#_Toc408226908).
+            RSA_OAEP_3072_SHA256_AES_256 = 3
+
+            # This ImportMethod represents the CKM_RSA_AES_KEY_WRAP key wrapping
+            # scheme defined in the PKCS #11 standard. In summary, this involves
+            # wrapping the raw key with an ephemeral AES key, and wrapping the
+            # ephemeral AES key with a 4096 bit RSA key. For more details, see
+            # [RSA AES key wrap
+            # mechanism](http://docs.oasis-open.org/pkcs11/pkcs11-curr/v2.40/cos01/pkcs11-curr-v2.40-cos01.html#_Toc408226908).
+            RSA_OAEP_4096_SHA256_AES_256 = 4
+
+            # This ImportMethod represents RSAES-OAEP with a 3072 bit RSA key. The
+            # key material to be imported is wrapped directly with the RSA key. Due
+            # to technical limitations of RSA wrapping, this method cannot be used to
+            # wrap RSA keys for import.
+            RSA_OAEP_3072_SHA256 = 5
+
+            # This ImportMethod represents RSAES-OAEP with a 4096 bit RSA key. The
+            # key material to be imported is wrapped directly with the RSA key. Due
+            # to technical limitations of RSA wrapping, this method cannot be used to
+            # wrap RSA keys for import.
+            RSA_OAEP_4096_SHA256 = 6
           end
 
           # The state of the {::Google::Cloud::Kms::V1::ImportJob ImportJob}, indicating if
@@ -771,6 +958,23 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # A
+        # {::Google::Cloud::Kms::V1::KeyAccessJustificationsPolicy KeyAccessJustificationsPolicy}
+        # specifies zero or more allowed
+        # {::Google::Cloud::Kms::V1::AccessReason AccessReason} values for encrypt, decrypt,
+        # and sign operations on a {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}.
+        # @!attribute [rw] allowed_access_reasons
+        #   @return [::Array<::Google::Cloud::Kms::V1::AccessReason>]
+        #     The list of allowed reasons for access to a
+        #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey}. Zero allowed access reasons
+        #     means all encrypt, decrypt, and sign operations for the
+        #     {::Google::Cloud::Kms::V1::CryptoKey CryptoKey} associated with this policy will
+        #     fail.
+        class KeyAccessJustificationsPolicy
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # {::Google::Cloud::Kms::V1::ProtectionLevel ProtectionLevel} specifies how
         # cryptographic operations are performed. For more information, see [Protection
         # levels] (https://cloud.google.com/kms/docs/algorithms#protection_levels).
@@ -789,6 +993,73 @@ module Google
 
           # Crypto operations are performed in an EKM-over-VPC backend.
           EXTERNAL_VPC = 4
+        end
+
+        # Describes the reason for a data access. Please refer to
+        # https://cloud.google.com/assured-workloads/key-access-justifications/docs/justification-codes
+        # for the detailed semantic meaning of justification reason codes.
+        module AccessReason
+          # Unspecified access reason.
+          REASON_UNSPECIFIED = 0
+
+          # Customer-initiated support.
+          CUSTOMER_INITIATED_SUPPORT = 1
+
+          # Google-initiated access for system management and troubleshooting.
+          GOOGLE_INITIATED_SERVICE = 2
+
+          # Google-initiated access in response to a legal request or legal process.
+          THIRD_PARTY_DATA_REQUEST = 3
+
+          # Google-initiated access for security, fraud, abuse, or compliance purposes.
+          GOOGLE_INITIATED_REVIEW = 4
+
+          # Customer uses their account to perform any access to their own data which
+          # their IAM policy authorizes.
+          CUSTOMER_INITIATED_ACCESS = 5
+
+          # Google systems access customer data to help optimize the structure of the
+          # data or quality for future uses by the customer.
+          GOOGLE_INITIATED_SYSTEM_OPERATION = 6
+
+          # No reason is expected for this key request.
+          REASON_NOT_EXPECTED = 7
+
+          # Customer uses their account to perform any access to their own data which
+          # their IAM policy authorizes, and one of the following is true:
+          #
+          # * A Google administrator has reset the root-access account associated with
+          #   the user's organization within the past 7 days.
+          # * A Google-initiated emergency access operation has interacted with a
+          #   resource in the same project or folder as the currently accessed resource
+          #   within the past 7 days.
+          MODIFIED_CUSTOMER_INITIATED_ACCESS = 8
+
+          # Google systems access customer data to help optimize the structure of the
+          # data or quality for future uses by the customer, and one of the following
+          # is true:
+          #
+          # * A Google administrator has reset the root-access account associated with
+          #   the user's organization within the past 7 days.
+          # * A Google-initiated emergency access operation has interacted with a
+          #   resource in the same project or folder as the currently accessed resource
+          #   within the past 7 days.
+          MODIFIED_GOOGLE_INITIATED_SYSTEM_OPERATION = 9
+
+          # Google-initiated access to maintain system reliability.
+          GOOGLE_RESPONSE_TO_PRODUCTION_ALERT = 10
+
+          # One of the following operations is being executed while simultaneously
+          # encountering an internal technical issue which prevented a more precise
+          # justification code from being generated:
+          #
+          # * Your account has been used to perform any access to your own data which
+          #   your IAM policy authorizes.
+          # * An automated Google system operates on encrypted customer data which your
+          #   IAM policy authorizes.
+          # * Customer-initiated Google support access.
+          # * Google-initiated support access to protect system reliability.
+          CUSTOMER_AUTHORIZED_WORKFLOW_SERVICING = 11
         end
       end
     end

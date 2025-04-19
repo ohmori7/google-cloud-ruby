@@ -41,9 +41,26 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -58,6 +75,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     parent = "hello world"
     page_size = 42
     page_token = "hello world"
+    filter = "hello world"
 
     list_customers_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :list_customers, name
@@ -65,6 +83,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       assert_equal "hello world", request["parent"]
       assert_equal 42, request["page_size"]
       assert_equal "hello world", request["page_token"]
+      assert_equal "hello world", request["filter"]
       refute_nil options
     end
 
@@ -75,35 +94,35 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       end
 
       # Use hash object
-      client.list_customers({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+      client.list_customers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_customers parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+      client.list_customers parent: parent, page_size: page_size, page_token: page_token, filter: filter do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_customers ::Google::Cloud::Channel::V1::ListCustomersRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+      client.list_customers ::Google::Cloud::Channel::V1::ListCustomersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_customers({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+      client.list_customers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }, grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_customers(::Google::Cloud::Channel::V1::ListCustomersRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+      client.list_customers(::Google::Cloud::Channel::V1::ListCustomersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter), grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
@@ -182,12 +201,14 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     # Create request parameters for a unary method.
     parent = "hello world"
     domain = "hello world"
+    primary_admin_email = "hello world"
 
     check_cloud_identity_accounts_exist_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :check_cloud_identity_accounts_exist, name
       assert_kind_of ::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest, request
       assert_equal "hello world", request["parent"]
       assert_equal "hello world", request["domain"]
+      assert_equal "hello world", request["primary_admin_email"]
       refute_nil options
     end
 
@@ -198,31 +219,31 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       end
 
       # Use hash object
-      client.check_cloud_identity_accounts_exist({ parent: parent, domain: domain }) do |response, operation|
+      client.check_cloud_identity_accounts_exist({ parent: parent, domain: domain, primary_admin_email: primary_admin_email }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.check_cloud_identity_accounts_exist parent: parent, domain: domain do |response, operation|
+      client.check_cloud_identity_accounts_exist parent: parent, domain: domain, primary_admin_email: primary_admin_email do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.check_cloud_identity_accounts_exist ::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new(parent: parent, domain: domain) do |response, operation|
+      client.check_cloud_identity_accounts_exist ::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new(parent: parent, domain: domain, primary_admin_email: primary_admin_email) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.check_cloud_identity_accounts_exist({ parent: parent, domain: domain }, grpc_options) do |response, operation|
+      client.check_cloud_identity_accounts_exist({ parent: parent, domain: domain, primary_admin_email: primary_admin_email }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.check_cloud_identity_accounts_exist(::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new(parent: parent, domain: domain), grpc_options) do |response, operation|
+      client.check_cloud_identity_accounts_exist(::Google::Cloud::Channel::V1::CheckCloudIdentityAccountsExistRequest.new(parent: parent, domain: domain, primary_admin_email: primary_admin_email), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -703,6 +724,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     page_token = "hello world"
     sku = "hello world"
     language_code = "hello world"
+    billing_account = "hello world"
 
     list_transferable_offers_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :list_transferable_offers, name
@@ -714,6 +736,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       assert_equal "hello world", request["page_token"]
       assert_equal "hello world", request["sku"]
       assert_equal "hello world", request["language_code"]
+      assert_equal "hello world", request["billing_account"]
       refute_nil options
     end
 
@@ -724,35 +747,35 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       end
 
       # Use hash object
-      client.list_transferable_offers({ cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code }) do |response, operation|
+      client.list_transferable_offers({ cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code, billing_account: billing_account }) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_transferable_offers cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code do |response, operation|
+      client.list_transferable_offers cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code, billing_account: billing_account do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_transferable_offers ::Google::Cloud::Channel::V1::ListTransferableOffersRequest.new(cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code) do |response, operation|
+      client.list_transferable_offers ::Google::Cloud::Channel::V1::ListTransferableOffersRequest.new(cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code, billing_account: billing_account) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_transferable_offers({ cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code }, grpc_options) do |response, operation|
+      client.list_transferable_offers({ cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code, billing_account: billing_account }, grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_transferable_offers(::Google::Cloud::Channel::V1::ListTransferableOffersRequest.new(cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code), grpc_options) do |response, operation|
+      client.list_transferable_offers(::Google::Cloud::Channel::V1::ListTransferableOffersRequest.new(cloud_identity_id: cloud_identity_id, parent: parent, page_size: page_size, page_token: page_token, sku: sku, language_code: language_code, billing_account: billing_account), grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
@@ -1037,6 +1060,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     parameters = [{}]
     purchase_order_id = "hello world"
     request_id = "hello world"
+    billing_account = "hello world"
 
     change_offer_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :change_offer, name
@@ -1046,6 +1070,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       assert_kind_of ::Google::Cloud::Channel::V1::Parameter, request["parameters"].first
       assert_equal "hello world", request["purchase_order_id"]
       assert_equal "hello world", request["request_id"]
+      assert_equal "hello world", request["billing_account"]
       refute_nil options
     end
 
@@ -1056,35 +1081,35 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       end
 
       # Use hash object
-      client.change_offer({ name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id }) do |response, operation|
+      client.change_offer({ name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id, billing_account: billing_account }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.change_offer name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id do |response, operation|
+      client.change_offer name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id, billing_account: billing_account do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.change_offer ::Google::Cloud::Channel::V1::ChangeOfferRequest.new(name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id) do |response, operation|
+      client.change_offer ::Google::Cloud::Channel::V1::ChangeOfferRequest.new(name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id, billing_account: billing_account) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.change_offer({ name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id }, grpc_options) do |response, operation|
+      client.change_offer({ name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id, billing_account: billing_account }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.change_offer(::Google::Cloud::Channel::V1::ChangeOfferRequest.new(name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id), grpc_options) do |response, operation|
+      client.change_offer(::Google::Cloud::Channel::V1::ChangeOfferRequest.new(name: name, offer: offer, parameters: parameters, purchase_order_id: purchase_order_id, request_id: request_id, billing_account: billing_account), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -1742,6 +1767,746 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     end
   end
 
+  def test_get_customer_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::CustomerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_customer_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_customer_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_customer_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_customer_repricing_config({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_customer_repricing_config name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_customer_repricing_config ::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_customer_repricing_config({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_customer_repricing_config(::Google::Cloud::Channel::V1::GetCustomerRepricingConfigRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_customer_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_customer_repricing_configs
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+    filter = "hello world"
+
+    list_customer_repricing_configs_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_customer_repricing_configs, name
+      assert_kind_of ::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      assert_equal "hello world", request["filter"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_customer_repricing_configs_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_customer_repricing_configs({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_customer_repricing_configs parent: parent, page_size: page_size, page_token: page_token, filter: filter do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_customer_repricing_configs ::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_customer_repricing_configs({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_customer_repricing_configs(::Google::Cloud::Channel::V1::ListCustomerRepricingConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_customer_repricing_configs_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_customer_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::CustomerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    customer_repricing_config = {}
+
+    create_customer_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_customer_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Channel::V1::CustomerRepricingConfig), request["customer_repricing_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_customer_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_customer_repricing_config({ parent: parent, customer_repricing_config: customer_repricing_config }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_customer_repricing_config parent: parent, customer_repricing_config: customer_repricing_config do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_customer_repricing_config ::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest.new(parent: parent, customer_repricing_config: customer_repricing_config) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_customer_repricing_config({ parent: parent, customer_repricing_config: customer_repricing_config }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_customer_repricing_config(::Google::Cloud::Channel::V1::CreateCustomerRepricingConfigRequest.new(parent: parent, customer_repricing_config: customer_repricing_config), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_customer_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_customer_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::CustomerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    customer_repricing_config = {}
+
+    update_customer_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_customer_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Channel::V1::CustomerRepricingConfig), request["customer_repricing_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_customer_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_customer_repricing_config({ customer_repricing_config: customer_repricing_config }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_customer_repricing_config customer_repricing_config: customer_repricing_config do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_customer_repricing_config ::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest.new(customer_repricing_config: customer_repricing_config) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_customer_repricing_config({ customer_repricing_config: customer_repricing_config }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_customer_repricing_config(::Google::Cloud::Channel::V1::UpdateCustomerRepricingConfigRequest.new(customer_repricing_config: customer_repricing_config), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_customer_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_customer_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_customer_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_customer_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_customer_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_customer_repricing_config({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_customer_repricing_config name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_customer_repricing_config ::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_customer_repricing_config({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_customer_repricing_config(::Google::Cloud::Channel::V1::DeleteCustomerRepricingConfigRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_customer_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_channel_partner_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_channel_partner_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_channel_partner_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_channel_partner_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_channel_partner_repricing_config({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_channel_partner_repricing_config name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_channel_partner_repricing_config ::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_channel_partner_repricing_config({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_channel_partner_repricing_config(::Google::Cloud::Channel::V1::GetChannelPartnerRepricingConfigRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_channel_partner_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_channel_partner_repricing_configs
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+    filter = "hello world"
+
+    list_channel_partner_repricing_configs_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_channel_partner_repricing_configs, name
+      assert_kind_of ::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      assert_equal "hello world", request["filter"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_channel_partner_repricing_configs_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_channel_partner_repricing_configs({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_channel_partner_repricing_configs parent: parent, page_size: page_size, page_token: page_token, filter: filter do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_channel_partner_repricing_configs ::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_channel_partner_repricing_configs({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_channel_partner_repricing_configs(::Google::Cloud::Channel::V1::ListChannelPartnerRepricingConfigsRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_channel_partner_repricing_configs_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_channel_partner_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    channel_partner_repricing_config = {}
+
+    create_channel_partner_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_channel_partner_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig), request["channel_partner_repricing_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_channel_partner_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_channel_partner_repricing_config({ parent: parent, channel_partner_repricing_config: channel_partner_repricing_config }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_channel_partner_repricing_config parent: parent, channel_partner_repricing_config: channel_partner_repricing_config do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_channel_partner_repricing_config ::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest.new(parent: parent, channel_partner_repricing_config: channel_partner_repricing_config) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_channel_partner_repricing_config({ parent: parent, channel_partner_repricing_config: channel_partner_repricing_config }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_channel_partner_repricing_config(::Google::Cloud::Channel::V1::CreateChannelPartnerRepricingConfigRequest.new(parent: parent, channel_partner_repricing_config: channel_partner_repricing_config), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_channel_partner_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_channel_partner_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    channel_partner_repricing_config = {}
+
+    update_channel_partner_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_channel_partner_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Channel::V1::ChannelPartnerRepricingConfig), request["channel_partner_repricing_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_channel_partner_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_channel_partner_repricing_config({ channel_partner_repricing_config: channel_partner_repricing_config }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_channel_partner_repricing_config channel_partner_repricing_config: channel_partner_repricing_config do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_channel_partner_repricing_config ::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest.new(channel_partner_repricing_config: channel_partner_repricing_config) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_channel_partner_repricing_config({ channel_partner_repricing_config: channel_partner_repricing_config }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_channel_partner_repricing_config(::Google::Cloud::Channel::V1::UpdateChannelPartnerRepricingConfigRequest.new(channel_partner_repricing_config: channel_partner_repricing_config), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_channel_partner_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_channel_partner_repricing_config
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_channel_partner_repricing_config_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_channel_partner_repricing_config, name
+      assert_kind_of ::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_channel_partner_repricing_config_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_channel_partner_repricing_config({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_channel_partner_repricing_config name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_channel_partner_repricing_config ::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_channel_partner_repricing_config({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_channel_partner_repricing_config(::Google::Cloud::Channel::V1::DeleteChannelPartnerRepricingConfigRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_channel_partner_repricing_config_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_sku_groups
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ListSkuGroupsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_sku_groups_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_sku_groups, name
+      assert_kind_of ::Google::Cloud::Channel::V1::ListSkuGroupsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_sku_groups_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_sku_groups({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_sku_groups parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_sku_groups ::Google::Cloud::Channel::V1::ListSkuGroupsRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_sku_groups({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_sku_groups(::Google::Cloud::Channel::V1::ListSkuGroupsRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_sku_groups_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_sku_group_billable_skus
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_sku_group_billable_skus_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_sku_group_billable_skus, name
+      assert_kind_of ::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_sku_group_billable_skus_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_sku_group_billable_skus({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_sku_group_billable_skus parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_sku_group_billable_skus ::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_sku_group_billable_skus({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_sku_group_billable_skus(::Google::Cloud::Channel::V1::ListSkuGroupBillableSkusRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_sku_group_billable_skus_client_stub.call_rpc_count
+    end
+  end
+
   def test_lookup_offer
     # Create GRPC objects.
     grpc_response = ::Google::Cloud::Channel::V1::Offer.new
@@ -1953,6 +2718,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     page_token = "hello world"
     filter = "hello world"
     language_code = "hello world"
+    show_future_offers = true
 
     list_offers_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :list_offers, name
@@ -1962,6 +2728,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       assert_equal "hello world", request["page_token"]
       assert_equal "hello world", request["filter"]
       assert_equal "hello world", request["language_code"]
+      assert_equal true, request["show_future_offers"]
       refute_nil options
     end
 
@@ -1972,35 +2739,35 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
       end
 
       # Use hash object
-      client.list_offers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code }) do |response, operation|
+      client.list_offers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code, show_future_offers: show_future_offers }) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_offers parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code do |response, operation|
+      client.list_offers parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code, show_future_offers: show_future_offers do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_offers ::Google::Cloud::Channel::V1::ListOffersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code) do |response, operation|
+      client.list_offers ::Google::Cloud::Channel::V1::ListOffersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code, show_future_offers: show_future_offers) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_offers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code }, grpc_options) do |response, operation|
+      client.list_offers({ parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code, show_future_offers: show_future_offers }, grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_offers(::Google::Cloud::Channel::V1::ListOffersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code), grpc_options) do |response, operation|
+      client.list_offers(::Google::Cloud::Channel::V1::ListOffersRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter, language_code: language_code, show_future_offers: show_future_offers), grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
@@ -2152,6 +2919,66 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
 
       # Verify method calls
       assert_equal 5, list_purchasable_offers_client_stub.call_rpc_count
+    end
+  end
+
+  def test_query_eligible_billing_accounts
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    customer = "hello world"
+    skus = ["hello world"]
+
+    query_eligible_billing_accounts_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :query_eligible_billing_accounts, name
+      assert_kind_of ::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest, request
+      assert_equal "hello world", request["customer"]
+      assert_equal ["hello world"], request["skus"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, query_eligible_billing_accounts_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.query_eligible_billing_accounts({ customer: customer, skus: skus }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.query_eligible_billing_accounts customer: customer, skus: skus do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.query_eligible_billing_accounts ::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest.new(customer: customer, skus: skus) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.query_eligible_billing_accounts({ customer: customer, skus: skus }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.query_eligible_billing_accounts(::Google::Cloud::Channel::V1::QueryEligibleBillingAccountsRequest.new(customer: customer, skus: skus), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, query_eligible_billing_accounts_client_stub.call_rpc_count
     end
   end
 
@@ -2337,11 +3164,81 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     end
   end
 
+  def test_list_entitlement_changes
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Channel::V1::ListEntitlementChangesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+    filter = "hello world"
+
+    list_entitlement_changes_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_entitlement_changes, name
+      assert_kind_of ::Google::Cloud::Channel::V1::ListEntitlementChangesRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      assert_equal "hello world", request["filter"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_entitlement_changes_client_stub do
+      # Create client
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_entitlement_changes({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_entitlement_changes parent: parent, page_size: page_size, page_token: page_token, filter: filter do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_entitlement_changes ::Google::Cloud::Channel::V1::ListEntitlementChangesRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_entitlement_changes({ parent: parent, page_size: page_size, page_token: page_token, filter: filter }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_entitlement_changes(::Google::Cloud::Channel::V1::ListEntitlementChangesRequest.new(parent: parent, page_size: page_size, page_token: page_token, filter: filter), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_entitlement_changes_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -2359,7 +3256,8 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientTest < Minitest::
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end

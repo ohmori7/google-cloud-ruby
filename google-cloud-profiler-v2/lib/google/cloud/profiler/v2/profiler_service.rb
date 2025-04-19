@@ -23,7 +23,9 @@ require "gapic/config/method"
 require "google/cloud/profiler/v2/version"
 
 require "google/cloud/profiler/v2/profiler_service/credentials"
+require "google/cloud/profiler/v2/profiler_service/paths"
 require "google/cloud/profiler/v2/profiler_service/client"
+require "google/cloud/profiler/v2/profiler_service/rest"
 
 module Google
   module Cloud
@@ -33,14 +35,18 @@ module Google
         # Manage the collection of continuous profiling data provided by profiling
         # agents running in the cloud or by an offline provider of profiling data.
         #
-        # General guidelines:
-        # * Profiles for a single deployment must be created in ascending time order.
-        # * Profiles can be created in either online or offline mode, see below.
+        # __The APIs listed in this service are intended for use within our profiler
+        # agents only.__
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/cloud/profiler/v2/profiler_service"
         #     client = ::Google::Cloud::Profiler::V2::ProfilerService::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/profiler/v2/profiler_service/rest"
+        #     client = ::Google::Cloud::Profiler::V2::ProfilerService::Rest::Client.new
         #
         module ProfilerService
         end

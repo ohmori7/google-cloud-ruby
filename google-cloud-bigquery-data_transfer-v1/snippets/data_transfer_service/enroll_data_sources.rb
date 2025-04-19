@@ -19,15 +19,29 @@
 # [START bigquerydatatransfer_v1_generated_DataTransferService_EnrollDataSources_sync]
 require "google/cloud/bigquery/data_transfer/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+##
+# Snippet for the enroll_data_sources call in the DataTransferService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client#enroll_data_sources.
+#
+def enroll_data_sources
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigquery::DataTransfer::V1::EnrollDataSourcesRequest.new
 
-# Call the enroll_data_sources method.
-result = client.enroll_data_sources request
+  # Call the enroll_data_sources method.
+  result = client.enroll_data_sources request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END bigquerydatatransfer_v1_generated_DataTransferService_EnrollDataSources_sync]

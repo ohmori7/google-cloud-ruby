@@ -19,15 +19,29 @@
 # [START spanner_v1_generated_Spanner_BatchCreateSessions_sync]
 require "google/cloud/spanner/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Spanner::V1::Spanner::Client.new
+##
+# Snippet for the batch_create_sessions call in the Spanner service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Spanner::V1::Spanner::Client#batch_create_sessions.
+#
+def batch_create_sessions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Spanner::V1::Spanner::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Spanner::V1::BatchCreateSessionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Spanner::V1::BatchCreateSessionsRequest.new
 
-# Call the batch_create_sessions method.
-result = client.batch_create_sessions request
+  # Call the batch_create_sessions method.
+  result = client.batch_create_sessions request
 
-# The returned object is of type Google::Cloud::Spanner::V1::BatchCreateSessionsResponse.
-p result
+  # The returned object is of type Google::Cloud::Spanner::V1::BatchCreateSessionsResponse.
+  p result
+end
 # [END spanner_v1_generated_Spanner_BatchCreateSessions_sync]

@@ -41,9 +41,26 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientTest < Minite
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -1044,11 +1061,273 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientTest < Minite
     end
   end
 
+  def test_remove_iam_policy
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Metastore::V1beta::RemoveIamPolicyResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    resource = "hello world"
+    asynchronous = true
+
+    remove_iam_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :remove_iam_policy, name
+      assert_kind_of ::Google::Cloud::Metastore::V1beta::RemoveIamPolicyRequest, request
+      assert_equal "hello world", request["resource"]
+      assert_equal true, request["asynchronous"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, remove_iam_policy_client_stub do
+      # Create client
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.remove_iam_policy({ resource: resource, asynchronous: asynchronous }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.remove_iam_policy resource: resource, asynchronous: asynchronous do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.remove_iam_policy ::Google::Cloud::Metastore::V1beta::RemoveIamPolicyRequest.new(resource: resource, asynchronous: asynchronous) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.remove_iam_policy({ resource: resource, asynchronous: asynchronous }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.remove_iam_policy(::Google::Cloud::Metastore::V1beta::RemoveIamPolicyRequest.new(resource: resource, asynchronous: asynchronous), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, remove_iam_policy_client_stub.call_rpc_count
+    end
+  end
+
+  def test_query_metadata
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    service = "hello world"
+    query = "hello world"
+
+    query_metadata_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :query_metadata, name
+      assert_kind_of ::Google::Cloud::Metastore::V1beta::QueryMetadataRequest, request
+      assert_equal "hello world", request["service"]
+      assert_equal "hello world", request["query"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, query_metadata_client_stub do
+      # Create client
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.query_metadata({ service: service, query: query }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.query_metadata service: service, query: query do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.query_metadata ::Google::Cloud::Metastore::V1beta::QueryMetadataRequest.new(service: service, query: query) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.query_metadata({ service: service, query: query }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.query_metadata(::Google::Cloud::Metastore::V1beta::QueryMetadataRequest.new(service: service, query: query), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, query_metadata_client_stub.call_rpc_count
+    end
+  end
+
+  def test_move_table_to_database
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    service = "hello world"
+    table_name = "hello world"
+    db_name = "hello world"
+    destination_db_name = "hello world"
+
+    move_table_to_database_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :move_table_to_database, name
+      assert_kind_of ::Google::Cloud::Metastore::V1beta::MoveTableToDatabaseRequest, request
+      assert_equal "hello world", request["service"]
+      assert_equal "hello world", request["table_name"]
+      assert_equal "hello world", request["db_name"]
+      assert_equal "hello world", request["destination_db_name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, move_table_to_database_client_stub do
+      # Create client
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.move_table_to_database({ service: service, table_name: table_name, db_name: db_name, destination_db_name: destination_db_name }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.move_table_to_database service: service, table_name: table_name, db_name: db_name, destination_db_name: destination_db_name do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.move_table_to_database ::Google::Cloud::Metastore::V1beta::MoveTableToDatabaseRequest.new(service: service, table_name: table_name, db_name: db_name, destination_db_name: destination_db_name) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.move_table_to_database({ service: service, table_name: table_name, db_name: db_name, destination_db_name: destination_db_name }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.move_table_to_database(::Google::Cloud::Metastore::V1beta::MoveTableToDatabaseRequest.new(service: service, table_name: table_name, db_name: db_name, destination_db_name: destination_db_name), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, move_table_to_database_client_stub.call_rpc_count
+    end
+  end
+
+  def test_alter_metadata_resource_location
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    service = "hello world"
+    resource_name = "hello world"
+    location_uri = "hello world"
+
+    alter_metadata_resource_location_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :alter_metadata_resource_location, name
+      assert_kind_of ::Google::Cloud::Metastore::V1beta::AlterMetadataResourceLocationRequest, request
+      assert_equal "hello world", request["service"]
+      assert_equal "hello world", request["resource_name"]
+      assert_equal "hello world", request["location_uri"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, alter_metadata_resource_location_client_stub do
+      # Create client
+      client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.alter_metadata_resource_location({ service: service, resource_name: resource_name, location_uri: location_uri }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.alter_metadata_resource_location service: service, resource_name: resource_name, location_uri: location_uri do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.alter_metadata_resource_location ::Google::Cloud::Metastore::V1beta::AlterMetadataResourceLocationRequest.new(service: service, resource_name: resource_name, location_uri: location_uri) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.alter_metadata_resource_location({ service: service, resource_name: resource_name, location_uri: location_uri }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.alter_metadata_resource_location(::Google::Cloud::Metastore::V1beta::AlterMetadataResourceLocationRequest.new(service: service, resource_name: resource_name, location_uri: location_uri), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, alter_metadata_resource_location_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -1066,7 +1345,8 @@ class ::Google::Cloud::Metastore::V1beta::DataprocMetastore::ClientTest < Minite
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Metastore::V1beta::DataprocMetastore::Client.new do |config|
         config.credentials = grpc_channel
       end

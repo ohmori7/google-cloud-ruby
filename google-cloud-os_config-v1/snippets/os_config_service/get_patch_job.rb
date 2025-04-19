@@ -19,15 +19,29 @@
 # [START osconfig_v1_generated_OsConfigService_GetPatchJob_sync]
 require "google/cloud/os_config/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OsConfig::V1::OsConfigService::Client.new
+##
+# Snippet for the get_patch_job call in the OsConfigService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OsConfig::V1::OsConfigService::Client#get_patch_job.
+#
+def get_patch_job
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OsConfig::V1::OsConfigService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OsConfig::V1::GetPatchJobRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OsConfig::V1::GetPatchJobRequest.new
 
-# Call the get_patch_job method.
-result = client.get_patch_job request
+  # Call the get_patch_job method.
+  result = client.get_patch_job request
 
-# The returned object is of type Google::Cloud::OsConfig::V1::PatchJob.
-p result
+  # The returned object is of type Google::Cloud::OsConfig::V1::PatchJob.
+  p result
+end
 # [END osconfig_v1_generated_OsConfigService_GetPatchJob_sync]

@@ -19,15 +19,29 @@
 # [START container_v1_generated_ClusterManager_GetCluster_sync]
 require "google/cloud/container/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Container::V1::ClusterManager::Client.new
+##
+# Snippet for the get_cluster call in the ClusterManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Container::V1::ClusterManager::Client#get_cluster.
+#
+def get_cluster
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Container::V1::ClusterManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Container::V1::GetClusterRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Container::V1::GetClusterRequest.new
 
-# Call the get_cluster method.
-result = client.get_cluster request
+  # Call the get_cluster method.
+  result = client.get_cluster request
 
-# The returned object is of type Google::Cloud::Container::V1::Cluster.
-p result
+  # The returned object is of type Google::Cloud::Container::V1::Cluster.
+  p result
+end
 # [END container_v1_generated_ClusterManager_GetCluster_sync]

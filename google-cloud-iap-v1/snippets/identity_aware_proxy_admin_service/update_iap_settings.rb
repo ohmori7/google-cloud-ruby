@@ -19,15 +19,29 @@
 # [START iap_v1_generated_IdentityAwareProxyAdminService_UpdateIapSettings_sync]
 require "google/cloud/iap/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+##
+# Snippet for the update_iap_settings call in the IdentityAwareProxyAdminService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client#update_iap_settings.
+#
+def update_iap_settings
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Iap::V1::UpdateIapSettingsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Iap::V1::UpdateIapSettingsRequest.new
 
-# Call the update_iap_settings method.
-result = client.update_iap_settings request
+  # Call the update_iap_settings method.
+  result = client.update_iap_settings request
 
-# The returned object is of type Google::Cloud::Iap::V1::IapSettings.
-p result
+  # The returned object is of type Google::Cloud::Iap::V1::IapSettings.
+  p result
+end
 # [END iap_v1_generated_IdentityAwareProxyAdminService_UpdateIapSettings_sync]

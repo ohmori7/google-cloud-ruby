@@ -24,7 +24,7 @@ module Google
         # A Connectivity Test for a network reachability analysis.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. Unique name of the resource using the form:
+        #     Identifier. Unique name of the resource using the form:
         #         `projects/{project_id}/locations/global/connectivityTests/{test_id}`
         # @!attribute [rw] description
         #   @return [::String]
@@ -34,46 +34,22 @@ module Google
         #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint]
         #     Required. Source specification of the Connectivity Test.
         #
-        #     You can use a combination of source IP address, virtual machine
-        #     (VM) instance, or Compute Engine network to uniquely identify
-        #     the source location.
+        #     You can use a combination of source IP address, URI of a supported
+        #     endpoint, project ID, or VPC network to identify the source location.
         #
-        #     Examples:
-        #     If the source IP address is an internal IP address within a Google Cloud
-        #     Virtual Private Cloud (VPC) network, then you must also specify the VPC
-        #     network. Otherwise, specify the VM instance, which already contains its
-        #     internal IP address and VPC network information.
-        #
-        #     If the source of the test is within an on-premises network, then you must
-        #     provide the destination VPC network.
-        #
-        #     If the source endpoint is a Compute Engine VM instance with multiple
-        #     network interfaces, the instance itself is not sufficient to identify the
-        #     endpoint. So, you must also specify the source IP address or VPC network.
-        #
-        #     A reachability analysis proceeds even if the source location is
-        #     ambiguous. However, the test result may include endpoints that you don't
-        #     intend to test.
+        #     Reachability analysis might proceed even if the source location is
+        #     ambiguous. However, the test result might include endpoints or use a source
+        #     that you don't intend to test.
         # @!attribute [rw] destination
         #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint]
         #     Required. Destination specification of the Connectivity Test.
         #
-        #     You can use a combination of destination IP address, Compute Engine
-        #     VM instance, or VPC network to uniquely identify the destination
-        #     location.
+        #     You can use a combination of destination IP address, URI of a supported
+        #     endpoint, project ID, or VPC network to identify the destination location.
         #
-        #     Even if the destination IP address is not unique, the source IP
-        #     location is unique. Usually, the analysis can infer the destination
-        #     endpoint from route information.
-        #
-        #     If the destination you specify is a VM instance and the instance has
-        #     multiple network interfaces, then you must also specify either
-        #     a destination IP address  or VPC network to identify the destination
-        #     interface.
-        #
-        #     A reachability analysis proceeds even if the destination location is
-        #     ambiguous. However, the result can include endpoints that you don't
-        #     intend to test.
+        #     Reachability analysis proceeds even if the destination location is
+        #     ambiguous. However, the test result might include endpoints or use a
+        #     destination that you don't intend to test.
         # @!attribute [rw] protocol
         #   @return [::String]
         #     IP Protocol of the test. When not provided, "TCP" is assumed.
@@ -98,6 +74,25 @@ module Google
         #     Output only. The reachability details of this test from the latest run.
         #     The details are updated when creating a new test, updating an
         #     existing test, or triggering a one-time rerun of an existing test.
+        # @!attribute [r] probing_details
+        #   @return [::Google::Cloud::NetworkManagement::V1::ProbingDetails]
+        #     Output only. The probing details of this test from the latest run, present
+        #     for applicable tests only. The details are updated when creating a new
+        #     test, updating an existing test, or triggering a one-time rerun of an
+        #     existing test.
+        # @!attribute [rw] round_trip
+        #   @return [::Boolean]
+        #     Whether run analysis for the return path from destination to source.
+        #     Default value is false.
+        # @!attribute [r] return_reachability_details
+        #   @return [::Google::Cloud::NetworkManagement::V1::ReachabilityDetails]
+        #     Output only. The reachability details of this test from the latest run for
+        #     the return path. The details are updated when creating a new test,
+        #     updating an existing test, or triggering a one-time rerun of an existing
+        #     test.
+        # @!attribute [rw] bypass_firewall_checks
+        #   @return [::Boolean]
+        #     Whether the analysis should skip firewall checking. Default value is false.
         class ConnectivityTest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -116,8 +111,6 @@ module Google
         # @!attribute [rw] ip_address
         #   @return [::String]
         #     The IP address of the endpoint, which can be an external or internal IP.
-        #     An IPv6 address is only allowed when the test's destination is a
-        #     [global load balancer VIP](/load-balancing/docs/load-balancing-overview).
         # @!attribute [rw] port
         #   @return [::Integer]
         #     The IP protocol port of the endpoint.
@@ -125,16 +118,63 @@ module Google
         # @!attribute [rw] instance
         #   @return [::String]
         #     A Compute Engine instance URI.
+        # @!attribute [rw] forwarding_rule
+        #   @return [::String]
+        #     A forwarding rule and its corresponding IP address represent the frontend
+        #     configuration of a Google Cloud load balancer. Forwarding rules are also
+        #     used for protocol forwarding, Private Service Connect and other network
+        #     services to provide forwarding information in the control plane. Applicable
+        #     only to destination endpoint. Format:
+        #      projects/\\{project}/global/forwardingRules/\\{id} or
+        #      projects/\\{project}/regions/\\{region}/forwardingRules/\\{id}
+        # @!attribute [r] forwarding_rule_target
+        #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint::ForwardingRuleTarget]
+        #     Output only. Specifies the type of the target of the forwarding rule.
+        # @!attribute [r] load_balancer_id
+        #   @return [::String]
+        #     Output only. ID of the load balancer the forwarding rule points to. Empty
+        #     for forwarding rules not related to load balancers.
+        # @!attribute [r] load_balancer_type
+        #   @return [::Google::Cloud::NetworkManagement::V1::LoadBalancerType]
+        #     Output only. Type of the load balancer the forwarding rule points to.
         # @!attribute [rw] gke_master_cluster
         #   @return [::String]
-        #     A cluster URI for [Google Kubernetes Engine
-        #     master](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture).
+        #     A cluster URI for [Google Kubernetes Engine cluster control
+        #     plane](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture).
+        # @!attribute [rw] fqdn
+        #   @return [::String]
+        #     DNS endpoint of [Google Kubernetes Engine cluster control
+        #     plane](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture).
+        #     Requires gke_master_cluster to be set, can't be used simultaneoulsly with
+        #     ip_address or network. Applicable only to destination endpoint.
         # @!attribute [rw] cloud_sql_instance
         #   @return [::String]
         #     A [Cloud SQL](https://cloud.google.com/sql) instance URI.
+        # @!attribute [rw] redis_instance
+        #   @return [::String]
+        #     A [Redis Instance](https://cloud.google.com/memorystore/docs/redis) URI.
+        #     Applicable only to destination endpoint.
+        # @!attribute [rw] redis_cluster
+        #   @return [::String]
+        #     A [Redis Cluster](https://cloud.google.com/memorystore/docs/cluster) URI.
+        #     Applicable only to destination endpoint.
+        # @!attribute [rw] cloud_function
+        #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint::CloudFunctionEndpoint]
+        #     A [Cloud Function](https://cloud.google.com/functions). Applicable only to
+        #     source endpoint.
+        # @!attribute [rw] app_engine_version
+        #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint::AppEngineVersionEndpoint]
+        #     An [App Engine](https://cloud.google.com/appengine) [service
+        #     version](https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions).
+        #     Applicable only to source endpoint.
+        # @!attribute [rw] cloud_run_revision
+        #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint::CloudRunRevisionEndpoint]
+        #     A [Cloud Run](https://cloud.google.com/run)
+        #     [revision](https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions/get)
+        #     Applicable only to source endpoint.
         # @!attribute [rw] network
         #   @return [::String]
-        #     A Compute Engine network URI.
+        #     A VPC network URI.
         # @!attribute [rw] network_type
         #   @return [::Google::Cloud::NetworkManagement::V1::Endpoint::NetworkType]
         #     Type of the network where the endpoint is located.
@@ -143,11 +183,11 @@ module Google
         # @!attribute [rw] project_id
         #   @return [::String]
         #     Project ID where the endpoint is located.
-        #     The Project ID can be derived from the URI if you provide a VM instance or
+        #     The project ID can be derived from the URI if you provide a endpoint or
         #     network URI.
-        #     The following are two cases where you must provide the project ID:
-        #     1. Only the IP address is specified, and the IP address is within a GCP
-        #     project.
+        #     The following are two cases where you may need to provide the project ID:
+        #     1. Only the IP address is specified, and the IP address is within a Google
+        #     Cloud project.
         #     2. When you are using Shared VPC and the IP address that you provide is
         #     from the service project. In this case, the network that the IP address
         #     resides in is defined in the host project.
@@ -155,21 +195,72 @@ module Google
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
+          # Wrapper for Cloud Function attributes.
+          # @!attribute [rw] uri
+          #   @return [::String]
+          #     A [Cloud Function](https://cloud.google.com/functions) name.
+          class CloudFunctionEndpoint
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Wrapper for the App Engine service version attributes.
+          # @!attribute [rw] uri
+          #   @return [::String]
+          #     An [App Engine](https://cloud.google.com/appengine) [service
+          #     version](https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services.versions)
+          #     name.
+          class AppEngineVersionEndpoint
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Wrapper for Cloud Run revision attributes.
+          # @!attribute [rw] uri
+          #   @return [::String]
+          #     A [Cloud Run](https://cloud.google.com/run)
+          #     [revision](https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions/get)
+          #     URI. The format is:
+          #     projects/\\{project}/locations/\\{location}/revisions/\\{revision}
+          class CloudRunRevisionEndpoint
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # The type definition of an endpoint's network. Use one of the
           # following choices:
           module NetworkType
             # Default type if unspecified.
             NETWORK_TYPE_UNSPECIFIED = 0
 
-            # A network hosted within Google Cloud Platform.
+            # A network hosted within Google Cloud.
             # To receive more detailed output, specify the URI for the source or
             # destination network.
             GCP_NETWORK = 1
 
-            # A network hosted outside of Google Cloud Platform.
-            # This can be an on-premises network, or a network hosted by another cloud
-            # provider.
+            # A network hosted outside of Google Cloud.
+            # This can be an on-premises network, an internet resource or a network
+            # hosted by another cloud provider.
             NON_GCP_NETWORK = 2
+          end
+
+          # Type of the target of a forwarding rule.
+          module ForwardingRuleTarget
+            # Forwarding rule target is unknown.
+            FORWARDING_RULE_TARGET_UNSPECIFIED = 0
+
+            # Compute Engine instance for protocol forwarding.
+            INSTANCE = 1
+
+            # Load Balancer. The specific type can be found from [load_balancer_type]
+            # [google.cloud.networkmanagement.v1.Endpoint.load_balancer_type].
+            LOAD_BALANCER = 2
+
+            # Classic Cloud VPN Gateway.
+            VPN_GATEWAY = 3
+
+            # Forwarding Rule is a Private Service Connect endpoint.
+            PSC = 4
           end
         end
 
@@ -213,7 +304,9 @@ module Google
             # The source and destination endpoints do not uniquely identify
             # the test location in the network, and the reachability result contains
             # multiple traces. For some traces, a packet could be delivered, and for
-            # others, it would not be.
+            # others, it would not be. This result is also assigned to
+            # configuration analysis of return path if on its own it should be
+            # REACHABLE, but configuration analysis of forward path is AMBIGUOUS.
             AMBIGUOUS = 4
 
             # The configuration analysis did not complete. Possible reasons are:
@@ -224,6 +317,114 @@ module Google
             # * The analyzer received an invalid or unsupported argument or was unable
             #   to identify a known endpoint.
             UNDETERMINED = 5
+          end
+        end
+
+        # Latency percentile rank and value.
+        # @!attribute [rw] percent
+        #   @return [::Integer]
+        #     Percentage of samples this data point applies to.
+        # @!attribute [rw] latency_micros
+        #   @return [::Integer]
+        #     percent-th percentile of latency observed, in microseconds.
+        #     Fraction of percent/100 of samples have latency lower or
+        #     equal to the value of this field.
+        class LatencyPercentile
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Describes measured latency distribution.
+        # @!attribute [rw] latency_percentiles
+        #   @return [::Array<::Google::Cloud::NetworkManagement::V1::LatencyPercentile>]
+        #     Representative latency percentiles.
+        class LatencyDistribution
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Results of active probing from the last run of the test.
+        # @!attribute [rw] result
+        #   @return [::Google::Cloud::NetworkManagement::V1::ProbingDetails::ProbingResult]
+        #     The overall result of active probing.
+        # @!attribute [rw] verify_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time that reachability was assessed through active probing.
+        # @!attribute [rw] error
+        #   @return [::Google::Rpc::Status]
+        #     Details about an internal failure or the cancellation of active probing.
+        # @!attribute [rw] abort_cause
+        #   @return [::Google::Cloud::NetworkManagement::V1::ProbingDetails::ProbingAbortCause]
+        #     The reason probing was aborted.
+        # @!attribute [rw] sent_probe_count
+        #   @return [::Integer]
+        #     Number of probes sent.
+        # @!attribute [rw] successful_probe_count
+        #   @return [::Integer]
+        #     Number of probes that reached the destination.
+        # @!attribute [rw] endpoint_info
+        #   @return [::Google::Cloud::NetworkManagement::V1::EndpointInfo]
+        #     The source and destination endpoints derived from the test input and used
+        #     for active probing.
+        # @!attribute [rw] probing_latency
+        #   @return [::Google::Cloud::NetworkManagement::V1::LatencyDistribution]
+        #     Latency as measured by active probing in one direction:
+        #     from the source to the destination endpoint.
+        # @!attribute [rw] destination_egress_location
+        #   @return [::Google::Cloud::NetworkManagement::V1::ProbingDetails::EdgeLocation]
+        #     The EdgeLocation from which a packet destined for/originating from the
+        #     internet will egress/ingress the Google network.
+        #     This will only be populated for a connectivity test which has an internet
+        #     destination/source address.
+        #     The absence of this field *must not* be used as an indication that the
+        #     destination/source is part of the Google network.
+        class ProbingDetails
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Representation of a network edge location as per
+          # https://cloud.google.com/vpc/docs/edge-locations.
+          # @!attribute [rw] metropolitan_area
+          #   @return [::String]
+          #     Name of the metropolitan area.
+          class EdgeLocation
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Overall probing result of the test.
+          module ProbingResult
+            # No result was specified.
+            PROBING_RESULT_UNSPECIFIED = 0
+
+            # At least 95% of packets reached the destination.
+            REACHABLE = 1
+
+            # No packets reached the destination.
+            UNREACHABLE = 2
+
+            # Less than 95% of packets reached the destination.
+            REACHABILITY_INCONSISTENT = 3
+
+            # Reachability could not be determined. Possible reasons are:
+            # * The user lacks permission to access some of the network resources
+            #   required to run the test.
+            # * No valid source endpoint could be derived from the request.
+            # * An internal error occurred.
+            UNDETERMINED = 4
+          end
+
+          # Abort cause types.
+          module ProbingAbortCause
+            # No reason was specified.
+            PROBING_ABORT_CAUSE_UNSPECIFIED = 0
+
+            # The user lacks permission to access some of the
+            # network resources required to run the test.
+            PERMISSION_DENIED = 1
+
+            # No valid source endpoint could be derived from the request.
+            NO_SOURCE_LOCATION = 2
           end
         end
       end

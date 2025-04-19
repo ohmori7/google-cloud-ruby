@@ -34,27 +34,46 @@ module Google
           #   @return [::Google::Cloud::Firestore::Admin::V1::Index::QueryScope]
           #     Indexes with a collection query scope specified allow queries
           #     against a collection that is the child of a specific document, specified at
-          #     query time, and that has the same collection id.
+          #     query time, and that has the same collection ID.
           #
           #     Indexes with a collection group query scope specified allow queries against
           #     all collections descended from a specific document, specified at query
-          #     time, and that have the same collection id as this index.
+          #     time, and that have the same collection ID as this index.
+          # @!attribute [rw] api_scope
+          #   @return [::Google::Cloud::Firestore::Admin::V1::Index::ApiScope]
+          #     The API scope supported by this index.
           # @!attribute [rw] fields
           #   @return [::Array<::Google::Cloud::Firestore::Admin::V1::Index::IndexField>]
           #     The fields supported by this index.
           #
-          #     For composite indexes, this is always 2 or more fields.
-          #     The last field entry is always for the field path `__name__`. If, on
-          #     creation, `__name__` was not specified as the last field, it will be added
-          #     automatically with the same direction as that of the last field defined. If
-          #     the final field in a composite index is not directional, the `__name__`
-          #     will be ordered ASCENDING (unless explicitly specified).
+          #     For composite indexes, this requires a minimum of 2 and a maximum of 100
+          #     fields. The last field entry is always for the field path `__name__`. If,
+          #     on creation, `__name__` was not specified as the last field, it will be
+          #     added automatically with the same direction as that of the last field
+          #     defined. If the final field in a composite index is not directional, the
+          #     `__name__` will be ordered ASCENDING (unless explicitly specified).
           #
           #     For single field indexes, this will always be exactly one entry with a
           #     field path equal to the field path of the associated field.
           # @!attribute [rw] state
           #   @return [::Google::Cloud::Firestore::Admin::V1::Index::State]
           #     Output only. The serving state of the index.
+          # @!attribute [rw] density
+          #   @return [::Google::Cloud::Firestore::Admin::V1::Index::Density]
+          #     Immutable. The density configuration of the index.
+          # @!attribute [rw] multikey
+          #   @return [::Boolean]
+          #     Optional. Whether the index is multikey. By default, the index is not
+          #     multikey. For non-multikey indexes, none of the paths in the index
+          #     definition reach or traverse an array, except via an explicit array index.
+          #     For multikey indexes, at most one of the paths in the index definition
+          #     reach or traverse an array, except via an explicit array index. Violations
+          #     will result in errors.
+          #
+          #     Note this field only applies to index with MONGODB_COMPATIBLE_API ApiScope.
+          # @!attribute [rw] shard_count
+          #   @return [::Integer]
+          #     Optional. The number of shards for the index.
           class Index
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -71,12 +90,44 @@ module Google
             #   @return [::Google::Cloud::Firestore::Admin::V1::Index::IndexField::Order]
             #     Indicates that this field supports ordering by the specified order or
             #     comparing using =, !=, <, <=, >, >=.
+            #
+            #     Note: The following fields are mutually exclusive: `order`, `array_config`, `vector_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] array_config
             #   @return [::Google::Cloud::Firestore::Admin::V1::Index::IndexField::ArrayConfig]
             #     Indicates that this field supports operations on `array_value`s.
+            #
+            #     Note: The following fields are mutually exclusive: `array_config`, `order`, `vector_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] vector_config
+            #   @return [::Google::Cloud::Firestore::Admin::V1::Index::IndexField::VectorConfig]
+            #     Indicates that this field supports nearest neighbor and distance
+            #     operations on vector.
+            #
+            #     Note: The following fields are mutually exclusive: `vector_config`, `order`, `array_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class IndexField
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # The index configuration to support vector search operations
+              # @!attribute [rw] dimension
+              #   @return [::Integer]
+              #     Required. The vector dimension this configuration applies to.
+              #
+              #     The resulting index will only include vectors of this dimension, and
+              #     can be used for vector search with the same dimension.
+              # @!attribute [rw] flat
+              #   @return [::Google::Cloud::Firestore::Admin::V1::Index::IndexField::VectorConfig::FlatIndex]
+              #     Indicates the vector index is a flat index.
+              class VectorConfig
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+
+                # An index that stores vectors in a flat data structure, and supports
+                # exhaustive search.
+                class FlatIndex
+                  include ::Google::Protobuf::MessageExts
+                  extend ::Google::Protobuf::MessageExts::ClassMethods
+                end
+              end
 
               # The supported orderings.
               module Order
@@ -108,13 +159,31 @@ module Google
 
               # Indexes with a collection query scope specified allow queries
               # against a collection that is the child of a specific document, specified
-              # at query time, and that has the collection id specified by the index.
+              # at query time, and that has the collection ID specified by the index.
               COLLECTION = 1
 
               # Indexes with a collection group query scope specified allow queries
-              # against all collections that has the collection id specified by the
+              # against all collections that has the collection ID specified by the
               # index.
               COLLECTION_GROUP = 2
+
+              # Include all the collections's ancestor in the index. Only available for
+              # Datastore Mode databases.
+              COLLECTION_RECURSIVE = 3
+            end
+
+            # API Scope defines the APIs (Firestore Native, or Firestore in
+            # Datastore Mode) that are supported for queries.
+            module ApiScope
+              # The index can only be used by the Firestore Native query API.
+              # This is the default.
+              ANY_API = 0
+
+              # The index can only be used by the Firestore in Datastore Mode query API.
+              DATASTORE_MODE_API = 1
+
+              # The index can only be used by the MONGODB_COMPATIBLE_API.
+              MONGODB_COMPATIBLE_API = 2
             end
 
             # The state of an index. During index creation, an index will be in the
@@ -145,6 +214,32 @@ module Google
               # that last attempted to create this index failed, then re-create the
               # index.
               NEEDS_REPAIR = 3
+            end
+
+            # The density configuration for the index.
+            module Density
+              # Unspecified. It will use database default setting. This value is input
+              # only.
+              DENSITY_UNSPECIFIED = 0
+
+              # In order for an index entry to be added, the document must
+              # contain all fields specified in the index.
+              #
+              # This is the only allowed value for indexes having ApiScope `ANY_API` and
+              # `DATASTORE_MODE_API`.
+              SPARSE_ALL = 1
+
+              # In order for an index entry to be added, the document must
+              # contain at least one of the fields specified in the index.
+              # Non-existent fields are treated as having a NULL value when generating
+              # index entries.
+              SPARSE_ANY = 2
+
+              # An index entry will be added regardless of whether the
+              # document contains any of the fields specified in the index.
+              # Non-existent fields are treated as having a NULL value when generating
+              # index entries.
+              DENSE = 3
             end
           end
         end

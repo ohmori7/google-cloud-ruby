@@ -1,5 +1,163 @@
 # Release History
 
+### 2.0.0 (2025-02-07)
+
+### ⚠ BREAKING CHANGES
+
+* Fixed incorrect pagination on certain REST RPC methods ([#28826](https://github.com/googleapis/google-cloud-ruby/issues/28826))
+
+#### Bug Fixes
+
+* Fixed incorrect pagination on certain REST RPC methods ([#28826](https://github.com/googleapis/google-cloud-ruby/issues/28826)) 
+
+### 1.6.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.5.0 (2025-01-08)
+
+#### Features
+
+* Added free_instance_availability, quorum_type, and storage_limit_per_processing_unit to InstanceConfig 
+* Added instance_type and free_instance_metadata to Instance 
+
+### 1.4.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.3.0 (2024-10-24)
+
+#### Features
+
+* Add support for Cloud Spanner Default Backup Schedules ([#27462](https://github.com/googleapis/google-cloud-ruby/issues/27462)) 
+
+### 1.2.0 (2024-10-15)
+
+#### Features
+
+* Support asymmetric autoscaling options 
+* The Instance resource reports the compute capacity per ReplicaSelection 
+
+### 1.1.1 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` ([#27012](https://github.com/googleapis/google-cloud-ruby/issues/27012)) 
+
+### 1.1.0 (2024-08-28)
+
+#### Features
+
+* add edition field to the instance proto ([#26959](https://github.com/googleapis/google-cloud-ruby/issues/26959)) 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.16.0 (2024-04-19)
+
+#### Features
+
+* Support FulfillmentPeriod expectation to instance creations triggered via On-Demand Capacity Feature ([#25471](https://github.com/googleapis/google-cloud-ruby/issues/25471)) 
+
+### 0.15.0 (2024-03-04)
+
+#### Features
+
+* Add instance partition support to spanner instance proto ([#25276](https://github.com/googleapis/google-cloud-ruby/issues/25276)) 
+
+### 0.14.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24877](https://github.com/googleapis/google-cloud-ruby/issues/24877)) 
+
+### 0.13.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.13.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.13.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23786](https://github.com/googleapis/google-cloud-ruby/issues/23786)) 
+
+### 0.12.0 (2023-10-17)
+
+#### Features
+
+* add autoscaling config to the admin instance ([#23436](https://github.com/googleapis/google-cloud-ruby/issues/23436)) 
+
+### 0.11.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22924](https://github.com/googleapis/google-cloud-ruby/issues/22924)) 
+
+### 0.10.2 (2023-08-04)
+
+#### Documentation
+
+* Improve documentation format ([#22685](https://github.com/googleapis/google-cloud-ruby/issues/22685)) 
+
+### 0.10.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.10.0 (2023-05-31)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21678](https://github.com/googleapis/google-cloud-ruby/issues/21678)) 
+
+### 0.9.0 (2023-03-08)
+
+#### Features
+
+* Support REST transport ([#20629](https://github.com/googleapis/google-cloud-ruby/issues/20629)) 
+
+### 0.8.0 (2022-09-16)
+
+#### Features
+
+* Support for managing instance configs ([#19172](https://github.com/googleapis/google-cloud-ruby/issues/19172)) 
+
+### 0.7.0 (2022-07-08)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+* Add new fields for Instance create_time and update_time ([#18666](https://github.com/googleapis/google-cloud-ruby/issues/18666)) 
+#### Bug Fixes
+
+* Fixed a crash when making certain long-running-operations status calls ([#18441](https://github.com/googleapis/google-cloud-ruby/issues/18441)) 
+
+### 0.6.0 (2022-04-20)
+
+#### Features
+
+* Support for update masks when setting IAM policies
+
 ### 0.5.5 / 2022-01-11
 
 #### Bug Fixes

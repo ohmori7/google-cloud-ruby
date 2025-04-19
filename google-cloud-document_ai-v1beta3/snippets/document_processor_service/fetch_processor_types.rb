@@ -19,15 +19,29 @@
 # [START documentai_v1beta3_generated_DocumentProcessorService_FetchProcessorTypes_sync]
 require "google/cloud/document_ai/v1beta3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client.new
+##
+# Snippet for the fetch_processor_types call in the DocumentProcessorService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client#fetch_processor_types.
+#
+def fetch_processor_types
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DocumentAI::V1beta3::FetchProcessorTypesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DocumentAI::V1beta3::FetchProcessorTypesRequest.new
 
-# Call the fetch_processor_types method.
-result = client.fetch_processor_types request
+  # Call the fetch_processor_types method.
+  result = client.fetch_processor_types request
 
-# The returned object is of type Google::Cloud::DocumentAI::V1beta3::FetchProcessorTypesResponse.
-p result
+  # The returned object is of type Google::Cloud::DocumentAI::V1beta3::FetchProcessorTypesResponse.
+  p result
+end
 # [END documentai_v1beta3_generated_DocumentProcessorService_FetchProcessorTypes_sync]

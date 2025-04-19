@@ -1,5 +1,191 @@
 # Release History
 
+### 1.2.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.1.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.0.2 (2024-09-18)
+
+#### Documentation
+
+* Clarify comments for `QueryAssetsResponse` and `ResourceSearchResult` ([#27321](https://github.com/googleapis/google-cloud-ruby/issues/27321)) 
+
+### 1.0.1 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.32.0 (2024-04-17)
+
+#### Features
+
+* Add tag key id support ([#25414](https://github.com/googleapis/google-cloud-ruby/issues/25414)) 
+
+### 0.31.0 (2024-03-07)
+
+#### Features
+
+* Add asset_type effective_tags field to GovernedResource 
+* Add field condition_evaluation to AnalyzerOrgPolicy.Rule 
+* Add fields project, folders and organization to OrgPolicyResult 
+* Add fields project, folders, organization and effective_tags to GovernedContainer 
+
+### 0.30.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24863](https://github.com/googleapis/google-cloud-ruby/issues/24863)) 
+
+### 0.29.3 (2024-02-08)
+
+#### Documentation
+
+* Improve YARD documentation ([#24771](https://github.com/googleapis/google-cloud-ruby/issues/24771)) 
+
+### 0.29.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.29.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.29.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23773](https://github.com/googleapis/google-cloud-ruby/issues/23773)) 
+
+### 0.28.1 (2024-01-09)
+
+#### Documentation
+
+* Various documentation updates ([#23709](https://github.com/googleapis/google-cloud-ruby/issues/23709)) 
+
+### 0.28.0 (2024-01-04)
+
+#### Features
+
+* Support for directly attached and effective tags ([#23370](https://github.com/googleapis/google-cloud-ruby/issues/23370)) 
+* Support for Security Command Center security marks 
+
+### 0.27.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22916](https://github.com/googleapis/google-cloud-ruby/issues/22916)) 
+
+### 0.26.1 (2023-08-04)
+
+#### Documentation
+
+* Improve documentation format ([#22684](https://github.com/googleapis/google-cloud-ruby/issues/22684)) 
+
+### 0.26.0 (2023-06-06)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21671](https://github.com/googleapis/google-cloud-ruby/issues/21671)) 
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.25.0 (2023-04-09)
+
+#### Features
+
+* Add client library support for AssetService v1 AnalyzeOrgPolicies API ([#21045](https://github.com/googleapis/google-cloud-ruby/issues/21045)) 
+
+### 0.24.0 (2023-03-08)
+
+#### Features
+
+* Support REST transport ([#20624](https://github.com/googleapis/google-cloud-ruby/issues/20624)) 
+
+### 0.23.0 (2023-01-15)
+
+#### Features
+
+* Added support for RPCs for analyzing org policies ([#20015](https://github.com/googleapis/google-cloud-ruby/issues/20015)) 
+
+### 0.22.0 (2022-10-18)
+
+#### Features
+
+* Added new searchable field "kms_keys", deprecating old field "kms_key" ([#19264](https://github.com/googleapis/google-cloud-ruby/issues/19264)) 
+
+### 0.21.1 (2022-09-28)
+
+#### Bug Fixes
+
+* Configured timeouts and retry policies for saved query calls ([#19201](https://github.com/googleapis/google-cloud-ruby/issues/19201)) 
+
+### 0.21.0 (2022-08-17)
+
+#### Features
+
+* Support for asset query system ([#19014](https://github.com/googleapis/google-cloud-ruby/issues/19014)) 
+#### Bug Fixes
+
+* Configure timeouts and retries for batch_get_effective_iam_policies ([#19025](https://github.com/googleapis/google-cloud-ruby/issues/19025)) 
+
+### 0.20.1 (2022-08-14)
+
+#### Bug Fixes
+
+* Update timeout and retry settings for batch_get_effective_iam_policies ([#18997](https://github.com/googleapis/google-cloud-ruby/issues/18997)) 
+#### Documentation
+
+* Document relationship clauses in search queries 
+
+### 0.20.0 (2022-07-01)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+#### Bug Fixes
+
+* Fixed a crash when making certain long-running-operations status calls ([#18441](https://github.com/googleapis/google-cloud-ruby/issues/18441)) 
+
+### 0.19.0 (2022-06-08)
+
+#### Features
+
+* Added a call to get effective IAM policies for a batch of resources
+* Added relationship_type field to RelatedAsset
+* Added support for saved analysis queries
+* Added tag key and value fields to search results
+* Deprecated Asset#related_assets and replaced with Asset#related_asset
+
+### 0.18.0 (2022-04-20)
+
+#### Features
+
+* Support for update masks when setting IAM policies
+
 ### 0.17.3 / 2022-01-11
 
 #### Bug Fixes

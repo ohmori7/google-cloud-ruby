@@ -21,19 +21,94 @@ module Google
   module Cloud
     module SecurityCenter
       module V1
-        # Represents what's commonly known as an Indicator of compromise (IoC) in
+        # Represents what's commonly known as an _indicator of compromise_ (IoC) in
         # computer forensics. This is an artifact observed on a network or in an
         # operating system that, with high confidence, indicates a computer intrusion.
-        # Reference: https://en.wikipedia.org/wiki/Indicator_of_compromise
+        # For more information, see [Indicator of
+        # compromise](https://en.wikipedia.org/wiki/Indicator_of_compromise).
         # @!attribute [rw] ip_addresses
         #   @return [::Array<::String>]
-        #     List of ip addresses associated to the Finding.
+        #     The list of IP addresses that are associated with the finding.
         # @!attribute [rw] domains
         #   @return [::Array<::String>]
         #     List of domains associated to the Finding.
+        # @!attribute [rw] signatures
+        #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Indicator::ProcessSignature>]
+        #     The list of matched signatures indicating that the given
+        #     process is present in the environment.
+        # @!attribute [rw] uris
+        #   @return [::Array<::String>]
+        #     The list of URIs associated to the Findings.
         class Indicator
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Indicates what signature matched this process.
+          # @!attribute [rw] memory_hash_signature
+          #   @return [::Google::Cloud::SecurityCenter::V1::Indicator::ProcessSignature::MemoryHashSignature]
+          #     Signature indicating that a binary family was matched.
+          #
+          #     Note: The following fields are mutually exclusive: `memory_hash_signature`, `yara_rule_signature`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] yara_rule_signature
+          #   @return [::Google::Cloud::SecurityCenter::V1::Indicator::ProcessSignature::YaraRuleSignature]
+          #     Signature indicating that a YARA rule was matched.
+          #
+          #     Note: The following fields are mutually exclusive: `yara_rule_signature`, `memory_hash_signature`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] signature_type
+          #   @return [::Google::Cloud::SecurityCenter::V1::Indicator::ProcessSignature::SignatureType]
+          #     Describes the type of resource associated with the signature.
+          class ProcessSignature
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # A signature corresponding to memory page hashes.
+            # @!attribute [rw] binary_family
+            #   @return [::String]
+            #     The binary family.
+            # @!attribute [rw] detections
+            #   @return [::Array<::Google::Cloud::SecurityCenter::V1::Indicator::ProcessSignature::MemoryHashSignature::Detection>]
+            #     The list of memory hash detections contributing to the binary family
+            #     match.
+            class MemoryHashSignature
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Memory hash detection contributing to the binary family match.
+              # @!attribute [rw] binary
+              #   @return [::String]
+              #     The name of the binary associated with the memory hash
+              #     signature detection.
+              # @!attribute [rw] percent_pages_matched
+              #   @return [::Float]
+              #     The percentage of memory page hashes in the signature
+              #     that were matched.
+              class Detection
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
+
+            # A signature corresponding to a YARA rule.
+            # @!attribute [rw] yara_rule
+            #   @return [::String]
+            #     The name of the YARA rule.
+            class YaraRuleSignature
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Possible resource types to be associated with a signature.
+            module SignatureType
+              # The default signature type.
+              SIGNATURE_TYPE_UNSPECIFIED = 0
+
+              # Used for signatures concerning processes.
+              SIGNATURE_TYPE_PROCESS = 1
+
+              # Used for signatures concerning disks.
+              SIGNATURE_TYPE_FILE = 2
+            end
+          end
         end
       end
     end

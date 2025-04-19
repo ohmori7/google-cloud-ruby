@@ -3,6 +3,7 @@
     "api_shortname": "datamigration",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-cloud_dms/latest",
     "distribution_name": "google-cloud-cloud_dms",
+    "is_cloud": true,
     "language": "ruby",
     "name": "datamigration",
     "name_pretty": "Cloud Database Migration Service API",
@@ -14,5 +15,5 @@
     "ruby-cloud-env-prefix": "DATABASE_MIGRATION",
     "ruby-cloud-product-url": "https://cloud.google.com/database-migration/",
     "ruby-cloud-namespace-override": "CloudDms=CloudDMS",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

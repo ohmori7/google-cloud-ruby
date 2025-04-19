@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/video/transcoder"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Video::Transcoder::ClientConstructionMinitest < Minitest::Test
-  def test_transcoder_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_transcoder_service_grpc
+    skip unless Google::Cloud::Video::Transcoder.transcoder_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Video::Transcoder.transcoder_service do |config|
+      client = Google::Cloud::Video::Transcoder.transcoder_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Video::Transcoder::V1::TranscoderService::Client, client
+    end
+  end
+
+  def test_transcoder_service_rest
+    skip unless Google::Cloud::Video::Transcoder.transcoder_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Video::Transcoder.transcoder_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Video::Transcoder::V1::TranscoderService::Rest::Client, client
     end
   end
 end

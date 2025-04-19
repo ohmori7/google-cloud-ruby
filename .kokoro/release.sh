@@ -7,9 +7,4 @@ set -eo pipefail
 export GEM_HOME=$HOME/.gem
 export PATH=$GEM_HOME/bin:$PATH
 
-python3 -m pip install git+https://github.com/googleapis/releasetool
-python3 -m pip install gcp-docuploader
-gem install --no-document toys
-
-python3 -m releasetool publish-reporter-script > /tmp/publisher-script; source /tmp/publisher-script
-toys release perform -v --force-republish --enable-docs --enable-rad < /dev/null
+toys release perform -v --reporter-org=googleapis --force-republish --enable-rad < /dev/null

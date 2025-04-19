@@ -21,7 +21,8 @@ module Google
   module Cloud
     module Firestore
       module V1
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#get_document Firestore.GetDocument}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#get_document Firestore.GetDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The resource name of the Document to get. In the format:
@@ -35,77 +36,115 @@ module Google
         # @!attribute [rw] transaction
         #   @return [::String]
         #     Reads the document in a transaction.
+        #
+        #     Note: The following fields are mutually exclusive: `transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Reads the version of the document at the given time.
-        #     This may not be older than 270 seconds.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `transaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class GetDocumentRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#list_documents Firestore.ListDocuments}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#list_documents Firestore.ListDocuments}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The parent resource name. In the format:
         #     `projects/{project_id}/databases/{database_id}/documents` or
         #     `projects/{project_id}/databases/{database_id}/documents/{document_path}`.
+        #
         #     For example:
         #     `projects/my-project/databases/my-database/documents` or
         #     `projects/my-project/databases/my-database/documents/chatrooms/my-chatroom`
         # @!attribute [rw] collection_id
         #   @return [::String]
-        #     Required. The collection ID, relative to `parent`, to list. For example: `chatrooms`
-        #     or `messages`.
+        #     Optional. The collection ID, relative to `parent`, to list.
+        #
+        #     For example: `chatrooms` or `messages`.
+        #
+        #     This is optional, and when not provided, Firestore will list documents
+        #     from all collections under the provided `parent`.
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     The maximum number of documents to return.
+        #     Optional. The maximum number of documents to return in a single response.
+        #
+        #     Firestore may return fewer than this value.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     The `next_page_token` value returned from a previous List request, if any.
+        #     Optional. A page token, received from a previous `ListDocuments` response.
+        #
+        #     Provide this to retrieve the subsequent page. When paginating, all other
+        #     parameters (with the exception of `page_size`) must match the values set
+        #     in the request that generated the page token.
         # @!attribute [rw] order_by
         #   @return [::String]
-        #     The order to sort results by. For example: `priority desc, name`.
+        #     Optional. The optional ordering of the documents to return.
+        #
+        #     For example: `priority desc, __name__ desc`.
+        #
+        #     This mirrors the {::Google::Cloud::Firestore::V1::StructuredQuery#order_by `ORDER BY`}
+        #     used in Firestore queries but in a string representation. When absent,
+        #     documents are ordered based on `__name__ ASC`.
         # @!attribute [rw] mask
         #   @return [::Google::Cloud::Firestore::V1::DocumentMask]
-        #     The fields to return. If not set, returns all fields.
+        #     Optional. The fields to return. If not set, returns all fields.
         #
         #     If a document has a field that is not present in this mask, that field
         #     will not be returned in the response.
         # @!attribute [rw] transaction
         #   @return [::String]
-        #     Reads documents in a transaction.
+        #     Perform the read as part of an already active transaction.
+        #
+        #     Note: The following fields are mutually exclusive: `transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     Reads documents as they were at the given time.
-        #     This may not be older than 270 seconds.
+        #     Perform the read at the provided time.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `transaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] show_missing
         #   @return [::Boolean]
-        #     If the list should show missing documents. A missing document is a
-        #     document that does not exist but has sub-documents. These documents will
-        #     be returned with a key but will not have fields, {::Google::Cloud::Firestore::V1::Document#create_time Document.create_time},
-        #     or {::Google::Cloud::Firestore::V1::Document#update_time Document.update_time} set.
+        #     If the list should show missing documents.
         #
-        #     Requests with `show_missing` may not specify `where` or
-        #     `order_by`.
+        #     A document is missing if it does not exist, but there are sub-documents
+        #     nested underneath it. When true, such missing documents will be returned
+        #     with a key but will not have fields,
+        #     {::Google::Cloud::Firestore::V1::Document#create_time `create_time`}, or
+        #     {::Google::Cloud::Firestore::V1::Document#update_time `update_time`} set.
+        #
+        #     Requests with `show_missing` may not specify `where` or `order_by`.
         class ListDocumentsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response for {::Google::Cloud::Firestore::V1::Firestore::Client#list_documents Firestore.ListDocuments}.
+        # The response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#list_documents Firestore.ListDocuments}.
         # @!attribute [rw] documents
         #   @return [::Array<::Google::Cloud::Firestore::V1::Document>]
         #     The Documents found.
         # @!attribute [rw] next_page_token
         #   @return [::String]
-        #     The next page token.
+        #     A token to retrieve the next page of documents.
+        #
+        #     If this field is omitted, there are no subsequent pages.
         class ListDocumentsResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#create_document Firestore.CreateDocument}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#create_document Firestore.CreateDocument}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The parent resource. For example:
@@ -113,7 +152,8 @@ module Google
         #     `projects/{project_id}/databases/{database_id}/documents/chatrooms/{chatroom_id}`
         # @!attribute [rw] collection_id
         #   @return [::String]
-        #     Required. The collection ID, relative to `parent`, to list. For example: `chatrooms`.
+        #     Required. The collection ID, relative to `parent`, to list. For example:
+        #     `chatrooms`.
         # @!attribute [rw] document_id
         #   @return [::String]
         #     The client-assigned document ID to use for this document.
@@ -133,7 +173,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#update_document Firestore.UpdateDocument}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#update_document Firestore.UpdateDocument}.
         # @!attribute [rw] document
         #   @return [::Google::Cloud::Firestore::V1::Document]
         #     Required. The updated document.
@@ -162,7 +203,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#delete_document Firestore.DeleteDocument}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#delete_document Firestore.DeleteDocument}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The resource name of the Document to delete. In the format:
@@ -176,7 +218,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#batch_get_documents Firestore.BatchGetDocuments}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#batch_get_documents Firestore.BatchGetDocuments}.
         # @!attribute [rw] database
         #   @return [::String]
         #     Required. The database name. In the format:
@@ -196,34 +239,49 @@ module Google
         # @!attribute [rw] transaction
         #   @return [::String]
         #     Reads documents in a transaction.
+        #
+        #     Note: The following fields are mutually exclusive: `transaction`, `new_transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] new_transaction
         #   @return [::Google::Cloud::Firestore::V1::TransactionOptions]
         #     Starts a new transaction and reads the documents.
         #     Defaults to a read-only transaction.
         #     The new transaction ID will be returned as the first response in the
         #     stream.
+        #
+        #     Note: The following fields are mutually exclusive: `new_transaction`, `transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Reads documents as they were at the given time.
-        #     This may not be older than 270 seconds.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `transaction`, `new_transaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class BatchGetDocumentsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The streamed response for {::Google::Cloud::Firestore::V1::Firestore::Client#batch_get_documents Firestore.BatchGetDocuments}.
+        # The streamed response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#batch_get_documents Firestore.BatchGetDocuments}.
         # @!attribute [rw] found
         #   @return [::Google::Cloud::Firestore::V1::Document]
         #     A document that was requested.
+        #
+        #     Note: The following fields are mutually exclusive: `found`, `missing`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] missing
         #   @return [::String]
         #     A document name that was requested but does not exist. In the format:
         #     `projects/{project_id}/databases/{database_id}/documents/{document_path}`.
+        #
+        #     Note: The following fields are mutually exclusive: `missing`, `found`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] transaction
         #   @return [::String]
         #     The transaction that was started as part of this request.
         #     Will only be set in the first response, and only if
-        #     {::Google::Cloud::Firestore::V1::BatchGetDocumentsRequest#new_transaction BatchGetDocumentsRequest.new_transaction} was set in the request.
+        #     {::Google::Cloud::Firestore::V1::BatchGetDocumentsRequest#new_transaction BatchGetDocumentsRequest.new_transaction}
+        #     was set in the request.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     The time at which the document was read.
@@ -235,7 +293,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#begin_transaction Firestore.BeginTransaction}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#begin_transaction Firestore.BeginTransaction}.
         # @!attribute [rw] database
         #   @return [::String]
         #     Required. The database name. In the format:
@@ -249,7 +308,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response for {::Google::Cloud::Firestore::V1::Firestore::Client#begin_transaction Firestore.BeginTransaction}.
+        # The response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#begin_transaction Firestore.BeginTransaction}.
         # @!attribute [rw] transaction
         #   @return [::String]
         #     The transaction that was started.
@@ -319,33 +379,49 @@ module Google
         #     A structured query.
         # @!attribute [rw] transaction
         #   @return [::String]
-        #     Reads documents in a transaction.
+        #     Run the query within an already active transaction.
+        #
+        #     The value here is the opaque transaction ID to execute the query in.
+        #
+        #     Note: The following fields are mutually exclusive: `transaction`, `new_transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] new_transaction
         #   @return [::Google::Cloud::Firestore::V1::TransactionOptions]
         #     Starts a new transaction and reads the documents.
         #     Defaults to a read-only transaction.
         #     The new transaction ID will be returned as the first response in the
         #     stream.
+        #
+        #     Note: The following fields are mutually exclusive: `new_transaction`, `transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Reads documents as they were at the given time.
-        #     This may not be older than 270 seconds.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `transaction`, `new_transaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] explain_options
+        #   @return [::Google::Cloud::Firestore::V1::ExplainOptions]
+        #     Optional. Explain options for the query. If set, additional query
+        #     statistics will be returned. If not, only query results will be returned.
         class RunQueryRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response for {::Google::Cloud::Firestore::V1::Firestore::Client#run_query Firestore.RunQuery}.
+        # The response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#run_query Firestore.RunQuery}.
         # @!attribute [rw] transaction
         #   @return [::String]
         #     The transaction that was started as part of this request.
         #     Can only be set in the first response, and only if
-        #     {::Google::Cloud::Firestore::V1::RunQueryRequest#new_transaction RunQueryRequest.new_transaction} was set in the request.
-        #     If set, no other fields will be set in this response.
+        #     {::Google::Cloud::Firestore::V1::RunQueryRequest#new_transaction RunQueryRequest.new_transaction}
+        #     was set in the request. If set, no other fields will be set in this
+        #     response.
         # @!attribute [rw] document
         #   @return [::Google::Cloud::Firestore::V1::Document]
-        #     A query result.
-        #     Not set when reporting partial progress.
+        #     A query result, not set when reporting partial progress.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     The time at which the document was read. This may be monotonically
@@ -359,12 +435,101 @@ module Google
         #   @return [::Integer]
         #     The number of results that have been skipped due to an offset between
         #     the last response and the current response.
+        # @!attribute [rw] done
+        #   @return [::Boolean]
+        #     If present, Firestore has completely finished the request and no more
+        #     documents will be returned.
+        # @!attribute [rw] explain_metrics
+        #   @return [::Google::Cloud::Firestore::V1::ExplainMetrics]
+        #     Query explain metrics. This is only present when the
+        #     {::Google::Cloud::Firestore::V1::RunQueryRequest#explain_options RunQueryRequest.explain_options}
+        #     is provided, and it is sent only once with the last response in the stream.
         class RunQueryResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#partition_query Firestore.PartitionQuery}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#run_aggregation_query Firestore.RunAggregationQuery}.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The parent resource name. In the format:
+        #     `projects/{project_id}/databases/{database_id}/documents` or
+        #     `projects/{project_id}/databases/{database_id}/documents/{document_path}`.
+        #     For example:
+        #     `projects/my-project/databases/my-database/documents` or
+        #     `projects/my-project/databases/my-database/documents/chatrooms/my-chatroom`
+        # @!attribute [rw] structured_aggregation_query
+        #   @return [::Google::Cloud::Firestore::V1::StructuredAggregationQuery]
+        #     An aggregation query.
+        # @!attribute [rw] transaction
+        #   @return [::String]
+        #     Run the aggregation within an already active transaction.
+        #
+        #     The value here is the opaque transaction ID to execute the query in.
+        #
+        #     Note: The following fields are mutually exclusive: `transaction`, `new_transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] new_transaction
+        #   @return [::Google::Cloud::Firestore::V1::TransactionOptions]
+        #     Starts a new transaction as part of the query, defaulting to read-only.
+        #
+        #     The new transaction ID will be returned as the first response in the
+        #     stream.
+        #
+        #     Note: The following fields are mutually exclusive: `new_transaction`, `transaction`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] read_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Executes the query at the given timestamp.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `transaction`, `new_transaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] explain_options
+        #   @return [::Google::Cloud::Firestore::V1::ExplainOptions]
+        #     Optional. Explain options for the query. If set, additional query
+        #     statistics will be returned. If not, only query results will be returned.
+        class RunAggregationQueryRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#run_aggregation_query Firestore.RunAggregationQuery}.
+        # @!attribute [rw] result
+        #   @return [::Google::Cloud::Firestore::V1::AggregationResult]
+        #     A single aggregation result.
+        #
+        #     Not present when reporting partial progress.
+        # @!attribute [rw] transaction
+        #   @return [::String]
+        #     The transaction that was started as part of this request.
+        #
+        #     Only present on the first response when the request requested to start
+        #     a new transaction.
+        # @!attribute [rw] read_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time at which the aggregate result was computed. This is always
+        #     monotonically increasing; in this case, the previous AggregationResult in
+        #     the result stream are guaranteed not to have changed between their
+        #     `read_time` and this one.
+        #
+        #     If the query returns no results, a response with `read_time` and no
+        #     `result` will be sent, and this represents the time at which the query
+        #     was run.
+        # @!attribute [rw] explain_metrics
+        #   @return [::Google::Cloud::Firestore::V1::ExplainMetrics]
+        #     Query explain metrics. This is only present when the
+        #     {::Google::Cloud::Firestore::V1::RunAggregationQueryRequest#explain_options RunAggregationQueryRequest.explain_options}
+        #     is provided, and it is sent only once with the last response in the stream.
+        class RunAggregationQueryResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#partition_query Firestore.PartitionQuery}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The parent resource name. In the format:
@@ -411,12 +576,20 @@ module Google
         #     to PartitionQuery will return up to 8 partitions and a `next_page_token`
         #     if more results exist. A second call to PartitionQuery will return up to
         #     2 partitions, to complete the total of 10 specified in `partition_count`.
+        # @!attribute [rw] read_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Reads documents as they were at the given time.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
         class PartitionQueryRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response for {::Google::Cloud::Firestore::V1::Firestore::Client#partition_query Firestore.PartitionQuery}.
+        # The response for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#partition_query Firestore.PartitionQuery}.
         # @!attribute [rw] partitions
         #   @return [::Array<::Google::Cloud::Firestore::V1::Cursor>]
         #     Partition results.
@@ -435,7 +608,7 @@ module Google
         #      * query, start_at B
         #
         #     An empty result may indicate that the query has too few results to be
-        #     partitioned.
+        #     partitioned, or that the query is not yet supported for partitioning.
         # @!attribute [rw] next_page_token
         #   @return [::String]
         #     A page token that may be used to request an additional set of results, up
@@ -479,9 +652,9 @@ module Google
         #     A stream token that was previously sent by the server.
         #
         #     The client should set this field to the token from the most recent
-        #     {::Google::Cloud::Firestore::V1::WriteResponse WriteResponse} it has received. This acknowledges that the client has
-        #     received responses up to this token. After sending this token, earlier
-        #     tokens may not be used anymore.
+        #     {::Google::Cloud::Firestore::V1::WriteResponse WriteResponse} it has received. This
+        #     acknowledges that the client has received responses up to this token. After
+        #     sending this token, earlier tokens may not be used anymore.
         #
         #     The server may close the stream if there are too many unacknowledged
         #     responses.
@@ -541,9 +714,13 @@ module Google
         # @!attribute [rw] add_target
         #   @return [::Google::Cloud::Firestore::V1::Target]
         #     A target to add to this stream.
+        #
+        #     Note: The following fields are mutually exclusive: `add_target`, `remove_target`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] remove_target
         #   @return [::Integer]
         #     The ID of a target to remove from this stream.
+        #
+        #     Note: The following fields are mutually exclusive: `remove_target`, `add_target`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Labels associated with this target change.
@@ -565,16 +742,24 @@ module Google
         # @!attribute [rw] target_change
         #   @return [::Google::Cloud::Firestore::V1::TargetChange]
         #     Targets have changed.
+        #
+        #     Note: The following fields are mutually exclusive: `target_change`, `document_change`, `document_delete`, `document_remove`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] document_change
         #   @return [::Google::Cloud::Firestore::V1::DocumentChange]
         #     A {::Google::Cloud::Firestore::V1::Document Document} has changed.
+        #
+        #     Note: The following fields are mutually exclusive: `document_change`, `target_change`, `document_delete`, `document_remove`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] document_delete
         #   @return [::Google::Cloud::Firestore::V1::DocumentDelete]
         #     A {::Google::Cloud::Firestore::V1::Document Document} has been deleted.
+        #
+        #     Note: The following fields are mutually exclusive: `document_delete`, `target_change`, `document_change`, `document_remove`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] document_remove
         #   @return [::Google::Cloud::Firestore::V1::DocumentRemove]
-        #     A {::Google::Cloud::Firestore::V1::Document Document} has been removed from a target (because it is no longer
-        #     relevant to that target).
+        #     A {::Google::Cloud::Firestore::V1::Document Document} has been removed from a target
+        #     (because it is no longer relevant to that target).
+        #
+        #     Note: The following fields are mutually exclusive: `document_remove`, `target_change`, `document_change`, `document_delete`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] filter
         #   @return [::Google::Cloud::Firestore::V1::ExistenceFilter]
         #     A filter to apply to the set of documents previously returned for the
@@ -582,6 +767,8 @@ module Google
         #
         #     Returned when documents may have been removed from the given target, but
         #     the exact documents are unknown.
+        #
+        #     Note: The following fields are mutually exclusive: `filter`, `target_change`, `document_change`, `document_delete`, `document_remove`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ListenResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -591,26 +778,58 @@ module Google
         # @!attribute [rw] query
         #   @return [::Google::Cloud::Firestore::V1::Target::QueryTarget]
         #     A target specified by a query.
+        #
+        #     Note: The following fields are mutually exclusive: `query`, `documents`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] documents
         #   @return [::Google::Cloud::Firestore::V1::Target::DocumentsTarget]
         #     A target specified by a set of document names.
+        #
+        #     Note: The following fields are mutually exclusive: `documents`, `query`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] resume_token
         #   @return [::String]
-        #     A resume token from a prior {::Google::Cloud::Firestore::V1::TargetChange TargetChange} for an identical target.
+        #     A resume token from a prior
+        #     {::Google::Cloud::Firestore::V1::TargetChange TargetChange} for an identical target.
         #
         #     Using a resume token with a different target is unsupported and may fail.
+        #
+        #     Note: The following fields are mutually exclusive: `resume_token`, `read_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] read_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Start listening after a specific `read_time`.
         #
         #     The client must know the state of matching documents at this time.
+        #
+        #     Note: The following fields are mutually exclusive: `read_time`, `resume_token`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] target_id
         #   @return [::Integer]
         #     The target ID that identifies the target on the stream. Must be a positive
         #     number and non-zero.
+        #
+        #     If `target_id` is 0 (or unspecified), the server will assign an ID for this
+        #     target and return that in a `TargetChange::ADD` event. Once a target with
+        #     `target_id=0` is added, all subsequent targets must also have
+        #     `target_id=0`. If an `AddTarget` request with `target_id != 0` is
+        #     sent to the server after a target with `target_id=0` is added, the server
+        #     will immediately send a response with a `TargetChange::Remove` event.
+        #
+        #     Note that if the client sends multiple `AddTarget` requests
+        #     without an ID, the order of IDs returned in `TargetChage.target_ids` are
+        #     undefined. Therefore, clients should provide a target ID instead of relying
+        #     on the server to assign one.
+        #
+        #     If `target_id` is non-zero, there must not be an existing active target on
+        #     this stream with the same ID.
         # @!attribute [rw] once
         #   @return [::Boolean]
         #     If the target should be removed once it is current and consistent.
+        # @!attribute [rw] expected_count
+        #   @return [::Google::Protobuf::Int32Value]
+        #     The number of documents that last matched the query at the resume token or
+        #     read time.
+        #
+        #     This value is only relevant when a `resume_type` is provided. This value
+        #     being present and greater than zero signals that the client wants
+        #     `ExistenceFilter.unchanged_names` to be included in the response.
         class Target
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -711,7 +930,8 @@ module Google
           end
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#list_collection_ids Firestore.ListCollectionIds}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#list_collection_ids Firestore.ListCollectionIds}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The parent document. In the format:
@@ -725,12 +945,20 @@ module Google
         #   @return [::String]
         #     A page token. Must be a value from
         #     {::Google::Cloud::Firestore::V1::ListCollectionIdsResponse ListCollectionIdsResponse}.
+        # @!attribute [rw] read_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Reads documents as they were at the given time.
+        #
+        #     This must be a microsecond precision timestamp within the past one hour,
+        #     or if Point-in-Time Recovery is enabled, can additionally be a whole
+        #     minute timestamp within the past 7 days.
         class ListCollectionIdsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response from {::Google::Cloud::Firestore::V1::Firestore::Client#list_collection_ids Firestore.ListCollectionIds}.
+        # The response from
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#list_collection_ids Firestore.ListCollectionIds}.
         # @!attribute [rw] collection_ids
         #   @return [::Array<::String>]
         #     The collection ids.
@@ -742,7 +970,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request for {::Google::Cloud::Firestore::V1::Firestore::Client#batch_write Firestore.BatchWrite}.
+        # The request for
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#batch_write Firestore.BatchWrite}.
         # @!attribute [rw] database
         #   @return [::String]
         #     Required. The database name. In the format:
@@ -771,7 +1000,8 @@ module Google
           end
         end
 
-        # The response from {::Google::Cloud::Firestore::V1::Firestore::Client#batch_write Firestore.BatchWrite}.
+        # The response from
+        # {::Google::Cloud::Firestore::V1::Firestore::Client#batch_write Firestore.BatchWrite}.
         # @!attribute [rw] write_results
         #   @return [::Array<::Google::Cloud::Firestore::V1::WriteResult>]
         #     The result of applying the writes.

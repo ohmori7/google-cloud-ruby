@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/tpu/v1/tpu"
 
 class ::Google::Cloud::Tpu::V1::Tpu::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_accelerator_type_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Tpu::V1::Tpu::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::Tpu::V1::Tpu::ClientPathsTest < Minitest::Test
 
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Tpu::V1::Tpu::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::Tpu::V1::Tpu::ClientPathsTest < Minitest::Test
 
   def test_node_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Tpu::V1::Tpu::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::Tpu::V1::Tpu::ClientPathsTest < Minitest::Test
 
   def test_tensor_flow_version_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Tpu::V1::Tpu::Client.new do |config|
         config.credentials = grpc_channel
       end

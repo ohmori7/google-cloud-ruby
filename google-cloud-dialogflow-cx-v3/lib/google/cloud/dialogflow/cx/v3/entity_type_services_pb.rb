@@ -34,8 +34,6 @@ module Google
               self.unmarshal_class_method = :decode
               self.service_name = 'google.cloud.dialogflow.cx.v3.EntityTypes'
 
-              # Returns the list of all entity types in the specified agent.
-              rpc :ListEntityTypes, ::Google::Cloud::Dialogflow::CX::V3::ListEntityTypesRequest, ::Google::Cloud::Dialogflow::CX::V3::ListEntityTypesResponse
               # Retrieves the specified entity type.
               rpc :GetEntityType, ::Google::Cloud::Dialogflow::CX::V3::GetEntityTypeRequest, ::Google::Cloud::Dialogflow::CX::V3::EntityType
               # Creates an entity type in the specified agent.
@@ -56,6 +54,12 @@ module Google
               # [training
               # documentation](https://cloud.google.com/dialogflow/cx/docs/concept/training).
               rpc :DeleteEntityType, ::Google::Cloud::Dialogflow::CX::V3::DeleteEntityTypeRequest, ::Google::Protobuf::Empty
+              # Returns the list of all entity types in the specified agent.
+              rpc :ListEntityTypes, ::Google::Cloud::Dialogflow::CX::V3::ListEntityTypesRequest, ::Google::Cloud::Dialogflow::CX::V3::ListEntityTypesResponse
+              # Exports the selected entity types.
+              rpc :ExportEntityTypes, ::Google::Cloud::Dialogflow::CX::V3::ExportEntityTypesRequest, ::Google::Longrunning::Operation
+              # Imports the specified entitytypes into the agent.
+              rpc :ImportEntityTypes, ::Google::Cloud::Dialogflow::CX::V3::ImportEntityTypesRequest, ::Google::Longrunning::Operation
             end
 
             Stub = Service.rpc_stub_class

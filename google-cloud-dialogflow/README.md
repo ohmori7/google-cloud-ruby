@@ -16,7 +16,7 @@ for this library, google-cloud-dialogflow, to see the convenience methods for
 constructing client objects. Reference documentation for the client objects
 themselves can be found in the client library documentation for the versioned
 client gems:
-[google-cloud-dialogflow-v2](https://googleapis.dev/ruby/google-cloud-dialogflow-v2/latest).
+[google-cloud-dialogflow-v2](https://cloud.google.com/ruby/docs/reference/google-cloud-dialogflow-v2/latest).
 
 See also the [Product Documentation](https://cloud.google.com/dialogflow)
 for more usage information.
@@ -32,7 +32,7 @@ In order to use this library, you first need to go through the following steps:
 1. [Select or create a Cloud Platform project.](https://console.cloud.google.com/project)
 1. [Enable billing for your project.](https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_a_project)
 1. [Enable the API.](https://console.cloud.google.com/apis/library/dialogflow.googleapis.com)
-1. {file:AUTHENTICATION.md Set up authentication.}
+1. [Set up authentication.](AUTHENTICATION.md)
 
 ## Migrating from 0.x versions
 
@@ -42,42 +42,46 @@ and includes substantial interface changes. Existing code written for earlier
 versions of this library will likely require updates to use this version.
 See the {file:MIGRATING.md MIGRATING.md} document for more information.
 
-## Enabling Logging
+## Debug Logging
 
-To enable logging for this library, set the logger for the underlying [gRPC](https://github.com/grpc/grpc/tree/master/src/ruby) library.
-The logger that you set may be a Ruby stdlib [`Logger`](https://ruby-doc.org/stdlib/libdoc/logger/rdoc/Logger.html) as shown below,
-or a [`Google::Cloud::Logging::Logger`](https://googleapis.dev/ruby/google-cloud-logging/latest)
-that will write logs to [Cloud Logging](https://cloud.google.com/logging/). See [grpc/logconfig.rb](https://github.com/grpc/grpc/blob/master/src/ruby/lib/grpc/logconfig.rb)
-and the gRPC [spec_helper.rb](https://github.com/grpc/grpc/blob/master/src/ruby/spec/spec_helper.rb) for additional information.
+This library comes with opt-in Debug Logging that can help you troubleshoot
+your application's integration with the API. When logging is activated, key
+events such as requests and responses, along with data payloads and metadata
+such as headers and client configuration, are logged to the standard error
+stream.
 
-Configuring a Ruby stdlib logger:
+**WARNING:** Client Library Debug Logging includes your data payloads in
+plaintext, which could include sensitive data such as PII for yourself or your
+customers, private keys, or other security data that could be compromising if
+leaked. Always practice good data hygiene with your application logs, and follow
+the principle of least access. Google also recommends that Client Library Debug
+Logging be enabled only temporarily during active debugging, and not used
+permanently in production.
 
-```ruby
-require "logger"
+To enable logging, set the environment variable `GOOGLE_SDK_RUBY_LOGGING_GEMS`
+to the value `all`. Alternatively, you can set the value to a comma-delimited
+list of client library gem names. This will select the default logging behavior,
+which writes logs to the standard error stream. On a local workstation, this may
+result in logs appearing on the console. When running on a Google Cloud hosting
+service such as [Google Cloud Run](https://cloud.google.com/run), this generally
+results in logs appearing alongside your application logs in the
+[Google Cloud Logging](https://cloud.google.com/logging/) service.
 
-module MyLogger
-  LOGGER = Logger.new $stderr, level: Logger::WARN
-  def logger
-    LOGGER
-  end
-end
-
-# Define a gRPC module-level logger method before grpc/logconfig.rb loads.
-module GRPC
-  extend MyLogger
-end
-```
+Debug logging also requires that the versioned clients for this service be
+sufficiently recent, released after about Dec 10, 2024. If logging is not
+working, try updating the versioned clients in your bundle or installed gems:
+[google-cloud-dialogflow-v2](https://cloud.google.com/ruby/docs/reference/google-cloud-dialogflow-v2/latest).
 
 ## Supported Ruby Versions
 
-This library is supported on Ruby 2.5+.
+This library is supported on Ruby 3.0+.
 
 Google provides official support for Ruby versions that are actively supported
 by Ruby Core—that is, Ruby versions that are either in normal maintenance or
-in security maintenance, and not end of life. Currently, this means Ruby 2.5
-and later. Older versions of Ruby _may_ still work, but are unsupported and not
-recommended. See https://www.ruby-lang.org/en/downloads/branches/ for details
-about the Ruby support schedule.
+in security maintenance, and not end of life. Older versions of Ruby _may_
+still work, but are unsupported and not recommended. See
+https://www.ruby-lang.org/en/downloads/branches/ for details about the Ruby
+support schedule.
 
 ## Which client should I use?
 

@@ -19,22 +19,36 @@
 # [START automl_v1_generated_AutoML_ExportData_sync]
 require "google/cloud/automl/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AutoML::V1::AutoML::Client.new
+##
+# Snippet for the export_data call in the AutoML service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AutoML::V1::AutoML::Client#export_data.
+#
+def export_data
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AutoML::V1::AutoML::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AutoML::V1::ExportDataRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AutoML::V1::ExportDataRequest.new
 
-# Call the export_data method.
-result = client.export_data request
+  # Call the export_data method.
+  result = client.export_data request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END automl_v1_generated_AutoML_ExportData_sync]

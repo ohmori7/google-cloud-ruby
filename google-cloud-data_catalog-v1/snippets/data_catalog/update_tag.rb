@@ -19,15 +19,29 @@
 # [START datacatalog_v1_generated_DataCatalog_UpdateTag_sync]
 require "google/cloud/data_catalog/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+##
+# Snippet for the update_tag call in the DataCatalog service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataCatalog::V1::DataCatalog::Client#update_tag.
+#
+def update_tag
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataCatalog::V1::UpdateTagRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataCatalog::V1::UpdateTagRequest.new
 
-# Call the update_tag method.
-result = client.update_tag request
+  # Call the update_tag method.
+  result = client.update_tag request
 
-# The returned object is of type Google::Cloud::DataCatalog::V1::Tag.
-p result
+  # The returned object is of type Google::Cloud::DataCatalog::V1::Tag.
+  p result
+end
 # [END datacatalog_v1_generated_DataCatalog_UpdateTag_sync]

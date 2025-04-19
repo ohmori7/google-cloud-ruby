@@ -19,15 +19,29 @@
 # [START securitycenter_v1_generated_SecurityCenter_CreateNotificationConfig_sync]
 require "google/cloud/security_center/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::SecurityCenter::V1::SecurityCenter::Client.new
+##
+# Snippet for the create_notification_config call in the SecurityCenter service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::SecurityCenter::V1::SecurityCenter::Client#create_notification_config.
+#
+def create_notification_config
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::SecurityCenter::V1::SecurityCenter::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::SecurityCenter::V1::CreateNotificationConfigRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::SecurityCenter::V1::CreateNotificationConfigRequest.new
 
-# Call the create_notification_config method.
-result = client.create_notification_config request
+  # Call the create_notification_config method.
+  result = client.create_notification_config request
 
-# The returned object is of type Google::Cloud::SecurityCenter::V1::NotificationConfig.
-p result
+  # The returned object is of type Google::Cloud::SecurityCenter::V1::NotificationConfig.
+  p result
+end
 # [END securitycenter_v1_generated_SecurityCenter_CreateNotificationConfig_sync]

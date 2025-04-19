@@ -46,6 +46,11 @@ module Google
         #     The steps are ordered by the processing sequence within the simulated
         #     network state machine. It is critical to preserve the order of the steps
         #     and avoid reordering or sorting them.
+        # @!attribute [rw] forward_trace_id
+        #   @return [::Integer]
+        #     ID of trace. For forward traces, this ID is unique for each trace. For
+        #     return traces, it matches ID of associated forward trace. A single forward
+        #     trace can be associated with none, one or more than one return trace.
         class Trace
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -68,51 +73,154 @@ module Google
         # @!attribute [rw] instance
         #   @return [::Google::Cloud::NetworkManagement::V1::InstanceInfo]
         #     Display information of a Compute Engine instance.
+        #
+        #     Note: The following fields are mutually exclusive: `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] firewall
         #   @return [::Google::Cloud::NetworkManagement::V1::FirewallInfo]
         #     Display information of a Compute Engine firewall rule.
+        #
+        #     Note: The following fields are mutually exclusive: `firewall`, `instance`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] route
         #   @return [::Google::Cloud::NetworkManagement::V1::RouteInfo]
         #     Display information of a Compute Engine route.
+        #
+        #     Note: The following fields are mutually exclusive: `route`, `instance`, `firewall`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] endpoint
         #   @return [::Google::Cloud::NetworkManagement::V1::EndpointInfo]
         #     Display information of the source and destination under analysis.
         #     The endpoint information in an intermediate state may differ with the
         #     initial input, as it might be modified by state like NAT,
         #     or Connection Proxy.
+        #
+        #     Note: The following fields are mutually exclusive: `endpoint`, `instance`, `firewall`, `route`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] google_service
+        #   @return [::Google::Cloud::NetworkManagement::V1::GoogleServiceInfo]
+        #     Display information of a Google service
+        #
+        #     Note: The following fields are mutually exclusive: `google_service`, `instance`, `firewall`, `route`, `endpoint`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] forwarding_rule
         #   @return [::Google::Cloud::NetworkManagement::V1::ForwardingRuleInfo]
         #     Display information of a Compute Engine forwarding rule.
+        #
+        #     Note: The following fields are mutually exclusive: `forwarding_rule`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] vpn_gateway
         #   @return [::Google::Cloud::NetworkManagement::V1::VpnGatewayInfo]
         #     Display information of a Compute Engine VPN gateway.
+        #
+        #     Note: The following fields are mutually exclusive: `vpn_gateway`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] vpn_tunnel
         #   @return [::Google::Cloud::NetworkManagement::V1::VpnTunnelInfo]
         #     Display information of a Compute Engine VPN tunnel.
+        #
+        #     Note: The following fields are mutually exclusive: `vpn_tunnel`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] vpc_connector
+        #   @return [::Google::Cloud::NetworkManagement::V1::VpcConnectorInfo]
+        #     Display information of a VPC connector.
+        #
+        #     Note: The following fields are mutually exclusive: `vpc_connector`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] direct_vpc_egress_connection
+        #   @return [::Google::Cloud::NetworkManagement::V1::DirectVpcEgressConnectionInfo]
+        #     Display information of a serverless direct VPC egress connection.
+        #
+        #     Note: The following fields are mutually exclusive: `direct_vpc_egress_connection`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] serverless_external_connection
+        #   @return [::Google::Cloud::NetworkManagement::V1::ServerlessExternalConnectionInfo]
+        #     Display information of a serverless public (external) connection.
+        #
+        #     Note: The following fields are mutually exclusive: `serverless_external_connection`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] deliver
         #   @return [::Google::Cloud::NetworkManagement::V1::DeliverInfo]
         #     Display information of the final state "deliver" and reason.
+        #
+        #     Note: The following fields are mutually exclusive: `deliver`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] forward
         #   @return [::Google::Cloud::NetworkManagement::V1::ForwardInfo]
         #     Display information of the final state "forward" and reason.
+        #
+        #     Note: The following fields are mutually exclusive: `forward`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] abort
         #   @return [::Google::Cloud::NetworkManagement::V1::AbortInfo]
         #     Display information of the final state "abort" and reason.
+        #
+        #     Note: The following fields are mutually exclusive: `abort`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] drop
         #   @return [::Google::Cloud::NetworkManagement::V1::DropInfo]
         #     Display information of the final state "drop" and reason.
+        #
+        #     Note: The following fields are mutually exclusive: `drop`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] load_balancer
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Cloud::NetworkManagement::V1::LoadBalancerInfo]
-        #     Display information of the load balancers.
+        #     Display information of the load balancers. Deprecated in favor of the
+        #     `load_balancer_backend_info` field, not used in new tests.
+        #
+        #     Note: The following fields are mutually exclusive: `load_balancer`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] network
         #   @return [::Google::Cloud::NetworkManagement::V1::NetworkInfo]
         #     Display information of a Google Cloud network.
+        #
+        #     Note: The following fields are mutually exclusive: `network`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] gke_master
         #   @return [::Google::Cloud::NetworkManagement::V1::GKEMasterInfo]
         #     Display information of a Google Kubernetes Engine cluster master.
+        #
+        #     Note: The following fields are mutually exclusive: `gke_master`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] cloud_sql_instance
         #   @return [::Google::Cloud::NetworkManagement::V1::CloudSQLInstanceInfo]
         #     Display information of a Cloud SQL instance.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_sql_instance`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] redis_instance
+        #   @return [::Google::Cloud::NetworkManagement::V1::RedisInstanceInfo]
+        #     Display information of a Redis Instance.
+        #
+        #     Note: The following fields are mutually exclusive: `redis_instance`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] redis_cluster
+        #   @return [::Google::Cloud::NetworkManagement::V1::RedisClusterInfo]
+        #     Display information of a Redis Cluster.
+        #
+        #     Note: The following fields are mutually exclusive: `redis_cluster`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] cloud_function
+        #   @return [::Google::Cloud::NetworkManagement::V1::CloudFunctionInfo]
+        #     Display information of a Cloud Function.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_function`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] app_engine_version
+        #   @return [::Google::Cloud::NetworkManagement::V1::AppEngineVersionInfo]
+        #     Display information of an App Engine service version.
+        #
+        #     Note: The following fields are mutually exclusive: `app_engine_version`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] cloud_run_revision
+        #   @return [::Google::Cloud::NetworkManagement::V1::CloudRunRevisionInfo]
+        #     Display information of a Cloud Run revision.
+        #
+        #     Note: The following fields are mutually exclusive: `cloud_run_revision`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] nat
+        #   @return [::Google::Cloud::NetworkManagement::V1::NatInfo]
+        #     Display information of a NAT.
+        #
+        #     Note: The following fields are mutually exclusive: `nat`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] proxy_connection
+        #   @return [::Google::Cloud::NetworkManagement::V1::ProxyConnectionInfo]
+        #     Display information of a ProxyConnection.
+        #
+        #     Note: The following fields are mutually exclusive: `proxy_connection`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `load_balancer_backend_info`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] load_balancer_backend_info
+        #   @return [::Google::Cloud::NetworkManagement::V1::LoadBalancerBackendInfo]
+        #     Display information of a specific load balancer backend.
+        #
+        #     Note: The following fields are mutually exclusive: `load_balancer_backend_info`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `storage_bucket`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] storage_bucket
+        #   @return [::Google::Cloud::NetworkManagement::V1::StorageBucketInfo]
+        #     Display information of a Storage Bucket. Used only for return traces.
+        #
+        #     Note: The following fields are mutually exclusive: `storage_bucket`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `serverless_neg`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] serverless_neg
+        #   @return [::Google::Cloud::NetworkManagement::V1::ServerlessNegInfo]
+        #     Display information of a Serverless network endpoint group backend. Used
+        #     only for return traces.
+        #
+        #     Note: The following fields are mutually exclusive: `serverless_neg`, `instance`, `firewall`, `route`, `endpoint`, `google_service`, `forwarding_rule`, `vpn_gateway`, `vpn_tunnel`, `vpc_connector`, `direct_vpc_egress_connection`, `serverless_external_connection`, `deliver`, `forward`, `abort`, `drop`, `load_balancer`, `network`, `gke_master`, `cloud_sql_instance`, `redis_instance`, `redis_cluster`, `cloud_function`, `app_engine_version`, `cloud_run_revision`, `nat`, `proxy_connection`, `load_balancer_backend_info`, `storage_bucket`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Step
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -131,6 +239,10 @@ module Google
             # The endpoint information is populated.
             START_FROM_INTERNET = 2
 
+            # Initial state: packet originating from a Google service.
+            # The google_service information is populated.
+            START_FROM_GOOGLE_SERVICE = 27
+
             # Initial state: packet originating from a VPC or on-premises network
             # with internal source IP.
             # If the source is a VPC network visible to the user, a NetworkInfo
@@ -145,6 +257,40 @@ module Google
             # A CloudSQLInstanceInfo is populated with starting instance information.
             START_FROM_CLOUD_SQL_INSTANCE = 22
 
+            # Initial state: packet originating from a Redis instance.
+            # A RedisInstanceInfo is populated with starting instance information.
+            START_FROM_REDIS_INSTANCE = 32
+
+            # Initial state: packet originating from a Redis Cluster.
+            # A RedisClusterInfo is populated with starting Cluster information.
+            START_FROM_REDIS_CLUSTER = 33
+
+            # Initial state: packet originating from a Cloud Function.
+            # A CloudFunctionInfo is populated with starting function information.
+            START_FROM_CLOUD_FUNCTION = 23
+
+            # Initial state: packet originating from an App Engine service version.
+            # An AppEngineVersionInfo is populated with starting version information.
+            START_FROM_APP_ENGINE_VERSION = 25
+
+            # Initial state: packet originating from a Cloud Run revision.
+            # A CloudRunRevisionInfo is populated with starting revision information.
+            START_FROM_CLOUD_RUN_REVISION = 26
+
+            # Initial state: packet originating from a Storage Bucket. Used only for
+            # return traces.
+            # The storage_bucket information is populated.
+            START_FROM_STORAGE_BUCKET = 29
+
+            # Initial state: packet originating from a published service that uses
+            # Private Service Connect. Used only for return traces.
+            START_FROM_PSC_PUBLISHED_SERVICE = 30
+
+            # Initial state: packet originating from a serverless network endpoint
+            # group backend. Used only for return traces.
+            # The serverless_neg information is populated.
+            START_FROM_SERVERLESS_NEG = 31
+
             # Config checking state: verify ingress firewall rule.
             APPLY_INGRESS_FIREWALL_RULE = 4
 
@@ -157,6 +303,9 @@ module Google
             # Config checking state: match forwarding rule.
             APPLY_FORWARDING_RULE = 7
 
+            # Config checking state: verify load balancer backend configuration.
+            ANALYZE_LOAD_BALANCER_BACKEND = 28
+
             # Config checking state: packet sent or received under foreign IP
             # address and allowed.
             SPOOFING_APPROVED = 8
@@ -165,9 +314,13 @@ module Google
             ARRIVE_AT_INSTANCE = 9
 
             # Forwarding state: arriving at a Compute Engine internal load balancer.
+            # Deprecated in favor of the `ANALYZE_LOAD_BALANCER_BACKEND` state, not
+            # used in new tests.
             ARRIVE_AT_INTERNAL_LOAD_BALANCER = 10
 
             # Forwarding state: arriving at a Compute Engine external load balancer.
+            # Deprecated in favor of the `ANALYZE_LOAD_BALANCER_BACKEND` state, not
+            # used in new tests.
             ARRIVE_AT_EXTERNAL_LOAD_BALANCER = 11
 
             # Forwarding state: arriving at a Cloud VPN gateway.
@@ -175,6 +328,17 @@ module Google
 
             # Forwarding state: arriving at a Cloud VPN tunnel.
             ARRIVE_AT_VPN_TUNNEL = 13
+
+            # Forwarding state: arriving at a VPC connector.
+            ARRIVE_AT_VPC_CONNECTOR = 24
+
+            # Forwarding state: for packets originating from a serverless endpoint
+            # forwarded through Direct VPC egress.
+            DIRECT_VPC_EGRESS_CONNECTION = 35
+
+            # Forwarding state: for packets originating from a serverless endpoint
+            # forwarded through public (external) connectivity.
+            SERVERLESS_EXTERNAL_CONNECTION = 36
 
             # Transition state: packet header translated.
             NAT = 14
@@ -225,44 +389,55 @@ module Google
         #   @return [::Array<::String>]
         #     Network tags configured on the instance.
         # @!attribute [rw] service_account
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
         #     Service account authorized for the instance.
+        # @!attribute [rw] psc_network_attachment_uri
+        #   @return [::String]
+        #     URI of the PSC network attachment the NIC is attached to (if relevant).
         class InstanceInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # For display only. Metadata associated with a Compute Engine network.
+        # Next ID: 7
         # @!attribute [rw] display_name
         #   @return [::String]
         #     Name of a Compute Engine network.
         # @!attribute [rw] uri
         #   @return [::String]
         #     URI of a Compute Engine network.
+        # @!attribute [rw] matched_subnet_uri
+        #   @return [::String]
+        #     URI of the subnet matching the source IP address of the test.
         # @!attribute [rw] matched_ip_range
         #   @return [::String]
-        #     The IP range that matches the test.
+        #     The IP range of the subnet matching the source IP address of the test.
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     The region of the subnet matching the source IP address of the test.
         class NetworkInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # For display only. Metadata associated with a VPC firewall rule, an implied
-        # VPC firewall rule, or a hierarchical firewall policy rule.
+        # VPC firewall rule, or a firewall policy rule.
         # @!attribute [rw] display_name
         #   @return [::String]
-        #     The display name of the VPC firewall rule. This field is not applicable
-        #     to hierarchical firewall policy rules.
+        #     The display name of the firewall rule. This field might be empty for
+        #     firewall policy rules.
         # @!attribute [rw] uri
         #   @return [::String]
-        #     The URI of the VPC firewall rule. This field is not applicable to
-        #     implied firewall rules or hierarchical firewall policy rules.
+        #     The URI of the firewall rule. This field is not applicable to implied
+        #     VPC firewall rules.
         # @!attribute [rw] direction
         #   @return [::String]
         #     Possible values: INGRESS, EGRESS
         # @!attribute [rw] action
         #   @return [::String]
-        #     Possible values: ALLOW, DENY
+        #     Possible values: ALLOW, DENY, APPLY_SECURITY_PROFILE_GROUP
         # @!attribute [rw] priority
         #   @return [::Integer]
         #     The priority of the firewall rule.
@@ -273,14 +448,20 @@ module Google
         # @!attribute [rw] target_tags
         #   @return [::Array<::String>]
         #     The target tags defined by the VPC firewall rule. This field is not
-        #     applicable to hierarchical firewall policy rules.
+        #     applicable to firewall policy rules.
         # @!attribute [rw] target_service_accounts
         #   @return [::Array<::String>]
         #     The target service accounts specified by the firewall rule.
         # @!attribute [rw] policy
         #   @return [::String]
-        #     The hierarchical firewall policy that this rule is associated with.
-        #     This field is not applicable to VPC firewall rules.
+        #     The name of the firewall policy that this rule is associated with.
+        #     This field is not applicable to VPC firewall rules and implied VPC firewall
+        #     rules.
+        # @!attribute [rw] policy_uri
+        #   @return [::String]
+        #     The URI of the firewall policy that this rule is associated with.
+        #     This field is not applicable to VPC firewall rules and implied VPC firewall
+        #     rules.
         # @!attribute [rw] firewall_rule_type
         #   @return [::Google::Cloud::NetworkManagement::V1::FirewallInfo::FirewallRuleType]
         #     The firewall rule's type.
@@ -307,6 +488,38 @@ module Google
             # [Implied
             # rules](https://cloud.google.com/vpc/docs/firewalls#default_firewall_rules).
             IMPLIED_VPC_FIREWALL_RULE = 3
+
+            # Implicit firewall rules that are managed by serverless VPC access to
+            # allow ingress access. They are not visible in the Google Cloud console.
+            # For details, see [VPC connector's implicit
+            # rules](https://cloud.google.com/functions/docs/networking/connecting-vpc#restrict-access).
+            SERVERLESS_VPC_ACCESS_MANAGED_FIREWALL_RULE = 4
+
+            # Global network firewall policy rule.
+            # For details, see [Network firewall
+            # policies](https://cloud.google.com/vpc/docs/network-firewall-policies).
+            NETWORK_FIREWALL_POLICY_RULE = 5
+
+            # Regional network firewall policy rule.
+            # For details, see [Regional network firewall
+            # policies](https://cloud.google.com/firewall/docs/regional-firewall-policies).
+            NETWORK_REGIONAL_FIREWALL_POLICY_RULE = 6
+
+            # Firewall policy rule containing attributes not yet supported in
+            # Connectivity tests. Firewall analysis is skipped if such a rule can
+            # potentially be matched. Please see the [list of unsupported
+            # configurations](https://cloud.google.com/network-intelligence-center/docs/connectivity-tests/concepts/overview#unsupported-configs).
+            UNSUPPORTED_FIREWALL_POLICY_RULE = 100
+
+            # Tracking state for response traffic created when request traffic goes
+            # through allow firewall rule.
+            # For details, see [firewall rules
+            # specifications](https://cloud.google.com/firewall/docs/firewalls#specifications)
+            TRACKING_STATE = 101
+
+            # Firewall analysis was skipped due to executing Connectivity Test in the
+            # BypassFirewallChecks mode
+            ANALYSIS_SKIPPED = 102
           end
         end
 
@@ -317,30 +530,91 @@ module Google
         # @!attribute [rw] next_hop_type
         #   @return [::Google::Cloud::NetworkManagement::V1::RouteInfo::NextHopType]
         #     Type of next hop.
+        # @!attribute [rw] route_scope
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::Google::Cloud::NetworkManagement::V1::RouteInfo::RouteScope]
+        #     Indicates where route is applicable. Deprecated, routes with NCC_HUB scope
+        #     are not included in the trace in new tests.
         # @!attribute [rw] display_name
         #   @return [::String]
-        #     Name of a Compute Engine route.
+        #     Name of a route.
         # @!attribute [rw] uri
         #   @return [::String]
-        #     URI of a Compute Engine route.
-        #     Dynamic route from cloud router does not have a URI.
-        #     Advertised route from Google Cloud VPC to on-premises network also does
-        #     not have a URI.
+        #     URI of a route. SUBNET, STATIC, PEERING_SUBNET (only for peering network)
+        #     and POLICY_BASED routes only.
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Region of the route. DYNAMIC, PEERING_DYNAMIC, POLICY_BASED and ADVERTISED
+        #     routes only. If set for POLICY_BASED route, this is a region of VLAN
+        #     attachments for Cloud Interconnect the route applies to.
         # @!attribute [rw] dest_ip_range
         #   @return [::String]
         #     Destination IP range of the route.
         # @!attribute [rw] next_hop
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
-        #     Next hop of the route.
+        #     String type of the next hop of the route (for example, "VPN tunnel").
+        #     Deprecated in favor of the next_hop_type and next_hop_uri fields, not used
+        #     in new tests.
         # @!attribute [rw] network_uri
         #   @return [::String]
-        #     URI of a Compute Engine network.
+        #     URI of a VPC network where route is located.
         # @!attribute [rw] priority
         #   @return [::Integer]
         #     Priority of the route.
         # @!attribute [rw] instance_tags
         #   @return [::Array<::String>]
         #     Instance tags of the route.
+        # @!attribute [rw] src_ip_range
+        #   @return [::String]
+        #     Source IP address range of the route. POLICY_BASED routes only.
+        # @!attribute [rw] dest_port_ranges
+        #   @return [::Array<::String>]
+        #     Destination port ranges of the route. POLICY_BASED routes only.
+        # @!attribute [rw] src_port_ranges
+        #   @return [::Array<::String>]
+        #     Source port ranges of the route. POLICY_BASED routes only.
+        # @!attribute [rw] protocols
+        #   @return [::Array<::String>]
+        #     Protocols of the route. POLICY_BASED routes only.
+        # @!attribute [rw] ncc_hub_uri
+        #   @return [::String]
+        #     URI of the NCC Hub the route is advertised by. PEERING_SUBNET and
+        #     PEERING_DYNAMIC routes that are advertised by NCC Hub only.
+        # @!attribute [rw] ncc_spoke_uri
+        #   @return [::String]
+        #     URI of the destination NCC Spoke. PEERING_SUBNET and PEERING_DYNAMIC routes
+        #     that are advertised by NCC Hub only.
+        # @!attribute [rw] advertised_route_source_router_uri
+        #   @return [::String]
+        #     For ADVERTISED dynamic routes, the URI of the Cloud Router that advertised
+        #     the corresponding IP prefix.
+        # @!attribute [rw] advertised_route_next_hop_uri
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::String]
+        #     For ADVERTISED routes, the URI of their next hop, i.e. the URI of the
+        #     hybrid endpoint (VPN tunnel, Interconnect attachment, NCC router appliance)
+        #     the advertised prefix is advertised through, or URI of the source peered
+        #     network. Deprecated in favor of the next_hop_uri field, not used in new
+        #     tests.
+        # @!attribute [rw] next_hop_uri
+        #   @return [::String]
+        #     URI of the next hop resource.
+        # @!attribute [rw] next_hop_network_uri
+        #   @return [::String]
+        #     URI of a VPC network where the next hop resource is located.
+        # @!attribute [rw] originating_route_uri
+        #   @return [::String]
+        #     For PEERING_SUBNET and PEERING_STATIC routes, the URI of the originating
+        #     SUBNET/STATIC route.
+        # @!attribute [rw] originating_route_display_name
+        #   @return [::String]
+        #     For PEERING_SUBNET, PEERING_STATIC and PEERING_DYNAMIC routes, the name of
+        #     the originating SUBNET/STATIC/DYNAMIC route.
+        # @!attribute [rw] ncc_hub_route_uri
+        #   @return [::String]
+        #     For PEERING_SUBNET and PEERING_DYNAMIC routes that are advertised by NCC
+        #     Hub, the URI of the corresponding route in NCC Hub's routing table.
         class RouteInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -360,14 +634,21 @@ module Google
             # Dynamic route exchanged between BGP peers.
             DYNAMIC = 3
 
-            # A subnet route received from peering network.
+            # A subnet route received from peering network or NCC Hub.
             PEERING_SUBNET = 4
 
             # A static route received from peering network.
             PEERING_STATIC = 5
 
-            # A dynamic route received from peering network.
+            # A dynamic route received from peering network or NCC Hub.
             PEERING_DYNAMIC = 6
+
+            # Policy based route.
+            POLICY_BASED = 7
+
+            # Advertised route. Synthetic route which is used to transition from the
+            # StartFromPrivateNetwork state in Connectivity tests.
+            ADVERTISED = 101
           end
 
           # Type of next hop:
@@ -384,7 +665,9 @@ module Google
             # Next hop is a VPC network gateway.
             NEXT_HOP_NETWORK = 3
 
-            # Next hop is a peering VPC.
+            # Next hop is a peering VPC. This scenario only happens when the user
+            # doesn't have permissions to the project where the next hop resource is
+            # located.
             NEXT_HOP_PEERING = 4
 
             # Next hop is an interconnect.
@@ -403,27 +686,101 @@ module Google
             NEXT_HOP_INTERNET_GATEWAY = 8
 
             # Next hop is blackhole; that is, the next hop either does not exist or is
-            # not running.
+            # unusable.
             NEXT_HOP_BLACKHOLE = 9
 
             # Next hop is the forwarding rule of an Internal Load Balancer.
             NEXT_HOP_ILB = 10
+
+            # Next hop is a
+            # [router appliance
+            # instance](https://cloud.google.com/network-connectivity/docs/network-connectivity-center/concepts/ra-overview).
+            NEXT_HOP_ROUTER_APPLIANCE = 11
+
+            # Next hop is an NCC hub. This scenario only happens when the user doesn't
+            # have permissions to the project where the next hop resource is located.
+            NEXT_HOP_NCC_HUB = 12
+          end
+
+          # Indicates where routes are applicable.
+          module RouteScope
+            # Unspecified scope. Default value.
+            ROUTE_SCOPE_UNSPECIFIED = 0
+
+            # Route is applicable to packets in Network.
+            NETWORK = 1
+
+            # Route is applicable to packets using NCC Hub's routing table.
+            NCC_HUB = 2
+          end
+        end
+
+        # For display only. Details of a Google Service sending packets to a
+        # VPC network. Although the source IP might be a publicly routable address,
+        # some Google Services use special routes within Google production
+        # infrastructure to reach Compute Engine Instances.
+        # https://cloud.google.com/vpc/docs/routes#special_return_paths
+        # @!attribute [rw] source_ip
+        #   @return [::String]
+        #     Source IP address.
+        # @!attribute [rw] google_service_type
+        #   @return [::Google::Cloud::NetworkManagement::V1::GoogleServiceInfo::GoogleServiceType]
+        #     Recognized type of a Google Service.
+        class GoogleServiceInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Recognized type of a Google Service.
+          module GoogleServiceType
+            # Unspecified Google Service.
+            GOOGLE_SERVICE_TYPE_UNSPECIFIED = 0
+
+            # Identity aware proxy.
+            # https://cloud.google.com/iap/docs/using-tcp-forwarding
+            IAP = 1
+
+            # One of two services sharing IP ranges:
+            # * Load Balancer proxy
+            # * Centralized Health Check prober
+            # https://cloud.google.com/load-balancing/docs/firewall-rules
+            GFE_PROXY_OR_HEALTH_CHECK_PROBER = 2
+
+            # Connectivity from Cloud DNS to forwarding targets or alternate name
+            # servers that use private routing.
+            # https://cloud.google.com/dns/docs/zones/forwarding-zones#firewall-rules
+            # https://cloud.google.com/dns/docs/policies#firewall-rules
+            CLOUD_DNS = 3
+
+            # private.googleapis.com and restricted.googleapis.com
+            GOOGLE_API = 4
+
+            # Google API via Private Service Connect.
+            # https://cloud.google.com/vpc/docs/configure-private-service-connect-apis
+            GOOGLE_API_PSC = 5
+
+            # Google API via VPC Service Controls.
+            # https://cloud.google.com/vpc/docs/configure-private-service-connect-apis
+            GOOGLE_API_VPC_SC = 6
+
+            # Google API via Serverless VPC Access.
+            # https://cloud.google.com/vpc/docs/serverless-vpc-access
+            SERVERLESS_VPC_ACCESS = 7
           end
         end
 
         # For display only. Metadata associated with a Compute Engine forwarding rule.
         # @!attribute [rw] display_name
         #   @return [::String]
-        #     Name of a Compute Engine forwarding rule.
+        #     Name of the forwarding rule.
         # @!attribute [rw] uri
         #   @return [::String]
-        #     URI of a Compute Engine forwarding rule.
+        #     URI of the forwarding rule.
         # @!attribute [rw] matched_protocol
         #   @return [::String]
-        #     Protocol defined in the forwarding rule that matches the test.
+        #     Protocol defined in the forwarding rule that matches the packet.
         # @!attribute [rw] matched_port_range
         #   @return [::String]
-        #     Port range defined in the forwarding rule that matches the test.
+        #     Port range defined in the forwarding rule that matches the packet.
         # @!attribute [rw] vip
         #   @return [::String]
         #     VIP of the forwarding rule.
@@ -432,7 +789,21 @@ module Google
         #     Target type of the forwarding rule.
         # @!attribute [rw] network_uri
         #   @return [::String]
-        #     Network URI. Only valid for Internal Load Balancer.
+        #     Network URI.
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Region of the forwarding rule. Set only for regional forwarding rules.
+        # @!attribute [rw] load_balancer_name
+        #   @return [::String]
+        #     Name of the load balancer the forwarding rule belongs to. Empty for
+        #     forwarding rules not related to load balancers (like PSC forwarding rules).
+        # @!attribute [rw] psc_service_attachment_uri
+        #   @return [::String]
+        #     URI of the PSC service attachment this forwarding rule targets (if
+        #     applicable).
+        # @!attribute [rw] psc_google_api_target
+        #   @return [::String]
+        #     PSC Google API target this forwarding rule targets (if applicable).
         class ForwardingRuleInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -443,8 +814,11 @@ module Google
         #   @return [::Google::Cloud::NetworkManagement::V1::LoadBalancerInfo::LoadBalancerType]
         #     Type of the load balancer.
         # @!attribute [rw] health_check_uri
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
-        #     URI of the health check for the load balancer.
+        #     URI of the health check for the load balancer. Deprecated and no longer
+        #     populated as different load balancer backends might have different health
+        #     checks.
         # @!attribute [rw] backends
         #   @return [::Array<::Google::Cloud::NetworkManagement::V1::LoadBalancerBackend>]
         #     Information for the loadbalancer backends.
@@ -489,6 +863,9 @@ module Google
 
             # Target Pool as the load balancer's backend.
             TARGET_POOL = 2
+
+            # Target Instance as the load balancer's backend.
+            TARGET_INSTANCE = 3
           end
         end
 
@@ -629,6 +1006,9 @@ module Google
         # @!attribute [rw] destination_network_uri
         #   @return [::String]
         #     URI of the network where this packet is sent to.
+        # @!attribute [rw] source_agent_uri
+        #   @return [::String]
+        #     URI of the source telemetry agent this packet originates from.
         class EndpointInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -641,6 +1021,16 @@ module Google
         # @!attribute [rw] resource_uri
         #   @return [::String]
         #     URI of the resource that the packet is delivered to.
+        # @!attribute [rw] ip_address
+        #   @return [::String]
+        #     IP address of the target (if applicable).
+        # @!attribute [rw] storage_bucket
+        #   @return [::String]
+        #     Name of the Cloud Storage Bucket the packet is delivered to (if
+        #     applicable).
+        # @!attribute [rw] psc_google_api_target
+        #   @return [::String]
+        #     PSC Google API target the packet is delivered to (if applicable).
         class DeliverInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -664,6 +1054,45 @@ module Google
 
             # Target is a Cloud SQL instance.
             CLOUD_SQL_INSTANCE = 5
+
+            # Target is a published service that uses [Private Service
+            # Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-services).
+            PSC_PUBLISHED_SERVICE = 6
+
+            # Target is Google APIs that use [Private Service
+            # Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-apis).
+            PSC_GOOGLE_API = 7
+
+            # Target is a VPC-SC that uses [Private Service
+            # Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-apis).
+            PSC_VPC_SC = 8
+
+            # Target is a serverless network endpoint group.
+            SERVERLESS_NEG = 9
+
+            # Target is a Cloud Storage bucket.
+            STORAGE_BUCKET = 10
+
+            # Target is a private network. Used only for return traces.
+            PRIVATE_NETWORK = 11
+
+            # Target is a Cloud Function. Used only for return traces.
+            CLOUD_FUNCTION = 12
+
+            # Target is a App Engine service version. Used only for return traces.
+            APP_ENGINE_VERSION = 13
+
+            # Target is a Cloud Run revision. Used only for return traces.
+            CLOUD_RUN_REVISION = 14
+
+            # Target is a Google-managed service. Used only for return traces.
+            GOOGLE_MANAGED_SERVICE = 15
+
+            # Target is a Redis Instance.
+            REDIS_INSTANCE = 16
+
+            # Target is a Redis Cluster.
+            REDIS_CLUSTER = 17
           end
         end
 
@@ -674,6 +1103,9 @@ module Google
         # @!attribute [rw] resource_uri
         #   @return [::String]
         #     URI of the resource that the packet is forwarded to.
+        # @!attribute [rw] ip_address
+        #   @return [::String]
+        #     IP address of the target (if applicable).
         class ForwardInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -700,6 +1132,15 @@ module Google
 
             # Forwarded to a Cloud SQL instance.
             CLOUD_SQL_INSTANCE = 6
+
+            # Forwarded to a VPC network in another project.
+            ANOTHER_PROJECT = 7
+
+            # Forwarded to an NCC Hub.
+            NCC_HUB = 8
+
+            # Forwarded to a router appliance.
+            ROUTER_APPLIANCE = 9
           end
         end
 
@@ -710,6 +1151,13 @@ module Google
         # @!attribute [rw] resource_uri
         #   @return [::String]
         #     URI of the resource that caused the abort.
+        # @!attribute [rw] ip_address
+        #   @return [::String]
+        #     IP address that caused the abort.
+        # @!attribute [rw] projects_missing_permission
+        #   @return [::Array<::String>]
+        #     List of project IDs the user specified in the request but lacks access to.
+        #     In this case, analysis is aborted with the PERMISSION_DENIED cause.
         class AbortInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -719,62 +1167,146 @@ module Google
             # Cause is unspecified.
             CAUSE_UNSPECIFIED = 0
 
-            # Aborted due to unknown network.
-            # The reachability analysis cannot proceed because the user does not have
-            # access to the host project's network configurations, including firewall
-            # rules and routes. This happens when the project is a service project and
-            # the endpoints being traced are in the host project's network.
+            # Aborted due to unknown network. Deprecated, not used in the new tests.
             UNKNOWN_NETWORK = 1
 
-            # Aborted because the IP address(es) are unknown.
-            UNKNOWN_IP = 2
-
             # Aborted because no project information can be derived from the test
-            # input.
+            # input. Deprecated, not used in the new tests.
             UNKNOWN_PROJECT = 3
 
-            # Aborted because the user lacks the permission to access all or part of
-            # the network configurations required to run the test.
-            PERMISSION_DENIED = 4
-
-            # Aborted because no valid source endpoint is derived from the input test
-            # request.
-            NO_SOURCE_LOCATION = 5
-
-            # Aborted because the source and/or destination endpoint specified in
-            # the test are invalid. The possible reasons that an endpoint is
-            # invalid include: malformed IP address; nonexistent instance or
-            # network URI; IP address not in the range of specified network URI; and
-            # instance not owning the network interface in the specified network.
-            INVALID_ARGUMENT = 6
-
             # Aborted because traffic is sent from a public IP to an instance without
-            # an external IP.
+            # an external IP. Deprecated, not used in the new tests.
             NO_EXTERNAL_IP = 7
 
             # Aborted because none of the traces matches destination information
-            # specified in the input test request.
+            # specified in the input test request. Deprecated, not used in the new
+            # tests.
             UNINTENDED_DESTINATION = 8
 
-            # Aborted because the number of steps in the trace exceeding a certain
-            # limit which may be caused by routing loop.
+            # Aborted because the source endpoint could not be found. Deprecated, not
+            # used in the new tests.
+            SOURCE_ENDPOINT_NOT_FOUND = 11
+
+            # Aborted because the source network does not match the source endpoint.
+            # Deprecated, not used in the new tests.
+            MISMATCHED_SOURCE_NETWORK = 12
+
+            # Aborted because the destination endpoint could not be found. Deprecated,
+            # not used in the new tests.
+            DESTINATION_ENDPOINT_NOT_FOUND = 13
+
+            # Aborted because the destination network does not match the destination
+            # endpoint. Deprecated, not used in the new tests.
+            MISMATCHED_DESTINATION_NETWORK = 14
+
+            # Aborted because no endpoint with the packet's destination IP address is
+            # found.
+            UNKNOWN_IP = 2
+
+            # Aborted because no endpoint with the packet's destination IP is found in
+            # the Google-managed project.
+            GOOGLE_MANAGED_SERVICE_UNKNOWN_IP = 32
+
+            # Aborted because the source IP address doesn't belong to any of the
+            # subnets of the source VPC network.
+            SOURCE_IP_ADDRESS_NOT_IN_SOURCE_NETWORK = 23
+
+            # Aborted because user lacks permission to access all or part of the
+            # network configurations required to run the test.
+            PERMISSION_DENIED = 4
+
+            # Aborted because user lacks permission to access Cloud NAT configs
+            # required to run the test.
+            PERMISSION_DENIED_NO_CLOUD_NAT_CONFIGS = 28
+
+            # Aborted because user lacks permission to access Network endpoint group
+            # endpoint configs required to run the test.
+            PERMISSION_DENIED_NO_NEG_ENDPOINT_CONFIGS = 29
+
+            # Aborted because user lacks permission to access Cloud Router configs
+            # required to run the test.
+            PERMISSION_DENIED_NO_CLOUD_ROUTER_CONFIGS = 36
+
+            # Aborted because no valid source or destination endpoint is derived from
+            # the input test request.
+            NO_SOURCE_LOCATION = 5
+
+            # Aborted because the source or destination endpoint specified in
+            # the request is invalid. Some examples:
+            # - The request might contain malformed resource URI, project ID, or IP
+            # address.
+            # - The request might contain inconsistent information (for example, the
+            # request might include both the instance and the network, but the instance
+            # might not have a NIC in that network).
+            INVALID_ARGUMENT = 6
+
+            # Aborted because the number of steps in the trace exceeds a certain
+            # limit. It might be caused by a routing loop.
             TRACE_TOO_LONG = 9
 
             # Aborted due to internal server error.
             INTERNAL_ERROR = 10
 
-            # Aborted because the source endpoint could not be found.
-            SOURCE_ENDPOINT_NOT_FOUND = 11
+            # Aborted because the test scenario is not supported.
+            UNSUPPORTED = 15
 
-            # Aborted because the source network does not match the source endpoint.
-            MISMATCHED_SOURCE_NETWORK = 12
+            # Aborted because the source and destination resources have no common IP
+            # version.
+            MISMATCHED_IP_VERSION = 16
 
-            # Aborted because the destination endpoint could not be found.
-            DESTINATION_ENDPOINT_NOT_FOUND = 13
+            # Aborted because the connection between the control plane and the node of
+            # the source cluster is initiated by the node and managed by the
+            # Konnectivity proxy.
+            GKE_KONNECTIVITY_PROXY_UNSUPPORTED = 17
 
-            # Aborted because the destination network does not match the destination
-            # endpoint.
-            MISMATCHED_DESTINATION_NETWORK = 14
+            # Aborted because expected resource configuration was missing.
+            RESOURCE_CONFIG_NOT_FOUND = 18
+
+            # Aborted because expected VM instance configuration was missing.
+            VM_INSTANCE_CONFIG_NOT_FOUND = 24
+
+            # Aborted because expected network configuration was missing.
+            NETWORK_CONFIG_NOT_FOUND = 25
+
+            # Aborted because expected firewall configuration was missing.
+            FIREWALL_CONFIG_NOT_FOUND = 26
+
+            # Aborted because expected route configuration was missing.
+            ROUTE_CONFIG_NOT_FOUND = 27
+
+            # Aborted because a PSC endpoint selection for the Google-managed service
+            # is ambiguous (several PSC endpoints satisfy test input).
+            GOOGLE_MANAGED_SERVICE_AMBIGUOUS_PSC_ENDPOINT = 19
+
+            # Aborted because tests with a PSC-based Cloud SQL instance as a source are
+            # not supported.
+            SOURCE_PSC_CLOUD_SQL_UNSUPPORTED = 20
+
+            # Aborted because tests with a Redis Cluster as a source are not supported.
+            SOURCE_REDIS_CLUSTER_UNSUPPORTED = 34
+
+            # Aborted because tests with a Redis Instance as a source are not
+            # supported.
+            SOURCE_REDIS_INSTANCE_UNSUPPORTED = 35
+
+            # Aborted because tests with a forwarding rule as a source are not
+            # supported.
+            SOURCE_FORWARDING_RULE_UNSUPPORTED = 21
+
+            # Aborted because one of the endpoints is a non-routable IP address
+            # (loopback, link-local, etc).
+            NON_ROUTABLE_IP_ADDRESS = 22
+
+            # Aborted due to an unknown issue in the Google-managed project.
+            UNKNOWN_ISSUE_IN_GOOGLE_MANAGED_PROJECT = 30
+
+            # Aborted due to an unsupported configuration of the Google-managed
+            # project.
+            UNSUPPORTED_GOOGLE_MANAGED_PROJECT_CONFIG = 31
+
+            # Aborted because the source endpoint is a Cloud Run revision with direct
+            # VPC access enabled, but there are no reserved serverless IP ranges.
+            NO_SERVERLESS_IP_RANGES = 37
           end
         end
 
@@ -785,6 +1317,15 @@ module Google
         # @!attribute [rw] resource_uri
         #   @return [::String]
         #     URI of the resource that caused the drop.
+        # @!attribute [rw] source_ip
+        #   @return [::String]
+        #     Source IP address of the dropped packet (if relevant).
+        # @!attribute [rw] destination_ip
+        #   @return [::String]
+        #     Destination IP address of the dropped packet (if relevant).
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Region of the dropped packet (if relevant).
         class DropInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -807,7 +1348,7 @@ module Google
             # tracking.
             FIREWALL_RULE = 3
 
-            # Dropped due to no routes.
+            # Dropped due to no matching routes.
             NO_ROUTE = 4
 
             # Dropped due to invalid route. Route's next hop is a blackhole.
@@ -815,21 +1356,56 @@ module Google
 
             # Packet is sent to a wrong (unintended) network. Example: you trace a
             # packet from VM1:Network1 to VM2:Network2, however, the route configured
-            # in Network1 sends the packet destined for VM2's IP addresss to Network3.
+            # in Network1 sends the packet destined for VM2's IP address to Network3.
             ROUTE_WRONG_NETWORK = 6
+
+            # Route's next hop IP address cannot be resolved to a GCP resource.
+            ROUTE_NEXT_HOP_IP_ADDRESS_NOT_RESOLVED = 42
+
+            # Route's next hop resource is not found.
+            ROUTE_NEXT_HOP_RESOURCE_NOT_FOUND = 43
+
+            # Route's next hop instance doesn't have a NIC in the route's network.
+            ROUTE_NEXT_HOP_INSTANCE_WRONG_NETWORK = 49
+
+            # Route's next hop IP address is not a primary IP address of the next hop
+            # instance.
+            ROUTE_NEXT_HOP_INSTANCE_NON_PRIMARY_IP = 50
+
+            # Route's next hop forwarding rule doesn't match next hop IP address.
+            ROUTE_NEXT_HOP_FORWARDING_RULE_IP_MISMATCH = 51
+
+            # Route's next hop VPN tunnel is down (does not have valid IKE SAs).
+            ROUTE_NEXT_HOP_VPN_TUNNEL_NOT_ESTABLISHED = 52
+
+            # Route's next hop forwarding rule type is invalid (it's not a forwarding
+            # rule of the internal passthrough load balancer).
+            ROUTE_NEXT_HOP_FORWARDING_RULE_TYPE_INVALID = 53
+
+            # Packet is sent from the Internet to the private IPv6 address.
+            NO_ROUTE_FROM_INTERNET_TO_PRIVATE_IPV6_ADDRESS = 44
+
+            # The packet does not match a policy-based VPN tunnel local selector.
+            VPN_TUNNEL_LOCAL_SELECTOR_MISMATCH = 45
+
+            # The packet does not match a policy-based VPN tunnel remote selector.
+            VPN_TUNNEL_REMOTE_SELECTOR_MISMATCH = 46
 
             # Packet with internal destination address sent to the internet gateway.
             PRIVATE_TRAFFIC_TO_INTERNET = 7
 
             # Instance with only an internal IP address tries to access Google API and
-            # services, but private Google access is not enabled.
+            # services, but private Google access is not enabled in the subnet.
             PRIVATE_GOOGLE_ACCESS_DISALLOWED = 8
+
+            # Source endpoint tries to access Google API and services through the VPN
+            # tunnel to another network, but Private Google Access needs to be enabled
+            # in the source endpoint network.
+            PRIVATE_GOOGLE_ACCESS_VIA_VPN_TUNNEL_UNSUPPORTED = 47
 
             # Instance with only an internal IP address tries to access external hosts,
             # but Cloud NAT is not enabled in the subnet, unless special configurations
-            # on a VM allow this connection. For more details, see [Special
-            # configurations for VM
-            # instances](https://cloud.google.com/vpc/docs/special-configurations).
+            # on a VM allow this connection.
             NO_EXTERNAL_ADDRESS = 9
 
             # Destination internal address cannot be resolved to a known target. If
@@ -850,9 +1426,26 @@ module Google
             # rules](https://cloud.google.com/load-balancing/docs/health-checks#firewall_rules).
             FIREWALL_BLOCKING_LOAD_BALANCER_BACKEND_HEALTH_CHECK = 13
 
+            # Matching ingress firewall rules by network tags for packets sent via
+            # serverless VPC direct egress is unsupported. Behavior is undefined.
+            # https://cloud.google.com/run/docs/configuring/vpc-direct-vpc#limitations
+            INGRESS_FIREWALL_TAGS_UNSUPPORTED_BY_DIRECT_VPC_EGRESS = 85
+
             # Packet is sent from or to a Compute Engine instance that is not in a
             # running state.
             INSTANCE_NOT_RUNNING = 14
+
+            # Packet sent from or to a GKE cluster that is not in running state.
+            GKE_CLUSTER_NOT_RUNNING = 27
+
+            # Packet sent from or to a Cloud SQL instance that is not in running state.
+            CLOUD_SQL_INSTANCE_NOT_RUNNING = 28
+
+            # Packet sent from or to a Redis Instance that is not in running state.
+            REDIS_INSTANCE_NOT_RUNNING = 68
+
+            # Packet sent from or to a Redis Cluster that is not in running state.
+            REDIS_CLUSTER_NOT_RUNNING = 69
 
             # The type of traffic is blocked and the user cannot configure a firewall
             # rule to enable it. See [Always blocked
@@ -882,9 +1475,211 @@ module Google
             # network and the Google Managed Services Network.
             GOOGLE_MANAGED_SERVICE_NO_PEERING = 20
 
+            # Packet was dropped because the Google-managed service uses Private
+            # Service Connect (PSC), but the PSC endpoint is not found in the project.
+            GOOGLE_MANAGED_SERVICE_NO_PSC_ENDPOINT = 38
+
+            # Packet was dropped because the GKE cluster uses Private Service Connect
+            # (PSC), but the PSC endpoint is not found in the project.
+            GKE_PSC_ENDPOINT_MISSING = 36
+
             # Packet was dropped because the Cloud SQL instance has neither a private
             # nor a public IP address.
             CLOUD_SQL_INSTANCE_NO_IP_ADDRESS = 21
+
+            # Packet was dropped because a GKE cluster private endpoint is
+            # unreachable from a region different from the cluster's region.
+            GKE_CONTROL_PLANE_REGION_MISMATCH = 30
+
+            # Packet sent from a public GKE cluster control plane to a private
+            # IP address.
+            PUBLIC_GKE_CONTROL_PLANE_TO_PRIVATE_DESTINATION = 31
+
+            # Packet was dropped because there is no route from a GKE cluster
+            # control plane to a destination network.
+            GKE_CONTROL_PLANE_NO_ROUTE = 32
+
+            # Packet sent from a Cloud SQL instance to an external IP address is not
+            # allowed. The Cloud SQL instance is not configured to send packets to
+            # external IP addresses.
+            CLOUD_SQL_INSTANCE_NOT_CONFIGURED_FOR_EXTERNAL_TRAFFIC = 33
+
+            # Packet sent from a Cloud SQL instance with only a public IP address to a
+            # private IP address.
+            PUBLIC_CLOUD_SQL_INSTANCE_TO_PRIVATE_DESTINATION = 34
+
+            # Packet was dropped because there is no route from a Cloud SQL
+            # instance to a destination network.
+            CLOUD_SQL_INSTANCE_NO_ROUTE = 35
+
+            # Packet was dropped because the Cloud SQL instance requires all
+            # connections to use Cloud SQL connectors and to target the Cloud SQL proxy
+            # port (3307).
+            CLOUD_SQL_CONNECTOR_REQUIRED = 63
+
+            # Packet could be dropped because the Cloud Function is not in an active
+            # status.
+            CLOUD_FUNCTION_NOT_ACTIVE = 22
+
+            # Packet could be dropped because no VPC connector is set.
+            VPC_CONNECTOR_NOT_SET = 23
+
+            # Packet could be dropped because the VPC connector is not in a running
+            # state.
+            VPC_CONNECTOR_NOT_RUNNING = 24
+
+            # Packet could be dropped because the traffic from the serverless service
+            # to the VPC connector is not allowed.
+            VPC_CONNECTOR_SERVERLESS_TRAFFIC_BLOCKED = 60
+
+            # Packet could be dropped because the health check traffic to the VPC
+            # connector is not allowed.
+            VPC_CONNECTOR_HEALTH_CHECK_TRAFFIC_BLOCKED = 61
+
+            # Packet could be dropped because it was sent from a different region
+            # to a regional forwarding without global access.
+            FORWARDING_RULE_REGION_MISMATCH = 25
+
+            # The Private Service Connect endpoint is in a project that is not approved
+            # to connect to the service.
+            PSC_CONNECTION_NOT_ACCEPTED = 26
+
+            # The packet is sent to the Private Service Connect endpoint over the
+            # peering, but [it's not
+            # supported](https://cloud.google.com/vpc/docs/configure-private-service-connect-services#on-premises).
+            PSC_ENDPOINT_ACCESSED_FROM_PEERED_NETWORK = 41
+
+            # The packet is sent to the Private Service Connect backend (network
+            # endpoint group), but the producer PSC forwarding rule does not have
+            # global access enabled.
+            PSC_NEG_PRODUCER_ENDPOINT_NO_GLOBAL_ACCESS = 48
+
+            # The packet is sent to the Private Service Connect backend (network
+            # endpoint group), but the producer PSC forwarding rule has multiple ports
+            # specified.
+            PSC_NEG_PRODUCER_FORWARDING_RULE_MULTIPLE_PORTS = 54
+
+            # The packet is sent to the Private Service Connect backend (network
+            # endpoint group) targeting a Cloud SQL service attachment, but this
+            # configuration is not supported.
+            CLOUD_SQL_PSC_NEG_UNSUPPORTED = 58
+
+            # No NAT subnets are defined for the PSC service attachment.
+            NO_NAT_SUBNETS_FOR_PSC_SERVICE_ATTACHMENT = 57
+
+            # PSC endpoint is accessed via NCC, but PSC transitivity configuration is
+            # not yet propagated.
+            PSC_TRANSITIVITY_NOT_PROPAGATED = 64
+
+            # The packet sent from the hybrid NEG proxy matches a non-dynamic route,
+            # but such a configuration is not supported.
+            HYBRID_NEG_NON_DYNAMIC_ROUTE_MATCHED = 55
+
+            # The packet sent from the hybrid NEG proxy matches a dynamic route with a
+            # next hop in a different region, but such a configuration is not
+            # supported.
+            HYBRID_NEG_NON_LOCAL_DYNAMIC_ROUTE_MATCHED = 56
+
+            # Packet sent from a Cloud Run revision that is not ready.
+            CLOUD_RUN_REVISION_NOT_READY = 29
+
+            # Packet was dropped inside Private Service Connect service producer.
+            DROPPED_INSIDE_PSC_SERVICE_PRODUCER = 37
+
+            # Packet sent to a load balancer, which requires a proxy-only subnet and
+            # the subnet is not found.
+            LOAD_BALANCER_HAS_NO_PROXY_SUBNET = 39
+
+            # Packet sent to Cloud Nat without active NAT IPs.
+            CLOUD_NAT_NO_ADDRESSES = 40
+
+            # Packet is stuck in a routing loop.
+            ROUTING_LOOP = 59
+
+            # Packet is dropped inside a Google-managed service due to being delivered
+            # in return trace to an endpoint that doesn't match the endpoint the packet
+            # was sent from in forward trace. Used only for return traces.
+            DROPPED_INSIDE_GOOGLE_MANAGED_SERVICE = 62
+
+            # Packet is dropped due to a load balancer backend instance not having a
+            # network interface in the network expected by the load balancer.
+            LOAD_BALANCER_BACKEND_INVALID_NETWORK = 65
+
+            # Packet is dropped due to a backend service named port not being defined
+            # on the instance group level.
+            BACKEND_SERVICE_NAMED_PORT_NOT_DEFINED = 66
+
+            # Packet is dropped due to a destination IP range being part of a Private
+            # NAT IP range.
+            DESTINATION_IS_PRIVATE_NAT_IP_RANGE = 67
+
+            # Generic drop cause for a packet being dropped inside a Redis Instance
+            # service project.
+            DROPPED_INSIDE_REDIS_INSTANCE_SERVICE = 70
+
+            # Packet is dropped due to an unsupported port being used to connect to a
+            # Redis Instance. Port 6379 should be used to connect to a Redis Instance.
+            REDIS_INSTANCE_UNSUPPORTED_PORT = 71
+
+            # Packet is dropped due to connecting from PUPI address to a PSA based
+            # Redis Instance.
+            REDIS_INSTANCE_CONNECTING_FROM_PUPI_ADDRESS = 72
+
+            # Packet is dropped due to no route to the destination network.
+            REDIS_INSTANCE_NO_ROUTE_TO_DESTINATION_NETWORK = 73
+
+            # Redis Instance does not have an external IP address.
+            REDIS_INSTANCE_NO_EXTERNAL_IP = 74
+
+            # Packet is dropped due to an unsupported protocol being used to connect to
+            # a Redis Instance. Only TCP connections are accepted by a Redis Instance.
+            REDIS_INSTANCE_UNSUPPORTED_PROTOCOL = 78
+
+            # Generic drop cause for a packet being dropped inside a Redis Cluster
+            # service project.
+            DROPPED_INSIDE_REDIS_CLUSTER_SERVICE = 75
+
+            # Packet is dropped due to an unsupported port being used to connect to a
+            # Redis Cluster. Ports 6379 and 11000 to 13047 should be used to connect to
+            # a Redis Cluster.
+            REDIS_CLUSTER_UNSUPPORTED_PORT = 76
+
+            # Redis Cluster does not have an external IP address.
+            REDIS_CLUSTER_NO_EXTERNAL_IP = 77
+
+            # Packet is dropped due to an unsupported protocol being used to connect to
+            # a Redis Cluster. Only TCP connections are accepted by a Redis Cluster.
+            REDIS_CLUSTER_UNSUPPORTED_PROTOCOL = 79
+
+            # Packet from the non-GCP (on-prem) or unknown GCP network is dropped due
+            # to the destination IP address not belonging to any IP prefix advertised
+            # via BGP by the Cloud Router.
+            NO_ADVERTISED_ROUTE_TO_GCP_DESTINATION = 80
+
+            # Packet from the non-GCP (on-prem) or unknown GCP network is dropped due
+            # to the destination IP address not belonging to any IP prefix included to
+            # the local traffic selector of the VPN tunnel.
+            NO_TRAFFIC_SELECTOR_TO_GCP_DESTINATION = 81
+
+            # Packet from the unknown peered network is dropped due to no known route
+            # from the source network to the destination IP address.
+            NO_KNOWN_ROUTE_FROM_PEERED_NETWORK_TO_DESTINATION = 82
+
+            # Sending packets processed by the Private NAT Gateways to the Private
+            # Service Connect endpoints is not supported.
+            PRIVATE_NAT_TO_PSC_ENDPOINT_UNSUPPORTED = 83
+
+            # Packet is sent to the PSC port mapping service, but its destination port
+            # does not match any port mapping rules.
+            PSC_PORT_MAPPING_PORT_MISMATCH = 86
+
+            # Sending packets directly to the PSC port mapping service without going
+            # through the PSC connection is not supported.
+            PSC_PORT_MAPPING_WITHOUT_PSC_CONNECTION_UNSUPPORTED = 87
+
+            # Packet with destination IP address within the reserved NAT64 range is
+            # dropped due to matching a route of an unsupported type.
+            UNSUPPORTED_ROUTE_MATCHED_FOR_NAT64_DESTINATION = 88
           end
         end
 
@@ -898,10 +1693,13 @@ module Google
         #     URI of a GKE cluster network.
         # @!attribute [rw] internal_ip
         #   @return [::String]
-        #     Internal IP address of a GKE cluster master.
+        #     Internal IP address of a GKE cluster control plane.
         # @!attribute [rw] external_ip
         #   @return [::String]
-        #     External IP address of a GKE cluster master.
+        #     External IP address of a GKE cluster control plane.
+        # @!attribute [rw] dns_endpoint
+        #   @return [::String]
+        #     DNS endpoint of a GKE cluster control plane.
         class GKEMasterInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -930,6 +1728,393 @@ module Google
         class CloudSQLInstanceInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a Cloud Redis Instance.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of a Cloud Redis Instance.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of a Cloud Redis Instance.
+        # @!attribute [rw] network_uri
+        #   @return [::String]
+        #     URI of a Cloud Redis Instance network.
+        # @!attribute [rw] primary_endpoint_ip
+        #   @return [::String]
+        #     Primary endpoint IP address of a Cloud Redis Instance.
+        # @!attribute [rw] read_endpoint_ip
+        #   @return [::String]
+        #     Read endpoint IP address of a Cloud Redis Instance (if applicable).
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Region in which the Cloud Redis Instance is defined.
+        class RedisInstanceInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a Redis Cluster.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of a Redis Cluster.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of a Redis Cluster in format
+        #     "projects/\\{project_id}/locations/\\{location}/clusters/\\{cluster_id}"
+        # @!attribute [rw] network_uri
+        #   @return [::String]
+        #     URI of the network containing the Redis Cluster endpoints in format
+        #     "projects/\\{project_id}/global/networks/\\{network_id}".
+        # @!attribute [rw] discovery_endpoint_ip_address
+        #   @return [::String]
+        #     Discovery endpoint IP address of a Redis Cluster.
+        # @!attribute [rw] secondary_endpoint_ip_address
+        #   @return [::String]
+        #     Secondary endpoint IP address of a Redis Cluster.
+        # @!attribute [rw] location
+        #   @return [::String]
+        #     Name of the region in which the Redis Cluster is defined. For example,
+        #     "us-central1".
+        class RedisClusterInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a Cloud Function.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of a Cloud Function.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of a Cloud Function.
+        # @!attribute [rw] location
+        #   @return [::String]
+        #     Location in which the Cloud Function is deployed.
+        # @!attribute [rw] version_id
+        #   @return [::Integer]
+        #     Latest successfully deployed version id of the Cloud Function.
+        class CloudFunctionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a Cloud Run revision.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of a Cloud Run revision.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of a Cloud Run revision.
+        # @!attribute [rw] location
+        #   @return [::String]
+        #     Location in which this revision is deployed.
+        # @!attribute [rw] service_uri
+        #   @return [::String]
+        #     URI of Cloud Run service this revision belongs to.
+        class CloudRunRevisionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with an App Engine version.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of an App Engine version.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of an App Engine version.
+        # @!attribute [rw] runtime
+        #   @return [::String]
+        #     Runtime of the App Engine version.
+        # @!attribute [rw] environment
+        #   @return [::String]
+        #     App Engine execution environment for a version.
+        class AppEngineVersionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a VPC connector.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Name of a VPC connector.
+        # @!attribute [rw] uri
+        #   @return [::String]
+        #     URI of a VPC connector.
+        # @!attribute [rw] location
+        #   @return [::String]
+        #     Location in which the VPC connector is deployed.
+        class VpcConnectorInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a serverless direct VPC egress
+        # connection.
+        # @!attribute [rw] network_uri
+        #   @return [::String]
+        #     URI of direct access network.
+        # @!attribute [rw] subnetwork_uri
+        #   @return [::String]
+        #     URI of direct access subnetwork.
+        # @!attribute [rw] selected_ip_range
+        #   @return [::String]
+        #     Selected IP range.
+        # @!attribute [rw] selected_ip_address
+        #   @return [::String]
+        #     Selected starting IP address, from the selected IP range.
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Region in which the Direct VPC egress is deployed.
+        class DirectVpcEgressConnectionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with a serverless public connection.
+        # @!attribute [rw] selected_ip_address
+        #   @return [::String]
+        #     Selected starting IP address, from the Google dynamic address pool.
+        class ServerlessExternalConnectionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with NAT.
+        # @!attribute [rw] type
+        #   @return [::Google::Cloud::NetworkManagement::V1::NatInfo::Type]
+        #     Type of NAT.
+        # @!attribute [rw] protocol
+        #   @return [::String]
+        #     IP protocol in string format, for example: "TCP", "UDP", "ICMP".
+        # @!attribute [rw] network_uri
+        #   @return [::String]
+        #     URI of the network where NAT translation takes place.
+        # @!attribute [rw] old_source_ip
+        #   @return [::String]
+        #     Source IP address before NAT translation.
+        # @!attribute [rw] new_source_ip
+        #   @return [::String]
+        #     Source IP address after NAT translation.
+        # @!attribute [rw] old_destination_ip
+        #   @return [::String]
+        #     Destination IP address before NAT translation.
+        # @!attribute [rw] new_destination_ip
+        #   @return [::String]
+        #     Destination IP address after NAT translation.
+        # @!attribute [rw] old_source_port
+        #   @return [::Integer]
+        #     Source port before NAT translation. Only valid when protocol is TCP or UDP.
+        # @!attribute [rw] new_source_port
+        #   @return [::Integer]
+        #     Source port after NAT translation. Only valid when protocol is TCP or UDP.
+        # @!attribute [rw] old_destination_port
+        #   @return [::Integer]
+        #     Destination port before NAT translation. Only valid when protocol is TCP or
+        #     UDP.
+        # @!attribute [rw] new_destination_port
+        #   @return [::Integer]
+        #     Destination port after NAT translation. Only valid when protocol is TCP or
+        #     UDP.
+        # @!attribute [rw] router_uri
+        #   @return [::String]
+        #     Uri of the Cloud Router. Only valid when type is CLOUD_NAT.
+        # @!attribute [rw] nat_gateway_name
+        #   @return [::String]
+        #     The name of Cloud NAT Gateway. Only valid when type is CLOUD_NAT.
+        class NatInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Types of NAT.
+          module Type
+            # Type is unspecified.
+            TYPE_UNSPECIFIED = 0
+
+            # From Compute Engine instance's internal address to external address.
+            INTERNAL_TO_EXTERNAL = 1
+
+            # From Compute Engine instance's external address to internal address.
+            EXTERNAL_TO_INTERNAL = 2
+
+            # Cloud NAT Gateway.
+            CLOUD_NAT = 3
+
+            # Private service connect NAT.
+            PRIVATE_SERVICE_CONNECT = 4
+          end
+        end
+
+        # For display only. Metadata associated with ProxyConnection.
+        # @!attribute [rw] protocol
+        #   @return [::String]
+        #     IP protocol in string format, for example: "TCP", "UDP", "ICMP".
+        # @!attribute [rw] old_source_ip
+        #   @return [::String]
+        #     Source IP address of an original connection.
+        # @!attribute [rw] new_source_ip
+        #   @return [::String]
+        #     Source IP address of a new connection.
+        # @!attribute [rw] old_destination_ip
+        #   @return [::String]
+        #     Destination IP address of an original connection
+        # @!attribute [rw] new_destination_ip
+        #   @return [::String]
+        #     Destination IP address of a new connection.
+        # @!attribute [rw] old_source_port
+        #   @return [::Integer]
+        #     Source port of an original connection. Only valid when protocol is TCP or
+        #     UDP.
+        # @!attribute [rw] new_source_port
+        #   @return [::Integer]
+        #     Source port of a new connection. Only valid when protocol is TCP or UDP.
+        # @!attribute [rw] old_destination_port
+        #   @return [::Integer]
+        #     Destination port of an original connection. Only valid when protocol is TCP
+        #     or UDP.
+        # @!attribute [rw] new_destination_port
+        #   @return [::Integer]
+        #     Destination port of a new connection. Only valid when protocol is TCP or
+        #     UDP.
+        # @!attribute [rw] subnet_uri
+        #   @return [::String]
+        #     Uri of proxy subnet.
+        # @!attribute [rw] network_uri
+        #   @return [::String]
+        #     URI of the network where connection is proxied.
+        class ProxyConnectionInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with the load balancer backend.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Display name of the backend. For example, it might be an instance name for
+        #     the instance group backends, or an IP address and port for zonal network
+        #     endpoint group backends.
+        # @!attribute [rw] instance_uri
+        #   @return [::String]
+        #     URI of the backend instance (if applicable). Populated for instance group
+        #     backends, and zonal NEG backends.
+        # @!attribute [rw] backend_service_uri
+        #   @return [::String]
+        #     URI of the backend service this backend belongs to (if applicable).
+        # @!attribute [rw] instance_group_uri
+        #   @return [::String]
+        #     URI of the instance group this backend belongs to (if applicable).
+        # @!attribute [rw] network_endpoint_group_uri
+        #   @return [::String]
+        #     URI of the network endpoint group this backend belongs to (if applicable).
+        # @!attribute [rw] backend_bucket_uri
+        #   @return [::String]
+        #     URI of the backend bucket this backend targets (if applicable).
+        # @!attribute [rw] psc_service_attachment_uri
+        #   @return [::String]
+        #     URI of the PSC service attachment this PSC NEG backend targets (if
+        #     applicable).
+        # @!attribute [rw] psc_google_api_target
+        #   @return [::String]
+        #     PSC Google API target this PSC NEG backend targets (if applicable).
+        # @!attribute [rw] health_check_uri
+        #   @return [::String]
+        #     URI of the health check attached to this backend (if applicable).
+        # @!attribute [r] health_check_firewalls_config_state
+        #   @return [::Google::Cloud::NetworkManagement::V1::LoadBalancerBackendInfo::HealthCheckFirewallsConfigState]
+        #     Output only. Health check firewalls configuration state for the backend.
+        #     This is a result of the static firewall analysis (verifying that health
+        #     check traffic from required IP ranges to the backend is allowed or not).
+        #     The backend might still be unhealthy even if these firewalls are
+        #     configured. Please refer to the documentation for more information:
+        #     https://cloud.google.com/load-balancing/docs/firewall-rules
+        class LoadBalancerBackendInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Health check firewalls configuration state enum.
+          module HealthCheckFirewallsConfigState
+            # Configuration state unspecified. It usually means that the backend has
+            # no health check attached, or there was an unexpected configuration error
+            # preventing Connectivity tests from verifying health check configuration.
+            HEALTH_CHECK_FIREWALLS_CONFIG_STATE_UNSPECIFIED = 0
+
+            # Firewall rules (policies) allowing health check traffic from all required
+            # IP ranges to the backend are configured.
+            FIREWALLS_CONFIGURED = 1
+
+            # Firewall rules (policies) allow health check traffic only from a part of
+            # required IP ranges.
+            FIREWALLS_PARTIALLY_CONFIGURED = 2
+
+            # Firewall rules (policies) deny health check traffic from all required
+            # IP ranges to the backend.
+            FIREWALLS_NOT_CONFIGURED = 3
+
+            # The network contains firewall rules of unsupported types, so Connectivity
+            # tests were not able to verify health check configuration status. Please
+            # refer to the documentation for the list of unsupported configurations:
+            # https://cloud.google.com/network-intelligence-center/docs/connectivity-tests/concepts/overview#unsupported-configs
+            FIREWALLS_UNSUPPORTED = 4
+          end
+        end
+
+        # For display only. Metadata associated with Storage Bucket.
+        # @!attribute [rw] bucket
+        #   @return [::String]
+        #     Cloud Storage Bucket name.
+        class StorageBucketInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # For display only. Metadata associated with the serverless network endpoint
+        # group backend.
+        # @!attribute [rw] neg_uri
+        #   @return [::String]
+        #     URI of the serverless network endpoint group.
+        class ServerlessNegInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Type of a load balancer. For more information, see [Summary of Google Cloud
+        # load
+        # balancers](https://cloud.google.com/load-balancing/docs/load-balancing-overview#summary-of-google-cloud-load-balancers).
+        module LoadBalancerType
+          # Forwarding rule points to a different target than a load balancer or a
+          # load balancer type is unknown.
+          LOAD_BALANCER_TYPE_UNSPECIFIED = 0
+
+          # Global external HTTP(S) load balancer.
+          HTTPS_ADVANCED_LOAD_BALANCER = 1
+
+          # Global external HTTP(S) load balancer (classic)
+          HTTPS_LOAD_BALANCER = 2
+
+          # Regional external HTTP(S) load balancer.
+          REGIONAL_HTTPS_LOAD_BALANCER = 3
+
+          # Internal HTTP(S) load balancer.
+          INTERNAL_HTTPS_LOAD_BALANCER = 4
+
+          # External SSL proxy load balancer.
+          SSL_PROXY_LOAD_BALANCER = 5
+
+          # External TCP proxy load balancer.
+          TCP_PROXY_LOAD_BALANCER = 6
+
+          # Internal regional TCP proxy load balancer.
+          INTERNAL_TCP_PROXY_LOAD_BALANCER = 7
+
+          # External TCP/UDP Network load balancer.
+          NETWORK_LOAD_BALANCER = 8
+
+          # Target-pool based external TCP/UDP Network load balancer.
+          LEGACY_NETWORK_LOAD_BALANCER = 9
+
+          # Internal TCP/UDP load balancer.
+          TCP_UDP_INTERNAL_LOAD_BALANCER = 10
         end
       end
     end

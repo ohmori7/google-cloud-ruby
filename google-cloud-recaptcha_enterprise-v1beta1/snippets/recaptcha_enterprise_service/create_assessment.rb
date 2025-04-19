@@ -19,15 +19,29 @@
 # [START recaptchaenterprise_v1beta1_generated_RecaptchaEnterpriseService_CreateAssessment_sync]
 require "google/cloud/recaptcha_enterprise/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::RecaptchaEnterprise::V1beta1::RecaptchaEnterpriseService::Client.new
+##
+# Snippet for the create_assessment call in the RecaptchaEnterpriseService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::RecaptchaEnterprise::V1beta1::RecaptchaEnterpriseService::Client#create_assessment.
+#
+def create_assessment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::RecaptchaEnterprise::V1beta1::RecaptchaEnterpriseService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::RecaptchaEnterprise::V1beta1::CreateAssessmentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::RecaptchaEnterprise::V1beta1::CreateAssessmentRequest.new
 
-# Call the create_assessment method.
-result = client.create_assessment request
+  # Call the create_assessment method.
+  result = client.create_assessment request
 
-# The returned object is of type Google::Cloud::RecaptchaEnterprise::V1beta1::Assessment.
-p result
+  # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1beta1::Assessment.
+  p result
+end
 # [END recaptchaenterprise_v1beta1_generated_RecaptchaEnterpriseService_CreateAssessment_sync]

@@ -29,10 +29,14 @@ module Google
         #   @return [::Google::Cloud::DataCatalog::V1::ViewSpec]
         #     Table view specification. Populated only if
         #     the `table_source_type` is `BIGQUERY_VIEW`.
+        #
+        #     Note: The following fields are mutually exclusive: `view_spec`, `table_spec`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] table_spec
         #   @return [::Google::Cloud::DataCatalog::V1::TableSpec]
         #     Specification of a BigQuery table. Populated only if
         #     the `table_source_type` is `BIGQUERY_TABLE`.
+        #
+        #     Note: The following fields are mutually exclusive: `table_spec`, `view_spec`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class BigQueryTableSpec
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -50,9 +54,9 @@ module Google
         # Normal BigQuery table specification.
         # @!attribute [r] grouped_entry
         #   @return [::String]
-        #     Output only. If the table is date-sharded, that is, it matches the `[prefix]YYYYMMDD`
-        #     name pattern, this field is the Data Catalog resource name of the
-        #     date-sharded grouped entry. For example:
+        #     Output only. If the table is date-sharded, that is, it matches the
+        #     `[prefix]YYYYMMDD` name pattern, this field is the Data Catalog resource
+        #     name of the date-sharded grouped entry. For example:
         #
         #     `projects/{PROJECT_ID}/locations/{LOCATION}/entrygroups/{ENTRY_GROUP_ID}/entries/{ENTRY_ID}`.
         #
@@ -69,8 +73,8 @@ module Google
         # (https://cloud.google.com/bigquery/docs/partitioned-tables#partitioning_versus_sharding).
         # @!attribute [r] dataset
         #   @return [::String]
-        #     Output only. The Data Catalog resource name of the dataset entry the current table
-        #     belongs to. For example:
+        #     Output only. The Data Catalog resource name of the dataset entry the
+        #     current table belongs to. For example:
         #
         #     `projects/{PROJECT_ID}/locations/{LOCATION}/entrygroups/{ENTRY_GROUP_ID}/entries/{ENTRY_ID}`.
         # @!attribute [r] table_prefix

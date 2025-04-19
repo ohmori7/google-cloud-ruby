@@ -172,7 +172,7 @@ module Google
         #   schema.param_types
         #
         def param_types
-          Hash[fields.map { |field| [field.name.to_sym, field.param_type] }]
+          fields.to_h { |field| [field.name.to_sym, field.param_type] }
         end
 
         ##
@@ -300,14 +300,31 @@ module Google
         #   At most 1 policy tag is currently allowed.
         # @param [Integer] max_length The maximum UTF-8 length of strings
         #   allowed in the field.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def string name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil
-          add_field name,
-                    :string,
+        def string name, description: nil, mode: :nullable, policy_tags: nil,
+                   max_length: nil, default_value_expression: nil
+          add_field name, :string,
                     description: description,
                     mode: mode,
                     policy_tags: policy_tags,
-                    max_length: max_length
+                    max_length: max_length,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -325,9 +342,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def integer name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :integer, description: description, mode: mode, policy_tags: policy_tags
+        def integer name, description: nil, mode: :nullable,
+                    policy_tags: nil, default_value_expression: nil
+          add_field name, :integer,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -345,9 +383,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def float name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :float, description: description, mode: mode, policy_tags: policy_tags
+        def float name, description: nil, mode: :nullable,
+                  policy_tags: nil, default_value_expression: nil
+          add_field name, :float,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -386,15 +445,32 @@ module Google
         #   must be: `1 ≤ (precision - scale) ≤ 29`. Values for scale must
         #   be: `0 ≤ scale ≤ 9`. If the scale value is set, the precision
         #   value must be set as well.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def numeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil
-          add_field name,
-                    :numeric,
+        def numeric name, description: nil, mode: :nullable, policy_tags: nil,
+                    precision: nil, scale: nil, default_value_expression: nil
+          add_field name, :numeric,
                     description: description,
                     mode: mode,
                     policy_tags: policy_tags,
                     precision: precision,
-                    scale: scale
+                    scale: scale,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -433,15 +509,32 @@ module Google
         #   must be: `1 ≤ (precision - scale) ≤ 38`. Values for scale must
         #   be: `0 ≤ scale ≤ 38`. If the scale value is set, the precision
         #   value must be set as well.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def bignumeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil
-          add_field name,
-                    :bignumeric,
+        def bignumeric name, description: nil, mode: :nullable, policy_tags: nil,
+                       precision: nil, scale: nil, default_value_expression: nil
+          add_field name, :bignumeric,
                     description: description,
                     mode: mode,
                     policy_tags: policy_tags,
                     precision: precision,
-                    scale: scale
+                    scale: scale,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -459,9 +552,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def boolean name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :boolean, description: description, mode: mode, policy_tags: policy_tags
+        def boolean name, description: nil, mode: :nullable, policy_tags: nil,
+                    default_value_expression: nil
+          add_field name, :boolean,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -481,9 +595,31 @@ module Google
         #   At most 1 policy tag is currently allowed.
         # @param [Integer] max_length The maximum the maximum number of
         #   bytes in the field.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def bytes name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil
-          add_field name, :bytes, description: description, mode: mode, policy_tags: policy_tags, max_length: max_length
+        def bytes name, description: nil, mode: :nullable,
+                  policy_tags: nil, max_length: nil, default_value_expression: nil
+          add_field name, :bytes,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    max_length: max_length,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -501,9 +637,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def timestamp name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :timestamp, description: description, mode: mode, policy_tags: policy_tags
+        def timestamp name, description: nil, mode: :nullable,
+                      policy_tags: nil, default_value_expression: nil
+          add_field name, :timestamp,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -521,9 +678,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def time name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :time, description: description, mode: mode, policy_tags: policy_tags
+        def time name, description: nil, mode: :nullable,
+                 policy_tags: nil, default_value_expression: nil
+          add_field name, :time,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -541,9 +719,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def datetime name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :datetime, description: description, mode: mode, policy_tags: policy_tags
+        def datetime name, description: nil, mode: :nullable,
+                     policy_tags: nil, default_value_expression: nil
+          add_field name, :datetime,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -561,9 +760,30 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def date name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :date, description: description, mode: mode, policy_tags: policy_tags
+        def date name, description: nil, mode: :nullable,
+                 policy_tags: nil, default_value_expression: nil
+          add_field name, :date,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -583,9 +803,73 @@ module Google
         #   single policy tag for the field. Policy tag identifiers are of
         #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
         #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
         #
-        def geography name, description: nil, mode: :nullable, policy_tags: nil
-          add_field name, :geography, description: description, mode: mode, policy_tags: policy_tags
+        def geography name, description: nil, mode: :nullable,
+                      policy_tags: nil, default_value_expression: nil
+          add_field name, :geography,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
+        end
+
+        ##
+        # Adds a JSON field to the schema.
+        #
+        # @see https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#json_type
+        #
+        # @param [String] name The field name. The name must contain only
+        #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
+        #   start with a letter or underscore. The maximum length is 128
+        #   characters.
+        # @param [String] description A description of the field.
+        # @param [Symbol] mode The field's mode. The possible values are
+        #   `:nullable`, `:required`, and `:repeated`. The default value is
+        #   `:nullable`.
+        # @param [Array<String>, String] policy_tags The policy tag list or
+        #   single policy tag for the field. Policy tag identifiers are of
+        #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
+        #   At most 1 policy tag is currently allowed.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
+        #
+        def json name, description: nil, mode: :nullable,
+                 policy_tags: nil, default_value_expression: nil
+          add_field name, :json,
+                    description: description,
+                    mode: mode,
+                    policy_tags: policy_tags,
+                    default_value_expression: default_value_expression
         end
 
         ##
@@ -603,6 +887,23 @@ module Google
         # @param [Symbol] mode The field's mode. The possible values are
         #   `:nullable`, `:required`, and `:repeated`. The default value is
         #   `:nullable`.
+        # @param default_value_expression [String] The default value of a field
+        #   using a SQL expression. It can only be set for top level fields (columns).
+        #   Use a struct or array expression to specify default value for the entire struct or
+        #   array. The valid SQL expressions are:
+        #     - Literals for all data types, including STRUCT and ARRAY.
+        #     - The following functions:
+        #         `CURRENT_TIMESTAMP`
+        #         `CURRENT_TIME`
+        #         `CURRENT_DATE`
+        #         `CURRENT_DATETIME`
+        #         `GENERATE_UUID`
+        #         `RAND`
+        #         `SESSION_USER`
+        #         `ST_GEOPOINT`
+        #     - Struct or array composed with the above allowed functions, for example:
+        #         "[CURRENT_DATE(), DATE '2020-01-01'"]
+        #
         # @yield [field] a block for setting the nested record's schema
         # @yieldparam [Field] field the object accepting the
         #   nested schema
@@ -622,11 +923,15 @@ module Google
         #     end
         #   end
         #
-        def record name, description: nil, mode: nil
+        def record name, description: nil, mode: nil,
+                   default_value_expression: nil
           # TODO: do we need to raise if no block was given?
           raise ArgumentError, "a block is required" unless block_given?
 
-          nested_field = add_field name, :record, description: description, mode: mode
+          nested_field = add_field name, :record,
+                                   description: description,
+                                   mode: mode,
+                                   default_value_expression: default_value_expression
           yield nested_field
           nested_field
         end
@@ -675,7 +980,8 @@ module Google
                       policy_tags: nil,
                       max_length: nil,
                       precision: nil,
-                      scale: nil
+                      scale: nil,
+                      default_value_expression: nil
           frozen_check!
 
           new_gapi = Google::Apis::BigqueryV2::TableFieldSchema.new(
@@ -692,6 +998,7 @@ module Google
           new_gapi.max_length = max_length if max_length
           new_gapi.precision = precision if precision
           new_gapi.scale = scale if scale
+          new_gapi.default_value_expression = default_value_expression if default_value_expression
           # Remove any existing field of this name
           @gapi.fields ||= []
           @gapi.fields.reject! { |f| f.name == new_gapi.name }

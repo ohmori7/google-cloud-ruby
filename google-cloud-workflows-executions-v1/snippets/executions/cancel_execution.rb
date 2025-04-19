@@ -19,15 +19,29 @@
 # [START workflowexecutions_v1_generated_Executions_CancelExecution_sync]
 require "google/cloud/workflows/executions/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Workflows::Executions::V1::Executions::Client.new
+##
+# Snippet for the cancel_execution call in the Executions service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Workflows::Executions::V1::Executions::Client#cancel_execution.
+#
+def cancel_execution
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Workflows::Executions::V1::Executions::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Workflows::Executions::V1::CancelExecutionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Workflows::Executions::V1::CancelExecutionRequest.new
 
-# Call the cancel_execution method.
-result = client.cancel_execution request
+  # Call the cancel_execution method.
+  result = client.cancel_execution request
 
-# The returned object is of type Google::Cloud::Workflows::Executions::V1::Execution.
-p result
+  # The returned object is of type Google::Cloud::Workflows::Executions::V1::Execution.
+  p result
+end
 # [END workflowexecutions_v1_generated_Executions_CancelExecution_sync]

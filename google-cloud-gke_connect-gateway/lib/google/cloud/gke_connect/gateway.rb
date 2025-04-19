@@ -29,16 +29,16 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :gke_connect_gateway do |config|
-  config.add_field! :endpoint,      "connectgateway.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
   config.add_field! :lib_version,   nil, match: ::String
-  config.add_field! :interceptors,  nil, match: ::Array
   config.add_field! :timeout,       nil, match: ::Numeric
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -46,37 +46,66 @@ module Google
     module GkeConnect
       module Gateway
         ##
-        # Create a new client object for GatewayService.
+        # Create a new client object for GatewayControl.
         #
         # By default, this returns an instance of
-        # [Google::Cloud::GkeConnect::Gateway::V1beta1::GatewayService::Client](https://googleapis.dev/ruby/google-cloud-gke_connect-gateway-v1beta1/latest/Google/Cloud/GkeConnect/Gateway/V1beta1/GatewayService/Client.html)
-        # for version V1beta1 of the API.
-        # However, you can specify specify a different API version by passing it in the
-        # `version` parameter. If the GatewayService service is
+        # [Google::Cloud::GkeConnect::Gateway::V1::GatewayControl::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-gke_connect-gateway-v1/latest/Google-Cloud-GkeConnect-Gateway-V1-GatewayControl-Rest-Client)
+        # for a REST client for version V1 of the API.
+        # However, you can specify a different API version by passing it in the
+        # `version` parameter. If the GatewayControl service is
         # supported by that API version, and the corresponding gem is available, the
         # appropriate versioned client will be returned.
         #
-        # ## About GatewayService
+        # Raises an exception if the currently installed versioned client gem for the
+        # given API version does not support the GatewayControl service.
+        # You can determine whether the method will succeed by calling
+        # {Google::Cloud::GkeConnect::Gateway.gateway_control_available?}.
         #
-        # Gateway service is a public API which works as a Kubernetes resource model
-        # proxy between end users and registered Kubernetes clusters. Each RPC in this
-        # service matches with an HTTP verb. End user will initiate kubectl commands
-        # against the Gateway service, and Gateway service will forward user requests
-        # to clusters.
+        # ## About GatewayControl
+        #
+        # GatewayControl is the control plane API for Connect Gateway.
         #
         # @param version [::String, ::Symbol] The API version to connect to. Optional.
-        #   Defaults to `:v1beta1`.
-        # @return [GatewayService::Client] A client object for the specified version.
+        #   Defaults to `:v1`.
+        # @return [::Object] A client object for the specified version.
         #
-        def self.gateway_service version: :v1beta1, &block
+        def self.gateway_control version: :v1, &block
           require "google/cloud/gke_connect/gateway/#{version.to_s.downcase}"
 
           package_name = Google::Cloud::GkeConnect::Gateway
                          .constants
                          .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                          .first
-          package_module = Google::Cloud::GkeConnect::Gateway.const_get package_name
-          package_module.const_get(:GatewayService).const_get(:Client).new(&block)
+          service_module = Google::Cloud::GkeConnect::Gateway.const_get(package_name).const_get(:GatewayControl)
+          service_module.const_get(:Rest).const_get(:Client).new(&block)
+        end
+
+        ##
+        # Determines whether the GatewayControl service is supported by the current client.
+        # If true, you can retrieve a client object by calling {Google::Cloud::GkeConnect::Gateway.gateway_control}.
+        # If false, that method will raise an exception. This could happen if the given
+        # API version does not exist or does not support the GatewayControl service,
+        # or if the versioned client gem needs an update to support the GatewayControl service.
+        #
+        # @param version [::String, ::Symbol] The API version to connect to. Optional.
+        #   Defaults to `:v1`.
+        # @return [boolean] Whether the service is available.
+        #
+        def self.gateway_control_available? version: :v1
+          require "google/cloud/gke_connect/gateway/#{version.to_s.downcase}"
+          package_name = Google::Cloud::GkeConnect::Gateway
+                         .constants
+                         .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                         .first
+          return false unless package_name
+          service_module = Google::Cloud::GkeConnect::Gateway.const_get package_name
+          return false unless service_module.const_defined? :GatewayControl
+          service_module = service_module.const_get :GatewayControl
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+          service_module.const_defined? :Client
+        rescue ::LoadError
+          false
         end
 
         ##
@@ -91,12 +120,10 @@ module Google
         #   The library name as recorded in instrumentation and logging.
         # * `lib_version` (*type:* `String`) -
         #   The library version as recorded in instrumentation and logging.
-        # * `interceptors` (*type:* `Array<GRPC::ClientInterceptor>`) -
-        #   An array of interceptors that are run before calls are executed.
         # * `timeout` (*type:* `Numeric`) -
         #   Default timeout in seconds.
         # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-        #   Additional gRPC headers to be sent with the call.
+        #   Additional headers to be sent with the call.
         # * `retry_policy` (*type:* `Hash`) -
         #   The retry policy. The value is a hash with the following keys:
         #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

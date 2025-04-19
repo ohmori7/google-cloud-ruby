@@ -22,7 +22,7 @@ module Google
     module Bigtable
       module Admin
         module V2
-          VERSION = "0.8.1"
+          VERSION = "1.8.0"
         end
       end
     end

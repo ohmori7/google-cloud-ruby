@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/network_security"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::NetworkSecurity::ClientConstructionMinitest < Minitest::Test
-  def test_network_security
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_network_security_grpc
+    skip unless Google::Cloud::NetworkSecurity.network_security_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::NetworkSecurity.network_security do |config|
+      client = Google::Cloud::NetworkSecurity.network_security transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client, client
+    end
+  end
+
+  def test_network_security_rest
+    skip unless Google::Cloud::NetworkSecurity.network_security_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::NetworkSecurity.network_security transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Rest::Client, client
     end
   end
 end

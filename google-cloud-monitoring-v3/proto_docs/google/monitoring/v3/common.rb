@@ -25,53 +25,73 @@ module Google
         # @!attribute [rw] bool_value
         #   @return [::Boolean]
         #     A Boolean value: `true` or `false`.
+        #
+        #     Note: The following fields are mutually exclusive: `bool_value`, `int64_value`, `double_value`, `string_value`, `distribution_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] int64_value
         #   @return [::Integer]
         #     A 64-bit integer. Its range is approximately &plusmn;9.2x10<sup>18</sup>.
+        #
+        #     Note: The following fields are mutually exclusive: `int64_value`, `bool_value`, `double_value`, `string_value`, `distribution_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] double_value
         #   @return [::Float]
         #     A 64-bit double-precision floating-point number. Its magnitude
         #     is approximately &plusmn;10<sup>&plusmn;300</sup> and it has 16
         #     significant digits of precision.
+        #
+        #     Note: The following fields are mutually exclusive: `double_value`, `bool_value`, `int64_value`, `string_value`, `distribution_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] string_value
         #   @return [::String]
         #     A variable-length string value.
+        #
+        #     Note: The following fields are mutually exclusive: `string_value`, `bool_value`, `int64_value`, `double_value`, `distribution_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] distribution_value
         #   @return [::Google::Api::Distribution]
         #     A distribution value.
+        #
+        #     Note: The following fields are mutually exclusive: `distribution_value`, `bool_value`, `int64_value`, `double_value`, `string_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class TypedValue
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # A closed time interval. It extends from the start time to the end time, and includes both: `[startTime, endTime]`. Valid time intervals depend on the [`MetricKind`](https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors#MetricKind) of the metric value. The end time must not be earlier than the start time. When writing data points, the start time must not be more than 25 hours in the past and the end time must not be more than five minutes in the future.
+        # Describes a time interval:
         #
-        # * For `GAUGE` metrics, the `startTime` value is technically optional; if
-        #   no value is specified, the start time defaults to the value of the
-        #   end time, and the interval represents a single point in time. If both
-        #   start and end times are specified, they must be identical. Such an
-        #   interval is valid only for `GAUGE` metrics, which are point-in-time
-        #   measurements. The end time of a new interval must be at least a
-        #   millisecond after the end time of the previous interval.
-        #
-        # * For `DELTA` metrics, the start time and end time must specify a
-        #   non-zero interval, with subsequent points specifying contiguous and
-        #   non-overlapping intervals. For `DELTA` metrics, the start time of
-        #   the next interval must be at least a millisecond after the end time
-        #   of the previous interval.
-        #
-        # * For `CUMULATIVE` metrics, the start time and end time must specify a
-        #   non-zero interval, with subsequent points specifying the same
-        #   start time and increasing end times, until an event resets the
-        #   cumulative value to zero and sets a new start time for the following
-        #   points. The new start time must be at least a millisecond after the
-        #   end time of the previous interval.
-        #
-        # * The start time of a new interval must be at least a millisecond after the
-        #   end time of the previous interval because intervals are closed. If the
-        #   start time of a new interval is the same as the end time of the previous
-        #   interval, then data written at the new start time could overwrite data
-        #   written at the previous end time.
+        #   * Reads: A half-open time interval. It includes the end time but
+        #     excludes the start time: `(startTime, endTime]`. The start time
+        #     must be specified, must be earlier than the end time, and should be
+        #     no older than the data retention period for the metric.
+        #   * Writes: A closed time interval. It extends from the start time to the end
+        #   time,
+        #     and includes both: `[startTime, endTime]`. Valid time intervals
+        #     depend on the
+        #     [`MetricKind`](https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors#MetricKind)
+        #     of the metric value. The end time must not be earlier than the start
+        #     time, and the end time must not be more than 25 hours in the past or more
+        #     than five minutes in the future.
+        #     * For `GAUGE` metrics, the `startTime` value is technically optional; if
+        #       no value is specified, the start time defaults to the value of the
+        #       end time, and the interval represents a single point in time. If both
+        #       start and end times are specified, they must be identical. Such an
+        #       interval is valid only for `GAUGE` metrics, which are point-in-time
+        #       measurements. The end time of a new interval must be at least a
+        #       millisecond after the end time of the previous interval.
+        #     * For `DELTA` metrics, the start time and end time must specify a
+        #       non-zero interval, with subsequent points specifying contiguous and
+        #       non-overlapping intervals. For `DELTA` metrics, the start time of
+        #       the next interval must be at least a millisecond after the end time
+        #       of the previous interval.
+        #     * For `CUMULATIVE` metrics, the start time and end time must specify a
+        #       non-zero interval, with subsequent points specifying the same
+        #       start time and increasing end times, until an event resets the
+        #       cumulative value to zero and sets a new start time for the following
+        #       points. The new start time must be at least a millisecond after the
+        #       end time of the previous interval.
+        #     * The start time of a new interval must be at least a millisecond after
+        #     the
+        #       end time of the previous interval because intervals are closed. If the
+        #       start time of a new interval is the same as the end time of the
+        #       previous interval, then data written at the new start time could
+        #       overwrite data written at the previous end time.
         # @!attribute [rw] end_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Required. The end of the time interval.
@@ -460,26 +480,27 @@ module Google
           COMPARISON_NE = 6
         end
 
-        # The tier of service for a Workspace. Please see the
+        # The tier of service for a Metrics Scope. Please see the
         # [service tiers
         # documentation](https://cloud.google.com/monitoring/workspaces/tiers) for more
         # details.
+        # @deprecated This enum is deprecated and may be removed in the next major version update.
         module ServiceTier
           # An invalid sentinel value, used to indicate that a tier has not
           # been provided explicitly.
           SERVICE_TIER_UNSPECIFIED = 0
 
-          # The Stackdriver Basic tier, a free tier of service that provides basic
+          # The Cloud Monitoring Basic tier, a free tier of service that provides basic
           # features, a moderate allotment of logs, and access to built-in metrics.
           # A number of features are not available in this tier. For more details,
           # see [the service tiers
           # documentation](https://cloud.google.com/monitoring/workspaces/tiers).
           SERVICE_TIER_BASIC = 1
 
-          # The Stackdriver Premium tier, a higher, more expensive tier of service
-          # that provides access to all Stackdriver features, lets you use Stackdriver
-          # with AWS accounts, and has a larger allotments for logs and metrics. For
-          # more details, see [the service tiers
+          # The Cloud Monitoring Premium tier, a higher, more expensive tier of service
+          # that provides access to all Cloud Monitoring features, lets you use Cloud
+          # Monitoring with AWS accounts, and has a larger allotments for logs and
+          # metrics. For more details, see [the service tiers
           # documentation](https://cloud.google.com/monitoring/workspaces/tiers).
           SERVICE_TIER_PREMIUM = 2
         end

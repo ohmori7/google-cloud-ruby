@@ -44,6 +44,48 @@ module Google
             end
 
             ##
+            # Create a fully-qualified CryptoKey resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param key_ring [String]
+            # @param crypto_key [String]
+            #
+            # @return [::String]
+            def crypto_key_path project:, location:, key_ring:, crypto_key:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "key_ring cannot contain /" if key_ring.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/keyRings/#{key_ring}/cryptoKeys/#{crypto_key}"
+            end
+
+            ##
+            # Create a fully-qualified NodeGroup resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/regions/{region}/clusters/{cluster}/nodeGroups/{node_group}`
+            #
+            # @param project [String]
+            # @param region [String]
+            # @param cluster [String]
+            # @param node_group [String]
+            #
+            # @return [::String]
+            def node_group_path project:, region:, cluster:, node_group:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "region cannot contain /" if region.to_s.include? "/"
+              raise ::ArgumentError, "cluster cannot contain /" if cluster.to_s.include? "/"
+
+              "projects/#{project}/regions/#{region}/clusters/#{cluster}/nodeGroups/#{node_group}"
+            end
+
+            ##
             # Create a fully-qualified Service resource string.
             #
             # The resource will be in the following format:

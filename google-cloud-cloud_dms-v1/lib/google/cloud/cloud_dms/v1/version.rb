@@ -21,7 +21,7 @@ module Google
   module Cloud
     module CloudDMS
       module V1
-        VERSION = "0.1.5"
+        VERSION = "1.2.1"
       end
     end
   end

@@ -1,5 +1,53 @@
 # Release History
 
+### 2.0.0 (2025-02-13)
+
+### ⚠ BREAKING CHANGES
+
+* Removed dependency on google-cloud-vision-v1p3beta1 prerelease service ([#28999](https://github.com/googleapis/google-cloud-ruby/issues/28999))
+
+#### Features
+
+* Removed dependency on google-cloud-vision-v1p3beta1 prerelease service ([#28999](https://github.com/googleapis/google-cloud-ruby/issues/28999)) 
+* Updated google-cloud-vision-v1 dependency to version 1.x 
+
+### 1.6.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28533](https://github.com/googleapis/google-cloud-ruby/issues/28533)) 
+* Update Ruby version requirement to 3.0 
+
+### 1.5.1 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26652](https://github.com/googleapis/google-cloud-ruby/issues/26652)) 
+
+### 1.5.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24879](https://github.com/googleapis/google-cloud-ruby/issues/24879)) 
+
+### 1.4.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24269](https://github.com/googleapis/google-cloud-ruby/issues/24269)) 
+
+### 1.3.0 (2023-02-28)
+
+#### Features
+
+* Support REST transport ([#20523](https://github.com/googleapis/google-cloud-ruby/issues/20523)) 
+
+### 1.2.0 (2022-07-08)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
 ### 1.1.3 / 2022-01-11
 
 #### Documentation

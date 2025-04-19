@@ -19,15 +19,29 @@
 # [START datacatalog_v1_generated_PolicyTagManager_GetTaxonomy_sync]
 require "google/cloud/data_catalog/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataCatalog::V1::PolicyTagManager::Client.new
+##
+# Snippet for the get_taxonomy call in the PolicyTagManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataCatalog::V1::PolicyTagManager::Client#get_taxonomy.
+#
+def get_taxonomy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataCatalog::V1::PolicyTagManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataCatalog::V1::GetTaxonomyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataCatalog::V1::GetTaxonomyRequest.new
 
-# Call the get_taxonomy method.
-result = client.get_taxonomy request
+  # Call the get_taxonomy method.
+  result = client.get_taxonomy request
 
-# The returned object is of type Google::Cloud::DataCatalog::V1::Taxonomy.
-p result
+  # The returned object is of type Google::Cloud::DataCatalog::V1::Taxonomy.
+  p result
+end
 # [END datacatalog_v1_generated_PolicyTagManager_GetTaxonomy_sync]

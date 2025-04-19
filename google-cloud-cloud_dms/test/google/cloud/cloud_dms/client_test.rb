@@ -22,8 +22,27 @@ require "gapic/common"
 require "gapic/grpc"
 
 class Google::Cloud::CloudDMS::ClientConstructionMinitest < Minitest::Test
-  def test_data_migration_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_data_migration_service_grpc
+    skip unless Google::Cloud::CloudDMS.data_migration_service_available?
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
       client = Google::Cloud::CloudDMS.data_migration_service do |config|
         config.credentials = grpc_channel

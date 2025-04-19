@@ -19,15 +19,29 @@
 # [START appengine_v1_generated_Firewall_BatchUpdateIngressRules_sync]
 require "google/cloud/app_engine/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AppEngine::V1::Firewall::Client.new
+##
+# Snippet for the batch_update_ingress_rules call in the Firewall service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AppEngine::V1::Firewall::Client#batch_update_ingress_rules.
+#
+def batch_update_ingress_rules
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AppEngine::V1::Firewall::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AppEngine::V1::BatchUpdateIngressRulesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AppEngine::V1::BatchUpdateIngressRulesRequest.new
 
-# Call the batch_update_ingress_rules method.
-result = client.batch_update_ingress_rules request
+  # Call the batch_update_ingress_rules method.
+  result = client.batch_update_ingress_rules request
 
-# The returned object is of type Google::Cloud::AppEngine::V1::BatchUpdateIngressRulesResponse.
-p result
+  # The returned object is of type Google::Cloud::AppEngine::V1::BatchUpdateIngressRulesResponse.
+  p result
+end
 # [END appengine_v1_generated_Firewall_BatchUpdateIngressRules_sync]

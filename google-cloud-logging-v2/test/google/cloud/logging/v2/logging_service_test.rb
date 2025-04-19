@@ -41,9 +41,26 @@ class ::Google::Cloud::Logging::V2::LoggingService::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -318,17 +335,17 @@ class ::Google::Cloud::Logging::V2::LoggingService::ClientTest < Minitest::Test
 
     # Create request parameters for a unary method.
     parent = "hello world"
+    resource_names = ["hello world"]
     page_size = 42
     page_token = "hello world"
-    resource_names = ["hello world"]
 
     list_logs_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :list_logs, name
       assert_kind_of ::Google::Cloud::Logging::V2::ListLogsRequest, request
       assert_equal "hello world", request["parent"]
+      assert_equal ["hello world"], request["resource_names"]
       assert_equal 42, request["page_size"]
       assert_equal "hello world", request["page_token"]
-      assert_equal ["hello world"], request["resource_names"]
       refute_nil options
     end
 
@@ -339,31 +356,31 @@ class ::Google::Cloud::Logging::V2::LoggingService::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.list_logs({ parent: parent, page_size: page_size, page_token: page_token, resource_names: resource_names }) do |response, operation|
+      client.list_logs({ parent: parent, resource_names: resource_names, page_size: page_size, page_token: page_token }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_logs parent: parent, page_size: page_size, page_token: page_token, resource_names: resource_names do |response, operation|
+      client.list_logs parent: parent, resource_names: resource_names, page_size: page_size, page_token: page_token do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_logs ::Google::Cloud::Logging::V2::ListLogsRequest.new(parent: parent, page_size: page_size, page_token: page_token, resource_names: resource_names) do |response, operation|
+      client.list_logs ::Google::Cloud::Logging::V2::ListLogsRequest.new(parent: parent, resource_names: resource_names, page_size: page_size, page_token: page_token) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_logs({ parent: parent, page_size: page_size, page_token: page_token, resource_names: resource_names }, grpc_options) do |response, operation|
+      client.list_logs({ parent: parent, resource_names: resource_names, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_logs(::Google::Cloud::Logging::V2::ListLogsRequest.new(parent: parent, page_size: page_size, page_token: page_token, resource_names: resource_names), grpc_options) do |response, operation|
+      client.list_logs(::Google::Cloud::Logging::V2::ListLogsRequest.new(parent: parent, resource_names: resource_names, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -469,7 +486,8 @@ class ::Google::Cloud::Logging::V2::LoggingService::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Logging::V2::LoggingService::Client.new do |config|
         config.credentials = grpc_channel
       end

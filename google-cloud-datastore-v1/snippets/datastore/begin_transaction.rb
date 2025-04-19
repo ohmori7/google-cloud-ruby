@@ -19,15 +19,29 @@
 # [START datastore_v1_generated_Datastore_BeginTransaction_sync]
 require "google/cloud/datastore/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastore::V1::Datastore::Client.new
+##
+# Snippet for the begin_transaction call in the Datastore service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastore::V1::Datastore::Client#begin_transaction.
+#
+def begin_transaction
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastore::V1::Datastore::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastore::V1::BeginTransactionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastore::V1::BeginTransactionRequest.new
 
-# Call the begin_transaction method.
-result = client.begin_transaction request
+  # Call the begin_transaction method.
+  result = client.begin_transaction request
 
-# The returned object is of type Google::Cloud::Datastore::V1::BeginTransactionResponse.
-p result
+  # The returned object is of type Google::Cloud::Datastore::V1::BeginTransactionResponse.
+  p result
+end
 # [END datastore_v1_generated_Datastore_BeginTransaction_sync]

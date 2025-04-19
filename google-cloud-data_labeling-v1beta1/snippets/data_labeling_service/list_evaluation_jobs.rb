@@ -19,21 +19,33 @@
 # [START datalabeling_v1beta1_generated_DataLabelingService_ListEvaluationJobs_sync]
 require "google/cloud/data_labeling/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
+##
+# Snippet for the list_evaluation_jobs call in the DataLabelingService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client#list_evaluation_jobs.
+#
+def list_evaluation_jobs
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataLabeling::V1beta1::ListEvaluationJobsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataLabeling::V1beta1::ListEvaluationJobsRequest.new
 
-# Call the list_evaluation_jobs method.
-result = client.list_evaluation_jobs request
+  # Call the list_evaluation_jobs method.
+  result = client.list_evaluation_jobs request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::DataLabeling::V1beta1::EvaluationJob.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::DataLabeling::V1beta1::EvaluationJob.
+    p item
+  end
 end
 # [END datalabeling_v1beta1_generated_DataLabelingService_ListEvaluationJobs_sync]

@@ -337,6 +337,9 @@ module Google
         # @!attribute [rw] post_step
         #   @return [::Google::Cloud::OsConfig::V1::ExecStep]
         #     The `ExecStep` to run after the patch update.
+        # @!attribute [rw] mig_instances_allowed
+        #   @return [::Boolean]
+        #     Allows the patch job to run on Managed instance groups (MIGs).
         class PatchConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -607,9 +610,13 @@ module Google
         # @!attribute [rw] local_path
         #   @return [::String]
         #     An absolute path to the executable on the VM.
+        #
+        #     Note: The following fields are mutually exclusive: `local_path`, `gcs_object`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] gcs_object
         #   @return [::Google::Cloud::OsConfig::V1::GcsObject]
         #     A Cloud Storage object containing the executable.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_object`, `local_path`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] allowed_success_codes
         #   @return [::Array<::Integer>]
         #     Defaults to [0]. A list of possible return values that the

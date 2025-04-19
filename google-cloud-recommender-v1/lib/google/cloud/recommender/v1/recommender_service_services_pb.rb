@@ -55,6 +55,16 @@ module Google
             # Gets the requested recommendation. Requires the recommender.*.get
             # IAM permission for the specified recommender.
             rpc :GetRecommendation, ::Google::Cloud::Recommender::V1::GetRecommendationRequest, ::Google::Cloud::Recommender::V1::Recommendation
+            # Mark the Recommendation State as Dismissed. Users can use this method to
+            # indicate to the Recommender API that an ACTIVE recommendation has to
+            # be marked back as DISMISSED.
+            #
+            # MarkRecommendationDismissed can be applied to recommendations in ACTIVE
+            # state.
+            #
+            # Requires the recommender.*.update IAM permission for the specified
+            # recommender.
+            rpc :MarkRecommendationDismissed, ::Google::Cloud::Recommender::V1::MarkRecommendationDismissedRequest, ::Google::Cloud::Recommender::V1::Recommendation
             # Marks the Recommendation State as Claimed. Users can use this method to
             # indicate to the Recommender API that they are starting to apply the
             # recommendation themselves. This stops the recommendation content from being
@@ -90,6 +100,18 @@ module Google
             # Requires the recommender.*.update IAM permission for the specified
             # recommender.
             rpc :MarkRecommendationFailed, ::Google::Cloud::Recommender::V1::MarkRecommendationFailedRequest, ::Google::Cloud::Recommender::V1::Recommendation
+            # Gets the requested Recommender Config. There is only one instance of the
+            # config for each Recommender.
+            rpc :GetRecommenderConfig, ::Google::Cloud::Recommender::V1::GetRecommenderConfigRequest, ::Google::Cloud::Recommender::V1::RecommenderConfig
+            # Updates a Recommender Config. This will create a new revision of the
+            # config.
+            rpc :UpdateRecommenderConfig, ::Google::Cloud::Recommender::V1::UpdateRecommenderConfigRequest, ::Google::Cloud::Recommender::V1::RecommenderConfig
+            # Gets the requested InsightTypeConfig. There is only one instance of the
+            # config for each InsightType.
+            rpc :GetInsightTypeConfig, ::Google::Cloud::Recommender::V1::GetInsightTypeConfigRequest, ::Google::Cloud::Recommender::V1::InsightTypeConfig
+            # Updates an InsightTypeConfig change. This will create a new revision of the
+            # config.
+            rpc :UpdateInsightTypeConfig, ::Google::Cloud::Recommender::V1::UpdateInsightTypeConfigRequest, ::Google::Cloud::Recommender::V1::InsightTypeConfig
           end
 
           Stub = Service.rpc_stub_class

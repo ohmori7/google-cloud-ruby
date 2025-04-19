@@ -21,7 +21,7 @@ module Google
   module Cloud
     module EssentialContacts
       module V1
-        VERSION = "0.1.4"
+        VERSION = "1.2.0"
       end
     end
   end

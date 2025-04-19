@@ -19,15 +19,29 @@
 # [START recommendationengine_v1beta1_generated_CatalogService_CreateCatalogItem_sync]
 require "google/cloud/recommendation_engine/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::RecommendationEngine::V1beta1::CatalogService::Client.new
+##
+# Snippet for the create_catalog_item call in the CatalogService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::RecommendationEngine::V1beta1::CatalogService::Client#create_catalog_item.
+#
+def create_catalog_item
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::RecommendationEngine::V1beta1::CatalogService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::RecommendationEngine::V1beta1::CreateCatalogItemRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::RecommendationEngine::V1beta1::CreateCatalogItemRequest.new
 
-# Call the create_catalog_item method.
-result = client.create_catalog_item request
+  # Call the create_catalog_item method.
+  result = client.create_catalog_item request
 
-# The returned object is of type Google::Cloud::RecommendationEngine::V1beta1::CatalogItem.
-p result
+  # The returned object is of type Google::Cloud::RecommendationEngine::V1beta1::CatalogItem.
+  p result
+end
 # [END recommendationengine_v1beta1_generated_CatalogService_CreateCatalogItem_sync]

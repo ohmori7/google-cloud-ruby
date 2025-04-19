@@ -30,8 +30,8 @@ module Google
         #     Required. The batch to create.
         # @!attribute [rw] batch_id
         #   @return [::String]
-        #     Optional. The ID to use for the batch, which will become the final component of
-        #     the batch's resource name.
+        #     Optional. The ID to use for the batch, which will become the final
+        #     component of the batch's resource name.
         #
         #     This value must be 4-63 characters. Valid characters are `/[a-z][0-9]-/`.
         # @!attribute [rw] request_id
@@ -56,7 +56,9 @@ module Google
         # A request to get the resource representation for a batch workload.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The name of the batch to retrieve.
+        #     Required. The fully qualified name of the batch to retrieve
+        #     in the format
+        #     "projects/PROJECT_ID/locations/DATAPROC_REGION/batches/BATCH_ID"
         class GetBatchRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -75,6 +77,28 @@ module Google
         #   @return [::String]
         #     Optional. A page token received from a previous `ListBatches` call.
         #     Provide this token to retrieve the subsequent page.
+        # @!attribute [rw] filter
+        #   @return [::String]
+        #     Optional. A filter for the batches to return in the response.
+        #
+        #     A filter is a logical expression constraining the values of various fields
+        #     in each batch resource. Filters are case sensitive, and may contain
+        #     multiple clauses combined with logical operators (AND/OR).
+        #     Supported fields are `batch_id`, `batch_uuid`, `state`, and `create_time`.
+        #
+        #     e.g. `state = RUNNING and create_time < "2023-01-01T00:00:00Z"`
+        #     filters for batches in state RUNNING that were created before 2023-01-01
+        #
+        #     See https://google.aip.dev/assets/misc/ebnf-filtering.txt for a detailed
+        #     description of the filter syntax and a list of supported comparisons.
+        # @!attribute [rw] order_by
+        #   @return [::String]
+        #     Optional. Field(s) on which to sort the list of batches.
+        #
+        #     Currently the only supported sort orders are unspecified (empty) and
+        #     `create_time desc` to sort by most recently created batches first.
+        #
+        #     See https://google.aip.dev/132#ordering for more details.
         class ListBatchesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -88,6 +112,11 @@ module Google
         #   @return [::String]
         #     A token, which can be sent as `page_token` to retrieve the next page.
         #     If this field is omitted, there are no subsequent pages.
+        # @!attribute [r] unreachable
+        #   @return [::Array<::String>]
+        #     Output only. List of Batches that could not be included in the response.
+        #     Attempting to get one of these resources may indicate why it was not
+        #     included in the list response.
         class ListBatchesResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -96,7 +125,9 @@ module Google
         # A request to delete a batch workload.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The name of the batch resource to delete.
+        #     Required. The fully qualified name of the batch to retrieve
+        #     in the format
+        #     "projects/PROJECT_ID/locations/DATAPROC_REGION/batches/BATCH_ID"
         class DeleteBatchRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -116,15 +147,23 @@ module Google
         # @!attribute [rw] pyspark_batch
         #   @return [::Google::Cloud::Dataproc::V1::PySparkBatch]
         #     Optional. PySpark batch config.
+        #
+        #     Note: The following fields are mutually exclusive: `pyspark_batch`, `spark_batch`, `spark_r_batch`, `spark_sql_batch`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_batch
         #   @return [::Google::Cloud::Dataproc::V1::SparkBatch]
         #     Optional. Spark batch config.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_batch`, `pyspark_batch`, `spark_r_batch`, `spark_sql_batch`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_r_batch
         #   @return [::Google::Cloud::Dataproc::V1::SparkRBatch]
         #     Optional. SparkR batch config.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_r_batch`, `pyspark_batch`, `spark_batch`, `spark_sql_batch`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] spark_sql_batch
         #   @return [::Google::Cloud::Dataproc::V1::SparkSqlBatch]
         #     Optional. SparkSql batch config.
+        #
+        #     Note: The following fields are mutually exclusive: `spark_sql_batch`, `pyspark_batch`, `spark_batch`, `spark_r_batch`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] runtime_info
         #   @return [::Google::Cloud::Dataproc::V1::RuntimeInfo]
         #     Output only. Runtime information about batch execution.
@@ -221,8 +260,8 @@ module Google
         # batch workload.
         # @!attribute [rw] main_python_file_uri
         #   @return [::String]
-        #     Required. The HCFS URI of the main Python file to use as the Spark driver. Must
-        #     be a .py file.
+        #     Required. The HCFS URI of the main Python file to use as the Spark driver.
+        #     Must be a .py file.
         # @!attribute [rw] args
         #   @return [::Array<::String>]
         #     Optional. The arguments to pass to the driver. Do not include arguments
@@ -250,15 +289,19 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # A configuration for running an [Apache Spark](http://spark.apache.org/)
+        # A configuration for running an [Apache Spark](https://spark.apache.org/)
         # batch workload.
         # @!attribute [rw] main_jar_file_uri
         #   @return [::String]
         #     Optional. The HCFS URI of the jar file that contains the main class.
+        #
+        #     Note: The following fields are mutually exclusive: `main_jar_file_uri`, `main_class`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] main_class
         #   @return [::String]
-        #     Optional. The name of the driver main class. The jar file that contains the class
-        #     must be in the classpath or specified in `jar_file_uris`.
+        #     Optional. The name of the driver main class. The jar file that contains
+        #     the class must be in the classpath or specified in `jar_file_uris`.
+        #
+        #     Note: The following fields are mutually exclusive: `main_class`, `main_jar_file_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] args
         #   @return [::Array<::String>]
         #     Optional. The arguments to pass to the driver. Do not include arguments
@@ -291,9 +334,9 @@ module Google
         #     Must be a `.R` or `.r` file.
         # @!attribute [rw] args
         #   @return [::Array<::String>]
-        #     Optional. The arguments to pass to the Spark driver. Do not include arguments
-        #     that can be set as batch properties, such as `--conf`, since a collision
-        #     can occur that causes an incorrect batch submission.
+        #     Optional. The arguments to pass to the Spark driver. Do not include
+        #     arguments that can be set as batch properties, such as `--conf`, since a
+        #     collision can occur that causes an incorrect batch submission.
         # @!attribute [rw] file_uris
         #   @return [::Array<::String>]
         #     Optional. HCFS URIs of files to be placed in the working directory of
@@ -309,10 +352,12 @@ module Google
         end
 
         # A configuration for running
-        # [Apache Spark SQL](http://spark.apache.org/sql/) queries as a batch workload.
+        # [Apache Spark SQL](https://spark.apache.org/sql/) queries as a batch
+        # workload.
         # @!attribute [rw] query_file_uri
         #   @return [::String]
-        #     Required. The HCFS URI of the script that contains Spark SQL queries to execute.
+        #     Required. The HCFS URI of the script that contains Spark SQL queries to
+        #     execute.
         # @!attribute [rw] query_variables
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Optional. Mapping of query variable names to values (equivalent to the

@@ -19,15 +19,29 @@
 # [START cloudkms_v1_generated_KeyManagementService_Decrypt_sync]
 require "google/cloud/kms/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+##
+# Snippet for the decrypt call in the KeyManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Kms::V1::KeyManagementService::Client#decrypt.
+#
+def decrypt
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Kms::V1::DecryptRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Kms::V1::DecryptRequest.new
 
-# Call the decrypt method.
-result = client.decrypt request
+  # Call the decrypt method.
+  result = client.decrypt request
 
-# The returned object is of type Google::Cloud::Kms::V1::DecryptResponse.
-p result
+  # The returned object is of type Google::Cloud::Kms::V1::DecryptResponse.
+  p result
+end
 # [END cloudkms_v1_generated_KeyManagementService_Decrypt_sync]

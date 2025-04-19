@@ -1,5 +1,66 @@
 # Release History
 
+### 2.9.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28530](https://github.com/googleapis/google-cloud-ruby/issues/28530)) 
+* Update Ruby version requirement to 3.0 
+
+### 2.8.2 (2024-09-30)
+
+#### Documentation
+
+* Provide links to KMS Autokey documentation on cloud.google.com ([#27337](https://github.com/googleapis/google-cloud-ruby/issues/27337)) 
+
+### 2.8.1 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26628](https://github.com/googleapis/google-cloud-ruby/issues/26628)) 
+
+### 2.8.0 (2024-05-23)
+
+#### Features
+
+* Support for the autokey service ([#25877](https://github.com/googleapis/google-cloud-ruby/issues/25877)) 
+
+### 2.7.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24871](https://github.com/googleapis/google-cloud-ruby/issues/24871)) 
+
+### 2.6.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24261](https://github.com/googleapis/google-cloud-ruby/issues/24261)) 
+
+### 2.5.1 (2023-02-21)
+
+#### Bug Fixes
+
+* Update the dependency on google-cloud-kms-v1 to require the version with REST support ([#20480](https://github.com/googleapis/google-cloud-ruby/issues/20480)) 
+
+### 2.5.0 (2023-02-17)
+
+#### Features
+
+* Added support for REST transport ([#20442](https://github.com/googleapis/google-cloud-ruby/issues/20442)) 
+
+### 2.4.0 (2022-07-02)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 2.3.0 / 2022-02-16
+
+#### Features
+
+* Support for managing EKM connections
+
 ### 2.2.1 / 2022-01-11
 
 #### Documentation

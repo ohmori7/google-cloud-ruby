@@ -19,15 +19,29 @@
 # [START policytroubleshooter_v1_generated_IamChecker_TroubleshootIamPolicy_sync]
 require "google/cloud/policy_troubleshooter/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PolicyTroubleshooter::V1::IamChecker::Client.new
+##
+# Snippet for the troubleshoot_iam_policy call in the IamChecker service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PolicyTroubleshooter::V1::IamChecker::Client#troubleshoot_iam_policy.
+#
+def troubleshoot_iam_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PolicyTroubleshooter::V1::IamChecker::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PolicyTroubleshooter::V1::TroubleshootIamPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PolicyTroubleshooter::V1::TroubleshootIamPolicyRequest.new
 
-# Call the troubleshoot_iam_policy method.
-result = client.troubleshoot_iam_policy request
+  # Call the troubleshoot_iam_policy method.
+  result = client.troubleshoot_iam_policy request
 
-# The returned object is of type Google::Cloud::PolicyTroubleshooter::V1::TroubleshootIamPolicyResponse.
-p result
+  # The returned object is of type Google::Cloud::PolicyTroubleshooter::V1::TroubleshootIamPolicyResponse.
+  p result
+end
 # [END policytroubleshooter_v1_generated_IamChecker_TroubleshootIamPolicy_sync]

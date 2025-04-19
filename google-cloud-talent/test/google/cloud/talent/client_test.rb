@@ -20,55 +20,129 @@ require "helper"
 require "google/cloud/talent"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Talent::ClientConstructionMinitest < Minitest::Test
-  def test_company_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_company_service_grpc
+    skip unless Google::Cloud::Talent.company_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Talent.company_service do |config|
+      client = Google::Cloud::Talent.company_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Talent::V4::CompanyService::Client, client
     end
   end
 
-  def test_completion
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_company_service_rest
+    skip unless Google::Cloud::Talent.company_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Talent.company_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Talent::V4::CompanyService::Rest::Client, client
+    end
+  end
+
+  def test_completion_grpc
+    skip unless Google::Cloud::Talent.completion_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Talent.completion do |config|
+      client = Google::Cloud::Talent.completion transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Talent::V4::Completion::Client, client
     end
   end
 
-  def test_event_service
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_completion_rest
+    skip unless Google::Cloud::Talent.completion_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Talent.completion transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Talent::V4::Completion::Rest::Client, client
+    end
+  end
+
+  def test_event_service_grpc
+    skip unless Google::Cloud::Talent.event_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Talent.event_service do |config|
+      client = Google::Cloud::Talent.event_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Talent::V4::EventService::Client, client
     end
   end
 
-  def test_job_service
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_event_service_rest
+    skip unless Google::Cloud::Talent.event_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Talent.event_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Talent::V4::EventService::Rest::Client, client
+    end
+  end
+
+  def test_job_service_grpc
+    skip unless Google::Cloud::Talent.job_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Talent.job_service do |config|
+      client = Google::Cloud::Talent.job_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Talent::V4::JobService::Client, client
     end
   end
 
-  def test_tenant_service
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_job_service_rest
+    skip unless Google::Cloud::Talent.job_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Talent.job_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Talent::V4::JobService::Rest::Client, client
+    end
+  end
+
+  def test_tenant_service_grpc
+    skip unless Google::Cloud::Talent.tenant_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Talent.tenant_service do |config|
+      client = Google::Cloud::Talent.tenant_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Talent::V4::TenantService::Client, client
+    end
+  end
+
+  def test_tenant_service_rest
+    skip unless Google::Cloud::Talent.tenant_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Talent.tenant_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Talent::V4::TenantService::Rest::Client, client
     end
   end
 end

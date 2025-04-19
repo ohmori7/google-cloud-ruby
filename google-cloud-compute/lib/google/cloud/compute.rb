@@ -29,13 +29,16 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :compute do |config|
-  config.add_field! :endpoint,      "compute.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
   config.add_field! :lib_version,   nil, match: ::String
   config.add_field! :timeout,       nil, match: ::Numeric
   config.add_field! :metadata,      nil, match: ::Hash
+  config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
+  config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -45,12 +48,17 @@ module Google
       # Create a new client object for AcceleratorTypes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::AcceleratorTypes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/AcceleratorTypes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::AcceleratorTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-AcceleratorTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the AcceleratorTypes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the AcceleratorTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.accelerator_types_available?}.
       #
       # ## About AcceleratorTypes
       #
@@ -60,7 +68,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [AcceleratorTypes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.accelerator_types version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -69,20 +77,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:AcceleratorTypes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:AcceleratorTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AcceleratorTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.accelerator_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AcceleratorTypes service,
+      # or if the versioned client gem needs an update to support the AcceleratorTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.accelerator_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :AcceleratorTypes
+        service_module = service_module.const_get :AcceleratorTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Addresses.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Addresses::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Addresses/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Addresses::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Addresses-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Addresses service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Addresses service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.addresses_available?}.
       #
       # ## About Addresses
       #
@@ -90,7 +131,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Addresses::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.addresses version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -99,20 +140,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Addresses).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Addresses)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Addresses service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.addresses}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Addresses service,
+      # or if the versioned client gem needs an update to support the Addresses service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.addresses_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Addresses
+        service_module = service_module.const_get :Addresses
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Autoscalers.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Autoscalers::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Autoscalers/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Autoscalers::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Autoscalers-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Autoscalers service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Autoscalers service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.autoscalers_available?}.
       #
       # ## About Autoscalers
       #
@@ -120,7 +194,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Autoscalers::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.autoscalers version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -129,20 +203,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Autoscalers).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Autoscalers)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Autoscalers service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.autoscalers}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Autoscalers service,
+      # or if the versioned client gem needs an update to support the Autoscalers service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.autoscalers_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Autoscalers
+        service_module = service_module.const_get :Autoscalers
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for BackendBuckets.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::BackendBuckets::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/BackendBuckets/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::BackendBuckets::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-BackendBuckets-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the BackendBuckets service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the BackendBuckets service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.backend_buckets_available?}.
       #
       # ## About BackendBuckets
       #
@@ -150,7 +257,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [BackendBuckets::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.backend_buckets version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -159,20 +266,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:BackendBuckets).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:BackendBuckets)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the BackendBuckets service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.backend_buckets}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the BackendBuckets service,
+      # or if the versioned client gem needs an update to support the BackendBuckets service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.backend_buckets_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :BackendBuckets
+        service_module = service_module.const_get :BackendBuckets
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for BackendServices.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::BackendServices::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/BackendServices/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::BackendServices::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-BackendServices-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the BackendServices service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the BackendServices service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.backend_services_available?}.
       #
       # ## About BackendServices
       #
@@ -180,7 +320,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [BackendServices::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.backend_services version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -189,20 +329,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:BackendServices).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:BackendServices)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the BackendServices service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.backend_services}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the BackendServices service,
+      # or if the versioned client gem needs an update to support the BackendServices service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.backend_services_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :BackendServices
+        service_module = service_module.const_get :BackendServices
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for DiskTypes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::DiskTypes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/DiskTypes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::DiskTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-DiskTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the DiskTypes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the DiskTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.disk_types_available?}.
       #
       # ## About DiskTypes
       #
@@ -210,7 +383,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [DiskTypes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.disk_types version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -219,20 +392,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:DiskTypes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:DiskTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the DiskTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.disk_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the DiskTypes service,
+      # or if the versioned client gem needs an update to support the DiskTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.disk_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :DiskTypes
+        service_module = service_module.const_get :DiskTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Disks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Disks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Disks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Disks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Disks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Disks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Disks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.disks_available?}.
       #
       # ## About Disks
       #
@@ -240,7 +446,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Disks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.disks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -249,20 +455,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Disks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Disks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Disks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.disks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Disks service,
+      # or if the versioned client gem needs an update to support the Disks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.disks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Disks
+        service_module = service_module.const_get :Disks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ExternalVpnGateways.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ExternalVpnGateways::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ExternalVpnGateways/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ExternalVpnGateways::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ExternalVpnGateways-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ExternalVpnGateways service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ExternalVpnGateways service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.external_vpn_gateways_available?}.
       #
       # ## About ExternalVpnGateways
       #
@@ -270,7 +509,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ExternalVpnGateways::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.external_vpn_gateways version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -279,20 +518,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ExternalVpnGateways).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ExternalVpnGateways)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ExternalVpnGateways service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.external_vpn_gateways}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ExternalVpnGateways service,
+      # or if the versioned client gem needs an update to support the ExternalVpnGateways service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.external_vpn_gateways_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ExternalVpnGateways
+        service_module = service_module.const_get :ExternalVpnGateways
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for FirewallPolicies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::FirewallPolicies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/FirewallPolicies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::FirewallPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-FirewallPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the FirewallPolicies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the FirewallPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.firewall_policies_available?}.
       #
       # ## About FirewallPolicies
       #
@@ -300,7 +572,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [FirewallPolicies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.firewall_policies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -309,20 +581,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:FirewallPolicies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:FirewallPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the FirewallPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.firewall_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the FirewallPolicies service,
+      # or if the versioned client gem needs an update to support the FirewallPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.firewall_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :FirewallPolicies
+        service_module = service_module.const_get :FirewallPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Firewalls.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Firewalls::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Firewalls/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Firewalls::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Firewalls-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Firewalls service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Firewalls service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.firewalls_available?}.
       #
       # ## About Firewalls
       #
@@ -330,7 +635,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Firewalls::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.firewalls version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -339,20 +644,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Firewalls).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Firewalls)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Firewalls service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.firewalls}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Firewalls service,
+      # or if the versioned client gem needs an update to support the Firewalls service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.firewalls_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Firewalls
+        service_module = service_module.const_get :Firewalls
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ForwardingRules.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ForwardingRules::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ForwardingRules/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ForwardingRules::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ForwardingRules-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ForwardingRules service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ForwardingRules service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.forwarding_rules_available?}.
       #
       # ## About ForwardingRules
       #
@@ -360,7 +698,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ForwardingRules::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.forwarding_rules version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -369,20 +707,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ForwardingRules).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ForwardingRules)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ForwardingRules service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.forwarding_rules}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ForwardingRules service,
+      # or if the versioned client gem needs an update to support the ForwardingRules service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.forwarding_rules_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ForwardingRules
+        service_module = service_module.const_get :ForwardingRules
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalAddresses.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalAddresses::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalAddresses/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalAddresses::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalAddresses-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalAddresses service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalAddresses service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_addresses_available?}.
       #
       # ## About GlobalAddresses
       #
@@ -390,7 +761,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalAddresses::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_addresses version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -399,20 +770,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalAddresses).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalAddresses)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalAddresses service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_addresses}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalAddresses service,
+      # or if the versioned client gem needs an update to support the GlobalAddresses service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_addresses_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalAddresses
+        service_module = service_module.const_get :GlobalAddresses
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalForwardingRules.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalForwardingRules::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalForwardingRules/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalForwardingRules::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalForwardingRules-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalForwardingRules service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalForwardingRules service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_forwarding_rules_available?}.
       #
       # ## About GlobalForwardingRules
       #
@@ -420,7 +824,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalForwardingRules::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_forwarding_rules version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -429,20 +833,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalForwardingRules).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalForwardingRules)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalForwardingRules service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_forwarding_rules}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalForwardingRules service,
+      # or if the versioned client gem needs an update to support the GlobalForwardingRules service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_forwarding_rules_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalForwardingRules
+        service_module = service_module.const_get :GlobalForwardingRules
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalNetworkEndpointGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalNetworkEndpointGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalNetworkEndpointGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalNetworkEndpointGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalNetworkEndpointGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalNetworkEndpointGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalNetworkEndpointGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_network_endpoint_groups_available?}.
       #
       # ## About GlobalNetworkEndpointGroups
       #
@@ -450,7 +887,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalNetworkEndpointGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_network_endpoint_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -459,20 +896,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalNetworkEndpointGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalNetworkEndpointGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalNetworkEndpointGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_network_endpoint_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalNetworkEndpointGroups service,
+      # or if the versioned client gem needs an update to support the GlobalNetworkEndpointGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_network_endpoint_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalNetworkEndpointGroups
+        service_module = service_module.const_get :GlobalNetworkEndpointGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalOperations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalOperations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalOperations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalOperations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalOperations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalOperations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalOperations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_operations_available?}.
       #
       # ## About GlobalOperations
       #
@@ -480,7 +950,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalOperations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_operations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -489,20 +959,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalOperations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalOperations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalOperations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_operations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalOperations service,
+      # or if the versioned client gem needs an update to support the GlobalOperations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_operations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalOperations
+        service_module = service_module.const_get :GlobalOperations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalOrganizationOperations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalOrganizationOperations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalOrganizationOperations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalOrganizationOperations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalOrganizationOperations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalOrganizationOperations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalOrganizationOperations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_organization_operations_available?}.
       #
       # ## About GlobalOrganizationOperations
       #
@@ -510,7 +1013,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalOrganizationOperations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_organization_operations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -519,20 +1022,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalOrganizationOperations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalOrganizationOperations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalOrganizationOperations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_organization_operations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalOrganizationOperations service,
+      # or if the versioned client gem needs an update to support the GlobalOrganizationOperations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_organization_operations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalOrganizationOperations
+        service_module = service_module.const_get :GlobalOrganizationOperations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GlobalPublicDelegatedPrefixes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::GlobalPublicDelegatedPrefixes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/GlobalPublicDelegatedPrefixes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::GlobalPublicDelegatedPrefixes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-GlobalPublicDelegatedPrefixes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GlobalPublicDelegatedPrefixes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GlobalPublicDelegatedPrefixes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.global_public_delegated_prefixes_available?}.
       #
       # ## About GlobalPublicDelegatedPrefixes
       #
@@ -540,7 +1076,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [GlobalPublicDelegatedPrefixes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.global_public_delegated_prefixes version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -549,20 +1085,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:GlobalPublicDelegatedPrefixes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:GlobalPublicDelegatedPrefixes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GlobalPublicDelegatedPrefixes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.global_public_delegated_prefixes}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GlobalPublicDelegatedPrefixes service,
+      # or if the versioned client gem needs an update to support the GlobalPublicDelegatedPrefixes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.global_public_delegated_prefixes_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :GlobalPublicDelegatedPrefixes
+        service_module = service_module.const_get :GlobalPublicDelegatedPrefixes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for HealthChecks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::HealthChecks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/HealthChecks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::HealthChecks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-HealthChecks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the HealthChecks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the HealthChecks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.health_checks_available?}.
       #
       # ## About HealthChecks
       #
@@ -570,7 +1139,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [HealthChecks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.health_checks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -579,20 +1148,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:HealthChecks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:HealthChecks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the HealthChecks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.health_checks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the HealthChecks service,
+      # or if the versioned client gem needs an update to support the HealthChecks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.health_checks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :HealthChecks
+        service_module = service_module.const_get :HealthChecks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ImageFamilyViews.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ImageFamilyViews::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ImageFamilyViews/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ImageFamilyViews::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ImageFamilyViews-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ImageFamilyViews service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ImageFamilyViews service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.image_family_views_available?}.
       #
       # ## About ImageFamilyViews
       #
@@ -600,7 +1202,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ImageFamilyViews::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.image_family_views version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -609,20 +1211,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ImageFamilyViews).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ImageFamilyViews)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ImageFamilyViews service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.image_family_views}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ImageFamilyViews service,
+      # or if the versioned client gem needs an update to support the ImageFamilyViews service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.image_family_views_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ImageFamilyViews
+        service_module = service_module.const_get :ImageFamilyViews
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Images.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Images::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Images/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Images::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Images-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Images service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Images service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.images_available?}.
       #
       # ## About Images
       #
@@ -630,7 +1265,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Images::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.images version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -639,20 +1274,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Images).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Images)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Images service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.images}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Images service,
+      # or if the versioned client gem needs an update to support the Images service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.images_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Images
+        service_module = service_module.const_get :Images
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for InstanceGroupManagerResizeRequests.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::InstanceGroupManagerResizeRequests::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstanceGroupManagerResizeRequests-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the InstanceGroupManagerResizeRequests service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstanceGroupManagerResizeRequests service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instance_group_manager_resize_requests_available?}.
+      #
+      # ## About InstanceGroupManagerResizeRequests
+      #
+      # The InstanceGroupManagerResizeRequests API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.instance_group_manager_resize_requests version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstanceGroupManagerResizeRequests)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstanceGroupManagerResizeRequests service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instance_group_manager_resize_requests}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstanceGroupManagerResizeRequests service,
+      # or if the versioned client gem needs an update to support the InstanceGroupManagerResizeRequests service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instance_group_manager_resize_requests_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstanceGroupManagerResizeRequests
+        service_module = service_module.const_get :InstanceGroupManagerResizeRequests
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for InstanceGroupManagers.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::InstanceGroupManagers::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/InstanceGroupManagers/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::InstanceGroupManagers::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstanceGroupManagers-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the InstanceGroupManagers service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstanceGroupManagers service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instance_group_managers_available?}.
       #
       # ## About InstanceGroupManagers
       #
@@ -660,7 +1391,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [InstanceGroupManagers::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.instance_group_managers version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -669,20 +1400,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:InstanceGroupManagers).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstanceGroupManagers)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstanceGroupManagers service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instance_group_managers}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstanceGroupManagers service,
+      # or if the versioned client gem needs an update to support the InstanceGroupManagers service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instance_group_managers_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstanceGroupManagers
+        service_module = service_module.const_get :InstanceGroupManagers
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for InstanceGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::InstanceGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/InstanceGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::InstanceGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstanceGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the InstanceGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstanceGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instance_groups_available?}.
       #
       # ## About InstanceGroups
       #
@@ -690,7 +1454,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [InstanceGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.instance_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -699,20 +1463,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:InstanceGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstanceGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstanceGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instance_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstanceGroups service,
+      # or if the versioned client gem needs an update to support the InstanceGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instance_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstanceGroups
+        service_module = service_module.const_get :InstanceGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for InstanceSettingsService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::InstanceSettingsService::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstanceSettingsService-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the InstanceSettingsService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstanceSettingsService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instance_settings_service_available?}.
+      #
+      # ## About InstanceSettingsService
+      #
+      # The InstanceSettings API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.instance_settings_service version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstanceSettingsService)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstanceSettingsService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instance_settings_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstanceSettingsService service,
+      # or if the versioned client gem needs an update to support the InstanceSettingsService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instance_settings_service_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstanceSettingsService
+        service_module = service_module.const_get :InstanceSettingsService
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for InstanceTemplates.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::InstanceTemplates::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/InstanceTemplates/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::InstanceTemplates::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstanceTemplates-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the InstanceTemplates service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstanceTemplates service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instance_templates_available?}.
       #
       # ## About InstanceTemplates
       #
@@ -720,7 +1580,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [InstanceTemplates::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.instance_templates version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -729,20 +1589,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:InstanceTemplates).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstanceTemplates)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstanceTemplates service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instance_templates}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstanceTemplates service,
+      # or if the versioned client gem needs an update to support the InstanceTemplates service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instance_templates_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstanceTemplates
+        service_module = service_module.const_get :InstanceTemplates
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Instances.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Instances::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Instances/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Instances::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Instances-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Instances service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Instances service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instances_available?}.
       #
       # ## About Instances
       #
@@ -750,7 +1643,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Instances::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.instances version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -759,20 +1652,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Instances).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Instances)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Instances service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instances}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Instances service,
+      # or if the versioned client gem needs an update to support the Instances service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instances_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Instances
+        service_module = service_module.const_get :Instances
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for InstantSnapshots.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::InstantSnapshots::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InstantSnapshots-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the InstantSnapshots service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InstantSnapshots service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.instant_snapshots_available?}.
+      #
+      # ## About InstantSnapshots
+      #
+      # The InstantSnapshots API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.instant_snapshots version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InstantSnapshots)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InstantSnapshots service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.instant_snapshots}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InstantSnapshots service,
+      # or if the versioned client gem needs an update to support the InstantSnapshots service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.instant_snapshots_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InstantSnapshots
+        service_module = service_module.const_get :InstantSnapshots
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for InterconnectAttachments.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::InterconnectAttachments::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/InterconnectAttachments/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::InterconnectAttachments::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InterconnectAttachments-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the InterconnectAttachments service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InterconnectAttachments service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.interconnect_attachments_available?}.
       #
       # ## About InterconnectAttachments
       #
@@ -780,7 +1769,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [InterconnectAttachments::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.interconnect_attachments version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -789,20 +1778,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:InterconnectAttachments).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InterconnectAttachments)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InterconnectAttachments service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.interconnect_attachments}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InterconnectAttachments service,
+      # or if the versioned client gem needs an update to support the InterconnectAttachments service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.interconnect_attachments_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InterconnectAttachments
+        service_module = service_module.const_get :InterconnectAttachments
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for InterconnectLocations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::InterconnectLocations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/InterconnectLocations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::InterconnectLocations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InterconnectLocations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the InterconnectLocations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InterconnectLocations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.interconnect_locations_available?}.
       #
       # ## About InterconnectLocations
       #
@@ -810,7 +1832,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [InterconnectLocations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.interconnect_locations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -819,20 +1841,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:InterconnectLocations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InterconnectLocations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InterconnectLocations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.interconnect_locations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InterconnectLocations service,
+      # or if the versioned client gem needs an update to support the InterconnectLocations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.interconnect_locations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InterconnectLocations
+        service_module = service_module.const_get :InterconnectLocations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for InterconnectRemoteLocations.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::InterconnectRemoteLocations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-InterconnectRemoteLocations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the InterconnectRemoteLocations service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the InterconnectRemoteLocations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.interconnect_remote_locations_available?}.
+      #
+      # ## About InterconnectRemoteLocations
+      #
+      # The InterconnectRemoteLocations API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.interconnect_remote_locations version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:InterconnectRemoteLocations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the InterconnectRemoteLocations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.interconnect_remote_locations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the InterconnectRemoteLocations service,
+      # or if the versioned client gem needs an update to support the InterconnectRemoteLocations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.interconnect_remote_locations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :InterconnectRemoteLocations
+        service_module = service_module.const_get :InterconnectRemoteLocations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Interconnects.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Interconnects::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Interconnects/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Interconnects::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Interconnects-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Interconnects service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Interconnects service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.interconnects_available?}.
       #
       # ## About Interconnects
       #
@@ -840,7 +1958,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Interconnects::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.interconnects version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -849,20 +1967,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Interconnects).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Interconnects)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Interconnects service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.interconnects}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Interconnects service,
+      # or if the versioned client gem needs an update to support the Interconnects service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.interconnects_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Interconnects
+        service_module = service_module.const_get :Interconnects
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for LicenseCodes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::LicenseCodes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/LicenseCodes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::LicenseCodes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-LicenseCodes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the LicenseCodes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the LicenseCodes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.license_codes_available?}.
       #
       # ## About LicenseCodes
       #
@@ -870,7 +2021,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [LicenseCodes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.license_codes version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -879,20 +2030,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:LicenseCodes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:LicenseCodes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the LicenseCodes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.license_codes}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the LicenseCodes service,
+      # or if the versioned client gem needs an update to support the LicenseCodes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.license_codes_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :LicenseCodes
+        service_module = service_module.const_get :LicenseCodes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Licenses.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Licenses::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Licenses/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Licenses::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Licenses-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Licenses service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Licenses service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.licenses_available?}.
       #
       # ## About Licenses
       #
@@ -900,7 +2084,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Licenses::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.licenses version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -909,20 +2093,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Licenses).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Licenses)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Licenses service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.licenses}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Licenses service,
+      # or if the versioned client gem needs an update to support the Licenses service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.licenses_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Licenses
+        service_module = service_module.const_get :Licenses
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for MachineImages.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::MachineImages::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-MachineImages-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the MachineImages service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the MachineImages service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.machine_images_available?}.
+      #
+      # ## About MachineImages
+      #
+      # The MachineImages API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.machine_images version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:MachineImages)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the MachineImages service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.machine_images}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the MachineImages service,
+      # or if the versioned client gem needs an update to support the MachineImages service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.machine_images_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :MachineImages
+        service_module = service_module.const_get :MachineImages
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for MachineTypes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::MachineTypes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/MachineTypes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::MachineTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-MachineTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the MachineTypes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the MachineTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.machine_types_available?}.
       #
       # ## About MachineTypes
       #
@@ -930,7 +2210,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [MachineTypes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.machine_types version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -939,20 +2219,179 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:MachineTypes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:MachineTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the MachineTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.machine_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the MachineTypes service,
+      # or if the versioned client gem needs an update to support the MachineTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.machine_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :MachineTypes
+        service_module = service_module.const_get :MachineTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for NetworkAttachments.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::NetworkAttachments::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NetworkAttachments-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the NetworkAttachments service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NetworkAttachments service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.network_attachments_available?}.
+      #
+      # ## About NetworkAttachments
+      #
+      # The NetworkAttachments API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.network_attachments version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NetworkAttachments)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NetworkAttachments service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.network_attachments}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NetworkAttachments service,
+      # or if the versioned client gem needs an update to support the NetworkAttachments service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.network_attachments_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NetworkAttachments
+        service_module = service_module.const_get :NetworkAttachments
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for NetworkEdgeSecurityServices.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::NetworkEdgeSecurityServices::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NetworkEdgeSecurityServices-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the NetworkEdgeSecurityServices service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NetworkEdgeSecurityServices service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.network_edge_security_services_available?}.
+      #
+      # ## About NetworkEdgeSecurityServices
+      #
+      # The NetworkEdgeSecurityServices API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.network_edge_security_services version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NetworkEdgeSecurityServices)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NetworkEdgeSecurityServices service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.network_edge_security_services}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NetworkEdgeSecurityServices service,
+      # or if the versioned client gem needs an update to support the NetworkEdgeSecurityServices service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.network_edge_security_services_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NetworkEdgeSecurityServices
+        service_module = service_module.const_get :NetworkEdgeSecurityServices
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for NetworkEndpointGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::NetworkEndpointGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/NetworkEndpointGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::NetworkEndpointGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NetworkEndpointGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the NetworkEndpointGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NetworkEndpointGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.network_endpoint_groups_available?}.
       #
       # ## About NetworkEndpointGroups
       #
@@ -960,7 +2399,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [NetworkEndpointGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.network_endpoint_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -969,20 +2408,179 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:NetworkEndpointGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NetworkEndpointGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NetworkEndpointGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.network_endpoint_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NetworkEndpointGroups service,
+      # or if the versioned client gem needs an update to support the NetworkEndpointGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.network_endpoint_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NetworkEndpointGroups
+        service_module = service_module.const_get :NetworkEndpointGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for NetworkFirewallPolicies.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::NetworkFirewallPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NetworkFirewallPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the NetworkFirewallPolicies service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NetworkFirewallPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.network_firewall_policies_available?}.
+      #
+      # ## About NetworkFirewallPolicies
+      #
+      # The NetworkFirewallPolicies API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.network_firewall_policies version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NetworkFirewallPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NetworkFirewallPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.network_firewall_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NetworkFirewallPolicies service,
+      # or if the versioned client gem needs an update to support the NetworkFirewallPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.network_firewall_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NetworkFirewallPolicies
+        service_module = service_module.const_get :NetworkFirewallPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for NetworkProfiles.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::NetworkProfiles::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NetworkProfiles-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the NetworkProfiles service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NetworkProfiles service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.network_profiles_available?}.
+      #
+      # ## About NetworkProfiles
+      #
+      # The NetworkProfiles API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.network_profiles version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NetworkProfiles)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NetworkProfiles service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.network_profiles}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NetworkProfiles service,
+      # or if the versioned client gem needs an update to support the NetworkProfiles service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.network_profiles_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NetworkProfiles
+        service_module = service_module.const_get :NetworkProfiles
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Networks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Networks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Networks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Networks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Networks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Networks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Networks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.networks_available?}.
       #
       # ## About Networks
       #
@@ -990,7 +2588,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Networks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.networks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -999,20 +2597,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Networks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Networks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Networks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.networks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Networks service,
+      # or if the versioned client gem needs an update to support the Networks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.networks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Networks
+        service_module = service_module.const_get :Networks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for NodeGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::NodeGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/NodeGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::NodeGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NodeGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the NodeGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NodeGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.node_groups_available?}.
       #
       # ## About NodeGroups
       #
@@ -1020,7 +2651,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [NodeGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.node_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1029,20 +2660,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:NodeGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NodeGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NodeGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.node_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NodeGroups service,
+      # or if the versioned client gem needs an update to support the NodeGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.node_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NodeGroups
+        service_module = service_module.const_get :NodeGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for NodeTemplates.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::NodeTemplates::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/NodeTemplates/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::NodeTemplates::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NodeTemplates-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the NodeTemplates service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NodeTemplates service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.node_templates_available?}.
       #
       # ## About NodeTemplates
       #
@@ -1050,7 +2714,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [NodeTemplates::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.node_templates version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1059,20 +2723,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:NodeTemplates).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NodeTemplates)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NodeTemplates service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.node_templates}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NodeTemplates service,
+      # or if the versioned client gem needs an update to support the NodeTemplates service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.node_templates_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NodeTemplates
+        service_module = service_module.const_get :NodeTemplates
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for NodeTypes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::NodeTypes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/NodeTypes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::NodeTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-NodeTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the NodeTypes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NodeTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.node_types_available?}.
       #
       # ## About NodeTypes
       #
@@ -1080,7 +2777,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [NodeTypes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.node_types version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1089,20 +2786,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:NodeTypes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:NodeTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NodeTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.node_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NodeTypes service,
+      # or if the versioned client gem needs an update to support the NodeTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.node_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :NodeTypes
+        service_module = service_module.const_get :NodeTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for PacketMirrorings.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::PacketMirrorings::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/PacketMirrorings/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::PacketMirrorings::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-PacketMirrorings-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the PacketMirrorings service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the PacketMirrorings service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.packet_mirrorings_available?}.
       #
       # ## About PacketMirrorings
       #
@@ -1110,7 +2840,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [PacketMirrorings::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.packet_mirrorings version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1119,20 +2849,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:PacketMirrorings).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:PacketMirrorings)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the PacketMirrorings service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.packet_mirrorings}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the PacketMirrorings service,
+      # or if the versioned client gem needs an update to support the PacketMirrorings service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.packet_mirrorings_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :PacketMirrorings
+        service_module = service_module.const_get :PacketMirrorings
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Projects.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Projects::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Projects/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Projects::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Projects-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Projects service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Projects service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.projects_available?}.
       #
       # ## About Projects
       #
@@ -1140,7 +2903,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Projects::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.projects version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1149,20 +2912,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Projects).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Projects)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Projects service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.projects}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Projects service,
+      # or if the versioned client gem needs an update to support the Projects service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.projects_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Projects
+        service_module = service_module.const_get :Projects
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for PublicAdvertisedPrefixes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::PublicAdvertisedPrefixes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/PublicAdvertisedPrefixes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::PublicAdvertisedPrefixes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-PublicAdvertisedPrefixes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the PublicAdvertisedPrefixes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the PublicAdvertisedPrefixes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.public_advertised_prefixes_available?}.
       #
       # ## About PublicAdvertisedPrefixes
       #
@@ -1170,7 +2966,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [PublicAdvertisedPrefixes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.public_advertised_prefixes version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1179,20 +2975,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:PublicAdvertisedPrefixes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:PublicAdvertisedPrefixes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the PublicAdvertisedPrefixes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.public_advertised_prefixes}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the PublicAdvertisedPrefixes service,
+      # or if the versioned client gem needs an update to support the PublicAdvertisedPrefixes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.public_advertised_prefixes_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :PublicAdvertisedPrefixes
+        service_module = service_module.const_get :PublicAdvertisedPrefixes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for PublicDelegatedPrefixes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::PublicDelegatedPrefixes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/PublicDelegatedPrefixes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::PublicDelegatedPrefixes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-PublicDelegatedPrefixes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the PublicDelegatedPrefixes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the PublicDelegatedPrefixes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.public_delegated_prefixes_available?}.
       #
       # ## About PublicDelegatedPrefixes
       #
@@ -1200,7 +3029,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [PublicDelegatedPrefixes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.public_delegated_prefixes version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1209,20 +3038,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:PublicDelegatedPrefixes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:PublicDelegatedPrefixes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the PublicDelegatedPrefixes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.public_delegated_prefixes}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the PublicDelegatedPrefixes service,
+      # or if the versioned client gem needs an update to support the PublicDelegatedPrefixes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.public_delegated_prefixes_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :PublicDelegatedPrefixes
+        service_module = service_module.const_get :PublicDelegatedPrefixes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionAutoscalers.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionAutoscalers::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionAutoscalers/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionAutoscalers::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionAutoscalers-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionAutoscalers service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionAutoscalers service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_autoscalers_available?}.
       #
       # ## About RegionAutoscalers
       #
@@ -1230,7 +3092,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionAutoscalers::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_autoscalers version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1239,20 +3101,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionAutoscalers).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionAutoscalers)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionAutoscalers service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_autoscalers}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionAutoscalers service,
+      # or if the versioned client gem needs an update to support the RegionAutoscalers service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_autoscalers_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionAutoscalers
+        service_module = service_module.const_get :RegionAutoscalers
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionBackendServices.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionBackendServices::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionBackendServices/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionBackendServices::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionBackendServices-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionBackendServices service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionBackendServices service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_backend_services_available?}.
       #
       # ## About RegionBackendServices
       #
@@ -1260,7 +3155,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionBackendServices::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_backend_services version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1269,20 +3164,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionBackendServices).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionBackendServices)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionBackendServices service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_backend_services}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionBackendServices service,
+      # or if the versioned client gem needs an update to support the RegionBackendServices service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_backend_services_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionBackendServices
+        service_module = service_module.const_get :RegionBackendServices
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionCommitments.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionCommitments::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionCommitments/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionCommitments::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionCommitments-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionCommitments service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionCommitments service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_commitments_available?}.
       #
       # ## About RegionCommitments
       #
@@ -1290,7 +3218,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionCommitments::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_commitments version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1299,20 +3227,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionCommitments).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionCommitments)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionCommitments service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_commitments}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionCommitments service,
+      # or if the versioned client gem needs an update to support the RegionCommitments service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_commitments_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionCommitments
+        service_module = service_module.const_get :RegionCommitments
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionDiskTypes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionDiskTypes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionDiskTypes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionDiskTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionDiskTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionDiskTypes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionDiskTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_disk_types_available?}.
       #
       # ## About RegionDiskTypes
       #
@@ -1320,7 +3281,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionDiskTypes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_disk_types version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1329,20 +3290,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionDiskTypes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionDiskTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionDiskTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_disk_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionDiskTypes service,
+      # or if the versioned client gem needs an update to support the RegionDiskTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_disk_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionDiskTypes
+        service_module = service_module.const_get :RegionDiskTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionDisks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionDisks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionDisks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionDisks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionDisks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionDisks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionDisks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_disks_available?}.
       #
       # ## About RegionDisks
       #
@@ -1350,7 +3344,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionDisks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_disks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1359,20 +3353,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionDisks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionDisks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionDisks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_disks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionDisks service,
+      # or if the versioned client gem needs an update to support the RegionDisks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_disks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionDisks
+        service_module = service_module.const_get :RegionDisks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionHealthCheckServices.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionHealthCheckServices::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionHealthCheckServices/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionHealthCheckServices::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionHealthCheckServices-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionHealthCheckServices service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionHealthCheckServices service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_health_check_services_available?}.
       #
       # ## About RegionHealthCheckServices
       #
@@ -1380,7 +3407,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionHealthCheckServices::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_health_check_services version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1389,20 +3416,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionHealthCheckServices).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionHealthCheckServices)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionHealthCheckServices service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_health_check_services}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionHealthCheckServices service,
+      # or if the versioned client gem needs an update to support the RegionHealthCheckServices service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_health_check_services_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionHealthCheckServices
+        service_module = service_module.const_get :RegionHealthCheckServices
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionHealthChecks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionHealthChecks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionHealthChecks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionHealthChecks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionHealthChecks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionHealthChecks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionHealthChecks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_health_checks_available?}.
       #
       # ## About RegionHealthChecks
       #
@@ -1410,7 +3470,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionHealthChecks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_health_checks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1419,20 +3479,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionHealthChecks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionHealthChecks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionHealthChecks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_health_checks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionHealthChecks service,
+      # or if the versioned client gem needs an update to support the RegionHealthChecks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_health_checks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionHealthChecks
+        service_module = service_module.const_get :RegionHealthChecks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionInstanceGroupManagers.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionInstanceGroupManagers::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionInstanceGroupManagers/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionInstanceGroupManagers::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionInstanceGroupManagers-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionInstanceGroupManagers service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionInstanceGroupManagers service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_instance_group_managers_available?}.
       #
       # ## About RegionInstanceGroupManagers
       #
@@ -1440,7 +3533,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionInstanceGroupManagers::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_instance_group_managers version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1449,20 +3542,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionInstanceGroupManagers).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionInstanceGroupManagers)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionInstanceGroupManagers service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_instance_group_managers}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionInstanceGroupManagers service,
+      # or if the versioned client gem needs an update to support the RegionInstanceGroupManagers service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_instance_group_managers_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionInstanceGroupManagers
+        service_module = service_module.const_get :RegionInstanceGroupManagers
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionInstanceGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionInstanceGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionInstanceGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionInstanceGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionInstanceGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionInstanceGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionInstanceGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_instance_groups_available?}.
       #
       # ## About RegionInstanceGroups
       #
@@ -1470,7 +3596,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionInstanceGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_instance_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1479,20 +3605,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionInstanceGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionInstanceGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionInstanceGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_instance_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionInstanceGroups service,
+      # or if the versioned client gem needs an update to support the RegionInstanceGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_instance_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionInstanceGroups
+        service_module = service_module.const_get :RegionInstanceGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionInstanceTemplates.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionInstanceTemplates::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionInstanceTemplates-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionInstanceTemplates service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionInstanceTemplates service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_instance_templates_available?}.
+      #
+      # ## About RegionInstanceTemplates
+      #
+      # The RegionInstanceTemplates API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_instance_templates version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionInstanceTemplates)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionInstanceTemplates service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_instance_templates}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionInstanceTemplates service,
+      # or if the versioned client gem needs an update to support the RegionInstanceTemplates service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_instance_templates_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionInstanceTemplates
+        service_module = service_module.const_get :RegionInstanceTemplates
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionInstances.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionInstances::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionInstances/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionInstances::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionInstances-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionInstances service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionInstances service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_instances_available?}.
       #
       # ## About RegionInstances
       #
@@ -1500,7 +3722,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionInstances::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_instances version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1509,20 +3731,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionInstances).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionInstances)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionInstances service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_instances}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionInstances service,
+      # or if the versioned client gem needs an update to support the RegionInstances service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_instances_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionInstances
+        service_module = service_module.const_get :RegionInstances
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionInstantSnapshots.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionInstantSnapshots::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionInstantSnapshots-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionInstantSnapshots service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionInstantSnapshots service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_instant_snapshots_available?}.
+      #
+      # ## About RegionInstantSnapshots
+      #
+      # The RegionInstantSnapshots API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_instant_snapshots version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionInstantSnapshots)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionInstantSnapshots service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_instant_snapshots}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionInstantSnapshots service,
+      # or if the versioned client gem needs an update to support the RegionInstantSnapshots service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_instant_snapshots_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionInstantSnapshots
+        service_module = service_module.const_get :RegionInstantSnapshots
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionNetworkEndpointGroups.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionNetworkEndpointGroups::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionNetworkEndpointGroups/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionNetworkEndpointGroups::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionNetworkEndpointGroups-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionNetworkEndpointGroups service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionNetworkEndpointGroups service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_network_endpoint_groups_available?}.
       #
       # ## About RegionNetworkEndpointGroups
       #
@@ -1530,7 +3848,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionNetworkEndpointGroups::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_network_endpoint_groups version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1539,20 +3857,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionNetworkEndpointGroups).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionNetworkEndpointGroups)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionNetworkEndpointGroups service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_network_endpoint_groups}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionNetworkEndpointGroups service,
+      # or if the versioned client gem needs an update to support the RegionNetworkEndpointGroups service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_network_endpoint_groups_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionNetworkEndpointGroups
+        service_module = service_module.const_get :RegionNetworkEndpointGroups
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionNetworkFirewallPolicies.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionNetworkFirewallPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionNetworkFirewallPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionNetworkFirewallPolicies service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionNetworkFirewallPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_network_firewall_policies_available?}.
+      #
+      # ## About RegionNetworkFirewallPolicies
+      #
+      # The RegionNetworkFirewallPolicies API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_network_firewall_policies version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionNetworkFirewallPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionNetworkFirewallPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_network_firewall_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionNetworkFirewallPolicies service,
+      # or if the versioned client gem needs an update to support the RegionNetworkFirewallPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_network_firewall_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionNetworkFirewallPolicies
+        service_module = service_module.const_get :RegionNetworkFirewallPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionNotificationEndpoints.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionNotificationEndpoints::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionNotificationEndpoints/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionNotificationEndpoints::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionNotificationEndpoints-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionNotificationEndpoints service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionNotificationEndpoints service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_notification_endpoints_available?}.
       #
       # ## About RegionNotificationEndpoints
       #
@@ -1560,7 +3974,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionNotificationEndpoints::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_notification_endpoints version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1569,20 +3983,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionNotificationEndpoints).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionNotificationEndpoints)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionNotificationEndpoints service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_notification_endpoints}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionNotificationEndpoints service,
+      # or if the versioned client gem needs an update to support the RegionNotificationEndpoints service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_notification_endpoints_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionNotificationEndpoints
+        service_module = service_module.const_get :RegionNotificationEndpoints
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionOperations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionOperations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionOperations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionOperations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionOperations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionOperations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionOperations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_operations_available?}.
       #
       # ## About RegionOperations
       #
@@ -1590,7 +4037,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionOperations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_operations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1599,20 +4046,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionOperations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionOperations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionOperations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_operations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionOperations service,
+      # or if the versioned client gem needs an update to support the RegionOperations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_operations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionOperations
+        service_module = service_module.const_get :RegionOperations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionSecurityPolicies.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionSecurityPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionSecurityPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionSecurityPolicies service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionSecurityPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_security_policies_available?}.
+      #
+      # ## About RegionSecurityPolicies
+      #
+      # The RegionSecurityPolicies API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_security_policies version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionSecurityPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionSecurityPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_security_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionSecurityPolicies service,
+      # or if the versioned client gem needs an update to support the RegionSecurityPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_security_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionSecurityPolicies
+        service_module = service_module.const_get :RegionSecurityPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionSslCertificates.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionSslCertificates::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionSslCertificates/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionSslCertificates::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionSslCertificates-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionSslCertificates service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionSslCertificates service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_ssl_certificates_available?}.
       #
       # ## About RegionSslCertificates
       #
@@ -1620,7 +4163,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionSslCertificates::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_ssl_certificates version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1629,20 +4172,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionSslCertificates).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionSslCertificates)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionSslCertificates service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_ssl_certificates}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionSslCertificates service,
+      # or if the versioned client gem needs an update to support the RegionSslCertificates service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_ssl_certificates_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionSslCertificates
+        service_module = service_module.const_get :RegionSslCertificates
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionSslPolicies.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionSslPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionSslPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionSslPolicies service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionSslPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_ssl_policies_available?}.
+      #
+      # ## About RegionSslPolicies
+      #
+      # The RegionSslPolicies API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_ssl_policies version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionSslPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionSslPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_ssl_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionSslPolicies service,
+      # or if the versioned client gem needs an update to support the RegionSslPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_ssl_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionSslPolicies
+        service_module = service_module.const_get :RegionSslPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionTargetHttpProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionTargetHttpProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionTargetHttpProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionTargetHttpProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionTargetHttpProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionTargetHttpProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionTargetHttpProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_target_http_proxies_available?}.
       #
       # ## About RegionTargetHttpProxies
       #
@@ -1650,7 +4289,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionTargetHttpProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_target_http_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1659,20 +4298,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionTargetHttpProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionTargetHttpProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionTargetHttpProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_target_http_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionTargetHttpProxies service,
+      # or if the versioned client gem needs an update to support the RegionTargetHttpProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_target_http_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionTargetHttpProxies
+        service_module = service_module.const_get :RegionTargetHttpProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionTargetHttpsProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionTargetHttpsProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionTargetHttpsProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionTargetHttpsProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionTargetHttpsProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionTargetHttpsProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionTargetHttpsProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_target_https_proxies_available?}.
       #
       # ## About RegionTargetHttpsProxies
       #
@@ -1680,7 +4352,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionTargetHttpsProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_target_https_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1689,20 +4361,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionTargetHttpsProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionTargetHttpsProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionTargetHttpsProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_target_https_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionTargetHttpsProxies service,
+      # or if the versioned client gem needs an update to support the RegionTargetHttpsProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_target_https_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionTargetHttpsProxies
+        service_module = service_module.const_get :RegionTargetHttpsProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionTargetTcpProxies.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionTargetTcpProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionTargetTcpProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionTargetTcpProxies service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionTargetTcpProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_target_tcp_proxies_available?}.
+      #
+      # ## About RegionTargetTcpProxies
+      #
+      # The RegionTargetTcpProxies API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_target_tcp_proxies version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionTargetTcpProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionTargetTcpProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_target_tcp_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionTargetTcpProxies service,
+      # or if the versioned client gem needs an update to support the RegionTargetTcpProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_target_tcp_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionTargetTcpProxies
+        service_module = service_module.const_get :RegionTargetTcpProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for RegionUrlMaps.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::RegionUrlMaps::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/RegionUrlMaps/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::RegionUrlMaps::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionUrlMaps-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the RegionUrlMaps service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionUrlMaps service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_url_maps_available?}.
       #
       # ## About RegionUrlMaps
       #
@@ -1710,7 +4478,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [RegionUrlMaps::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.region_url_maps version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1719,20 +4487,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:RegionUrlMaps).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionUrlMaps)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionUrlMaps service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_url_maps}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionUrlMaps service,
+      # or if the versioned client gem needs an update to support the RegionUrlMaps service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_url_maps_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionUrlMaps
+        service_module = service_module.const_get :RegionUrlMaps
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for RegionZones.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::RegionZones::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-RegionZones-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the RegionZones service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the RegionZones service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.region_zones_available?}.
+      #
+      # ## About RegionZones
+      #
+      # The RegionZones API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.region_zones version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:RegionZones)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the RegionZones service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.region_zones}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the RegionZones service,
+      # or if the versioned client gem needs an update to support the RegionZones service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.region_zones_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :RegionZones
+        service_module = service_module.const_get :RegionZones
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Regions.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Regions::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Regions/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Regions::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Regions-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Regions service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Regions service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.regions_available?}.
       #
       # ## About Regions
       #
@@ -1740,7 +4604,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Regions::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.regions version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1749,20 +4613,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Regions).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Regions)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Regions service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.regions}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Regions service,
+      # or if the versioned client gem needs an update to support the Regions service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.regions_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Regions
+        service_module = service_module.const_get :Regions
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for ReservationBlocks.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::ReservationBlocks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ReservationBlocks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the ReservationBlocks service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ReservationBlocks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.reservation_blocks_available?}.
+      #
+      # ## About ReservationBlocks
+      #
+      # The ReservationBlocks API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.reservation_blocks version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ReservationBlocks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ReservationBlocks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.reservation_blocks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ReservationBlocks service,
+      # or if the versioned client gem needs an update to support the ReservationBlocks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.reservation_blocks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ReservationBlocks
+        service_module = service_module.const_get :ReservationBlocks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Reservations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Reservations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Reservations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Reservations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Reservations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Reservations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Reservations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.reservations_available?}.
       #
       # ## About Reservations
       #
@@ -1770,7 +4730,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Reservations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.reservations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1779,20 +4739,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Reservations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Reservations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Reservations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.reservations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Reservations service,
+      # or if the versioned client gem needs an update to support the Reservations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.reservations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Reservations
+        service_module = service_module.const_get :Reservations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ResourcePolicies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ResourcePolicies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ResourcePolicies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ResourcePolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ResourcePolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ResourcePolicies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ResourcePolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.resource_policies_available?}.
       #
       # ## About ResourcePolicies
       #
@@ -1800,7 +4793,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ResourcePolicies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.resource_policies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1809,20 +4802,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ResourcePolicies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ResourcePolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ResourcePolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.resource_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ResourcePolicies service,
+      # or if the versioned client gem needs an update to support the ResourcePolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.resource_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ResourcePolicies
+        service_module = service_module.const_get :ResourcePolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Routers.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Routers::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Routers/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Routers::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Routers-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Routers service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Routers service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.routers_available?}.
       #
       # ## About Routers
       #
@@ -1830,7 +4856,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Routers::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.routers version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1839,20 +4865,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Routers).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Routers)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Routers service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.routers}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Routers service,
+      # or if the versioned client gem needs an update to support the Routers service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.routers_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Routers
+        service_module = service_module.const_get :Routers
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Routes.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Routes::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Routes/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Routes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Routes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Routes service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Routes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.routes_available?}.
       #
       # ## About Routes
       #
@@ -1860,7 +4919,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Routes::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.routes version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1869,20 +4928,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Routes).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Routes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Routes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.routes}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Routes service,
+      # or if the versioned client gem needs an update to support the Routes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.routes_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Routes
+        service_module = service_module.const_get :Routes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for SecurityPolicies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::SecurityPolicies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/SecurityPolicies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::SecurityPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-SecurityPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the SecurityPolicies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the SecurityPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.security_policies_available?}.
       #
       # ## About SecurityPolicies
       #
@@ -1890,7 +4982,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [SecurityPolicies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.security_policies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1899,20 +4991,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:SecurityPolicies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:SecurityPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SecurityPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.security_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SecurityPolicies service,
+      # or if the versioned client gem needs an update to support the SecurityPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.security_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :SecurityPolicies
+        service_module = service_module.const_get :SecurityPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ServiceAttachments.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ServiceAttachments::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ServiceAttachments/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ServiceAttachments::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ServiceAttachments-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ServiceAttachments service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ServiceAttachments service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.service_attachments_available?}.
       #
       # ## About ServiceAttachments
       #
@@ -1920,7 +5045,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ServiceAttachments::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.service_attachments version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1929,20 +5054,116 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ServiceAttachments).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ServiceAttachments)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ServiceAttachments service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.service_attachments}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ServiceAttachments service,
+      # or if the versioned client gem needs an update to support the ServiceAttachments service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.service_attachments_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ServiceAttachments
+        service_module = service_module.const_get :ServiceAttachments
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for SnapshotSettingsService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::SnapshotSettingsService::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-SnapshotSettingsService-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the SnapshotSettingsService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the SnapshotSettingsService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.snapshot_settings_service_available?}.
+      #
+      # ## About SnapshotSettingsService
+      #
+      # The SnapshotSettings API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.snapshot_settings_service version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:SnapshotSettingsService)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SnapshotSettingsService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.snapshot_settings_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SnapshotSettingsService service,
+      # or if the versioned client gem needs an update to support the SnapshotSettingsService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.snapshot_settings_service_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :SnapshotSettingsService
+        service_module = service_module.const_get :SnapshotSettingsService
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Snapshots.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Snapshots::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Snapshots/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Snapshots::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Snapshots-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Snapshots service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Snapshots service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.snapshots_available?}.
       #
       # ## About Snapshots
       #
@@ -1950,7 +5171,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Snapshots::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.snapshots version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1959,20 +5180,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Snapshots).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Snapshots)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Snapshots service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.snapshots}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Snapshots service,
+      # or if the versioned client gem needs an update to support the Snapshots service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.snapshots_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Snapshots
+        service_module = service_module.const_get :Snapshots
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for SslCertificates.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::SslCertificates::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/SslCertificates/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::SslCertificates::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-SslCertificates-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the SslCertificates service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the SslCertificates service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.ssl_certificates_available?}.
       #
       # ## About SslCertificates
       #
@@ -1980,7 +5234,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [SslCertificates::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.ssl_certificates version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -1989,20 +5243,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:SslCertificates).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:SslCertificates)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SslCertificates service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.ssl_certificates}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SslCertificates service,
+      # or if the versioned client gem needs an update to support the SslCertificates service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.ssl_certificates_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :SslCertificates
+        service_module = service_module.const_get :SslCertificates
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for SslPolicies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::SslPolicies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/SslPolicies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::SslPolicies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-SslPolicies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the SslPolicies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the SslPolicies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.ssl_policies_available?}.
       #
       # ## About SslPolicies
       #
@@ -2010,7 +5297,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [SslPolicies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.ssl_policies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2019,20 +5306,179 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:SslPolicies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:SslPolicies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SslPolicies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.ssl_policies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SslPolicies service,
+      # or if the versioned client gem needs an update to support the SslPolicies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.ssl_policies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :SslPolicies
+        service_module = service_module.const_get :SslPolicies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for StoragePoolTypes.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::StoragePoolTypes::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-StoragePoolTypes-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the StoragePoolTypes service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the StoragePoolTypes service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.storage_pool_types_available?}.
+      #
+      # ## About StoragePoolTypes
+      #
+      # The StoragePoolTypes API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.storage_pool_types version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:StoragePoolTypes)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the StoragePoolTypes service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.storage_pool_types}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the StoragePoolTypes service,
+      # or if the versioned client gem needs an update to support the StoragePoolTypes service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.storage_pool_types_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :StoragePoolTypes
+        service_module = service_module.const_get :StoragePoolTypes
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for StoragePools.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Compute::V1::StoragePools::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-StoragePools-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the StoragePools service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the StoragePools service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.storage_pools_available?}.
+      #
+      # ## About StoragePools
+      #
+      # The StoragePools API.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.storage_pools version: :v1, &block
+        require "google/cloud/compute/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:StoragePools)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the StoragePools service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.storage_pools}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the StoragePools service,
+      # or if the versioned client gem needs an update to support the StoragePools service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.storage_pools_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :StoragePools
+        service_module = service_module.const_get :StoragePools
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Subnetworks.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Subnetworks::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Subnetworks/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Subnetworks::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Subnetworks-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Subnetworks service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Subnetworks service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.subnetworks_available?}.
       #
       # ## About Subnetworks
       #
@@ -2040,7 +5486,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Subnetworks::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.subnetworks version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2049,20 +5495,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Subnetworks).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Subnetworks)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Subnetworks service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.subnetworks}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Subnetworks service,
+      # or if the versioned client gem needs an update to support the Subnetworks service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.subnetworks_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Subnetworks
+        service_module = service_module.const_get :Subnetworks
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetGrpcProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetGrpcProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetGrpcProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetGrpcProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetGrpcProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetGrpcProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetGrpcProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_grpc_proxies_available?}.
       #
       # ## About TargetGrpcProxies
       #
@@ -2070,7 +5549,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetGrpcProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_grpc_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2079,20 +5558,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetGrpcProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetGrpcProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetGrpcProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_grpc_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetGrpcProxies service,
+      # or if the versioned client gem needs an update to support the TargetGrpcProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_grpc_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetGrpcProxies
+        service_module = service_module.const_get :TargetGrpcProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetHttpProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetHttpProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetHttpProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetHttpProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetHttpProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetHttpProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetHttpProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_http_proxies_available?}.
       #
       # ## About TargetHttpProxies
       #
@@ -2100,7 +5612,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetHttpProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_http_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2109,20 +5621,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetHttpProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetHttpProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetHttpProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_http_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetHttpProxies service,
+      # or if the versioned client gem needs an update to support the TargetHttpProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_http_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetHttpProxies
+        service_module = service_module.const_get :TargetHttpProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetHttpsProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetHttpsProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetHttpsProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetHttpsProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetHttpsProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetHttpsProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetHttpsProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_https_proxies_available?}.
       #
       # ## About TargetHttpsProxies
       #
@@ -2130,7 +5675,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetHttpsProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_https_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2139,20 +5684,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetHttpsProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetHttpsProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetHttpsProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_https_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetHttpsProxies service,
+      # or if the versioned client gem needs an update to support the TargetHttpsProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_https_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetHttpsProxies
+        service_module = service_module.const_get :TargetHttpsProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetInstances.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetInstances::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetInstances/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetInstances::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetInstances-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetInstances service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetInstances service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_instances_available?}.
       #
       # ## About TargetInstances
       #
@@ -2160,7 +5738,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetInstances::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_instances version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2169,20 +5747,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetInstances).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetInstances)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetInstances service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_instances}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetInstances service,
+      # or if the versioned client gem needs an update to support the TargetInstances service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_instances_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetInstances
+        service_module = service_module.const_get :TargetInstances
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetPools.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetPools::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetPools/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetPools::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetPools-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetPools service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetPools service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_pools_available?}.
       #
       # ## About TargetPools
       #
@@ -2190,7 +5801,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetPools::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_pools version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2199,20 +5810,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetPools).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetPools)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetPools service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_pools}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetPools service,
+      # or if the versioned client gem needs an update to support the TargetPools service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_pools_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetPools
+        service_module = service_module.const_get :TargetPools
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetSslProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetSslProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetSslProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetSslProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetSslProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetSslProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetSslProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_ssl_proxies_available?}.
       #
       # ## About TargetSslProxies
       #
@@ -2220,7 +5864,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetSslProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_ssl_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2229,20 +5873,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetSslProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetSslProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetSslProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_ssl_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetSslProxies service,
+      # or if the versioned client gem needs an update to support the TargetSslProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_ssl_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetSslProxies
+        service_module = service_module.const_get :TargetSslProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetTcpProxies.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetTcpProxies::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetTcpProxies/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetTcpProxies::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetTcpProxies-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetTcpProxies service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetTcpProxies service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_tcp_proxies_available?}.
       #
       # ## About TargetTcpProxies
       #
@@ -2250,7 +5927,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetTcpProxies::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_tcp_proxies version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2259,20 +5936,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetTcpProxies).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetTcpProxies)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetTcpProxies service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_tcp_proxies}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetTcpProxies service,
+      # or if the versioned client gem needs an update to support the TargetTcpProxies service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_tcp_proxies_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetTcpProxies
+        service_module = service_module.const_get :TargetTcpProxies
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for TargetVpnGateways.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::TargetVpnGateways::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/TargetVpnGateways/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::TargetVpnGateways::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-TargetVpnGateways-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the TargetVpnGateways service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the TargetVpnGateways service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.target_vpn_gateways_available?}.
       #
       # ## About TargetVpnGateways
       #
@@ -2280,7 +5990,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [TargetVpnGateways::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.target_vpn_gateways version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2289,20 +5999,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:TargetVpnGateways).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:TargetVpnGateways)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the TargetVpnGateways service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.target_vpn_gateways}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the TargetVpnGateways service,
+      # or if the versioned client gem needs an update to support the TargetVpnGateways service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.target_vpn_gateways_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :TargetVpnGateways
+        service_module = service_module.const_get :TargetVpnGateways
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for UrlMaps.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::UrlMaps::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/UrlMaps/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::UrlMaps::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-UrlMaps-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the UrlMaps service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the UrlMaps service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.url_maps_available?}.
       #
       # ## About UrlMaps
       #
@@ -2310,7 +6053,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [UrlMaps::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.url_maps version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2319,20 +6062,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:UrlMaps).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:UrlMaps)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the UrlMaps service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.url_maps}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the UrlMaps service,
+      # or if the versioned client gem needs an update to support the UrlMaps service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.url_maps_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :UrlMaps
+        service_module = service_module.const_get :UrlMaps
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for VpnGateways.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::VpnGateways::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/VpnGateways/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::VpnGateways::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-VpnGateways-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the VpnGateways service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the VpnGateways service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.vpn_gateways_available?}.
       #
       # ## About VpnGateways
       #
@@ -2340,7 +6116,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [VpnGateways::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.vpn_gateways version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2349,20 +6125,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:VpnGateways).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:VpnGateways)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the VpnGateways service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.vpn_gateways}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the VpnGateways service,
+      # or if the versioned client gem needs an update to support the VpnGateways service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.vpn_gateways_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :VpnGateways
+        service_module = service_module.const_get :VpnGateways
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for VpnTunnels.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::VpnTunnels::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/VpnTunnels/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::VpnTunnels::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-VpnTunnels-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the VpnTunnels service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the VpnTunnels service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.vpn_tunnels_available?}.
       #
       # ## About VpnTunnels
       #
@@ -2370,7 +6179,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [VpnTunnels::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.vpn_tunnels version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2379,20 +6188,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:VpnTunnels).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:VpnTunnels)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the VpnTunnels service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.vpn_tunnels}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the VpnTunnels service,
+      # or if the versioned client gem needs an update to support the VpnTunnels service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.vpn_tunnels_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :VpnTunnels
+        service_module = service_module.const_get :VpnTunnels
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ZoneOperations.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::ZoneOperations::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/ZoneOperations/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::ZoneOperations::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-ZoneOperations-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ZoneOperations service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ZoneOperations service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.zone_operations_available?}.
       #
       # ## About ZoneOperations
       #
@@ -2400,7 +6242,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ZoneOperations::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.zone_operations version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2409,20 +6251,53 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:ZoneOperations).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:ZoneOperations)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ZoneOperations service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.zone_operations}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ZoneOperations service,
+      # or if the versioned client gem needs an update to support the ZoneOperations service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.zone_operations_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :ZoneOperations
+        service_module = service_module.const_get :ZoneOperations
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for Zones.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Compute::V1::Zones::Rest::Client](https://googleapis.dev/ruby/google-cloud-compute-v1/latest/Google/Cloud/Compute/V1/Zones/Rest/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Compute::V1::Zones::Rest::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-compute-v1/latest/Google-Cloud-Compute-V1-Zones-Rest-Client)
+      # for a REST client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the Zones service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the Zones service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Compute.zones_available?}.
       #
       # ## About Zones
       #
@@ -2430,7 +6305,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [Zones::Rest::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.zones version: :v1, &block
         require "google/cloud/compute/#{version.to_s.downcase}"
@@ -2439,8 +6314,36 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Compute.const_get package_name
-        package_module.const_get(:Zones).const_get(:Rest).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Compute.const_get(package_name).const_get(:Zones)
+        service_module.const_get(:Rest).const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the Zones service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Compute.zones}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the Zones service,
+      # or if the versioned client gem needs an update to support the Zones service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.zones_available? version: :v1
+        require "google/cloud/compute/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Compute
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Compute.const_get package_name
+        return false unless service_module.const_defined? :Zones
+        service_module = service_module.const_get :Zones
+        return false unless service_module.const_defined? :Rest
+        service_module = service_module.const_get :Rest
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -2458,7 +6361,14 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional REST headers to be sent with the call.
+      #   Additional headers to be sent with the call.
+      # * `retry_policy` (*type:* `Hash`) -
+      #   The retry policy. The value is a hash with the following keys:
+      #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.
+      #     * `:max_delay` (*type:* `Numeric`) - The max delay in seconds.
+      #     * `:multiplier` (*type:* `Numeric`) - The incremental backoff multiplier.
+      #     * `:retry_codes` (*type:* `Array<String>`) -
+      #       The error codes that should trigger a retry.
       #
       # @return [::Google::Cloud::Config] The default configuration used by this library
       #

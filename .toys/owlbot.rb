@@ -1,3 +1,19 @@
+# frozen_string_literal: true
+
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 desc "Runs OwlBot for one or more gems."
 
 long_desc \
@@ -12,8 +28,11 @@ long_desc \
 remaining_args :gem_names do
   desc "The gems for which to run owlbot."
 end
-flag :all do
-  desc "Run owlbot on all gems in this repo."
+flag :all, "--all[=WHICH]" do
+  desc "Run owlbot on all gems in this repo. Optional value can be 'gapics' or 'wrappers'"
+end
+flag :except, "--except=GEM", handler: :push, default: [] do
+  desc "Omit this gem from --all. Can be used multiple times."
 end
 flag :postprocessor_tag, "--postprocessor-tag=TAG", default: "latest" do
   desc "The tag for the Ruby postprocessor image. Defaults to 'latest'."
@@ -27,17 +46,32 @@ end
 flag :git_remote, "--remote=NAME" do
   desc "The name of the git remote to use as the pull request head. If omitted, does not open a pull request."
 end
+flag :enable_fork, "--fork" do
+  desc "Use a fork to open the pull request"
+end
 flag :commit_message, "--message=MESSAGE" do
   desc "The conventional commit message"
 end
-flag :source_path, "--source-path=PATH" do
-  desc "Path to the googleapis-gen source repo"
-end
-flag :protos_path, "--protos-path=PATH" do
-  desc "Path to the googleapis protos repo or third_party directory"
-end
-flag :piper_client, "--piper-client=NAME" do
-  desc "Generate by running Bazel from the given piper client rather than using googleapis-gen"
+at_most_one desc: "Source" do
+  long_desc \
+    "Specify where the generated client comes from.",
+    "At most one of these flags can be set. If none is given, the googleapis-gen repo is cloned."
+  flag :googleapis_gen_github_token, "--googleapis-gen-github-token=TOKEN" do
+    default(ENV["GOOGLEAPIS_GEN_GITHUB_TOKEN"] || ENV["GITHUB_TOKEN"])
+    desc "GitHub token for cloning the googleapis-gen repository."
+  end
+  flag :pull_googleapis, "--pull-googleapis[=COMMIT]" do
+    desc "Generate by pulling googleapis/googleapis and running Bazel from the protos there"
+  end
+  flag :source_path, "--source-path=PATH" do
+    desc "Path to the googleapis-gen source repo."
+  end
+  flag :protos_path, "--protos-path=PATH" do
+    desc "Generate by running Bazel from the given path to the googleapis protos repo or third_party directory."
+  end
+  flag :piper_client, "--piper-client=NAME" do
+    desc "Generate by running Bazel from the given piper client"
+  end
 end
 flag :combined_prs do
   desc "Combine all changes into a single pull request"
@@ -45,9 +79,8 @@ end
 flag :enable_tests, "--test" do
   desc "Run CI on each library"
 end
-flag :googleapis_gen_github_token, "--googleapis-gen-github-token=TOKEN" do
-  default(ENV["GOOGLEAPIS_GEN_GITHUB_TOKEN"] || ENV["GITHUB_TOKEN"])
-  desc "GitHub token for cloning the googleapis-gen repository"
+flag :enable_bazelisk, "--bazelisk" do
+  desc "Enable running bazel commands with bazelisk"
 end
 
 OWLBOT_CONFIG_FILE_NAME = ".OwlBot.yaml"
@@ -59,27 +92,36 @@ TMP_DIR_NAME = "tmp"
 include :exec, e: true
 include :terminal
 include :fileutils
+include "yoshi-pr-generator"
 
 def run
   require "psych"
   require "fileutils"
   require "tmpdir"
-  require "pull_request_generator"
-  extend PullRequestGenerator
-  ensure_docker
 
-  set :source_path, File.expand_path(source_path) if source_path
-  ensure_source_path
   gems = choose_gems
-  Dir.chdir context_directory
-  gem_info = collect_gem_info gems
-
+  cd context_directory
+  setup_git
   pull_images
-  run_bazel gem_info if piper_client || protos_path
-  run_owlbot gem_info
+  maybe_pull_googleapis
+
+  gem_info = collect_gem_info gems
+  if piper_client || protos_path
+    set :source_path, run_bazel(gem_info)
+  else
+    set :source_path, source_path ? File.expand_path(source_path) : googleapis_gen_path
+  end
+  run_owlbot gem_info, use_bazel_bin: piper_client || protos_path
   verify_staging gems
   results = process_gems gems
   final_output results
+end
+
+def setup_git
+  yoshi_utils.git_ensure_identity
+  return unless enable_fork
+  set :git_remote, "pull-request-fork" unless git_remote
+  yoshi_utils.gh_ensure_fork remote: git_remote
 end
 
 def ensure_docker
@@ -90,7 +132,7 @@ end
 
 def choose_gems
   gems = gem_names
-  gems = all ? all_gems : gems_from_subdirectory if gems.empty?
+  gems = all_gems || gems_from_subdirectory if gems.empty?
   error "You must specify at least one gem name" if gems.empty?
   logger.info "Gems: #{gems}"
   gems
@@ -104,12 +146,18 @@ def gems_from_subdirectory
 end
 
 def all_gems
-  Dir.chdir context_directory do
+  return nil unless all
+  cd context_directory do
     gems = Dir.glob("*/#{OWLBOT_CONFIG_FILE_NAME}").map { |path| File.dirname path }
     gems.delete_if do |name|
       !File.file? File.join(context_directory, name, "#{name}.gemspec")
     end
-    gems
+    if all.to_s.start_with? "gapic"
+      gems.delete_if { |name| name !~ /-v\d+\w*$/ }
+    elsif all.to_s.start_with? "wrapper"
+      gems.delete_if { |name| name =~ /-v\d+\w*$/ }
+    end
+    gems - except
   end
 end
 
@@ -117,6 +165,24 @@ def pull_images
   return unless pull
   exec ["docker", "pull", "#{OWLBOT_CLI_IMAGE}:#{owlbot_cli_tag}"]
   exec ["docker", "pull", "#{POSTPROCESSOR_IMAGE}:#{postprocessor_tag}"]
+end
+
+def maybe_pull_googleapis
+  return unless pull_googleapis
+  commit = pull_googleapis
+  commit = "HEAD" if commit == true
+  googleapis_dir = File.join context_directory, "tmp", "googleapis"
+  rm_rf googleapis_dir
+  mkdir_p googleapis_dir
+  at_exit { FileUtils.rm_rf googleapis_dir }
+  cd googleapis_dir do
+    exec ["git", "init"]
+    exec ["git", "remote", "add", "origin", "https://github.com/googleapis/googleapis.git"]
+    exec ["git", "fetch", "--depth=1", "origin", commit]
+    exec ["git", "branch", "github-head", "FETCH_HEAD"]
+    exec ["git", "switch", "github-head"]
+  end
+  set :protos_path, googleapis_dir
 end
 
 def collect_gem_info gems
@@ -158,84 +224,74 @@ def determine_bazel_target library_path
 end
 
 def run_bazel gem_info
-  gem_info.each do |name, info|
+  bazel_alias = enable_bazelisk ? "bazelisk" : "bazel"
+  gem_info.each_value do |info|
     info[:bazel_targets].each do |library_path, bazel_target|
-      exec ["bazel", "build", "//#{library_path}:#{bazel_target}"], chdir: bazel_base_dir
-      generated_dir = File.join bazel_base_dir, "bazel-bin", library_path, bazel_target
-      source_dir = File.join source_path, library_path, bazel_target
-      rm_rf source_dir
-      mkdir_p File.dirname source_dir
-      cp_r generated_dir, source_dir
+      exec [bazel_alias, "build", "--verbose_failures", "//#{library_path}:#{bazel_target}"], chdir: bazel_base_dir
     end
   end
-end
-
-def ensure_source_path
-  return if source_path
+  source_dir = capture([bazel_alias, "info", "bazel-bin"], chdir: bazel_base_dir).chomp
   temp_dir = Dir.mktmpdir
   at_exit { FileUtils.rm_rf temp_dir }
-  Dir.chdir temp_dir do
+  results_dir = File.join temp_dir, "bazel-bin"
+  cp_r source_dir, results_dir
+  results_dir
+end
+
+def googleapis_gen_path
+  temp_dir = Dir.mktmpdir
+  at_exit { FileUtils.rm_rf temp_dir }
+  cd temp_dir do
     exec ["git", "init"]
-    if ensure_googleapis_gen_github_token
-      hostname = "#{ensure_googleapis_gen_github_token}@github.com"
-      log_hostname = "xxxxxxxx@github.com"
-    else
-      hostname = log_hostname = "github.com"
+    token = googleapis_gen_github_token || yoshi_utils.gh_cur_token
+    error "No github token found to load googleapis-gen" unless token
+    username = yoshi_utils.gh_with_token(token) { yoshi_utils.gh_username }
+    add_origin_cmd = ["git", "remote", "add", "origin",
+                      "https://#{username}:#{token}@github.com/googleapis/googleapis-gen.git"]
+    add_origin_log = ["git", "remote", "add", "origin",
+                      "https://xxxxxxxx@github.com/googleapis/googleapis-gen.git"]
+    exec add_origin_cmd, log_cmd: "exec: #{add_origin_log.inspect}"
+    yoshi_utils.gh_without_standard_git_auth do
+      exec ["git", "fetch", "--depth=1", "origin", "HEAD"]
     end
-    add_origin_cmd = ["git", "remote", "add", "origin", "https://#{hostname}/googleapis/googleapis-gen.git"]
-    add_origin_log = ["git", "remote", "add", "origin", "https://#{log_hostname}/googleapis/googleapis-gen.git"]
-    exec add_origin_cmd, log_cmd: add_origin_log.inspect
-    exec ["git", "fetch", "--depth=1", "origin", "HEAD"]
     exec ["git", "branch", "github-head", "FETCH_HEAD"]
     exec ["git", "switch", "github-head"]
   end
-  set :source_path, temp_dir
+  temp_dir
 end
 
-def environment_github_token
-  @environment_github_token ||= begin
-    result = exec ["gh", "auth", "status", "-t"], e: false, out: :capture, err: [:child, :out]
-    if result.success? && result.captured_out =~ /Token: (\w+)/
-      puts "**** found token of size #{Regexp.last_match[1].size}"
-      Regexp.last_match[1]
-    end
-  end
-end
-
-def ensure_googleapis_gen_github_token
-  @googleapis_gen_github_token ||= googleapis_gen_github_token || environment_github_token
-end
-
-def run_owlbot gem_info
-  FileUtils.mkdir_p TMP_DIR_NAME
+def run_owlbot gem_info, use_bazel_bin:
+  mkdir_p TMP_DIR_NAME
   temp_config = File.join TMP_DIR_NAME, OWLBOT_CONFIG_FILE_NAME
-  FileUtils.rm_f temp_config
+  rm_f temp_config
   combined_deep_copy_regex = gem_info.values.map { |info| info[:deep_copy_regexes] }.flatten
-  combined_config = {"deep-copy-regex" => combined_deep_copy_regex}
+  combined_config = { "deep-copy-regex" => combined_deep_copy_regex }
   File.open temp_config, "w" do |file|
     file.puts Psych.dump combined_config
   end
   cmd = [
-    "-v", "#{source_path}:/googleapis-gen",
-    "#{OWLBOT_CLI_IMAGE}:#{owlbot_cli_tag}", "copy-code",
+    "-v", "#{source_path}:/source-path",
+    "#{OWLBOT_CLI_IMAGE}:#{owlbot_cli_tag}",
+    (use_bazel_bin ? "copy-bazel-bin" : "copy-code"),
     "--config-file", temp_config,
-    "--source-repo", "/googleapis-gen"
+    (use_bazel_bin ? "--source-dir" : "--source-repo"), "/source-path"
   ]
   docker_run(*cmd)
+  rm_f ".gitconfig"
 end
 
 def verify_staging gems
   gems.each do |name|
     staging_dir = File.join STAGING_DIR_NAME, name
     error "Gem #{name} did not output a staging directory" unless File.directory? staging_dir
-    error "Gem #{name} staging directory is empty" if Dir.children(staging_dir).empty?
+    error "Gem #{name} staging directory is empty" if Dir.empty? staging_dir
   end
 end
 
 def process_gems gems
   temp_staging_dir = File.join TMP_DIR_NAME, STAGING_DIR_NAME
-  FileUtils.rm_rf temp_staging_dir
-  FileUtils.mv STAGING_DIR_NAME, temp_staging_dir
+  rm_rf temp_staging_dir
+  mv STAGING_DIR_NAME, temp_staging_dir
   if combined_prs
     process_gems_combined_pr gems, temp_staging_dir
   else
@@ -246,13 +302,13 @@ end
 def process_gems_separate_prs gems, temp_staging_dir
   results = {}
   gems.each_with_index do |name, index|
-    timestamp = Time.now.utc.strftime("%Y%m%d-%H%M%S")
+    timestamp = Time.now.utc.strftime "%Y%m%d-%H%M%S"
     branch_name = "owlbot/#{name}-#{timestamp}"
     message = build_commit_message name
-    result = generate_pull_request gem_name: name,
-                                   git_remote: git_remote,
-                                   branch_name: branch_name,
-                                   commit_message: message do
+    result = yoshi_pr_generator.capture enabled: !git_remote.nil?,
+                                        remote: git_remote,
+                                        branch_name: branch_name,
+                                        commit_message: message do
       process_single_gem name, temp_staging_dir
     end
     puts "Results for #{name} (#{index}/#{gems.size})..."
@@ -262,12 +318,13 @@ def process_gems_separate_prs gems, temp_staging_dir
 end
 
 def process_gems_combined_pr gems, temp_staging_dir
-  timestamp = Time.now.utc.strftime("%Y%m%d-%H%M%S")
+  timestamp = Time.now.utc.strftime "%Y%m%d-%H%M%S"
   branch_name = "owlbot/all-#{timestamp}"
   message = build_commit_message "all gems"
-  result = generate_pull_request git_remote: git_remote,
-                                 branch_name: branch_name,
-                                 commit_message: message do
+  result = yoshi_pr_generator.capture enabled: !git_remote.nil?,
+                                      remote: git_remote,
+                                      branch_name: branch_name,
+                                      commit_message: message do
     gems.each_with_index do |name, index|
       process_single_gem name, temp_staging_dir
       puts "Completed #{name} (#{index}/#{gems.size})..."
@@ -285,14 +342,13 @@ def build_commit_message name
 end
 
 def process_single_gem name, temp_staging_dir
-  FileUtils.mkdir_p STAGING_DIR_NAME
-  FileUtils.mv File.join(temp_staging_dir, name), File.join(STAGING_DIR_NAME, name)
+  mkdir_p STAGING_DIR_NAME
+  mv File.join(temp_staging_dir, name), File.join(STAGING_DIR_NAME, name)
   docker_run "#{POSTPROCESSOR_IMAGE}:#{postprocessor_tag}", "--gem", name
-  if enable_tests
-    Dir.chdir name do
-      exec ["bundle", "install"]
-      exec ["bundle", "exec", "rake", "ci"]
-    end
+  return unless enable_tests
+  cd name do
+    exec ["bundle", "install"]
+    exec ["toys", "ci", "--rubocop", "--yard", "--test"]
   end
 end
 
@@ -310,14 +366,12 @@ end
 
 def output_result name, result, *style
   case result
-  when :opened
-    puts "#{name}: Created pull request", *style
+  when Integer
+    puts "#{name}: Created pull request #{result}", *style
   when :unchanged
     puts "#{name}: No pull request created because nothing changed", *style
-  when :disabled
-    puts "#{name}: Results left in the local directory", *style
   else
-    puts "#{name}: Unknown result #{result.inspect}", *style
+    puts "#{name}: Results left in the local directory", *style
   end
   result
 end
@@ -328,7 +382,8 @@ def docker_run *args
     "--rm",
     "--user", "#{Process.uid}:#{Process.gid}",
     "-v", "#{context_directory}:/repo",
-    "-w", "/repo"
+    "-w", "/repo",
+    "--env", "HOME=/repo"
   ] + args
   exec cmd
 end

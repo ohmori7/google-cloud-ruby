@@ -37,17 +37,23 @@ module Google
         #     Automatic scaling is based on request rate, response latencies, and other
         #     application metrics. Instances are dynamically created and destroyed as
         #     needed in order to handle traffic.
+        #
+        #     Note: The following fields are mutually exclusive: `automatic_scaling`, `basic_scaling`, `manual_scaling`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] basic_scaling
         #   @return [::Google::Cloud::AppEngine::V1::BasicScaling]
         #     A service with basic scaling will create an instance when the application
         #     receives a request. The instance will be turned down when the app becomes
         #     idle. Basic scaling is ideal for work that is intermittent or driven by
         #     user activity.
+        #
+        #     Note: The following fields are mutually exclusive: `basic_scaling`, `automatic_scaling`, `manual_scaling`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] manual_scaling
         #   @return [::Google::Cloud::AppEngine::V1::ManualScaling]
         #     A service with manual scaling runs continuously, allowing you to perform
         #     complex initialization and rely on the state of its memory over time.
         #     Manually scaled versions are sometimes referred to as "backends".
+        #
+        #     Note: The following fields are mutually exclusive: `manual_scaling`, `automatic_scaling`, `basic_scaling`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] inbound_services
         #   @return [::Array<::Google::Cloud::AppEngine::V1::InboundServiceType>]
         #     Before an application can receive email or XMPP messages, the application
@@ -86,6 +92,10 @@ module Google
         # @!attribute [rw] vm
         #   @return [::Boolean]
         #     Whether to deploy this version in a container on a virtual machine.
+        # @!attribute [rw] app_engine_apis
+        #   @return [::Boolean]
+        #     Allows App Engine second generation runtimes to access the legacy bundled
+        #     services.
         # @!attribute [rw] beta_settings
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Metadata settings that are supplied to this version to enable
@@ -557,9 +567,27 @@ module Google
         #   @return [::String]
         #     Full Serverless VPC Access Connector name e.g.
         #     /projects/my-project/locations/us-central1/connectors/c1.
+        # @!attribute [rw] egress_setting
+        #   @return [::Google::Cloud::AppEngine::V1::VpcAccessConnector::EgressSetting]
+        #     The egress setting for the connector, controlling what traffic is diverted
+        #     through it.
         class VpcAccessConnector
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Available egress settings.
+          #
+          # This controls what traffic is diverted through the VPC Access Connector
+          # resource. By default PRIVATE_IP_RANGES will be used.
+          module EgressSetting
+            EGRESS_SETTING_UNSPECIFIED = 0
+
+            # Force the use of VPC Access for all egress traffic from the function.
+            ALL_TRAFFIC = 1
+
+            # Use the VPC Access Connector for private IP space from RFC1918.
+            PRIVATE_IP_RANGES = 2
+          end
         end
 
         # The entrypoint for the application.

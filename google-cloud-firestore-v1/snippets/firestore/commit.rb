@@ -19,15 +19,29 @@
 # [START firestore_v1_generated_Firestore_Commit_sync]
 require "google/cloud/firestore/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Firestore::V1::Firestore::Client.new
+##
+# Snippet for the commit call in the Firestore service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Firestore::V1::Firestore::Client#commit.
+#
+def commit
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Firestore::V1::Firestore::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Firestore::V1::CommitRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Firestore::V1::CommitRequest.new
 
-# Call the commit method.
-result = client.commit request
+  # Call the commit method.
+  result = client.commit request
 
-# The returned object is of type Google::Cloud::Firestore::V1::CommitResponse.
-p result
+  # The returned object is of type Google::Cloud::Firestore::V1::CommitResponse.
+  p result
+end
 # [END firestore_v1_generated_Firestore_Commit_sync]

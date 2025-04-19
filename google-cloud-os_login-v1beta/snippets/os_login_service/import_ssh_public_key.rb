@@ -19,15 +19,29 @@
 # [START oslogin_v1beta_generated_OsLoginService_ImportSshPublicKey_sync]
 require "google/cloud/os_login/v1beta"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OsLogin::V1beta::OsLoginService::Client.new
+##
+# Snippet for the import_ssh_public_key call in the OsLoginService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OsLogin::V1beta::OsLoginService::Client#import_ssh_public_key.
+#
+def import_ssh_public_key
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OsLogin::V1beta::OsLoginService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OsLogin::V1beta::ImportSshPublicKeyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OsLogin::V1beta::ImportSshPublicKeyRequest.new
 
-# Call the import_ssh_public_key method.
-result = client.import_ssh_public_key request
+  # Call the import_ssh_public_key method.
+  result = client.import_ssh_public_key request
 
-# The returned object is of type Google::Cloud::OsLogin::V1beta::ImportSshPublicKeyResponse.
-p result
+  # The returned object is of type Google::Cloud::OsLogin::V1beta::ImportSshPublicKeyResponse.
+  p result
+end
 # [END oslogin_v1beta_generated_OsLoginService_ImportSshPublicKey_sync]

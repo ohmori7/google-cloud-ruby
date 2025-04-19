@@ -19,21 +19,33 @@
 # [START redis_v1beta1_generated_CloudRedis_ListInstances_sync]
 require "google/cloud/redis/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Redis::V1beta1::CloudRedis::Client.new
+##
+# Snippet for the list_instances call in the CloudRedis service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Redis::V1beta1::CloudRedis::Client#list_instances.
+#
+def list_instances
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Redis::V1beta1::CloudRedis::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Redis::V1beta1::ListInstancesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Redis::V1beta1::ListInstancesRequest.new
 
-# Call the list_instances method.
-result = client.list_instances request
+  # Call the list_instances method.
+  result = client.list_instances request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Redis::V1beta1::Instance.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Redis::V1beta1::Instance.
+    p item
+  end
 end
 # [END redis_v1beta1_generated_CloudRedis_ListInstances_sync]

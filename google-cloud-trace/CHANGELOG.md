@@ -1,5 +1,54 @@
 # Release History
 
+### 0.45.0 (2025-03-04)
+
+#### Features
+
+* Update minimum Ruby version to 3.0 ([#29261](https://github.com/googleapis/google-cloud-ruby/issues/29261)) 
+
+### 0.44.1 (2024-12-11)
+
+#### Documentation
+
+* Updated readme to reflect that the instrumentation is deprecated ([#27728](https://github.com/googleapis/google-cloud-ruby/issues/27728)) 
+
+### 0.44.0 (2024-07-09)
+
+#### Features
+
+* compatibility with GA releases of underlying versioned clients ([#26361](https://github.com/googleapis/google-cloud-ruby/issues/26361)) 
+
+### 0.43.0 (2024-03-07)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 0.42.2 (2023-05-19)
+
+#### Documentation
+
+* Fixed broken links in authentication documentation ([#21619](https://github.com/googleapis/google-cloud-ruby/issues/21619)) 
+
+### 0.42.1 (2022-07-28)
+
+#### Documentation
+
+* Fix example in FaradayMiddleware ([#18850](https://github.com/googleapis/google-cloud-ruby/issues/18850)) 
+
+### 0.42.0 (2022-07-08)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18455](https://github.com/googleapis/google-cloud-ruby/issues/18455)) 
+
+### 0.41.4 (2022-05-27)
+
+#### Bug Fixes
+
+* normalize span time based on rails version
+* wrap patched methods into class to ignore yard parsing
+
 ### 0.41.3 / 2021-07-08
 
 #### Documentation

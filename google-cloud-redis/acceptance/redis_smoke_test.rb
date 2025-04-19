@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "simplecov"
 require "minitest/autorun"
 
 require "google/cloud/redis"
@@ -25,17 +24,6 @@ class RedisSmokeTest < Minitest::Test
     project_id = ENV["REDIS_TEST_PROJECT"].freeze
 
     client = Google::Cloud::Redis.cloud_redis version: :v1
-    parent = "projects/#{project_id}/locations/-"
-    client.list_instances parent: parent
-  end
-
-  def test_list_instances_v1beta1
-    unless ENV["REDIS_TEST_PROJECT"]
-      fail "REDIS_TEST_PROJECT environment variable must be defined"
-    end
-    project_id = ENV["REDIS_TEST_PROJECT"].freeze
-
-    client = Google::Cloud::Redis.cloud_redis version: :v1beta1
     parent = "projects/#{project_id}/locations/-"
     client.list_instances parent: parent
   end

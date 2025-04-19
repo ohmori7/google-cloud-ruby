@@ -30,6 +30,11 @@
                 "list_keys"
               ]
             },
+            "RetrieveLegacySecretKey": {
+              "methods": [
+                "retrieve_legacy_secret_key"
+              ]
+            },
             "GetKey": {
               "methods": [
                 "get_key"
@@ -50,9 +55,54 @@
                 "migrate_key"
               ]
             },
+            "AddIpOverride": {
+              "methods": [
+                "add_ip_override"
+              ]
+            },
+            "RemoveIpOverride": {
+              "methods": [
+                "remove_ip_override"
+              ]
+            },
+            "ListIpOverrides": {
+              "methods": [
+                "list_ip_overrides"
+              ]
+            },
             "GetMetrics": {
               "methods": [
                 "get_metrics"
+              ]
+            },
+            "CreateFirewallPolicy": {
+              "methods": [
+                "create_firewall_policy"
+              ]
+            },
+            "ListFirewallPolicies": {
+              "methods": [
+                "list_firewall_policies"
+              ]
+            },
+            "GetFirewallPolicy": {
+              "methods": [
+                "get_firewall_policy"
+              ]
+            },
+            "UpdateFirewallPolicy": {
+              "methods": [
+                "update_firewall_policy"
+              ]
+            },
+            "DeleteFirewallPolicy": {
+              "methods": [
+                "delete_firewall_policy"
+              ]
+            },
+            "ReorderFirewallPolicies": {
+              "methods": [
+                "reorder_firewall_policies"
               ]
             },
             "ListRelatedAccountGroups": {

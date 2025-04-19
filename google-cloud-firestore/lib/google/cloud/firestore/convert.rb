@@ -50,15 +50,18 @@ module Google
           end
 
           def fields_to_hash fields, client
-            Hash[fields.map do |key, value|
-              [key.to_sym, value_to_raw(value, client)]
-            end]
+            # Google::Protobuf::Map#to_h ignores the given block, unlike Hash#to_h
+            # rubocop:disable Style/MapToHash
+            fields
+              .map { |key, value| [key.to_sym, value_to_raw(value, client)] }
+              .to_h
+            # rubocop:enable Style/MapToHash
           end
 
           def hash_to_fields hash
-            Hash[hash.map do |key, value|
+            hash.to_h do |key, value|
               [String(key), raw_to_value(value)]
-            end]
+            end
           end
 
           def value_to_raw value, client
@@ -304,7 +307,7 @@ module Google
             field_paths = new_data_pairs.map(&:first)
 
             delete_paths.map!(&:first)
-            root_field_paths_and_values = Hash[root_field_paths_and_values]
+            root_field_paths_and_values = root_field_paths_and_values.to_h
 
             data, nested_deletes = remove_field_value_from data, :delete
             raise ArgumentError, "DELETE cannot be nested" if nested_deletes.any?
@@ -359,10 +362,10 @@ module Google
             )
 
             unless exists.nil? && update_time.nil?
-              write.current_document = \
+              write.current_document =
                 Google::Cloud::Firestore::V1::Precondition.new({
                   exists: exists, update_time: time_to_timestamp(update_time)
-                }.delete_if { |_, v| v.nil? })
+                }.compact)
             end
 
             write
@@ -378,12 +381,12 @@ module Google
                 return val if val
               end
             when Hash
-              obj.each do |_k, v|
+              obj.each_value do |v|
                 val = field_value_nested? v, field_value_type
                 return val if val
               end
             end
-            nil
+            nil # rubocop:disable Style/ReturnNilInPredicateMethodDefinition
           end
 
           def remove_field_value_from obj, field_value_type = nil
@@ -425,7 +428,7 @@ module Google
             end
 
             # return new data hash and field path/values hash
-            [Hash[new_pairs.compact], Hash[paths]]
+            [new_pairs.compact.to_h, paths.to_h]
           end
 
           def identify_leaf_nodes hash
@@ -495,7 +498,6 @@ module Google
               dup_hash = dup_hash[field]
             end
             prev_hash[last_field] = dup_hash
-            prev_hash.delete_if { |_k, v| v.nil? }
             ret_hash
           end
 
@@ -528,18 +530,18 @@ module Google
             left_hash
           end
 
-          START_FIELD_PATH_CHARS = /\A[a-zA-Z_]/.freeze
-          INVALID_FIELD_PATH_CHARS = %r{[~*/\[\]]}.freeze
-          ESCAPED_FIELD_PATH = /\A`(.*)`\z/.freeze
+          START_FIELD_PATH_CHARS = /\A[a-zA-Z_]/
+          INVALID_FIELD_PATH_CHARS = %r{[~*/\[\]]}
+          ESCAPED_FIELD_PATH = /\A`(.*)`\z/
 
           def build_hash_from_field_paths_and_values pairs
-            pairs.each do |field_path, _value|
-              raise ArgumentError unless field_path.is_a? FieldPath
+            pairs.each do |pair|
+              raise ArgumentError unless pair.first.is_a? FieldPath
             end
 
             dup_hash = {}
 
-            pairs.each do |field_path, value|
+            pairs.each do |(field_path, value)|
               tmp_dup = dup_hash
               last_field = nil
               field_path.fields.map(&:to_sym).each do |field|

@@ -19,15 +19,29 @@
 # [START binaryauthorization_v1_generated_BinauthzManagementService_GetPolicy_sync]
 require "google/cloud/binary_authorization/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
+##
+# Snippet for the get_policy call in the BinauthzManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client#get_policy.
+#
+def get_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::BinaryAuthorization::V1::BinauthzManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::BinaryAuthorization::V1::GetPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::BinaryAuthorization::V1::GetPolicyRequest.new
 
-# Call the get_policy method.
-result = client.get_policy request
+  # Call the get_policy method.
+  result = client.get_policy request
 
-# The returned object is of type Google::Cloud::BinaryAuthorization::V1::Policy.
-p result
+  # The returned object is of type Google::Cloud::BinaryAuthorization::V1::Policy.
+  p result
+end
 # [END binaryauthorization_v1_generated_BinauthzManagementService_GetPolicy_sync]

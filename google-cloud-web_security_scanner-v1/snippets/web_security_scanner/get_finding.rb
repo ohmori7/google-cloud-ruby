@@ -19,15 +19,29 @@
 # [START websecurityscanner_v1_generated_WebSecurityScanner_GetFinding_sync]
 require "google/cloud/web_security_scanner/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::WebSecurityScanner::V1::WebSecurityScanner::Client.new
+##
+# Snippet for the get_finding call in the WebSecurityScanner service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::WebSecurityScanner::V1::WebSecurityScanner::Client#get_finding.
+#
+def get_finding
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::WebSecurityScanner::V1::WebSecurityScanner::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::WebSecurityScanner::V1::GetFindingRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::WebSecurityScanner::V1::GetFindingRequest.new
 
-# Call the get_finding method.
-result = client.get_finding request
+  # Call the get_finding method.
+  result = client.get_finding request
 
-# The returned object is of type Google::Cloud::WebSecurityScanner::V1::Finding.
-p result
+  # The returned object is of type Google::Cloud::WebSecurityScanner::V1::Finding.
+  p result
+end
 # [END websecurityscanner_v1_generated_WebSecurityScanner_GetFinding_sync]

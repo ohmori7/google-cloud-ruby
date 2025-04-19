@@ -35,10 +35,10 @@ module Google
             self.service_name = 'google.pubsub.v1.Publisher'
 
             # Creates the given topic with the given name. See the [resource name rules]
-            # (https://cloud.google.com/pubsub/docs/admin#resource_names).
+            # (https://cloud.google.com/pubsub/docs/pubsub-basics#resource_names).
             rpc :CreateTopic, ::Google::Cloud::PubSub::V1::Topic, ::Google::Cloud::PubSub::V1::Topic
-            # Updates an existing topic. Note that certain properties of a
-            # topic are not modifiable.
+            # Updates an existing topic by updating the fields specified in the update
+            # mask. Note that certain properties of a topic are not modifiable.
             rpc :UpdateTopic, ::Google::Cloud::PubSub::V1::UpdateTopicRequest, ::Google::Cloud::PubSub::V1::Topic
             # Adds one or more messages to the topic. Returns `NOT_FOUND` if the topic
             # does not exist.
@@ -83,21 +83,22 @@ module Google
             self.service_name = 'google.pubsub.v1.Subscriber'
 
             # Creates a subscription to a given topic. See the [resource name rules]
-            # (https://cloud.google.com/pubsub/docs/admin#resource_names).
+            # (https://cloud.google.com/pubsub/docs/pubsub-basics#resource_names).
             # If the subscription already exists, returns `ALREADY_EXISTS`.
             # If the corresponding topic doesn't exist, returns `NOT_FOUND`.
             #
             # If the name is not provided in the request, the server will assign a random
             # name for this subscription on the same project as the topic, conforming
             # to the [resource name format]
-            # (https://cloud.google.com/pubsub/docs/admin#resource_names). The generated
-            # name is populated in the returned Subscription object. Note that for REST
-            # API requests, you must specify a name in the request.
+            # (https://cloud.google.com/pubsub/docs/pubsub-basics#resource_names). The
+            # generated name is populated in the returned Subscription object. Note that
+            # for REST API requests, you must specify a name in the request.
             rpc :CreateSubscription, ::Google::Cloud::PubSub::V1::Subscription, ::Google::Cloud::PubSub::V1::Subscription
             # Gets the configuration details of a subscription.
             rpc :GetSubscription, ::Google::Cloud::PubSub::V1::GetSubscriptionRequest, ::Google::Cloud::PubSub::V1::Subscription
-            # Updates an existing subscription. Note that certain properties of a
-            # subscription, such as its topic, are not modifiable.
+            # Updates an existing subscription by updating the fields specified in the
+            # update mask. Note that certain properties of a subscription, such as its
+            # topic, are not modifiable.
             rpc :UpdateSubscription, ::Google::Cloud::PubSub::V1::UpdateSubscriptionRequest, ::Google::Cloud::PubSub::V1::Subscription
             # Lists matching subscriptions.
             rpc :ListSubscriptions, ::Google::Cloud::PubSub::V1::ListSubscriptionsRequest, ::Google::Cloud::PubSub::V1::ListSubscriptionsResponse
@@ -121,9 +122,7 @@ module Google
             # but such a message may be redelivered later. Acknowledging a message more
             # than once will not result in an error.
             rpc :Acknowledge, ::Google::Cloud::PubSub::V1::AcknowledgeRequest, ::Google::Protobuf::Empty
-            # Pulls messages from the server. The server may return `UNAVAILABLE` if
-            # there are too many concurrent pull requests pending for the given
-            # subscription.
+            # Pulls messages from the server.
             rpc :Pull, ::Google::Cloud::PubSub::V1::PullRequest, ::Google::Cloud::PubSub::V1::PullResponse
             # Establishes a stream with the server, which sends messages down to the
             # client. The client streams acknowledgements and ack deadline modifications
@@ -141,10 +140,10 @@ module Google
             # continuously through the call regardless of changes to the `PushConfig`.
             rpc :ModifyPushConfig, ::Google::Cloud::PubSub::V1::ModifyPushConfigRequest, ::Google::Protobuf::Empty
             # Gets the configuration details of a snapshot. Snapshots are used in
-            # <a href="https://cloud.google.com/pubsub/docs/replay-overview">Seek</a>
-            # operations, which allow you to manage message acknowledgments in bulk. That
-            # is, you can set the acknowledgment state of messages in an existing
-            # subscription to the state captured by a snapshot.
+            # [Seek](https://cloud.google.com/pubsub/docs/replay-overview) operations,
+            # which allow you to manage message acknowledgments in bulk. That is, you can
+            # set the acknowledgment state of messages in an existing subscription to the
+            # state captured by a snapshot.
             rpc :GetSnapshot, ::Google::Cloud::PubSub::V1::GetSnapshotRequest, ::Google::Cloud::PubSub::V1::Snapshot
             # Lists the existing snapshots. Snapshots are used in [Seek](
             # https://cloud.google.com/pubsub/docs/replay-overview) operations, which
@@ -165,16 +164,16 @@ module Google
             # the request, the server will assign a random
             # name for this snapshot on the same project as the subscription, conforming
             # to the [resource name format]
-            # (https://cloud.google.com/pubsub/docs/admin#resource_names). The
+            # (https://cloud.google.com/pubsub/docs/pubsub-basics#resource_names). The
             # generated name is populated in the returned Snapshot object. Note that for
             # REST API requests, you must specify a name in the request.
             rpc :CreateSnapshot, ::Google::Cloud::PubSub::V1::CreateSnapshotRequest, ::Google::Cloud::PubSub::V1::Snapshot
-            # Updates an existing snapshot. Snapshots are used in
-            # <a href="https://cloud.google.com/pubsub/docs/replay-overview">Seek</a>
-            # operations, which allow
-            # you to manage message acknowledgments in bulk. That is, you can set the
-            # acknowledgment state of messages in an existing subscription to the state
-            # captured by a snapshot.
+            # Updates an existing snapshot by updating the fields specified in the update
+            # mask. Snapshots are used in
+            # [Seek](https://cloud.google.com/pubsub/docs/replay-overview) operations,
+            # which allow you to manage message acknowledgments in bulk. That is, you can
+            # set the acknowledgment state of messages in an existing subscription to the
+            # state captured by a snapshot.
             rpc :UpdateSnapshot, ::Google::Cloud::PubSub::V1::UpdateSnapshotRequest, ::Google::Cloud::PubSub::V1::Snapshot
             # Removes an existing snapshot. Snapshots are used in [Seek]
             # (https://cloud.google.com/pubsub/docs/replay-overview) operations, which

@@ -19,15 +19,29 @@
 # [START cloudbuild_v1_generated_CloudBuild_CancelBuild_sync]
 require "google/cloud/build/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Build::V1::CloudBuild::Client.new
+##
+# Snippet for the cancel_build call in the CloudBuild service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Build::V1::CloudBuild::Client#cancel_build.
+#
+def cancel_build
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Build::V1::CloudBuild::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Build::V1::CancelBuildRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Build::V1::CancelBuildRequest.new
 
-# Call the cancel_build method.
-result = client.cancel_build request
+  # Call the cancel_build method.
+  result = client.cancel_build request
 
-# The returned object is of type Google::Cloud::Build::V1::Build.
-p result
+  # The returned object is of type Google::Cloud::Build::V1::Build.
+  p result
+end
 # [END cloudbuild_v1_generated_CloudBuild_CancelBuild_sync]

@@ -41,9 +41,26 @@ class ::Google::Cloud::Talent::V4beta1::CompanyService::ClientTest < Minitest::T
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -356,7 +373,8 @@ class ::Google::Cloud::Talent::V4beta1::CompanyService::ClientTest < Minitest::T
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Talent::V4beta1::CompanyService::Client.new do |config|
         config.credentials = grpc_channel
       end

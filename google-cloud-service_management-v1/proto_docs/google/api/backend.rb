@@ -35,7 +35,8 @@ module Google
     #   @return [::String]
     #     Selects the methods to which this rule applies.
     #
-    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax details.
+    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax
+    #     details.
     # @!attribute [rw] address
     #   @return [::String]
     #     The address of the API backend.
@@ -63,9 +64,9 @@ module Google
     #     The number of seconds to wait for a response from a request. The default
     #     varies based on the request protocol and deployment environment.
     # @!attribute [rw] min_deadline
+    #   @deprecated This field is deprecated and may be removed in the next major version update.
     #   @return [::Float]
-    #     Minimum deadline in seconds needed for this method. Calls having deadline
-    #     value lower than this will be rejected.
+    #     Deprecated, do not use.
     # @!attribute [rw] operation_deadline
     #   @return [::Float]
     #     The number of seconds to wait for the completion of a long running
@@ -77,12 +78,16 @@ module Google
     #     The JWT audience is used when generating a JWT ID token for the backend.
     #     This ID token will be added in the HTTP "authorization" header, and sent
     #     to the backend.
+    #
+    #     Note: The following fields are mutually exclusive: `jwt_audience`, `disable_auth`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] disable_auth
     #   @return [::Boolean]
     #     When disable_auth is true, a JWT ID token won't be generated and the
     #     original "Authorization" HTTP header will be preserved. If the header is
     #     used to carry the original token and is expected by the backend, this
     #     field must be set to true to preserve the header.
+    #
+    #     Note: The following fields are mutually exclusive: `disable_auth`, `jwt_audience`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] protocol
     #   @return [::String]
     #     The protocol used for sending a request to the backend.
@@ -106,9 +111,21 @@ module Google
     #     See
     #     https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
     #     for more details on the supported values.
+    # @!attribute [rw] overrides_by_request_protocol
+    #   @return [::Google::Protobuf::Map{::String => ::Google::Api::BackendRule}]
+    #     The map between request protocol and the backend address.
     class BackendRule
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods
+
+      # @!attribute [rw] key
+      #   @return [::String]
+      # @!attribute [rw] value
+      #   @return [::Google::Api::BackendRule]
+      class OverridesByRequestProtocolEntry
+        include ::Google::Protobuf::MessageExts
+        extend ::Google::Protobuf::MessageExts::ClassMethods
+      end
 
       # Path Translation specifies how to combine the backend address with the
       # request path in order to produce the appropriate forwarding URL for the

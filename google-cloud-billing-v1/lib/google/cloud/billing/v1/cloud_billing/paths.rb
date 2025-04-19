@@ -27,15 +27,79 @@ module Google
             ##
             # Create a fully-qualified BillingAccount resource string.
             #
-            # The resource will be in the following format:
+            # @overload billing_account_path(billing_account:)
+            #   The resource will be in the following format:
             #
-            # `billingAccounts/{billing_account}`
+            #   `billingAccounts/{billing_account}`
             #
-            # @param billing_account [String]
+            #   @param billing_account [String]
+            #
+            # @overload billing_account_path(organization:, billing_account:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/billingAccounts/{billing_account}`
+            #
+            #   @param organization [String]
+            #   @param billing_account [String]
             #
             # @return [::String]
-            def billing_account_path billing_account:
-              "billingAccounts/#{billing_account}"
+            def billing_account_path **args
+              resources = {
+                "billing_account" => (proc do |billing_account:|
+                  "billingAccounts/#{billing_account}"
+                end),
+                "billing_account:organization" => (proc do |organization:, billing_account:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+
+                  "organizations/#{organization}/billingAccounts/#{billing_account}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified Organization resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `organizations/{organization}`
+            #
+            # @param organization [String]
+            #
+            # @return [::String]
+            def organization_path organization:
+              "organizations/#{organization}"
+            end
+
+            ##
+            # Create a fully-qualified Project resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}`
+            #
+            # @param project [String]
+            #
+            # @return [::String]
+            def project_path project:
+              "projects/#{project}"
+            end
+
+            ##
+            # Create a fully-qualified ProjectBillingInfo resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/billingInfo`
+            #
+            # @param project [String]
+            #
+            # @return [::String]
+            def project_billing_info_path project:
+              "projects/#{project}/billingInfo"
             end
 
             extend self

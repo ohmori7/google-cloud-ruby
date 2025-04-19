@@ -33,6 +33,12 @@ module Google
           # manage package installations and patch jobs for Compute Engine VM instances.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "osconfig.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -99,6 +105,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @os_config_zonal_service_stub.universe_domain
+            end
+
+            ##
             # Create a new OsConfigZonalService client object.
             #
             # @example
@@ -131,8 +146,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -145,15 +161,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @os_config_zonal_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @os_config_zonal_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -162,6 +193,15 @@ module Google
             # @return [::Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @os_config_zonal_service_stub.logger
+            end
 
             # Service calls
 
@@ -226,14 +266,14 @@ module Google
             #   # Call the create_os_policy_assignment method.
             #   result = client.create_os_policy_assignment request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_os_policy_assignment request, options = nil
@@ -247,10 +287,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_os_policy_assignment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -272,7 +313,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :create_os_policy_assignment, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -329,14 +370,14 @@ module Google
             #   # Call the update_os_policy_assignment method.
             #   result = client.update_os_policy_assignment request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_os_policy_assignment request, options = nil
@@ -350,10 +391,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_os_policy_assignment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -375,7 +417,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :update_os_policy_assignment, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -443,10 +485,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_os_policy_assignment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -467,7 +510,6 @@ module Google
 
               @os_config_zonal_service_stub.call_rpc :get_os_policy_assignment, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -522,13 +564,11 @@ module Google
             #   # Call the list_os_policy_assignments method.
             #   result = client.list_os_policy_assignments request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignment.
-            #     p response
+            #     p item
             #   end
             #
             def list_os_policy_assignments request, options = nil
@@ -542,10 +582,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_os_policy_assignments.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -567,7 +608,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :list_os_policy_assignments, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_os_policy_assignments, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -620,13 +661,11 @@ module Google
             #   # Call the list_os_policy_assignment_revisions method.
             #   result = client.list_os_policy_assignment_revisions request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignment.
-            #     p response
+            #     p item
             #   end
             #
             def list_os_policy_assignment_revisions request, options = nil
@@ -640,10 +679,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_os_policy_assignment_revisions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -665,7 +705,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :list_os_policy_assignment_revisions, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_os_policy_assignment_revisions, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -723,14 +763,14 @@ module Google
             #   # Call the delete_os_policy_assignment method.
             #   result = client.delete_os_policy_assignment request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_os_policy_assignment request, options = nil
@@ -744,10 +784,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_os_policy_assignment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -769,7 +810,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :delete_os_policy_assignment, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -778,6 +819,8 @@ module Google
             ##
             # Get OS policies compliance data for the specified Compute Engine VM
             # instance.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload get_instance_os_policies_compliance(request, options = nil)
             #   Pass arguments to `get_instance_os_policies_compliance` via a request object, either of type
@@ -839,10 +882,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_instance_os_policies_compliance.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -863,7 +907,6 @@ module Google
 
               @os_config_zonal_service_stub.call_rpc :get_instance_os_policies_compliance, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -872,6 +915,8 @@ module Google
             ##
             # List OS policies compliance data for all Compute Engine VM instances in the
             # specified zone.
+            #
+            # @deprecated This method is deprecated and may be removed in the next major version update.
             #
             # @overload list_instance_os_policies_compliances(request, options = nil)
             #   Pass arguments to `list_instance_os_policies_compliances` via a request object, either of type
@@ -925,13 +970,11 @@ module Google
             #   # Call the list_instance_os_policies_compliances method.
             #   result = client.list_instance_os_policies_compliances request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::InstanceOSPoliciesCompliance.
-            #     p response
+            #     p item
             #   end
             #
             def list_instance_os_policies_compliances request, options = nil
@@ -945,10 +988,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_instance_os_policies_compliances.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -970,7 +1014,222 @@ module Google
               @os_config_zonal_service_stub.call_rpc :list_instance_os_policies_compliances, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_instance_os_policies_compliances, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Get the OS policy asssignment report for the specified Compute Engine VM
+            # instance.
+            #
+            # @overload get_os_policy_assignment_report(request, options = nil)
+            #   Pass arguments to `get_os_policy_assignment_report` via a request object, either of type
+            #   {::Google::Cloud::OsConfig::V1alpha::GetOSPolicyAssignmentReportRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::OsConfig::V1alpha::GetOSPolicyAssignmentReportRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_os_policy_assignment_report(name: nil)
+            #   Pass arguments to `get_os_policy_assignment_report` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. API resource name for OS policy assignment report.
+            #
+            #     Format:
+            #     `/projects/{project}/locations/{location}/instances/{instance}/osPolicyAssignments/{assignment}/report`
+            #
+            #     For `{project}`, either `project-number` or `project-id` can be provided.
+            #     For `{instance_id}`, either Compute Engine `instance-id` or `instance-name`
+            #     can be provided.
+            #     For `{assignment_id}`, the OSPolicyAssignment id must be provided.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/os_config/v1alpha"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::OsConfig::V1alpha::GetOSPolicyAssignmentReportRequest.new
+            #
+            #   # Call the get_os_policy_assignment_report method.
+            #   result = client.get_os_policy_assignment_report request
+            #
+            #   # The returned object is of type Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport.
+            #   p result
+            #
+            def get_os_policy_assignment_report request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::OsConfig::V1alpha::GetOSPolicyAssignmentReportRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_os_policy_assignment_report.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_os_policy_assignment_report.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_os_policy_assignment_report.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @os_config_zonal_service_stub.call_rpc :get_os_policy_assignment_report, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # List OS policy asssignment reports for all Compute Engine VM instances in
+            # the specified zone.
+            #
+            # @overload list_os_policy_assignment_reports(request, options = nil)
+            #   Pass arguments to `list_os_policy_assignment_reports` via a request object, either of type
+            #   {::Google::Cloud::OsConfig::V1alpha::ListOSPolicyAssignmentReportsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::OsConfig::V1alpha::ListOSPolicyAssignmentReportsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_os_policy_assignment_reports(parent: nil, page_size: nil, filter: nil, page_token: nil)
+            #   Pass arguments to `list_os_policy_assignment_reports` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The parent resource name.
+            #
+            #     Format:
+            #     `projects/{project}/locations/{location}/instances/{instance}/osPolicyAssignments/{assignment}/reports`
+            #
+            #     For `{project}`, either `project-number` or `project-id` can be provided.
+            #     For `{instance}`, either `instance-name`, `instance-id`, or `-` can be
+            #     provided. If '-' is provided, the response will include
+            #     OSPolicyAssignmentReports for all instances in the project/location.
+            #     For `{assignment}`, either `assignment-id` or `-` can be provided. If '-'
+            #     is provided, the response will include OSPolicyAssignmentReports for all
+            #     OSPolicyAssignments in the project/location.
+            #     Either \\{instance} or \\{assignment} must be `-`.
+            #
+            #     For example:
+            #     `projects/{project}/locations/{location}/instances/{instance}/osPolicyAssignments/-/reports`
+            #      returns all reports for the instance
+            #     `projects/{project}/locations/{location}/instances/-/osPolicyAssignments/{assignment-id}/reports`
+            #      returns all the reports for the given assignment across all instances.
+            #     `projects/{project}/locations/{location}/instances/-/osPolicyAssignments/-/reports`
+            #      returns all the reports for all assignments across all instances.
+            #   @param page_size [::Integer]
+            #     The maximum number of results to return.
+            #   @param filter [::String]
+            #     If provided, this field specifies the criteria that must be met by the
+            #     `OSPolicyAssignmentReport` API resource that is included in the response.
+            #   @param page_token [::String]
+            #     A pagination token returned from a previous call to the
+            #     `ListOSPolicyAssignmentReports` method that indicates where this listing
+            #     should continue from.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/os_config/v1alpha"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::OsConfig::V1alpha::OsConfigZonalService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::OsConfig::V1alpha::ListOSPolicyAssignmentReportsRequest.new
+            #
+            #   # Call the list_os_policy_assignment_reports method.
+            #   result = client.list_os_policy_assignment_reports request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::OSPolicyAssignmentReport.
+            #     p item
+            #   end
+            #
+            def list_os_policy_assignment_reports request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::OsConfig::V1alpha::ListOSPolicyAssignmentReportsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_os_policy_assignment_reports.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_os_policy_assignment_reports.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_os_policy_assignment_reports.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @os_config_zonal_service_stub.call_rpc :list_os_policy_assignment_reports, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_os_policy_assignment_reports, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1042,10 +1301,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_inventory.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1066,7 +1326,6 @@ module Google
 
               @os_config_zonal_service_stub.call_rpc :get_inventory, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1093,11 +1352,9 @@ module Google
             #   @param parent [::String]
             #     Required. The parent resource name.
             #
-            #     Format: `projects/{project}/locations/{location}/instances/{instance}`
+            #     Format: `projects/{project}/locations/{location}/instances/-`
             #
-            #     For `{project}`, either `project-number` or `project-id` can be
-            #     provided. For `{instance}`, only hyphen or dash character is supported to
-            #     list inventories across VMs.
+            #     For `{project}`, either `project-number` or `project-id` can be provided.
             #   @param view [::Google::Cloud::OsConfig::V1alpha::InventoryView]
             #     Inventory view indicating what information should be included in the
             #     inventory resource. If unspecified, the default view is BASIC.
@@ -1131,13 +1388,11 @@ module Google
             #   # Call the list_inventories method.
             #   result = client.list_inventories request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::Inventory.
-            #     p response
+            #     p item
             #   end
             #
             def list_inventories request, options = nil
@@ -1151,10 +1406,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_inventories.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1176,7 +1432,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :list_inventories, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_inventories, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1245,10 +1501,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_vulnerability_report.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1269,7 +1526,6 @@ module Google
 
               @os_config_zonal_service_stub.call_rpc :get_vulnerability_report, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1296,11 +1552,9 @@ module Google
             #   @param parent [::String]
             #     Required. The parent resource name.
             #
-            #     Format: `projects/{project}/locations/{location}/instances/{instance}`
+            #     Format: `projects/{project}/locations/{location}/instances/-`
             #
             #     For `{project}`, either `project-number` or `project-id` can be provided.
-            #     For `{instance}`, only `-` character is supported to list vulnerability
-            #     reports across VMs.
             #   @param page_size [::Integer]
             #     The maximum number of results to return.
             #   @param page_token [::String]
@@ -1331,13 +1585,11 @@ module Google
             #   # Call the list_vulnerability_reports method.
             #   result = client.list_vulnerability_reports request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::OsConfig::V1alpha::VulnerabilityReport.
-            #     p response
+            #     p item
             #   end
             #
             def list_vulnerability_reports request, options = nil
@@ -1351,10 +1603,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_vulnerability_reports.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::OsConfig::V1alpha::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1376,7 +1629,7 @@ module Google
               @os_config_zonal_service_stub.call_rpc :list_vulnerability_reports, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @os_config_zonal_service_stub, :list_vulnerability_reports, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1412,20 +1665,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"osconfig.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1460,11 +1720,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "osconfig.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "osconfig.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1479,6 +1753,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1497,6 +1773,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -1558,6 +1842,16 @@ module Google
                 #
                 attr_reader :list_instance_os_policies_compliances
                 ##
+                # RPC-specific configuration for `get_os_policy_assignment_report`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_os_policy_assignment_report
+                ##
+                # RPC-specific configuration for `list_os_policy_assignment_reports`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_os_policy_assignment_reports
+                ##
                 # RPC-specific configuration for `get_inventory`
                 # @return [::Gapic::Config::Method]
                 #
@@ -1596,6 +1890,10 @@ module Google
                   @get_instance_os_policies_compliance = ::Gapic::Config::Method.new get_instance_os_policies_compliance_config
                   list_instance_os_policies_compliances_config = parent_rpcs.list_instance_os_policies_compliances if parent_rpcs.respond_to? :list_instance_os_policies_compliances
                   @list_instance_os_policies_compliances = ::Gapic::Config::Method.new list_instance_os_policies_compliances_config
+                  get_os_policy_assignment_report_config = parent_rpcs.get_os_policy_assignment_report if parent_rpcs.respond_to? :get_os_policy_assignment_report
+                  @get_os_policy_assignment_report = ::Gapic::Config::Method.new get_os_policy_assignment_report_config
+                  list_os_policy_assignment_reports_config = parent_rpcs.list_os_policy_assignment_reports if parent_rpcs.respond_to? :list_os_policy_assignment_reports
+                  @list_os_policy_assignment_reports = ::Gapic::Config::Method.new list_os_policy_assignment_reports_config
                   get_inventory_config = parent_rpcs.get_inventory if parent_rpcs.respond_to? :get_inventory
                   @get_inventory = ::Gapic::Config::Method.new get_inventory_config
                   list_inventories_config = parent_rpcs.list_inventories if parent_rpcs.respond_to? :list_inventories

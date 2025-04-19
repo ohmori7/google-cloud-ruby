@@ -41,9 +41,26 @@ class ::Google::Cloud::GkeHub::V1::GkeHub::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -453,12 +470,14 @@ class ::Google::Cloud::GkeHub::V1::GkeHub::ClientTest < Minitest::Test
     # Create request parameters for a unary method.
     name = "hello world"
     request_id = "hello world"
+    force = true
 
     delete_membership_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :delete_membership, name
       assert_kind_of ::Google::Cloud::GkeHub::V1::DeleteMembershipRequest, request
       assert_equal "hello world", request["name"]
       assert_equal "hello world", request["request_id"]
+      assert_equal true, request["force"]
       refute_nil options
     end
 
@@ -469,35 +488,35 @@ class ::Google::Cloud::GkeHub::V1::GkeHub::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.delete_membership({ name: name, request_id: request_id }) do |response, operation|
+      client.delete_membership({ name: name, request_id: request_id, force: force }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.delete_membership name: name, request_id: request_id do |response, operation|
+      client.delete_membership name: name, request_id: request_id, force: force do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.delete_membership ::Google::Cloud::GkeHub::V1::DeleteMembershipRequest.new(name: name, request_id: request_id) do |response, operation|
+      client.delete_membership ::Google::Cloud::GkeHub::V1::DeleteMembershipRequest.new(name: name, request_id: request_id, force: force) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.delete_membership({ name: name, request_id: request_id }, grpc_options) do |response, operation|
+      client.delete_membership({ name: name, request_id: request_id, force: force }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.delete_membership(::Google::Cloud::GkeHub::V1::DeleteMembershipRequest.new(name: name, request_id: request_id), grpc_options) do |response, operation|
+      client.delete_membership(::Google::Cloud::GkeHub::V1::DeleteMembershipRequest.new(name: name, request_id: request_id, force: force), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -787,7 +806,8 @@ class ::Google::Cloud::GkeHub::V1::GkeHub::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::GkeHub::V1::GkeHub::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -805,7 +825,8 @@ class ::Google::Cloud::GkeHub::V1::GkeHub::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::GkeHub::V1::GkeHub::Client.new do |config|
         config.credentials = grpc_channel
       end

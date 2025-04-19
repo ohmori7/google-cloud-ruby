@@ -41,9 +41,26 @@ class ::Google::Cloud::PubSub::V1::Publisher::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -62,6 +79,9 @@ class ::Google::Cloud::PubSub::V1::Publisher::ClientTest < Minitest::Test
     schema_settings = {}
     satisfies_pzs = true
     message_retention_duration = {}
+    state = :STATE_UNSPECIFIED
+    ingestion_data_source_settings = {}
+    message_transforms = [{}]
 
     create_topic_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :create_topic, name
@@ -73,6 +93,9 @@ class ::Google::Cloud::PubSub::V1::Publisher::ClientTest < Minitest::Test
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::PubSub::V1::SchemaSettings), request["schema_settings"]
       assert_equal true, request["satisfies_pzs"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Duration), request["message_retention_duration"]
+      assert_equal :STATE_UNSPECIFIED, request["state"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::PubSub::V1::IngestionDataSourceSettings), request["ingestion_data_source_settings"]
+      assert_kind_of ::Google::Cloud::PubSub::V1::MessageTransform, request["message_transforms"].first
       refute_nil options
     end
 
@@ -83,31 +106,31 @@ class ::Google::Cloud::PubSub::V1::Publisher::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.create_topic({ name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration }) do |response, operation|
+      client.create_topic({ name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration, state: state, ingestion_data_source_settings: ingestion_data_source_settings, message_transforms: message_transforms }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.create_topic name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration do |response, operation|
+      client.create_topic name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration, state: state, ingestion_data_source_settings: ingestion_data_source_settings, message_transforms: message_transforms do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.create_topic ::Google::Cloud::PubSub::V1::Topic.new(name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration) do |response, operation|
+      client.create_topic ::Google::Cloud::PubSub::V1::Topic.new(name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration, state: state, ingestion_data_source_settings: ingestion_data_source_settings, message_transforms: message_transforms) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.create_topic({ name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration }, grpc_options) do |response, operation|
+      client.create_topic({ name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration, state: state, ingestion_data_source_settings: ingestion_data_source_settings, message_transforms: message_transforms }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.create_topic(::Google::Cloud::PubSub::V1::Topic.new(name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration), grpc_options) do |response, operation|
+      client.create_topic(::Google::Cloud::PubSub::V1::Topic.new(name: name, labels: labels, message_storage_policy: message_storage_policy, kms_key_name: kms_key_name, schema_settings: schema_settings, satisfies_pzs: satisfies_pzs, message_retention_duration: message_retention_duration, state: state, ingestion_data_source_settings: ingestion_data_source_settings, message_transforms: message_transforms), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -606,7 +629,8 @@ class ::Google::Cloud::PubSub::V1::Publisher::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::PubSub::V1::Publisher::Client.new do |config|
         config.credentials = grpc_channel
       end

@@ -35,9 +35,39 @@
                 "restore_instance"
               ]
             },
+            "RevertInstance": {
+              "methods": [
+                "revert_instance"
+              ]
+            },
             "DeleteInstance": {
               "methods": [
                 "delete_instance"
+              ]
+            },
+            "ListSnapshots": {
+              "methods": [
+                "list_snapshots"
+              ]
+            },
+            "GetSnapshot": {
+              "methods": [
+                "get_snapshot"
+              ]
+            },
+            "CreateSnapshot": {
+              "methods": [
+                "create_snapshot"
+              ]
+            },
+            "DeleteSnapshot": {
+              "methods": [
+                "delete_snapshot"
+              ]
+            },
+            "UpdateSnapshot": {
+              "methods": [
+                "update_snapshot"
               ]
             },
             "ListBackups": {
@@ -63,6 +93,11 @@
             "UpdateBackup": {
               "methods": [
                 "update_backup"
+              ]
+            },
+            "PromoteReplica": {
+              "methods": [
+                "promote_replica"
               ]
             }
           }

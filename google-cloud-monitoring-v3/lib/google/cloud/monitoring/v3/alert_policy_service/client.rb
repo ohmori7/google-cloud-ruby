@@ -28,16 +28,22 @@ module Google
           # Client for the AlertPolicyService service.
           #
           # The AlertPolicyService API is used to manage (list, create, delete,
-          # edit) alert policies in Stackdriver Monitoring. An alerting policy is
+          # edit) alert policies in Cloud Monitoring. An alerting policy is
           # a description of the conditions under which some aspect of your
           # system is considered to be "unhealthy" and the ways to notify
           # people or services about this state. In addition to using this API, alert
           # policies can also be managed through
-          # [Stackdriver Monitoring](https://cloud.google.com/monitoring/docs/),
+          # [Cloud Monitoring](https://cloud.google.com/monitoring/docs/),
           # which can be reached by clicking the "Monitoring" tab in
-          # [Cloud Console](https://console.cloud.google.com/).
+          # [Cloud console](https://console.cloud.google.com/).
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "monitoring.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -118,6 +124,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @alert_policy_service_stub.universe_domain
+            end
+
+            ##
             # Create a new AlertPolicyService client object.
             #
             # @example
@@ -150,8 +165,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -162,11 +178,34 @@ module Google
 
               @alert_policy_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Monitoring::V3::AlertPolicyService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @alert_policy_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @alert_policy_service_stub.logger
             end
 
             # Service calls
@@ -190,8 +229,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name)
-            #     whose alert policies are to be listed. The format is:
+            #     Required. The
+            #     [project](https://cloud.google.com/monitoring/api/v3#project_name) whose
+            #     alert policies are to be listed. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
@@ -201,24 +241,25 @@ module Google
             #     {::Google::Cloud::Monitoring::V3::AlertPolicyService::Client#get_alert_policy GetAlertPolicy}
             #     operation, instead.
             #   @param filter [::String]
-            #     If provided, this field specifies the criteria that must be met by
-            #     alert policies to be included in the response.
+            #     Optional. If provided, this field specifies the criteria that must be met
+            #     by alert policies to be included in the response.
             #
             #     For more details, see [sorting and
             #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
             #   @param order_by [::String]
-            #     A comma-separated list of fields by which to sort the result. Supports
-            #     the same set of field references as the `filter` field. Entries can be
-            #     prefixed with a minus sign to sort by the field in descending order.
+            #     Optional. A comma-separated list of fields by which to sort the result.
+            #     Supports the same set of field references as the `filter` field. Entries
+            #     can be prefixed with a minus sign to sort by the field in descending order.
             #
             #     For more details, see [sorting and
             #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
             #   @param page_size [::Integer]
-            #     The maximum number of results to return in a single response.
+            #     Optional. The maximum number of results to return in a single response.
             #   @param page_token [::String]
-            #     If this field is not empty then it must contain the `nextPageToken` value
-            #     returned by a previous call to this method.  Using this field causes the
-            #     method to return more results from the previous method call.
+            #     Optional. If this field is not empty then it must contain the
+            #     `nextPageToken` value returned by a previous call to this method.  Using
+            #     this field causes the method to return more results from the previous
+            #     method call.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Monitoring::V3::AlertPolicy>]
@@ -240,13 +281,11 @@ module Google
             #   # Call the list_alert_policies method.
             #   result = client.list_alert_policies request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Monitoring::V3::AlertPolicy.
-            #     p response
+            #     p item
             #   end
             #
             def list_alert_policies request, options = nil
@@ -260,10 +299,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_alert_policies.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -285,7 +325,7 @@ module Google
               @alert_policy_service_stub.call_rpc :list_alert_policies, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @alert_policy_service_stub, :list_alert_policies, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -348,10 +388,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_alert_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -372,7 +413,6 @@ module Google
 
               @alert_policy_service_stub.call_rpc :get_alert_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -380,6 +420,10 @@ module Google
 
             ##
             # Creates a new alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             #
             # @overload create_alert_policy(request, options = nil)
             #   Pass arguments to `create_alert_policy` via a request object, either of type
@@ -397,22 +441,23 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) in
-            #     which to create the alerting policy. The format is:
+            #     Required. The
+            #     [project](https://cloud.google.com/monitoring/api/v3#project_name) in which
+            #     to create the alerting policy. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
             #     Note that this field names the parent container in which the alerting
             #     policy will be written, not the name of the created policy. |name| must be
-            #     a host project of a workspace, otherwise INVALID_ARGUMENT error will
+            #     a host project of a Metrics Scope, otherwise INVALID_ARGUMENT error will
             #     return. The alerting policy that is returned will have a name that contains
             #     a normalized representation of this name as a prefix but adds a suffix of
             #     the form `/alertPolicies/[ALERT_POLICY_ID]`, identifying the policy in the
             #     container.
             #   @param alert_policy [::Google::Cloud::Monitoring::V3::AlertPolicy, ::Hash]
-            #     Required. The requested alerting policy. You should omit the `name` field in this
-            #     policy. The name will be returned in the new policy, including
-            #     a new `[ALERT_POLICY_ID]` value.
+            #     Required. The requested alerting policy. You should omit the `name` field
+            #     in this policy. The name will be returned in the new policy, including a
+            #     new `[ALERT_POLICY_ID]` value.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Monitoring::V3::AlertPolicy]
@@ -448,10 +493,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_alert_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -472,7 +518,6 @@ module Google
 
               @alert_policy_service_stub.call_rpc :create_alert_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -480,6 +525,10 @@ module Google
 
             ##
             # Deletes an alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             #
             # @overload delete_alert_policy(request, options = nil)
             #   Pass arguments to `delete_alert_policy` via a request object, either of type
@@ -537,10 +586,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_alert_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -561,7 +611,6 @@ module Google
 
               @alert_policy_service_stub.call_rpc :delete_alert_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -572,6 +621,10 @@ module Google
             # a new one or replace only certain fields in the current alerting policy by
             # specifying the fields to be updated via `updateMask`. Returns the
             # updated alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             #
             # @overload update_alert_policy(request, options = nil)
             #   Pass arguments to `update_alert_policy` via a request object, either of type
@@ -650,10 +703,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_alert_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -674,7 +728,6 @@ module Google
 
               @alert_policy_service_stub.call_rpc :update_alert_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -710,20 +763,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"monitoring.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -758,11 +818,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "monitoring.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "monitoring.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -777,6 +851,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -795,6 +871,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

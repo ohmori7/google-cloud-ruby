@@ -19,15 +19,29 @@
 # [START datastore_v1_generated_DatastoreAdmin_GetIndex_sync]
 require "google/cloud/datastore/admin/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastore::Admin::V1::DatastoreAdmin::Client.new
+##
+# Snippet for the get_index call in the DatastoreAdmin service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastore::Admin::V1::DatastoreAdmin::Client#get_index.
+#
+def get_index
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastore::Admin::V1::DatastoreAdmin::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastore::Admin::V1::GetIndexRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastore::Admin::V1::GetIndexRequest.new
 
-# Call the get_index method.
-result = client.get_index request
+  # Call the get_index method.
+  result = client.get_index request
 
-# The returned object is of type Google::Cloud::Datastore::Admin::V1::Index.
-p result
+  # The returned object is of type Google::Cloud::Datastore::Admin::V1::Index.
+  p result
+end
 # [END datastore_v1_generated_DatastoreAdmin_GetIndex_sync]

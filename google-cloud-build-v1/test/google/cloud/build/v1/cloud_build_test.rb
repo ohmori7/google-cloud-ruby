@@ -41,9 +41,26 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -707,6 +724,7 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
     project_id = "hello world"
     trigger_id = "hello world"
     trigger = {}
+    update_mask = {}
 
     update_build_trigger_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :update_build_trigger, name
@@ -714,6 +732,7 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
       assert_equal "hello world", request["project_id"]
       assert_equal "hello world", request["trigger_id"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Build::V1::BuildTrigger), request["trigger"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
       refute_nil options
     end
 
@@ -724,31 +743,31 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.update_build_trigger({ project_id: project_id, trigger_id: trigger_id, trigger: trigger }) do |response, operation|
+      client.update_build_trigger({ project_id: project_id, trigger_id: trigger_id, trigger: trigger, update_mask: update_mask }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.update_build_trigger project_id: project_id, trigger_id: trigger_id, trigger: trigger do |response, operation|
+      client.update_build_trigger project_id: project_id, trigger_id: trigger_id, trigger: trigger, update_mask: update_mask do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.update_build_trigger ::Google::Cloud::Build::V1::UpdateBuildTriggerRequest.new(project_id: project_id, trigger_id: trigger_id, trigger: trigger) do |response, operation|
+      client.update_build_trigger ::Google::Cloud::Build::V1::UpdateBuildTriggerRequest.new(project_id: project_id, trigger_id: trigger_id, trigger: trigger, update_mask: update_mask) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.update_build_trigger({ project_id: project_id, trigger_id: trigger_id, trigger: trigger }, grpc_options) do |response, operation|
+      client.update_build_trigger({ project_id: project_id, trigger_id: trigger_id, trigger: trigger, update_mask: update_mask }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.update_build_trigger(::Google::Cloud::Build::V1::UpdateBuildTriggerRequest.new(project_id: project_id, trigger_id: trigger_id, trigger: trigger), grpc_options) do |response, operation|
+      client.update_build_trigger(::Google::Cloud::Build::V1::UpdateBuildTriggerRequest.new(project_id: project_id, trigger_id: trigger_id, trigger: trigger, update_mask: update_mask), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -1227,7 +1246,8 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Build::V1::CloudBuild::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -1245,7 +1265,8 @@ class ::Google::Cloud::Build::V1::CloudBuild::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Build::V1::CloudBuild::Client.new do |config|
         config.credentials = grpc_channel
       end

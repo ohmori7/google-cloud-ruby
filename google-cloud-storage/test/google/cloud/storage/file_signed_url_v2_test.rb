@@ -22,6 +22,8 @@ describe Google::Cloud::Storage::File, :signed_url, :mock_storage do
   let(:file_name) { "file.ext" }
   let(:file_gapi) { Google::Apis::StorageV1::Object.from_json random_file_hash(bucket.name, file_name).to_json }
   let(:file) { Google::Cloud::Storage::File.from_gapi file_gapi, storage.service }
+  let(:custom_universe_domain) { "mydomain1.com" }
+  let(:custom_endpoint) { "https://storage.#{custom_universe_domain}/" }
 
   it "uses the credentials' issuer and signing_key to generate signed_url" do
     Time.stub :now, Time.new(2012,1,1,0,0,0, "+00:00") do
@@ -172,21 +174,21 @@ describe Google::Cloud::Storage::File, :signed_url, :mock_storage do
     }.must_raise ArgumentError
   end
 
-  describe "Files with spaces in them" do
-    let(:file_name) { "hello world.txt" }
+  describe "Files with spaces and hashes in them" do
+    let(:file_name) { "hello world #1.txt" }
 
     it "properly escapes the path when generating signed_url" do
       Time.stub :now, Time.new(2012,1,1,0,0,0, "+00:00") do
         signing_key_mock = Minitest::Mock.new
         signing_key_mock.expect :is_a?, false, [Proc]
-        signing_key_mock.expect :sign, "native-signature", [OpenSSL::Digest::SHA256, "GET\n\n\n1325376300\n/bucket/hello%20world.txt"]
+        signing_key_mock.expect :sign, "native-signature", [OpenSSL::Digest::SHA256, "GET\n\n\n1325376300\n/bucket/hello%20world%20%231.txt"]
         credentials.issuer = "native_client_email"
         credentials.signing_key = signing_key_mock
 
         signed_url = file.signed_url
 
         signed_uri = URI signed_url
-        _(signed_uri.path).must_equal "/bucket/hello%20world.txt"
+        _(signed_uri.path).must_equal "/bucket/hello%20world%20%231.txt"
 
         signed_url_params = CGI::parse signed_uri.query
         _(signed_url_params["GoogleAccessId"]).must_equal ["native_client_email"]
@@ -231,6 +233,46 @@ describe Google::Cloud::Storage::File, :signed_url, :mock_storage do
       _(signed_url_params["disposition"]).must_equal ["inline"]
 
       signing_key_mock.verify
+    end
+  end
+
+  describe "Supports custom endpoint" do
+
+    it "returns signed_url with custom universe_domain" do
+      service = Google::Cloud::Storage::Service.new project, credentials, universe_domain: custom_universe_domain
+      file = Google::Cloud::Storage::File.from_gapi file_gapi, service
+
+      Time.stub :now, Time.new(2012,1,1,0,0,0, "+00:00") do
+        signing_key_mock = Minitest::Mock.new
+        signing_key_mock.expect :is_a?, false, [Proc]
+        signing_key_mock.expect :sign, "native-signature", [OpenSSL::Digest::SHA256, "GET\n\n\n1325376300\n/bucket/file.ext"]
+
+        credentials.issuer = "native_client_email"
+        credentials.signing_key = signing_key_mock
+
+        signed_url = file.signed_url
+
+        signed_url = URI(signed_url)
+        _(signed_url.host).must_equal URI(custom_endpoint).host
+        signing_key_mock.verify
+      end
+    end
+
+    it "returns signed_url with custom endpoint" do
+      service = Google::Cloud::Storage::Service.new project, credentials, host: custom_endpoint
+      file = Google::Cloud::Storage::File.from_gapi file_gapi, service
+
+      Time.stub :now, Time.new(2012,1,1,0,0,0, "+00:00") do
+        signing_key_mock = Minitest::Mock.new
+        signing_key_mock.expect :is_a?, false, [Proc]
+        signing_key_mock.expect :sign, "native-signature", [OpenSSL::Digest::SHA256, "GET\n\n\n1325376300\n/bucket/file.ext"]
+
+        signed_url = file.signed_url issuer: "native_client_email", signing_key: signing_key_mock
+
+        signed_url = URI(signed_url)
+        _(signed_url.host).must_equal URI(custom_endpoint).host
+        signing_key_mock.verify
+      end
     end
   end
 

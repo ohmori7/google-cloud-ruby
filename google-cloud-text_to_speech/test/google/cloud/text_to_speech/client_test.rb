@@ -20,15 +20,66 @@ require "helper"
 require "google/cloud/text_to_speech"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::TextToSpeech::ClientConstructionMinitest < Minitest::Test
-  def test_text_to_speech
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_text_to_speech_grpc
+    skip unless Google::Cloud::TextToSpeech.text_to_speech_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::TextToSpeech.text_to_speech do |config|
+      client = Google::Cloud::TextToSpeech.text_to_speech transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::TextToSpeech::V1::TextToSpeech::Client, client
+    end
+  end
+
+  def test_text_to_speech_rest
+    skip unless Google::Cloud::TextToSpeech.text_to_speech_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::TextToSpeech.text_to_speech transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::TextToSpeech::V1::TextToSpeech::Rest::Client, client
+    end
+  end
+
+  def test_text_to_speech_long_audio_synthesize_grpc
+    skip unless Google::Cloud::TextToSpeech.text_to_speech_long_audio_synthesize_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
+      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+      client = Google::Cloud::TextToSpeech.text_to_speech_long_audio_synthesize transport: :grpc do |config|
+        config.credentials = grpc_channel
+      end
+      assert_kind_of Google::Cloud::TextToSpeech::V1::TextToSpeechLongAudioSynthesize::Client, client
+    end
+  end
+
+  def test_text_to_speech_long_audio_synthesize_rest
+    skip unless Google::Cloud::TextToSpeech.text_to_speech_long_audio_synthesize_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::TextToSpeech.text_to_speech_long_audio_synthesize transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::TextToSpeech::V1::TextToSpeechLongAudioSynthesize::Rest::Client, client
     end
   end
 end

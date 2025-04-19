@@ -25,6 +25,92 @@ module Google
           # Path helper methods for the DlpService API.
           module Paths
             ##
+            # Create a fully-qualified ColumnDataProfile resource string.
+            #
+            # @overload column_data_profile_path(organization:, location:, column_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/locations/{location}/columnDataProfiles/{column_data_profile}`
+            #
+            #   @param organization [String]
+            #   @param location [String]
+            #   @param column_data_profile [String]
+            #
+            # @overload column_data_profile_path(project:, location:, column_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/columnDataProfiles/{column_data_profile}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param column_data_profile [String]
+            #
+            # @return [::String]
+            def column_data_profile_path **args
+              resources = {
+                "column_data_profile:location:organization" => (proc do |organization:, location:, column_data_profile:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "organizations/#{organization}/locations/#{location}/columnDataProfiles/#{column_data_profile}"
+                end),
+                "column_data_profile:location:project" => (proc do |project:, location:, column_data_profile:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/columnDataProfiles/#{column_data_profile}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified Connection resource string.
+            #
+            # @overload connection_path(project:, location:, connection:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/connections/{connection}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param connection [String]
+            #
+            # @overload connection_path(organization:, location:, connection:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/locations/{location}/connections/{connection}`
+            #
+            #   @param organization [String]
+            #   @param location [String]
+            #   @param connection [String]
+            #
+            # @return [::String]
+            def connection_path **args
+              resources = {
+                "connection:location:project" => (proc do |project:, location:, connection:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/connections/#{connection}"
+                end),
+                "connection:location:organization" => (proc do |organization:, location:, connection:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "organizations/#{organization}/locations/#{location}/connections/#{connection}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
             # Create a fully-qualified DeidentifyTemplate resource string.
             #
             # @overload deidentify_template_path(organization:, deidentify_template:)
@@ -94,6 +180,25 @@ module Google
             end
 
             ##
+            # Create a fully-qualified DiscoveryConfig resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/discoveryConfigs/{discovery_config}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param discovery_config [String]
+            #
+            # @return [::String]
+            def discovery_config_path project:, location:, discovery_config:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/discoveryConfigs/#{discovery_config}"
+            end
+
+            ##
             # Create a fully-qualified DlpJob resource string.
             #
             # @overload dlp_job_path(project:, dlp_job:)
@@ -126,6 +231,49 @@ module Google
                   raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
 
                   "projects/#{project}/locations/#{location}/dlpJobs/#{dlp_job}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified FileStoreDataProfile resource string.
+            #
+            # @overload file_store_data_profile_path(organization:, location:, file_store_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/locations/{location}/fileStoreDataProfiles/{file_store_data_profile}`
+            #
+            #   @param organization [String]
+            #   @param location [String]
+            #   @param file_store_data_profile [String]
+            #
+            # @overload file_store_data_profile_path(project:, location:, file_store_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/fileStoreDataProfiles/{file_store_data_profile}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param file_store_data_profile [String]
+            #
+            # @return [::String]
+            def file_store_data_profile_path **args
+              resources = {
+                "file_store_data_profile:location:organization" => (proc do |organization:, location:, file_store_data_profile:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "organizations/#{organization}/locations/#{location}/fileStoreDataProfiles/#{file_store_data_profile}"
+                end),
+                "file_store_data_profile:location:project" => (proc do |project:, location:, file_store_data_profile:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/fileStoreDataProfiles/#{file_store_data_profile}"
                 end)
               }
 
@@ -307,6 +455,49 @@ module Google
             end
 
             ##
+            # Create a fully-qualified ProjectDataProfile resource string.
+            #
+            # @overload project_data_profile_path(organization:, location:, project_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/locations/{location}/projectDataProfiles/{project_data_profile}`
+            #
+            #   @param organization [String]
+            #   @param location [String]
+            #   @param project_data_profile [String]
+            #
+            # @overload project_data_profile_path(project:, location:, project_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/projectDataProfiles/{project_data_profile}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param project_data_profile [String]
+            #
+            # @return [::String]
+            def project_data_profile_path **args
+              resources = {
+                "location:organization:project_data_profile" => (proc do |organization:, location:, project_data_profile:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "organizations/#{organization}/locations/#{location}/projectDataProfiles/#{project_data_profile}"
+                end),
+                "location:project:project_data_profile" => (proc do |project:, location:, project_data_profile:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/projectDataProfiles/#{project_data_profile}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
             # Create a fully-qualified StoredInfoType resource string.
             #
             # @overload stored_info_type_path(organization:, stored_info_type:)
@@ -367,6 +558,49 @@ module Google
                   raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
 
                   "projects/#{project}/locations/#{location}/storedInfoTypes/#{stored_info_type}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified TableDataProfile resource string.
+            #
+            # @overload table_data_profile_path(organization:, location:, table_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `organizations/{organization}/locations/{location}/tableDataProfiles/{table_data_profile}`
+            #
+            #   @param organization [String]
+            #   @param location [String]
+            #   @param table_data_profile [String]
+            #
+            # @overload table_data_profile_path(project:, location:, table_data_profile:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/tableDataProfiles/{table_data_profile}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param table_data_profile [String]
+            #
+            # @return [::String]
+            def table_data_profile_path **args
+              resources = {
+                "location:organization:table_data_profile" => (proc do |organization:, location:, table_data_profile:|
+                  raise ::ArgumentError, "organization cannot contain /" if organization.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "organizations/#{organization}/locations/#{location}/tableDataProfiles/#{table_data_profile}"
+                end),
+                "location:project:table_data_profile" => (proc do |project:, location:, table_data_profile:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/tableDataProfiles/#{table_data_profile}"
                 end)
               }
 

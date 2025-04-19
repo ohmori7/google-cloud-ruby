@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/bigquery/reservation/v1/reservation_service"
 
 class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_assignment_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientPath
 
   def test_bi_reservation_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientPath
 
   def test_capacity_commitment_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientPath
 
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,7 +91,7 @@ class ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::ClientPath
 
   def test_reservation_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new do |config|
         config.credentials = grpc_channel
       end

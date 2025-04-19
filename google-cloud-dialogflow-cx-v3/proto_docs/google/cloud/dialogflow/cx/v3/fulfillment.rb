@@ -28,10 +28,14 @@ module Google
           #   * Set parameter values.
           #   * Call the webhook.
           #
-          # Fulfillments can be called at various stages in the {::Google::Cloud::Dialogflow::CX::V3::Page Page} or
-          # {::Google::Cloud::Dialogflow::CX::V3::Form Form} lifecycle. For example, when a {::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest DetectIntentRequest} drives a
-          # session to enter a new page, the page's entry fulfillment can add a static
-          # response to the {::Google::Cloud::Dialogflow::CX::V3::QueryResult QueryResult} in the returning {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse DetectIntentResponse},
+          # Fulfillments can be called at various stages in the
+          # {::Google::Cloud::Dialogflow::CX::V3::Page Page} or
+          # {::Google::Cloud::Dialogflow::CX::V3::Form Form} lifecycle. For example, when a
+          # {::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest DetectIntentRequest}
+          # drives a session to enter a new page, the page's entry fulfillment can add a
+          # static response to the
+          # {::Google::Cloud::Dialogflow::CX::V3::QueryResult QueryResult} in the returning
+          # {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse DetectIntentResponse},
           # call the webhook (for example, to load user data from a database), or both.
           # @!attribute [rw] messages
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::ResponseMessage>]
@@ -39,8 +43,8 @@ module Google
           # @!attribute [rw] webhook
           #   @return [::String]
           #     The webhook to call.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/webhooks/<Webhook ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/webhooks/<WebhookID>`.
           # @!attribute [rw] return_partial_responses
           #   @return [::Boolean]
           #     Whether Dialogflow should return currently queued fulfillment response
@@ -54,7 +58,12 @@ module Google
           #     that have slow webhooks.
           # @!attribute [rw] tag
           #   @return [::String]
-          #     The tag used by the webhook to identify which fulfillment is being called.
+          #     The value of this field will be populated in the
+          #     {::Google::Cloud::Dialogflow::CX::V3::WebhookRequest WebhookRequest}
+          #     `fulfillmentInfo.tag` field by Dialogflow when the associated webhook is
+          #     called.
+          #     The tag is typically used by the webhook service to identify which
+          #     fulfillment is being called, but it could be used for other purposes.
           #     This field is required if `webhook` is specified.
           # @!attribute [rw] set_parameter_actions
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::Fulfillment::SetParameterAction>]
@@ -62,6 +71,17 @@ module Google
           # @!attribute [rw] conditional_cases
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::Fulfillment::ConditionalCases>]
           #     Conditional cases for this fulfillment.
+          # @!attribute [rw] advanced_settings
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AdvancedSettings]
+          #     Hierarchical advanced settings for this fulfillment. The settings exposed
+          #     at the lower level overrides the settings exposed at the higher level.
+          # @!attribute [rw] enable_generative_fallback
+          #   @return [::Boolean]
+          #     If the flag is true, the agent will utilize LLM to generate a text
+          #     response. If LLM generation fails, the defined
+          #     {::Google::Cloud::Dialogflow::CX::V3::Fulfillment#messages responses} in the
+          #     fulfillment will be respected. This flag is only useful for fulfillments
+          #     associated with no-match event handlers.
           class Fulfillment
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -109,9 +129,13 @@ module Google
                 # @!attribute [rw] message
                 #   @return [::Google::Cloud::Dialogflow::CX::V3::ResponseMessage]
                 #     Returned message.
+                #
+                #     Note: The following fields are mutually exclusive: `message`, `additional_cases`. If a field in that set is populated, all other fields in the set will automatically be cleared.
                 # @!attribute [rw] additional_cases
                 #   @return [::Google::Cloud::Dialogflow::CX::V3::Fulfillment::ConditionalCases]
                 #     Additional cases to be evaluated.
+                #
+                #     Note: The following fields are mutually exclusive: `additional_cases`, `message`. If a field in that set is populated, all other fields in the set will automatically be cleared.
                 class CaseContent
                   include ::Google::Protobuf::MessageExts
                   extend ::Google::Protobuf::MessageExts::ClassMethods

@@ -109,6 +109,61 @@
               "methods": [
                 "test_iam_permissions"
               ]
+            },
+            "ListHotTablets": {
+              "methods": [
+                "list_hot_tablets"
+              ]
+            },
+            "CreateLogicalView": {
+              "methods": [
+                "create_logical_view"
+              ]
+            },
+            "GetLogicalView": {
+              "methods": [
+                "get_logical_view"
+              ]
+            },
+            "ListLogicalViews": {
+              "methods": [
+                "list_logical_views"
+              ]
+            },
+            "UpdateLogicalView": {
+              "methods": [
+                "update_logical_view"
+              ]
+            },
+            "DeleteLogicalView": {
+              "methods": [
+                "delete_logical_view"
+              ]
+            },
+            "CreateMaterializedView": {
+              "methods": [
+                "create_materialized_view"
+              ]
+            },
+            "GetMaterializedView": {
+              "methods": [
+                "get_materialized_view"
+              ]
+            },
+            "ListMaterializedViews": {
+              "methods": [
+                "list_materialized_views"
+              ]
+            },
+            "UpdateMaterializedView": {
+              "methods": [
+                "update_materialized_view"
+              ]
+            },
+            "DeleteMaterializedView": {
+              "methods": [
+                "delete_materialized_view"
+              ]
             }
           }
         }
@@ -139,9 +194,44 @@
                 "get_table"
               ]
             },
+            "UpdateTable": {
+              "methods": [
+                "update_table"
+              ]
+            },
             "DeleteTable": {
               "methods": [
                 "delete_table"
+              ]
+            },
+            "UndeleteTable": {
+              "methods": [
+                "undelete_table"
+              ]
+            },
+            "CreateAuthorizedView": {
+              "methods": [
+                "create_authorized_view"
+              ]
+            },
+            "ListAuthorizedViews": {
+              "methods": [
+                "list_authorized_views"
+              ]
+            },
+            "GetAuthorizedView": {
+              "methods": [
+                "get_authorized_view"
+              ]
+            },
+            "UpdateAuthorizedView": {
+              "methods": [
+                "update_authorized_view"
+              ]
+            },
+            "DeleteAuthorizedView": {
+              "methods": [
+                "delete_authorized_view"
               ]
             },
             "ModifyColumnFamilies": {
@@ -212,6 +302,11 @@
             "RestoreTable": {
               "methods": [
                 "restore_table"
+              ]
+            },
+            "CopyBackup": {
+              "methods": [
+                "copy_backup"
               ]
             },
             "GetIamPolicy": {

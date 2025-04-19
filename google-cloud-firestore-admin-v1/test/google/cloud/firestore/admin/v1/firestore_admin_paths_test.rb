@@ -23,9 +23,51 @@ require "gapic/grpc/service_stub"
 require "google/cloud/firestore/admin/v1/firestore_admin"
 
 class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_backup_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.backup_path project: "value0", location: "value1", backup: "value2"
+      assert_equal "projects/value0/locations/value1/backups/value2", path
+    end
+  end
+
+  def test_backup_schedule_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.backup_schedule_path project: "value0", database: "value1", backup_schedule: "value2"
+      assert_equal "projects/value0/databases/value1/backupSchedules/value2", path
+    end
+  end
+
   def test_collection_group_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +79,7 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientPathsTest < M
 
   def test_database_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +91,7 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientPathsTest < M
 
   def test_field_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +103,7 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientPathsTest < M
 
   def test_index_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -71,15 +113,51 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientPathsTest < M
     end
   end
 
+  def test_location_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.location_path project: "value0", location: "value1"
+      assert_equal "projects/value0/locations/value1", path
+    end
+  end
+
+  def test_operation_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.operation_path project: "value0", database: "value1", operation: "value2"
+      assert_equal "projects/value0/databases/value1/operations/value2", path
+    end
+  end
+
   def test_project_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
 
       path = client.project_path project: "value0"
       assert_equal "projects/value0", path
+    end
+  end
+
+  def test_user_creds_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.user_creds_path project: "value0", database: "value1", user_creds: "value2"
+      assert_equal "projects/value0/databases/value1/userCreds/value2", path
     end
   end
 end

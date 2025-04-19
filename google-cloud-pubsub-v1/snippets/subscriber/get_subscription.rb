@@ -19,15 +19,29 @@
 # [START pubsub_v1_generated_Subscriber_GetSubscription_sync]
 require "google/cloud/pubsub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PubSub::V1::Subscriber::Client.new
+##
+# Snippet for the get_subscription call in the Subscriber service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PubSub::V1::Subscriber::Client#get_subscription.
+#
+def get_subscription
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PubSub::V1::Subscriber::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PubSub::V1::GetSubscriptionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PubSub::V1::GetSubscriptionRequest.new
 
-# Call the get_subscription method.
-result = client.get_subscription request
+  # Call the get_subscription method.
+  result = client.get_subscription request
 
-# The returned object is of type Google::Cloud::PubSub::V1::Subscription.
-p result
+  # The returned object is of type Google::Cloud::PubSub::V1::Subscription.
+  p result
+end
 # [END pubsub_v1_generated_Subscriber_GetSubscription_sync]

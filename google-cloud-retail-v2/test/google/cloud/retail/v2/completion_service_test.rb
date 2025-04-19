@@ -41,9 +41,26 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -62,6 +79,8 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
     device_type = "hello world"
     dataset = "hello world"
     max_suggestions = 42
+    enable_attribute_suggestions = true
+    entity = "hello world"
 
     complete_query_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :complete_query, name
@@ -73,6 +92,8 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
       assert_equal "hello world", request["device_type"]
       assert_equal "hello world", request["dataset"]
       assert_equal 42, request["max_suggestions"]
+      assert_equal true, request["enable_attribute_suggestions"]
+      assert_equal "hello world", request["entity"]
       refute_nil options
     end
 
@@ -83,31 +104,31 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
       end
 
       # Use hash object
-      client.complete_query({ catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions }) do |response, operation|
+      client.complete_query({ catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions, enable_attribute_suggestions: enable_attribute_suggestions, entity: entity }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.complete_query catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions do |response, operation|
+      client.complete_query catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions, enable_attribute_suggestions: enable_attribute_suggestions, entity: entity do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.complete_query ::Google::Cloud::Retail::V2::CompleteQueryRequest.new(catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions) do |response, operation|
+      client.complete_query ::Google::Cloud::Retail::V2::CompleteQueryRequest.new(catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions, enable_attribute_suggestions: enable_attribute_suggestions, entity: entity) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.complete_query({ catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions }, grpc_options) do |response, operation|
+      client.complete_query({ catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions, enable_attribute_suggestions: enable_attribute_suggestions, entity: entity }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.complete_query(::Google::Cloud::Retail::V2::CompleteQueryRequest.new(catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions), grpc_options) do |response, operation|
+      client.complete_query(::Google::Cloud::Retail::V2::CompleteQueryRequest.new(catalog: catalog, query: query, visitor_id: visitor_id, language_codes: language_codes, device_type: device_type, dataset: dataset, max_suggestions: max_suggestions, enable_attribute_suggestions: enable_attribute_suggestions, entity: entity), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -188,7 +209,8 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Retail::V2::CompletionService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -206,7 +228,8 @@ class ::Google::Cloud::Retail::V2::CompletionService::ClientTest < Minitest::Tes
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Retail::V2::CompletionService::Client.new do |config|
         config.credentials = grpc_channel
       end

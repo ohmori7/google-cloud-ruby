@@ -19,15 +19,29 @@
 # [START phishingprotection_v1beta1_generated_PhishingProtectionService_ReportPhishing_sync]
 require "google/cloud/phishing_protection/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PhishingProtection::V1beta1::PhishingProtectionService::Client.new
+##
+# Snippet for the report_phishing call in the PhishingProtectionService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PhishingProtection::V1beta1::PhishingProtectionService::Client#report_phishing.
+#
+def report_phishing
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PhishingProtection::V1beta1::PhishingProtectionService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PhishingProtection::V1beta1::ReportPhishingRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PhishingProtection::V1beta1::ReportPhishingRequest.new
 
-# Call the report_phishing method.
-result = client.report_phishing request
+  # Call the report_phishing method.
+  result = client.report_phishing request
 
-# The returned object is of type Google::Cloud::PhishingProtection::V1beta1::ReportPhishingResponse.
-p result
+  # The returned object is of type Google::Cloud::PhishingProtection::V1beta1::ReportPhishingResponse.
+  p result
+end
 # [END phishingprotection_v1beta1_generated_PhishingProtectionService_ReportPhishing_sync]

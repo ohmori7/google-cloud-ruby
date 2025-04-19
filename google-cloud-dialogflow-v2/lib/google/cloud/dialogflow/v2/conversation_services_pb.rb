@@ -24,7 +24,8 @@ module Google
     module Dialogflow
       module V2
         module Conversations
-          # Service for managing [Conversations][google.cloud.dialogflow.v2.Conversation].
+          # Service for managing
+          # [Conversations][google.cloud.dialogflow.v2.Conversation].
           class Service
 
             include ::GRPC::GenericService
@@ -46,11 +47,14 @@ module Google
             # For Assist Stage, there's no dialogflow agent responding to user queries.
             # But we will provide suggestions which are generated from conversation.
             #
-            # If [Conversation.conversation_profile][google.cloud.dialogflow.v2.Conversation.conversation_profile] is configured for a dialogflow
-            # agent, conversation will start from `Automated Agent Stage`, otherwise, it
-            # will start from `Assist Stage`. And during `Automated Agent Stage`, once an
-            # [Intent][google.cloud.dialogflow.v2.Intent] with [Intent.live_agent_handoff][google.cloud.dialogflow.v2.Intent.live_agent_handoff] is triggered, conversation
-            # will transfer to Assist Stage.
+            # If
+            # [Conversation.conversation_profile][google.cloud.dialogflow.v2.Conversation.conversation_profile]
+            # is configured for a dialogflow agent, conversation will start from
+            # `Automated Agent Stage`, otherwise, it will start from `Assist Stage`. And
+            # during `Automated Agent Stage`, once an
+            # [Intent][google.cloud.dialogflow.v2.Intent] with
+            # [Intent.live_agent_handoff][google.cloud.dialogflow.v2.Intent.live_agent_handoff]
+            # is triggered, conversation will transfer to Assist Stage.
             rpc :CreateConversation, ::Google::Cloud::Dialogflow::V2::CreateConversationRequest, ::Google::Cloud::Dialogflow::V2::Conversation
             # Returns the list of all conversations in the specified project.
             rpc :ListConversations, ::Google::Cloud::Dialogflow::V2::ListConversationsRequest, ::Google::Cloud::Dialogflow::V2::ListConversationsResponse
@@ -59,12 +63,31 @@ module Google
             # Completes the specified conversation. Finished conversations are purged
             # from the database after 30 days.
             rpc :CompleteConversation, ::Google::Cloud::Dialogflow::V2::CompleteConversationRequest, ::Google::Cloud::Dialogflow::V2::Conversation
+            # Data ingestion API.
+            # Ingests context references for an existing conversation.
+            rpc :IngestContextReferences, ::Google::Cloud::Dialogflow::V2::IngestContextReferencesRequest, ::Google::Cloud::Dialogflow::V2::IngestContextReferencesResponse
             # Lists messages that belong to a given conversation.
             # `messages` are ordered by `create_time` in descending order. To fetch
             # updates without duplication, send request with filter
             # `create_time_epoch_microseconds >
             # [first item's create_time of previous request]` and empty page_token.
             rpc :ListMessages, ::Google::Cloud::Dialogflow::V2::ListMessagesRequest, ::Google::Cloud::Dialogflow::V2::ListMessagesResponse
+            # Suggests summary for a conversation based on specific historical messages.
+            # The range of the messages to be used for summary can be specified in the
+            # request.
+            rpc :SuggestConversationSummary, ::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryRequest, ::Google::Cloud::Dialogflow::V2::SuggestConversationSummaryResponse
+            # Generates and returns a summary for a conversation that does not have a
+            # resource created for it.
+            rpc :GenerateStatelessSummary, ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryRequest, ::Google::Cloud::Dialogflow::V2::GenerateStatelessSummaryResponse
+            # Generates and returns a suggestion for a conversation that does not have a
+            # resource created for it.
+            rpc :GenerateStatelessSuggestion, ::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionRequest, ::Google::Cloud::Dialogflow::V2::GenerateStatelessSuggestionResponse
+            # Get answers for the given query based on knowledge documents.
+            rpc :SearchKnowledge, ::Google::Cloud::Dialogflow::V2::SearchKnowledgeRequest, ::Google::Cloud::Dialogflow::V2::SearchKnowledgeResponse
+            # Generates all the suggestions using generators configured in the
+            # conversation profile. A generator is used only if its trigger event is
+            # matched.
+            rpc :GenerateSuggestions, ::Google::Cloud::Dialogflow::V2::GenerateSuggestionsRequest, ::Google::Cloud::Dialogflow::V2::GenerateSuggestionsResponse
           end
 
           Stub = Service.rpc_stub_class

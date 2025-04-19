@@ -66,6 +66,16 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Used for advanced voice options.
+        # @!attribute [rw] low_latency_journey_synthesis
+        #   @return [::Boolean]
+        #     Only for Journey voices. If false, the synthesis is context aware
+        #     and has a higher latency.
+        class AdvancedVoiceOptions
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # The top-level message sent by the client for the `SynthesizeSpeech` method.
         # @!attribute [rw] input
         #   @return [::Google::Cloud::TextToSpeech::V1::SynthesisInput]
@@ -76,24 +86,113 @@ module Google
         # @!attribute [rw] audio_config
         #   @return [::Google::Cloud::TextToSpeech::V1::AudioConfig]
         #     Required. The configuration of the synthesized audio.
+        # @!attribute [rw] advanced_voice_options
+        #   @return [::Google::Cloud::TextToSpeech::V1::AdvancedVoiceOptions]
+        #     Advanced voice options.
         class SynthesizeSpeechRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Pronunciation customization for a phrase.
+        # @!attribute [rw] phrase
+        #   @return [::String]
+        #     The phrase to which the customization is applied.
+        #     The phrase can be multiple words, such as proper nouns, but shouldn't span
+        #     the length of the sentence.
+        # @!attribute [rw] phonetic_encoding
+        #   @return [::Google::Cloud::TextToSpeech::V1::CustomPronunciationParams::PhoneticEncoding]
+        #     The phonetic encoding of the phrase.
+        # @!attribute [rw] pronunciation
+        #   @return [::String]
+        #     The pronunciation of the phrase. This must be in the phonetic encoding
+        #     specified above.
+        class CustomPronunciationParams
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The phonetic encoding of the phrase.
+          module PhoneticEncoding
+            # Not specified.
+            PHONETIC_ENCODING_UNSPECIFIED = 0
+
+            # IPA, such as apple -> ˈæpəl.
+            # https://en.wikipedia.org/wiki/International_Phonetic_Alphabet
+            PHONETIC_ENCODING_IPA = 1
+
+            # X-SAMPA, such as apple -> "{p@l".
+            # https://en.wikipedia.org/wiki/X-SAMPA
+            PHONETIC_ENCODING_X_SAMPA = 2
+          end
+        end
+
+        # A collection of pronunciation customizations.
+        # @!attribute [rw] pronunciations
+        #   @return [::Array<::Google::Cloud::TextToSpeech::V1::CustomPronunciationParams>]
+        #     The pronunciation customizations are applied.
+        class CustomPronunciations
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A collection of turns for multi-speaker synthesis.
+        # @!attribute [rw] turns
+        #   @return [::Array<::Google::Cloud::TextToSpeech::V1::MultiSpeakerMarkup::Turn>]
+        #     Required. Speaker turns.
+        class MultiSpeakerMarkup
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # A multi-speaker turn.
+          # @!attribute [rw] speaker
+          #   @return [::String]
+          #     Required. The speaker of the turn, for example, 'O' or 'Q'. Please refer
+          #     to documentation for available speakers.
+          # @!attribute [rw] text
+          #   @return [::String]
+          #     Required. The text to speak.
+          class Turn
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
         # Contains text input to be synthesized. Either `text` or `ssml` must be
         # supplied. Supplying both or neither returns
-        # [google.rpc.Code.INVALID_ARGUMENT][]. The input size is limited to 5000
-        # characters.
+        # [google.rpc.Code.INVALID_ARGUMENT][google.rpc.Code.INVALID_ARGUMENT]. The
+        # input size is limited to 5000 bytes.
         # @!attribute [rw] text
         #   @return [::String]
         #     The raw text to be synthesized.
+        #
+        #     Note: The following fields are mutually exclusive: `text`, `ssml`, `multi_speaker_markup`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] ssml
         #   @return [::String]
         #     The SSML document to be synthesized. The SSML document must be valid
         #     and well-formed. Otherwise the RPC will fail and return
-        #     [google.rpc.Code.INVALID_ARGUMENT][]. For more information, see
+        #     [google.rpc.Code.INVALID_ARGUMENT][google.rpc.Code.INVALID_ARGUMENT]. For
+        #     more information, see
         #     [SSML](https://cloud.google.com/text-to-speech/docs/ssml).
+        #
+        #     Note: The following fields are mutually exclusive: `ssml`, `text`, `multi_speaker_markup`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] multi_speaker_markup
+        #   @return [::Google::Cloud::TextToSpeech::V1::MultiSpeakerMarkup]
+        #     The multi-speaker input to be synthesized. Only applicable for
+        #     multi-speaker synthesis.
+        #
+        #     Note: The following fields are mutually exclusive: `multi_speaker_markup`, `text`, `ssml`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] custom_pronunciations
+        #   @return [::Google::Cloud::TextToSpeech::V1::CustomPronunciations]
+        #     Optional. The pronunciation customizations are applied to the input. If
+        #     this is set, the input is synthesized using the given pronunciation
+        #     customizations.
+        #
+        #     The initial support is for en-us, with plans to expand to other locales in
+        #     the future. Instant Clone voices aren't supported.
+        #
+        #     In order to customize the pronunciation of a phrase, there must be an exact
+        #     match of the phrase in the input types. If using SSML, the phrase must not
+        #     be inside a phoneme tag.
         class SynthesisInput
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -102,9 +201,9 @@ module Google
         # Description of which voice to use for a synthesis request.
         # @!attribute [rw] language_code
         #   @return [::String]
-        #     Required. The language (and potentially also the region) of the voice expressed as a
-        #     [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag, e.g.
-        #     "en-US". This should not include a script tag (e.g. use
+        #     Required. The language (and potentially also the region) of the voice
+        #     expressed as a [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt)
+        #     language tag, e.g. "en-US". This should not include a script tag (e.g. use
         #     "cmn-cn" rather than "cmn-Hant-cn"), because the script will be inferred
         #     from the input provided in the SynthesisInput.  The TTS service
         #     will use this parameter to help choose an appropriate voice.  Note that
@@ -115,8 +214,9 @@ module Google
         #     Bokmal) instead of "no" (Norwegian)".
         # @!attribute [rw] name
         #   @return [::String]
-        #     The name of the voice. If not set, the service will choose a
-        #     voice based on the other parameters such as language_code and gender.
+        #     The name of the voice. If both the name and the gender are not set,
+        #     the service will choose a voice based on the other parameters such as
+        #     language_code.
         # @!attribute [rw] ssml_gender
         #   @return [::Google::Cloud::TextToSpeech::V1::SsmlVoiceGender]
         #     The preferred gender of the voice. If not set, the service will
@@ -124,6 +224,16 @@ module Google
         #     name. Note that this is only a preference, not requirement; if a
         #     voice of the appropriate gender is not available, the synthesizer should
         #     substitute a voice with a different gender rather than failing the request.
+        # @!attribute [rw] custom_voice
+        #   @return [::Google::Cloud::TextToSpeech::V1::CustomVoiceParams]
+        #     The configuration for a custom voice. If [CustomVoiceParams.model] is set,
+        #     the service will choose the custom voice matching the specified
+        #     configuration.
+        # @!attribute [rw] voice_clone
+        #   @return [::Google::Cloud::TextToSpeech::V1::VoiceCloneParams]
+        #     Optional. The configuration for a voice clone. If
+        #     [VoiceCloneParams.voice_clone_key] is set, the service chooses the voice
+        #     clone matching the specified configuration.
         class VoiceSelectionParams
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -135,10 +245,10 @@ module Google
         #     Required. The format of the audio byte stream.
         # @!attribute [rw] speaking_rate
         #   @return [::Float]
-        #     Optional. Input only. Speaking rate/speed, in the range [0.25, 4.0]. 1.0 is
+        #     Optional. Input only. Speaking rate/speed, in the range [0.25, 2.0]. 1.0 is
         #     the normal native speed supported by the specific voice. 2.0 is twice as
         #     fast, and 0.5 is half as fast. If unset(0.0), defaults to the native 1.0
-        #     speed. Any other values < 0.25 or > 4.0 will return an error.
+        #     speed. Any other values < 0.25 or > 2.0 will return an error.
         # @!attribute [rw] pitch
         #   @return [::Float]
         #     Optional. Input only. Speaking pitch, in the range [-20.0, 20.0]. 20 means
@@ -162,7 +272,7 @@ module Google
         #     converting to the desired sample rate (which might result in worse audio
         #     quality), unless the specified sample rate is not supported for the
         #     encoding chosen, in which case it will fail the request and return
-        #     [google.rpc.Code.INVALID_ARGUMENT][].
+        #     [google.rpc.Code.INVALID_ARGUMENT][google.rpc.Code.INVALID_ARGUMENT].
         # @!attribute [rw] effects_profile_id
         #   @return [::Array<::String>]
         #     Optional. Input only. An identifier which selects 'audio effects' profiles
@@ -176,6 +286,44 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Description of the custom voice to be synthesized.
+        # @!attribute [rw] model
+        #   @return [::String]
+        #     Required. The name of the AutoML model that synthesizes the custom voice.
+        # @!attribute [rw] reported_usage
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::Google::Cloud::TextToSpeech::V1::CustomVoiceParams::ReportedUsage]
+        #     Optional. Deprecated. The usage of the synthesized audio to be reported.
+        class CustomVoiceParams
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Deprecated. The usage of the synthesized audio. Usage does not affect
+          # billing.
+          module ReportedUsage
+            # Request with reported usage unspecified will be rejected.
+            REPORTED_USAGE_UNSPECIFIED = 0
+
+            # For scenarios where the synthesized audio is not downloadable and can
+            # only be used once. For example, real-time request in IVR system.
+            REALTIME = 1
+
+            # For scenarios where the synthesized audio is downloadable and can be
+            # reused. For example, the synthesized audio is downloaded, stored in
+            # customer service system and played repeatedly.
+            OFFLINE = 2
+          end
+        end
+
+        # The configuration of Voice Clone feature.
+        # @!attribute [rw] voice_cloning_key
+        #   @return [::String]
+        #     Required. Created by GenerateVoiceCloningKey.
+        class VoiceCloneParams
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # The message returned to the client by the `SynthesizeSpeech` method.
         # @!attribute [rw] audio_content
         #   @return [::String]
@@ -185,6 +333,95 @@ module Google
         #     with all bytes fields, protobuffers use a pure binary representation,
         #     whereas JSON representations use base64.
         class SynthesizeSpeechResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Description of the desired output audio data.
+        # @!attribute [rw] audio_encoding
+        #   @return [::Google::Cloud::TextToSpeech::V1::AudioEncoding]
+        #     Required. The format of the audio byte stream.
+        #     Streaming supports PCM, ALAW, MULAW and OGG_OPUS. All other encodings
+        #     return an error.
+        # @!attribute [rw] sample_rate_hertz
+        #   @return [::Integer]
+        #     Optional. The synthesis sample rate (in hertz) for this audio.
+        # @!attribute [rw] speaking_rate
+        #   @return [::Float]
+        #     Optional. Input only. Speaking rate/speed, in the range [0.25, 2.0]. 1.0 is
+        #     the normal native speed supported by the specific voice. 2.0 is twice as
+        #     fast, and 0.5 is half as fast. If unset(0.0), defaults to the native 1.0
+        #     speed. Any other values < 0.25 or > 2.0 will return an error.
+        class StreamingAudioConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Provides configuration information for the StreamingSynthesize request.
+        # @!attribute [rw] voice
+        #   @return [::Google::Cloud::TextToSpeech::V1::VoiceSelectionParams]
+        #     Required. The desired voice of the synthesized audio.
+        # @!attribute [rw] streaming_audio_config
+        #   @return [::Google::Cloud::TextToSpeech::V1::StreamingAudioConfig]
+        #     Optional. The configuration of the synthesized audio.
+        # @!attribute [rw] custom_pronunciations
+        #   @return [::Google::Cloud::TextToSpeech::V1::CustomPronunciations]
+        #     Optional. The pronunciation customizations are applied to the input. If
+        #     this is set, the input is synthesized using the given pronunciation
+        #     customizations.
+        #
+        #     The initial support is for en-us, with plans to expand to other locales in
+        #     the future. Instant Clone voices aren't supported.
+        #
+        #     In order to customize the pronunciation of a phrase, there must be an exact
+        #     match of the phrase in the input types. If using SSML, the phrase must not
+        #     be inside a phoneme tag.
+        class StreamingSynthesizeConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Input to be synthesized.
+        # @!attribute [rw] text
+        #   @return [::String]
+        #     The raw text to be synthesized. It is recommended that each input
+        #     contains complete, terminating sentences, which results in better prosody
+        #     in the output audio.
+        class StreamingSynthesisInput
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request message for the `StreamingSynthesize` method. Multiple
+        # `StreamingSynthesizeRequest` messages are sent in one call.
+        # The first message must contain a `streaming_config` that
+        # fully specifies the request configuration and must not contain `input`. All
+        # subsequent messages must only have `input` set.
+        # @!attribute [rw] streaming_config
+        #   @return [::Google::Cloud::TextToSpeech::V1::StreamingSynthesizeConfig]
+        #     StreamingSynthesizeConfig to be used in this streaming attempt. Only
+        #     specified in the first message sent in a `StreamingSynthesize` call.
+        #
+        #     Note: The following fields are mutually exclusive: `streaming_config`, `input`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] input
+        #   @return [::Google::Cloud::TextToSpeech::V1::StreamingSynthesisInput]
+        #     Input to synthesize. Specified in all messages but the first in a
+        #     `StreamingSynthesize` call.
+        #
+        #     Note: The following fields are mutually exclusive: `input`, `streaming_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        class StreamingSynthesizeRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # `StreamingSynthesizeResponse` is the only message returned to the
+        # client by `StreamingSynthesize` method. A series of zero or more
+        # `StreamingSynthesizeResponse` messages are streamed back to the client.
+        # @!attribute [rw] audio_content
+        #   @return [::String]
+        #     The audio data bytes encoded as specified in the request. This is
+        #     headerless LINEAR16 audio with a sample rate of 24000.
+        class StreamingSynthesizeResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -212,7 +449,8 @@ module Google
         # Configuration to set up audio encoder. The encoding determines the output
         # audio format that we'd like.
         module AudioEncoding
-          # Not specified. Will return result [google.rpc.Code.INVALID_ARGUMENT][].
+          # Not specified. Will return result
+          # [google.rpc.Code.INVALID_ARGUMENT][google.rpc.Code.INVALID_ARGUMENT].
           AUDIO_ENCODING_UNSPECIFIED = 0
 
           # Uncompressed 16-bit signed little-endian samples (Linear PCM).
@@ -222,7 +460,7 @@ module Google
           # MP3 audio at 32kbps.
           MP3 = 2
 
-          # Opus encoded audio wrapped in an ogg container. The result will be a
+          # Opus encoded audio wrapped in an ogg container. The result is a
           # file which can be played natively on Android, and in browsers (at least
           # Chrome and Firefox). The quality of the encoding is considerably higher
           # than MP3 while using approximately the same bitrate.
@@ -235,6 +473,11 @@ module Google
           # 8-bit samples that compand 14-bit audio samples using G.711 PCMU/A-law.
           # Audio content returned as ALAW also contains a WAV header.
           ALAW = 6
+
+          # Uncompressed 16-bit signed little-endian samples (Linear PCM).
+          # Note that as opposed to LINEAR16, audio won't be wrapped in a WAV (or
+          # any other) header.
+          PCM = 7
         end
       end
     end

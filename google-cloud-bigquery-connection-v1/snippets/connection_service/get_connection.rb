@@ -19,15 +19,29 @@
 # [START bigqueryconnection_v1_generated_ConnectionService_GetConnection_sync]
 require "google/cloud/bigquery/connection/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new
+##
+# Snippet for the get_connection call in the ConnectionService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client#get_connection.
+#
+def get_connection
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigquery::Connection::V1::ConnectionService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigquery::Connection::V1::GetConnectionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigquery::Connection::V1::GetConnectionRequest.new
 
-# Call the get_connection method.
-result = client.get_connection request
+  # Call the get_connection method.
+  result = client.get_connection request
 
-# The returned object is of type Google::Cloud::Bigquery::Connection::V1::Connection.
-p result
+  # The returned object is of type Google::Cloud::Bigquery::Connection::V1::Connection.
+  p result
+end
 # [END bigqueryconnection_v1_generated_ConnectionService_GetConnection_sync]

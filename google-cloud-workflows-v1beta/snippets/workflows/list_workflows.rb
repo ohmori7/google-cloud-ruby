@@ -19,21 +19,33 @@
 # [START workflows_v1beta_generated_Workflows_ListWorkflows_sync]
 require "google/cloud/workflows/v1beta"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Workflows::V1beta::Workflows::Client.new
+##
+# Snippet for the list_workflows call in the Workflows service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Workflows::V1beta::Workflows::Client#list_workflows.
+#
+def list_workflows
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Workflows::V1beta::Workflows::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Workflows::V1beta::ListWorkflowsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Workflows::V1beta::ListWorkflowsRequest.new
 
-# Call the list_workflows method.
-result = client.list_workflows request
+  # Call the list_workflows method.
+  result = client.list_workflows request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Workflows::V1beta::Workflow.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Workflows::V1beta::Workflow.
+    p item
+  end
 end
 # [END workflows_v1beta_generated_Workflows_ListWorkflows_sync]

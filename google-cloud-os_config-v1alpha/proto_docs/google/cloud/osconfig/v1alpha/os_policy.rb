@@ -58,8 +58,7 @@ module Google
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # The `OSFilter` is used to specify the OS filtering criteria for the
-          # resource group.
+          # Filtering criteria to select VMs based on OS details.
           # @!attribute [rw] os_short_name
           #   @return [::String]
           #     This should match OS short name emitted by the OS inventory agent.
@@ -72,6 +71,24 @@ module Google
           #     last character. For example, to match all versions with a major
           #     version of `7`, specify the following value for this field `7.*`
           class OSFilter
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Filtering criteria to select VMs based on inventory details.
+          # @!attribute [rw] os_short_name
+          #   @return [::String]
+          #     Required. The OS short name
+          # @!attribute [rw] os_version
+          #   @return [::String]
+          #     The OS version
+          #
+          #     Prefix matches are supported if asterisk(*) is provided as the
+          #     last character. For example, to match all versions with a major
+          #     version of `7`, specify the following value for this field `7.*`
+          #
+          #     An empty string matches all OS versions.
+          class InventoryFilter
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -94,15 +111,23 @@ module Google
           # @!attribute [rw] pkg
           #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource]
           #     Package resource
+          #
+          #     Note: The following fields are mutually exclusive: `pkg`, `repository`, `exec`, `file`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] repository
           #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::RepositoryResource]
           #     Package repository resource
+          #
+          #     Note: The following fields are mutually exclusive: `repository`, `pkg`, `exec`, `file`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] exec
           #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::ExecResource]
           #     Exec resource
+          #
+          #     Note: The following fields are mutually exclusive: `exec`, `pkg`, `repository`, `file`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] file
           #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::FileResource]
           #     File resource
+          #
+          #     Note: The following fields are mutually exclusive: `file`, `pkg`, `repository`, `exec`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class Resource
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -111,12 +136,18 @@ module Google
             # @!attribute [rw] remote
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::File::Remote]
             #     A generic remote file.
+            #
+            #     Note: The following fields are mutually exclusive: `remote`, `gcs`, `local_path`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] gcs
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::File::Gcs]
             #     A Cloud Storage object.
+            #
+            #     Note: The following fields are mutually exclusive: `gcs`, `remote`, `local_path`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] local_path
             #   @return [::String]
             #     A local path within the VM to use.
+            #
+            #     Note: The following fields are mutually exclusive: `local_path`, `remote`, `gcs`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] allow_insecure
             #   @return [::Boolean]
             #     Defaults to false. When false, files are subject to validations
@@ -164,24 +195,38 @@ module Google
             # @!attribute [rw] apt
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::APT]
             #     A package managed by Apt.
+            #
+            #     Note: The following fields are mutually exclusive: `apt`, `deb`, `yum`, `zypper`, `rpm`, `googet`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] deb
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::Deb]
             #     A deb package file.
+            #
+            #     Note: The following fields are mutually exclusive: `deb`, `apt`, `yum`, `zypper`, `rpm`, `googet`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] yum
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::YUM]
             #     A package managed by YUM.
+            #
+            #     Note: The following fields are mutually exclusive: `yum`, `apt`, `deb`, `zypper`, `rpm`, `googet`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] zypper
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::Zypper]
             #     A package managed by Zypper.
+            #
+            #     Note: The following fields are mutually exclusive: `zypper`, `apt`, `deb`, `yum`, `rpm`, `googet`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] rpm
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::RPM]
             #     An rpm package file.
+            #
+            #     Note: The following fields are mutually exclusive: `rpm`, `apt`, `deb`, `yum`, `zypper`, `googet`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] googet
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::GooGet]
             #     A package managed by GooGet.
+            #
+            #     Note: The following fields are mutually exclusive: `googet`, `apt`, `deb`, `yum`, `zypper`, `rpm`, `msi`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] msi
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::PackageResource::MSI]
             #     An MSI package.
+            #
+            #     Note: The following fields are mutually exclusive: `msi`, `apt`, `deb`, `yum`, `zypper`, `rpm`, `googet`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class PackageResource
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -293,15 +338,23 @@ module Google
             # @!attribute [rw] apt
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::RepositoryResource::AptRepository]
             #     An Apt Repository.
+            #
+            #     Note: The following fields are mutually exclusive: `apt`, `yum`, `zypper`, `goo`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] yum
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::RepositoryResource::YumRepository]
             #     A Yum Repository.
+            #
+            #     Note: The following fields are mutually exclusive: `yum`, `apt`, `zypper`, `goo`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] zypper
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::RepositoryResource::ZypperRepository]
             #     A Zypper Repository.
+            #
+            #     Note: The following fields are mutually exclusive: `zypper`, `apt`, `yum`, `goo`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] goo
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::RepositoryResource::GooRepository]
             #     A Goo Repository.
+            #
+            #     Note: The following fields are mutually exclusive: `goo`, `apt`, `yum`, `zypper`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class RepositoryResource
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -449,10 +502,14 @@ module Google
               # @!attribute [rw] file
               #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::File]
               #     A remote or local file.
+              #
+              #     Note: The following fields are mutually exclusive: `file`, `script`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               # @!attribute [rw] script
               #   @return [::String]
               #     An inline script.
               #     The size of the script is limited to 1024 characters.
+              #
+              #     Note: The following fields are mutually exclusive: `script`, `file`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               # @!attribute [rw] args
               #   @return [::Array<::String>]
               #     Optional arguments to pass to the source during execution.
@@ -473,21 +530,21 @@ module Google
 
                 # The interpreter to use.
                 module Interpreter
-                  # Defaults to NONE.
+                  # Invalid value, the request will return validation error.
                   INTERPRETER_UNSPECIFIED = 0
 
-                  # If no interpreter is specified the
-                  # source will be executed directly, which will likely only
-                  # succeed for executables and scripts with shebang lines.
-                  # [Wikipedia
-                  # shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)).
+                  # If an interpreter is not specified, the
+                  # source is executed directly. This execution, without an
+                  # interpreter, only succeeds for executables and scripts that have <a
+                  # href="https://en.wikipedia.org/wiki/Shebang_(Unix)"
+                  # class="external">shebang lines</a>.
                   NONE = 1
 
-                  # Indicates that the script will be run with /bin/sh on Linux and
-                  # cmd.exe on windows.
+                  # Indicates that the script runs with `/bin/sh` on Linux and
+                  # `cmd.exe` on Windows.
                   SHELL = 2
 
-                  # Indicates that the script will be run with powershell.
+                  # Indicates that the script runs with PowerShell.
                   POWERSHELL = 3
                 end
               end
@@ -497,10 +554,14 @@ module Google
             # @!attribute [rw] file
             #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource::File]
             #     A remote or local source.
+            #
+            #     Note: The following fields are mutually exclusive: `file`, `content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] content
             #   @return [::String]
             #     A a file with this content.
             #     The size of the content is limited to 1024 characters.
+            #
+            #     Note: The following fields are mutually exclusive: `content`, `file`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] path
             #   @return [::String]
             #     Required. The absolute path of the file within the VM.
@@ -553,8 +614,25 @@ module Google
           # group within the OS policy is selected based on the `OSFilter` specified
           # within the resource group.
           # @!attribute [rw] os_filter
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Google::Cloud::OsConfig::V1alpha::OSPolicy::OSFilter]
+          #     Deprecated. Use the `inventory_filters` field instead.
           #     Used to specify the OS filter for a resource group
+          # @!attribute [rw] inventory_filters
+          #   @return [::Array<::Google::Cloud::OsConfig::V1alpha::OSPolicy::InventoryFilter>]
+          #     List of inventory filters for the resource group.
+          #
+          #     The resources in this resource group are applied to the target VM if it
+          #     satisfies at least one of the following inventory filters.
+          #
+          #     For example, to apply this resource group to VMs running either `RHEL` or
+          #     `CentOS` operating systems, specify 2 items for the list with following
+          #     values:
+          #     inventory_filters[0].os_short_name='rhel' and
+          #     inventory_filters[1].os_short_name='centos'
+          #
+          #     If the list is empty, this resource group will be applied to the target
+          #     VM unconditionally.
           # @!attribute [rw] resources
           #   @return [::Array<::Google::Cloud::OsConfig::V1alpha::OSPolicy::Resource>]
           #     Required. List of resources configured for this resource group.

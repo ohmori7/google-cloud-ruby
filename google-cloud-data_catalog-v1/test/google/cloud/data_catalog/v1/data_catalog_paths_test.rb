@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/data_catalog/v1/data_catalog"
 
 class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_entry_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_entry_group_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_tag_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,7 +91,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_tag_template_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -85,7 +103,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_tag_template_field_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -97,7 +115,7 @@ class ::Google::Cloud::DataCatalog::V1::DataCatalog::ClientPathsTest < Minitest:
 
   def test_tag_template_field_enum_value_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::DataCatalog::V1::DataCatalog::Client.new do |config|
         config.credentials = grpc_channel
       end

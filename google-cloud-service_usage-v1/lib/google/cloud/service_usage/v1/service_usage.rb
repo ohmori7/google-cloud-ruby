@@ -25,6 +25,7 @@ require "google/cloud/service_usage/v1/version"
 require "google/cloud/service_usage/v1/service_usage/credentials"
 require "google/cloud/service_usage/v1/service_usage/operations"
 require "google/cloud/service_usage/v1/service_usage/client"
+require "google/cloud/service_usage/v1/service_usage/rest"
 
 module Google
   module Cloud
@@ -37,10 +38,15 @@ module Google
         #
         # See [Service Usage API](https://cloud.google.com/service-usage/docs/overview)
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/cloud/service_usage/v1/service_usage"
         #     client = ::Google::Cloud::ServiceUsage::V1::ServiceUsage::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/service_usage/v1/service_usage/rest"
+        #     client = ::Google::Cloud::ServiceUsage::V1::ServiceUsage::Rest::Client.new
         #
         module ServiceUsage
         end

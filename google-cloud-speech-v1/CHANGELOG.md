@@ -1,5 +1,144 @@
 # Release History
 
+### 1.2.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.1.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.0.1 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` ([#27012](https://github.com/googleapis/google-cloud-ruby/issues/27012)) 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.17.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24877](https://github.com/googleapis/google-cloud-ruby/issues/24877)) 
+
+### 0.16.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.16.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.16.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23786](https://github.com/googleapis/google-cloud-ruby/issues/23786)) 
+
+### 0.15.0 (2023-11-06)
+
+#### Features
+
+* Support MP3, TranscriptNormalization and SpeakerLabels ([#23506](https://github.com/googleapis/google-cloud-ruby/issues/23506)) 
+
+### 0.14.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22924](https://github.com/googleapis/google-cloud-ruby/issues/22924)) 
+
+### 0.13.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.13.0 (2023-05-31)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21678](https://github.com/googleapis/google-cloud-ruby/issues/21678)) 
+
+### 0.12.1 (2023-03-23)
+
+#### Documentation
+
+* fix the resource name format for CreatePhraseSetRequest ([#20950](https://github.com/googleapis/google-cloud-ruby/issues/20950)) 
+
+### 0.12.0 (2023-02-28)
+
+#### Features
+
+* Support for voice activity events during streaming recognition ([#20521](https://github.com/googleapis/google-cloud-ruby/issues/20521)) 
+
+### 0.11.0 (2023-02-23)
+
+#### Features
+
+* Added support for REST transport ([#20498](https://github.com/googleapis/google-cloud-ruby/issues/20498)) 
+
+### 0.10.2 (2023-02-17)
+
+#### Bug Fixes
+
+* Fixed routing headers sent with long-running operation calls ([#20451](https://github.com/googleapis/google-cloud-ruby/issues/20451)) 
+
+### 0.10.1 (2023-02-03)
+
+#### Documentation
+
+* Clarify boost usage ([#20107](https://github.com/googleapis/google-cloud-ruby/issues/20107)) 
+
+### 0.10.0 (2023-01-05)
+
+#### Features
+
+* Support for ABNF grammars in speech adaptation ([#19954](https://github.com/googleapis/google-cloud-ruby/issues/19954)) 
+
+### 0.9.0 (2022-07-08)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+#### Bug Fixes
+
+* Fixed a crash when making certain long-running-operations status calls ([#18441](https://github.com/googleapis/google-cloud-ruby/issues/18441)) 
+
+### 0.8.0 (2022-05-12)
+
+#### Features
+
+* Added a client for the Speech Adaptation API
+
+### 0.7.3 (2022-05-03)
+
+#### Documentation
+
+* Document the latest_long and latest_short recognition models
+
+### 0.7.2 (2022-04-16)
+
+#### Bug Fixes
+
+* Removed some unused requires
+
 ### 0.7.1 / 2022-01-11
 
 #### Bug Fixes

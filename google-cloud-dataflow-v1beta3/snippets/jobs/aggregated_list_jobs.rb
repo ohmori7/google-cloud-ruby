@@ -19,21 +19,33 @@
 # [START dataflow_v1beta3_generated_Jobs_AggregatedListJobs_sync]
 require "google/cloud/dataflow/v1beta3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataflow::V1beta3::Jobs::Client.new
+##
+# Snippet for the aggregated_list_jobs call in the Jobs service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataflow::V1beta3::Jobs::Client#aggregated_list_jobs.
+#
+def aggregated_list_jobs
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataflow::V1beta3::Jobs::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataflow::V1beta3::ListJobsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataflow::V1beta3::ListJobsRequest.new
 
-# Call the aggregated_list_jobs method.
-result = client.aggregated_list_jobs request
+  # Call the aggregated_list_jobs method.
+  result = client.aggregated_list_jobs request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Dataflow::V1beta3::Job.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Dataflow::V1beta3::Job.
+    p item
+  end
 end
 # [END dataflow_v1beta3_generated_Jobs_AggregatedListJobs_sync]

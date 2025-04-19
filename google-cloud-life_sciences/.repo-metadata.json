@@ -3,6 +3,7 @@
     "api_shortname": "lifesciences",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-life_sciences/latest",
     "distribution_name": "google-cloud-life_sciences",
+    "is_cloud": true,
     "language": "ruby",
     "name": "lifesciences",
     "name_pretty": "Cloud Life Sciences API",
@@ -14,5 +15,5 @@
     "ruby-cloud-env-prefix": "LIFE_SCIENCES",
     "ruby-cloud-product-url": "https://cloud.google.com/life-sciences/",
     "ruby-cloud-service-override": "WorkflowsServiceV2Beta=WorkflowsService",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

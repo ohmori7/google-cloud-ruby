@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :vision do |config|
-  config.add_field! :endpoint,      "vision.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,6 +39,7 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -48,55 +49,104 @@ module Google
       # Create a new client object for ProductSearch.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Vision::V1::ProductSearch::Client](https://googleapis.dev/ruby/google-cloud-vision-v1/latest/Google/Cloud/Vision/V1/ProductSearch/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Vision::V1::ProductSearch::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-vision-v1/latest/Google-Cloud-Vision-V1-ProductSearch-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ProductSearch service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ProductSearch service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Vision.product_search_available?}.
       #
       # ## About ProductSearch
       #
       # Manages Products and ProductSets of reference images for use in product
       # search. It uses the following resource model:
       #
-      # - The API has a collection of ProductSet resources, named
-      # `projects/*/locations/*/productSets/*`, which acts as a way to put different
-      # products into groups to limit identification.
+      # - The API has a collection of ProductSet
+      # resources, named `projects/*/locations/*/productSets/*`, which acts as a way
+      # to put different products into groups to limit identification.
       #
       # In parallel,
       #
-      # - The API has a collection of Product resources, named
+      # - The API has a collection of Product
+      # resources, named
       #   `projects/*/locations/*/products/*`
       #
-      # - Each Product has a collection of ReferenceImage resources, named
+      # - Each Product has a collection of
+      # ReferenceImage resources, named
       #   `projects/*/locations/*/products/*/referenceImages/*`
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ProductSearch::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.product_search version: :v1, &block
+      def self.product_search version: :v1, transport: :grpc, &block
         require "google/cloud/vision/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Vision
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Vision.const_get package_name
-        package_module.const_get(:ProductSearch).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Vision.const_get(package_name).const_get(:ProductSearch)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ProductSearch service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Vision.product_search}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ProductSearch service,
+      # or if the versioned client gem needs an update to support the ProductSearch service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.product_search_available? version: :v1, transport: :grpc
+        require "google/cloud/vision/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Vision
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Vision.const_get package_name
+        return false unless service_module.const_defined? :ProductSearch
+        service_module = service_module.const_get :ProductSearch
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ImageAnnotator.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Vision::V1::ImageAnnotator::Client](https://googleapis.dev/ruby/google-cloud-vision-v1/latest/Google/Cloud/Vision/V1/ImageAnnotator/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Vision::V1::ImageAnnotator::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-vision-v1/latest/Google-Cloud-Vision-V1-ImageAnnotator-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ImageAnnotator service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ImageAnnotator service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Vision.image_annotator_available?}.
       #
       # ## About ImageAnnotator
       #
@@ -106,17 +156,50 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [ImageAnnotator::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.image_annotator version: :v1, &block
+      def self.image_annotator version: :v1, transport: :grpc, &block
         require "google/cloud/vision/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Vision
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Vision.const_get package_name
-        package_module.const_get(:ImageAnnotator).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Vision.const_get(package_name).const_get(:ImageAnnotator)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ImageAnnotator service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Vision.image_annotator}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ImageAnnotator service,
+      # or if the versioned client gem needs an update to support the ImageAnnotator service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.image_annotator_available? version: :v1, transport: :grpc
+        require "google/cloud/vision/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Vision
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Vision.const_get package_name
+        return false unless service_module.const_defined? :ImageAnnotator
+        service_module = service_module.const_get :ImageAnnotator
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -136,7 +219,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

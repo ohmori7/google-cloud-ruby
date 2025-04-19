@@ -19,15 +19,29 @@
 # [START servicedirectory_v1_generated_LookupService_ResolveService_sync]
 require "google/cloud/service_directory/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ServiceDirectory::V1::LookupService::Client.new
+##
+# Snippet for the resolve_service call in the LookupService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ServiceDirectory::V1::LookupService::Client#resolve_service.
+#
+def resolve_service
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ServiceDirectory::V1::LookupService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ServiceDirectory::V1::ResolveServiceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ServiceDirectory::V1::ResolveServiceRequest.new
 
-# Call the resolve_service method.
-result = client.resolve_service request
+  # Call the resolve_service method.
+  result = client.resolve_service request
 
-# The returned object is of type Google::Cloud::ServiceDirectory::V1::ResolveServiceResponse.
-p result
+  # The returned object is of type Google::Cloud::ServiceDirectory::V1::ResolveServiceResponse.
+  p result
+end
 # [END servicedirectory_v1_generated_LookupService_ResolveService_sync]

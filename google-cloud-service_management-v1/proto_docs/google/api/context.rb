@@ -71,13 +71,16 @@ module Google
     #   @return [::String]
     #     Selects the methods to which this rule applies.
     #
-    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax details.
+    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax
+    #     details.
     # @!attribute [rw] requested
     #   @return [::Array<::String>]
-    #     A list of full type names of requested contexts.
+    #     A list of full type names of requested contexts, only the requested context
+    #     will be made available to the backend.
     # @!attribute [rw] provided
     #   @return [::Array<::String>]
-    #     A list of full type names of provided contexts.
+    #     A list of full type names of provided contexts. It is used to support
+    #     propagating HTTP headers and ETags from the response extension.
     # @!attribute [rw] allowed_request_extensions
     #   @return [::Array<::String>]
     #     A list of full type names or extension IDs of extensions allowed in grpc

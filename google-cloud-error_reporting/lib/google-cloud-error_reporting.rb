@@ -25,7 +25,7 @@ require "googleauth"
 module Google
   module Cloud
     ##
-    # Create a new object for connecting to the Stackdriver Error Reporting
+    # Create a new object for connecting to the Error Reporting
     # service. Each call creates a new connection.
     #
     # For more information on connecting to Google Cloud see the
@@ -58,20 +58,21 @@ module Google
     #   error_reporting.report error_event
     #
     def error_reporting scope: nil, timeout: nil
+      timeout ||= @timeout
       Google::Cloud.error_reporting @project, @keyfile,
                                     scope: scope,
-                                    timeout: (timeout || @timeout)
+                                    timeout: timeout
     end
 
     ##
-    # Create a new object for connecting to the Stackdriver Error Reporting
+    # Create a new object for connecting to the Error Reporting
     # service. Each call creates a new connection.
     #
     # For more information on connecting to Google Cloud see the
     # {file:AUTHENTICATION.md Authentication Guide}.
     #
     # @param [String] project_id Google Cloud Platform project identifier for
-    #   the Stackdriver Error Reporting service you are connecting to. If not
+    #   the Error Reporting service you are connecting to. If not
     #   present, the default project for the credentials is used.
     # @param [String, Hash, Google::Auth::Credentials] credentials The path to
     #   the keyfile as a String, the contents of the keyfile as a Hash, or a

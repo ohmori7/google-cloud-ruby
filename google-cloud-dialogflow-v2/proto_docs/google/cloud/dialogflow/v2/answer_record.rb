@@ -42,11 +42,14 @@ module Google
         # A typical workflow for customers provide feedback to an answer is:
         #
         # 1. For human agent assistant, customers get suggestion via ListSuggestions
-        #    API. Together with the answers, {::Google::Cloud::Dialogflow::V2::AnswerRecord#name AnswerRecord.name} are returned to the
-        #    customers.
-        # 2. The customer uses the {::Google::Cloud::Dialogflow::V2::AnswerRecord#name AnswerRecord.name} to call the
-        #    [UpdateAnswerRecord][] method to send feedback about a specific answer
-        #    that they believe is wrong.
+        #    API. Together with the answers,
+        #    {::Google::Cloud::Dialogflow::V2::AnswerRecord#name AnswerRecord.name} are
+        #    returned to the customers.
+        # 2. The customer uses the
+        # {::Google::Cloud::Dialogflow::V2::AnswerRecord#name AnswerRecord.name} to call the
+        #    {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#update_answer_record AnswerRecords.UpdateAnswerRecord}
+        #    method to send feedback about a specific answer that they believe is
+        #    wrong.
         # @!attribute [rw] name
         #   @return [::String]
         #     The unique identifier of this answer record.
@@ -55,8 +58,8 @@ module Google
         # @!attribute [rw] answer_feedback
         #   @return [::Google::Cloud::Dialogflow::V2::AnswerFeedback]
         #     Required. The AnswerFeedback for this record. You can set this with
-        #     {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#update_answer_record AnswerRecords.UpdateAnswerRecord} in order to give us feedback about
-        #     this answer.
+        #     {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#update_answer_record AnswerRecords.UpdateAnswerRecord}
+        #     in order to give us feedback about this answer.
         # @!attribute [r] agent_assistant_record
         #   @return [::Google::Cloud::Dialogflow::V2::AgentAssistantRecord]
         #     Output only. The record for human agent assistant.
@@ -65,7 +68,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#list_answer_records AnswerRecords.ListAnswerRecords}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#list_answer_records AnswerRecords.ListAnswerRecords}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The project to list all answer records for in reverse
@@ -73,9 +77,19 @@ module Google
         #     ID>`.
         # @!attribute [rw] filter
         #   @return [::String]
-        #     Required. Filters to restrict results to specific answer records.
-        #     Filter on answer record type. Currently predicates on `type` is supported,
-        #     valid values are `ARTICLE_ANSWER`, `FAQ_ANSWER`.
+        #     Optional. Filters to restrict results to specific answer records. The
+        #     expression has the following syntax:
+        #
+        #         <field> <operator> <value> [AND <field> <operator> <value>] ...
+        #
+        #     The following fields and operators are supported:
+        #     * conversation_id with equals(=) operator
+        #
+        #     Examples:
+        #
+        #     * `conversation_id=bar` matches answer records in the
+        #       `projects/foo/locations/global/conversations/bar` conversation
+        #       (assuming the parent is `projects/foo/locations/global`).
         #
         #     For more information about filtering, see
         #     [API Filtering](https://aip.dev/160).
@@ -95,7 +109,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Response message for {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#list_answer_records AnswerRecords.ListAnswerRecords}.
+        # Response message for
+        # {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#list_answer_records AnswerRecords.ListAnswerRecords}.
         # @!attribute [rw] answer_records
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::AnswerRecord>]
         #     The list of answer records.
@@ -112,7 +127,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#update_answer_record AnswerRecords.UpdateAnswerRecord}.
+        # Request message for
+        # {::Google::Cloud::Dialogflow::V2::AnswerRecords::Client#update_answer_record AnswerRecords.UpdateAnswerRecord}.
         # @!attribute [rw] answer_record
         #   @return [::Google::Cloud::Dialogflow::V2::AnswerRecord]
         #     Required. Answer record to update.
@@ -136,6 +152,8 @@ module Google
         #   @return [::Boolean]
         #     Indicates whether the answer/item was clicked by the human agent
         #     or not. Default to false.
+        #     For knowledge search and knowledge assist, the answer record is considered
+        #     to be clicked if the answer was copied or any URI was clicked.
         # @!attribute [rw] click_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Time when the answer/item was clicked.
@@ -187,16 +205,92 @@ module Google
         #     * Suggested document says: "Items must be returned/exchanged within 60
         #       days of the purchase date."
         #     * Ground truth: "No return or exchange is allowed."
-        #     * [document_correctness]: INCORRECT
+        #     * {::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback#document_correctness document_correctness}: {::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::DocumentCorrectness::INCORRECT INCORRECT}
         # @!attribute [rw] document_efficiency
         #   @return [::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::DocumentEfficiency]
         #     Optional. Whether or not the suggested document is efficient. For example,
         #     if the document is poorly written, hard to understand, hard to use or
-        #     too long to find useful information, {::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback#document_efficiency document_efficiency} is
+        #     too long to find useful information,
+        #     {::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback#document_efficiency document_efficiency}
+        #     is
         #     {::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::DocumentEfficiency::INEFFICIENT DocumentEfficiency.INEFFICIENT}.
+        # @!attribute [rw] summarization_feedback
+        #   @return [::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::SummarizationFeedback]
+        #     Optional. Feedback for conversation summarization.
+        # @!attribute [rw] knowledge_search_feedback
+        #   @return [::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::KnowledgeSearchFeedback]
+        #     Optional. Feedback for knowledge search.
+        # @!attribute [rw] knowledge_assist_feedback
+        #   @return [::Google::Cloud::Dialogflow::V2::AgentAssistantFeedback::KnowledgeAssistFeedback]
+        #     Optional. Feedback for knowledge assist.
         class AgentAssistantFeedback
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Feedback for conversation summarization.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Timestamp when composing of the summary starts.
+          # @!attribute [rw] submit_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Timestamp when the summary was submitted.
+          # @!attribute [rw] summary_text
+          #   @return [::String]
+          #     Text of actual submitted summary.
+          # @!attribute [rw] text_sections
+          #   @return [::Google::Protobuf::Map{::String => ::String}]
+          #     Optional. Actual text sections of submitted summary.
+          class SummarizationFeedback
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::String]
+            class TextSectionsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+
+          # Feedback for knowledge search.
+          # @!attribute [rw] answer_copied
+          #   @return [::Boolean]
+          #     Whether the answer was copied by the human agent or not.
+          #     If the value is set to be true,
+          #     {::Google::Cloud::Dialogflow::V2::AnswerFeedback#clicked AnswerFeedback.clicked}
+          #     will be updated to be true.
+          # @!attribute [rw] clicked_uris
+          #   @return [::Array<::String>]
+          #     The URIs clicked by the human agent. The value is appended for each
+          #     {::Google::Cloud::Dialogflow::V2::UpdateAnswerRecordRequest UpdateAnswerRecordRequest}.
+          #     If the value is not empty,
+          #     {::Google::Cloud::Dialogflow::V2::AnswerFeedback#clicked AnswerFeedback.clicked}
+          #     will be updated to be true.
+          class KnowledgeSearchFeedback
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Feedback for knowledge assist.
+          # @!attribute [rw] answer_copied
+          #   @return [::Boolean]
+          #     Whether the suggested answer was copied by the human agent.
+          #     If the value is set to be true,
+          #     {::Google::Cloud::Dialogflow::V2::AnswerFeedback#clicked AnswerFeedback.clicked}
+          #     will be updated to be true.
+          # @!attribute [rw] clicked_uris
+          #   @return [::Array<::String>]
+          #     The URIs clicked by the human agent. The value is appended for each
+          #     UpdateAnswerRecordRequest.
+          #     If the value is not empty,
+          #     {::Google::Cloud::Dialogflow::V2::AnswerFeedback#clicked AnswerFeedback.clicked}
+          #     will be updated to be true.
+          class KnowledgeAssistFeedback
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
 
           # Relevance of an answer.
           module AnswerRelevance
@@ -239,9 +333,18 @@ module Google
         # @!attribute [r] article_suggestion_answer
         #   @return [::Google::Cloud::Dialogflow::V2::ArticleAnswer]
         #     Output only. The article suggestion answer.
+        #
+        #     Note: The following fields are mutually exclusive: `article_suggestion_answer`, `faq_answer`, `dialogflow_assist_answer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] faq_answer
         #   @return [::Google::Cloud::Dialogflow::V2::FaqAnswer]
         #     Output only. The FAQ answer.
+        #
+        #     Note: The following fields are mutually exclusive: `faq_answer`, `article_suggestion_answer`, `dialogflow_assist_answer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [r] dialogflow_assist_answer
+        #   @return [::Google::Cloud::Dialogflow::V2::DialogflowAssistAnswer]
+        #     Output only. Dialogflow assist answer.
+        #
+        #     Note: The following fields are mutually exclusive: `dialogflow_assist_answer`, `article_suggestion_answer`, `faq_answer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class AgentAssistantRecord
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

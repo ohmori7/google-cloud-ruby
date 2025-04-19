@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/dialogflow/cx/v3/agent_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -31,6 +32,12 @@ module Google
             # Service for managing {::Google::Cloud::Dialogflow::CX::V3::Agent Agents}.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "dialogflow.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -70,6 +77,11 @@ module Google
                     initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
                   }
 
+                  default_config.rpcs.create_agent.timeout = 180.0
+                  default_config.rpcs.create_agent.retry_policy = {
+                    initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [14]
+                  }
+
                   default_config
                 end
                 yield @configure if block_given?
@@ -94,6 +106,15 @@ module Google
               def configure
                 yield @config if block_given?
                 @config
+              end
+
+              ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @agents_stub.universe_domain
               end
 
               ##
@@ -129,8 +150,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -143,15 +165,38 @@ module Google
                   config.credentials = credentials
                   config.quota_project = @quota_project_id
                   config.endpoint = @config.endpoint
+                  config.universe_domain = @config.universe_domain
                 end
 
                 @agents_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Dialogflow::CX::V3::Agents::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @agents_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+
+                @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @agents_stub.endpoint
+                  config.universe_domain = @agents_stub.universe_domain
+                  config.logger = @agents_stub.logger if config.respond_to? :logger=
+                end
               end
 
               ##
@@ -160,6 +205,22 @@ module Google
               # @return [::Google::Cloud::Dialogflow::CX::V3::Agents::Operations]
               #
               attr_reader :operations_client
+
+              ##
+              # Get the associated client for mix-in of the Locations.
+              #
+              # @return [Google::Cloud::Location::Locations::Client]
+              #
+              attr_reader :location_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @agents_stub.logger
+              end
 
               # Service calls
 
@@ -183,7 +244,7 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The location to list all agents for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>`.
               #   @param page_size [::Integer]
               #     The maximum number of items to return in a single page. By default 100 and
               #     at most 1000.
@@ -210,13 +271,11 @@ module Google
               #   # Call the list_agents method.
               #   result = client.list_agents request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Dialogflow::CX::V3::Agent.
-              #     p response
+              #     p item
               #   end
               #
               def list_agents request, options = nil
@@ -230,10 +289,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_agents.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -255,7 +315,7 @@ module Google
                 @agents_stub.call_rpc :list_agents, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @agents_stub, :list_agents, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -281,7 +341,7 @@ module Google
               #
               #   @param name [::String]
               #     Required. The name of the agent.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::Agent]
@@ -317,10 +377,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -341,7 +402,6 @@ module Google
 
                 @agents_stub.call_rpc :get_agent, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -371,7 +431,7 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The location to create a agent for.
-              #     Format: `projects/<Project ID>/locations/<Location ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>`.
               #   @param agent [::Google::Cloud::Dialogflow::CX::V3::Agent, ::Hash]
               #     Required. The agent to create.
               #
@@ -409,10 +469,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -433,7 +494,6 @@ module Google
 
                 @agents_stub.call_rpc :create_agent, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -501,10 +561,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -525,7 +586,6 @@ module Google
 
                 @agents_stub.call_rpc :update_agent, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -551,7 +611,7 @@ module Google
               #
               #   @param name [::String]
               #     Required. The name of the agent to delete.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Protobuf::Empty]
@@ -587,10 +647,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -611,7 +672,6 @@ module Google
 
                 @agents_stub.call_rpc :delete_agent, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -626,7 +686,8 @@ module Google
               #
               # - `metadata`: An empty [Struct
               #   message](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#struct)
-              # - `response`: {::Google::Cloud::Dialogflow::CX::V3::ExportAgentResponse ExportAgentResponse}
+              # - `response`:
+              # {::Google::Cloud::Dialogflow::CX::V3::ExportAgentResponse ExportAgentResponse}
               #
               # @overload export_agent(request, options = nil)
               #   Pass arguments to `export_agent` via a request object, either of type
@@ -638,23 +699,36 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload export_agent(name: nil, agent_uri: nil, environment: nil)
+              # @overload export_agent(name: nil, agent_uri: nil, data_format: nil, environment: nil, git_destination: nil, include_bigquery_export_settings: nil)
               #   Pass arguments to `export_agent` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
               #     Required. The name of the agent to export.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param agent_uri [::String]
-              #     Optional. The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI to
-              #     export the agent to. The format of this URI must be
-              #     `gs://<bucket-name>/<object-name>`.
-              #     If left unspecified, the serialized agent is returned inline.
+              #     Optional. The [Google Cloud
+              #     Storage](https://cloud.google.com/storage/docs/) URI to export the agent
+              #     to. The format of this URI must be `gs://<bucket-name>/<object-name>`. If
+              #     left unspecified, the serialized agent is returned inline.
+              #
+              #     Dialogflow performs a write operation for the Cloud Storage object
+              #     on the caller's behalf, so your request authentication must
+              #     have write permissions for the object. For more information, see
+              #     [Dialogflow access
+              #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+              #   @param data_format [::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest::DataFormat]
+              #     Optional. The data format of the exported agent. If not specified, `BLOB`
+              #     is assumed.
               #   @param environment [::String]
               #     Optional. Environment name. If not set, draft environment is assumed.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/environments/<Environment ID>`.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>`.
+              #   @param git_destination [::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest::GitDestination, ::Hash]
+              #     Optional. The Git branch to export the agent to.
+              #   @param include_bigquery_export_settings [::Boolean]
+              #     Optional. Whether to include BigQuery Export setting.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -676,14 +750,14 @@ module Google
               #   # Call the export_agent method.
               #   result = client.export_agent request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def export_agent request, options = nil
@@ -697,10 +771,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.export_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -722,7 +797,7 @@ module Google
                 @agents_stub.call_rpc :export_agent, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -757,20 +832,34 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload restore_agent(name: nil, agent_uri: nil, agent_content: nil, restore_option: nil)
+              # @overload restore_agent(name: nil, agent_uri: nil, agent_content: nil, git_source: nil, restore_option: nil)
               #   Pass arguments to `restore_agent` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
               #     Required. The name of the agent to restore into.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param agent_uri [::String]
               #     The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI
               #     to restore agent from. The format of this URI must be
               #     `gs://<bucket-name>/<object-name>`.
+              #
+              #     Dialogflow performs a read operation for the Cloud Storage object
+              #     on the caller's behalf, so your request authentication must
+              #     have read permissions for the object. For more information, see
+              #     [Dialogflow access
+              #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+              #
+              #     Note: The following fields are mutually exclusive: `agent_uri`, `agent_content`, `git_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #   @param agent_content [::String]
               #     Uncompressed raw byte content for agent.
+              #
+              #     Note: The following fields are mutually exclusive: `agent_content`, `agent_uri`, `git_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+              #   @param git_source [::Google::Cloud::Dialogflow::CX::V3::RestoreAgentRequest::GitSource, ::Hash]
+              #     Setting for restoring from a git branch
+              #
+              #     Note: The following fields are mutually exclusive: `git_source`, `agent_uri`, `agent_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #   @param restore_option [::Google::Cloud::Dialogflow::CX::V3::RestoreAgentRequest::RestoreOption]
               #     Agent restore mode. If not specified, `KEEP` is assumed.
               #
@@ -794,14 +883,14 @@ module Google
               #   # Call the restore_agent method.
               #   result = client.restore_agent request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def restore_agent request, options = nil
@@ -815,10 +904,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.restore_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -840,7 +930,7 @@ module Google
                 @agents_stub.call_rpc :restore_agent, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -868,7 +958,7 @@ module Google
               #
               #   @param name [::String]
               #     Required. The agent to validate.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+              #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
               #   @param language_code [::String]
               #     If not specified, the agent's default language is used.
               #
@@ -906,10 +996,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.validate_agent.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -930,7 +1021,6 @@ module Google
 
                 @agents_stub.call_rpc :validate_agent, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -957,8 +1047,8 @@ module Google
               #
               #   @param name [::String]
               #     Required. The agent name.
-              #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-              #     ID>/validationResult`.
+              #     Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/validationResult`.
               #   @param language_code [::String]
               #     If not specified, the agent's default language is used.
               #
@@ -996,10 +1086,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_agent_validation_result.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1020,7 +1111,182 @@ module Google
 
                 @agents_stub.call_rpc :get_agent_validation_result, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Gets the generative settings for the agent.
+              #
+              # @overload get_generative_settings(request, options = nil)
+              #   Pass arguments to `get_generative_settings` via a request object, either of type
+              #   {::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload get_generative_settings(name: nil, language_code: nil)
+              #   Pass arguments to `get_generative_settings` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. Format:
+              #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/generativeSettings`.
+              #   @param language_code [::String]
+              #     Required. Language code of the generative settings.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/dialogflow/cx/v3"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Dialogflow::CX::V3::Agents::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest.new
+              #
+              #   # Call the get_generative_settings method.
+              #   result = client.get_generative_settings request
+              #
+              #   # The returned object is of type Google::Cloud::Dialogflow::CX::V3::GenerativeSettings.
+              #   p result
+              #
+              def get_generative_settings request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.get_generative_settings.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.get_generative_settings.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.get_generative_settings.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @agents_stub.call_rpc :get_generative_settings, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Updates the generative settings for the agent.
+              #
+              # @overload update_generative_settings(request, options = nil)
+              #   Pass arguments to `update_generative_settings` via a request object, either of type
+              #   {::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload update_generative_settings(generative_settings: nil, update_mask: nil)
+              #   Pass arguments to `update_generative_settings` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param generative_settings [::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings, ::Hash]
+              #     Required. Generative settings to update.
+              #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+              #     Optional. The mask to control which fields get updated. If the mask is not
+              #     present, all fields will be updated.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/dialogflow/cx/v3"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Dialogflow::CX::V3::Agents::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest.new
+              #
+              #   # Call the update_generative_settings method.
+              #   result = client.update_generative_settings request
+              #
+              #   # The returned object is of type Google::Cloud::Dialogflow::CX::V3::GenerativeSettings.
+              #   p result
+              #
+              def update_generative_settings request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.update_generative_settings.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Dialogflow::CX::V3::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.generative_settings&.name
+                  header_params["generative_settings.name"] = request.generative_settings.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.update_generative_settings.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.update_generative_settings.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @agents_stub.call_rpc :update_generative_settings, request, options: options do |response, operation|
+                  yield response, operation if block_given?
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1056,20 +1322,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"dialogflow.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -1104,11 +1377,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "dialogflow.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "dialogflow.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1123,6 +1410,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -1141,6 +1430,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##
@@ -1206,6 +1503,16 @@ module Google
                   # @return [::Gapic::Config::Method]
                   #
                   attr_reader :get_agent_validation_result
+                  ##
+                  # RPC-specific configuration for `get_generative_settings`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :get_generative_settings
+                  ##
+                  # RPC-specific configuration for `update_generative_settings`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :update_generative_settings
 
                   # @private
                   def initialize parent_rpcs = nil
@@ -1227,6 +1534,10 @@ module Google
                     @validate_agent = ::Gapic::Config::Method.new validate_agent_config
                     get_agent_validation_result_config = parent_rpcs.get_agent_validation_result if parent_rpcs.respond_to? :get_agent_validation_result
                     @get_agent_validation_result = ::Gapic::Config::Method.new get_agent_validation_result_config
+                    get_generative_settings_config = parent_rpcs.get_generative_settings if parent_rpcs.respond_to? :get_generative_settings
+                    @get_generative_settings = ::Gapic::Config::Method.new get_generative_settings_config
+                    update_generative_settings_config = parent_rpcs.update_generative_settings if parent_rpcs.respond_to? :update_generative_settings
+                    @update_generative_settings = ::Gapic::Config::Method.new update_generative_settings_config
 
                     yield self if block_given?
                   end

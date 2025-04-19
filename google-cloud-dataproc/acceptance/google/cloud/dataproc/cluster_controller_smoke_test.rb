@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "simplecov"
 require "minitest/autorun"
 require "minitest/spec"
 
@@ -26,16 +25,6 @@ class ClusterControllerSmokeTest < Minitest::Test
     project_id = ENV["DATAPROC_TEST_PROJECT"].freeze
 
     client = Google::Cloud::Dataproc.cluster_controller
-    client.list_clusters project_id: project_id, region: "global"
-  end
-
-  def test_list_clusters_v1beta2
-    unless ENV["DATAPROC_TEST_PROJECT"]
-      fail "DATAPROC_TEST_PROJECT environment variable must be defined"
-    end
-    project_id = ENV["DATAPROC_TEST_PROJECT"].freeze
-
-    client = Google::Cloud::Dataproc.cluster_controller version: :v1beta2
     client.list_clusters project_id: project_id, region: "global"
   end
 end

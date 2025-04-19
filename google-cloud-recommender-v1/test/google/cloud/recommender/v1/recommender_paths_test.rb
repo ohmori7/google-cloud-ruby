@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/recommender/v1/recommender"
 
 class ::Google::Cloud::Recommender::V1::Recommender::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_insight_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -46,7 +64,7 @@ class ::Google::Cloud::Recommender::V1::Recommender::ClientPathsTest < Minitest:
 
   def test_insight_type_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -65,9 +83,27 @@ class ::Google::Cloud::Recommender::V1::Recommender::ClientPathsTest < Minitest:
     end
   end
 
+  def test_insight_type_config_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.insight_type_config_path project: "value0", location: "value1", insight_type: "value2"
+      assert_equal "projects/value0/locations/value1/insightTypes/value2/config", path
+
+      path = client.insight_type_config_path organization: "value0", location: "value1", insight_type: "value2"
+      assert_equal "organizations/value0/locations/value1/insightTypes/value2/config", path
+
+      path = client.insight_type_config_path billing_account: "value0", location: "value1", insight_type: "value2"
+      assert_equal "billingAccounts/value0/locations/value1/insightTypes/value2/config", path
+    end
+  end
+
   def test_recommendation_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -88,7 +124,7 @@ class ::Google::Cloud::Recommender::V1::Recommender::ClientPathsTest < Minitest:
 
   def test_recommender_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -104,6 +140,24 @@ class ::Google::Cloud::Recommender::V1::Recommender::ClientPathsTest < Minitest:
 
       path = client.recommender_path organization: "value0", location: "value1", recommender: "value2"
       assert_equal "organizations/value0/locations/value1/recommenders/value2", path
+    end
+  end
+
+  def test_recommender_config_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Recommender::V1::Recommender::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.recommender_config_path project: "value0", location: "value1", recommender: "value2"
+      assert_equal "projects/value0/locations/value1/recommenders/value2/config", path
+
+      path = client.recommender_config_path organization: "value0", location: "value1", recommender: "value2"
+      assert_equal "organizations/value0/locations/value1/recommenders/value2/config", path
+
+      path = client.recommender_config_path billing_account: "value0", location: "value1", recommender: "value2"
+      assert_equal "billingAccounts/value0/locations/value1/recommenders/value2/config", path
     end
   end
 end

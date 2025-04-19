@@ -25,18 +25,24 @@ require "google/analytics/admin/v1alpha/version"
 require "google/analytics/admin/v1alpha/analytics_admin_service/credentials"
 require "google/analytics/admin/v1alpha/analytics_admin_service/paths"
 require "google/analytics/admin/v1alpha/analytics_admin_service/client"
+require "google/analytics/admin/v1alpha/analytics_admin_service/rest"
 
 module Google
   module Analytics
     module Admin
       module V1alpha
         ##
-        # Service Interface for the Analytics Admin API (GA4).
+        # Service Interface for the Google Analytics Admin API.
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/analytics/admin/v1alpha/analytics_admin_service"
         #     client = ::Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/analytics/admin/v1alpha/analytics_admin_service/rest"
+        #     client = ::Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Rest::Client.new
         #
         module AnalyticsAdminService
         end

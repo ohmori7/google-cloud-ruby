@@ -26,28 +26,34 @@ require "google/identity/access_context_manager/v1/access_context_manager/creden
 require "google/identity/access_context_manager/v1/access_context_manager/paths"
 require "google/identity/access_context_manager/v1/access_context_manager/operations"
 require "google/identity/access_context_manager/v1/access_context_manager/client"
+require "google/identity/access_context_manager/v1/access_context_manager/rest"
 
 module Google
   module Identity
     module AccessContextManager
       module V1
         ##
-        # API for setting [Access Levels]
-        # [google.identity.accesscontextmanager.v1.AccessLevel] and [Service
-        # Perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
-        # for Google Cloud Projects. Each organization has one [AccessPolicy]
-        # [google.identity.accesscontextmanager.v1.AccessPolicy] containing the
-        # [Access Levels] [google.identity.accesscontextmanager.v1.AccessLevel]
-        # and [Service Perimeters]
+        # API for setting [access levels]
+        # [google.identity.accesscontextmanager.v1.AccessLevel] and [service
+        # perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
+        # for Google Cloud projects. Each organization has one [access policy]
+        # [google.identity.accesscontextmanager.v1.AccessPolicy] that contains the
+        # [access levels] [google.identity.accesscontextmanager.v1.AccessLevel]
+        # and [service perimeters]
         # [google.identity.accesscontextmanager.v1.ServicePerimeter]. This
-        # [AccessPolicy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
+        # [access policy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
         # applicable to all resources in the organization.
         # AccessPolicies
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/identity/access_context_manager/v1/access_context_manager"
         #     client = ::Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/identity/access_context_manager/v1/access_context_manager/rest"
+        #     client = ::Google::Identity::AccessContextManager::V1::AccessContextManager::Rest::Client.new
         #
         module AccessContextManager
         end

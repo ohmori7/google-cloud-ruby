@@ -19,15 +19,29 @@
 # [START binaryauthorization_v1_generated_ValidationHelper_ValidateAttestationOccurrence_sync]
 require "google/cloud/binary_authorization/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::BinaryAuthorization::V1::ValidationHelper::Client.new
+##
+# Snippet for the validate_attestation_occurrence call in the ValidationHelper service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::BinaryAuthorization::V1::ValidationHelper::Client#validate_attestation_occurrence.
+#
+def validate_attestation_occurrence
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::BinaryAuthorization::V1::ValidationHelper::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::BinaryAuthorization::V1::ValidateAttestationOccurrenceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::BinaryAuthorization::V1::ValidateAttestationOccurrenceRequest.new
 
-# Call the validate_attestation_occurrence method.
-result = client.validate_attestation_occurrence request
+  # Call the validate_attestation_occurrence method.
+  result = client.validate_attestation_occurrence request
 
-# The returned object is of type Google::Cloud::BinaryAuthorization::V1::ValidateAttestationOccurrenceResponse.
-p result
+  # The returned object is of type Google::Cloud::BinaryAuthorization::V1::ValidateAttestationOccurrenceResponse.
+  p result
+end
 # [END binaryauthorization_v1_generated_ValidationHelper_ValidateAttestationOccurrence_sync]

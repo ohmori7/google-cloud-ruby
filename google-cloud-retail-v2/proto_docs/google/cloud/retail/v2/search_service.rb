@@ -21,14 +21,63 @@ module Google
   module Cloud
     module Retail
       module V2
+        # Product attribute which structured by an attribute name and value. This
+        # structure is used in conversational search filters and answers. For example,
+        # if we have `name=color` and `value=red`, this means that the color is `red`.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     The attribute name.
+        # @!attribute [rw] value
+        #   @return [::String]
+        #     The attribute value.
+        class ProductAttributeValue
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Product attribute name and numeric interval.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     The attribute name (e.g. "length")
+        # @!attribute [rw] interval
+        #   @return [::Google::Cloud::Retail::V2::Interval]
+        #     The numeric interval (e.g. [10, 20))
+        class ProductAttributeInterval
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # This field specifies the tile information including an attribute key,
+        # attribute value. More fields will be added in the future, eg: product id
+        # or product counts, etc.
+        # @!attribute [rw] product_attribute_value
+        #   @return [::Google::Cloud::Retail::V2::ProductAttributeValue]
+        #     The product attribute key-value.
+        #
+        #     Note: The following fields are mutually exclusive: `product_attribute_value`, `product_attribute_interval`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] product_attribute_interval
+        #   @return [::Google::Cloud::Retail::V2::ProductAttributeInterval]
+        #     The product attribute key-numeric interval.
+        #
+        #     Note: The following fields are mutually exclusive: `product_attribute_interval`, `product_attribute_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] representative_product_id
+        #   @return [::String]
+        #     The representative product id for this tile.
+        class Tile
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Request message for
         # {::Google::Cloud::Retail::V2::SearchService::Client#search SearchService.Search} method.
         # @!attribute [rw] placement
         #   @return [::String]
-        #     Required. The resource name of the search engine placement, such as
+        #     Required. The resource name of the Retail Search serving config, such as
+        #     `projects/*/locations/global/catalogs/default_catalog/servingConfigs/default_serving_config`
+        #     or the name of the legacy placement resource, such as
         #     `projects/*/locations/global/catalogs/default_catalog/placements/default_search`.
-        #     This field is used to identify the serving configuration name and the set
-        #     of models that will be used to make the search.
+        #     This field is used to identify the serving config name and the set
+        #     of models that are used to make the search.
         # @!attribute [rw] branch
         #   @return [::String]
         #     The branch resource name, such as
@@ -39,12 +88,20 @@ module Google
         # @!attribute [rw] query
         #   @return [::String]
         #     Raw search query.
+        #
+        #     If this field is empty, the request is considered a category browsing
+        #     request and returned results are based on
+        #     {::Google::Cloud::Retail::V2::SearchRequest#filter filter} and
+        #     {::Google::Cloud::Retail::V2::SearchRequest#page_categories page_categories}.
         # @!attribute [rw] visitor_id
         #   @return [::String]
         #     Required. A unique identifier for tracking visitors. For example, this
         #     could be implemented with an HTTP cookie, which should be able to uniquely
         #     identify a visitor on a single device. This unique identifier should not
         #     change if the visitor logs in or out of the website.
+        #
+        #     This should be the same identifier as
+        #     {::Google::Cloud::Retail::V2::UserEvent#visitor_id UserEvent.visitor_id}.
         #
         #     The field must be a UTF-8 encoded string with a length limit of 128
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
@@ -83,68 +140,77 @@ module Google
         #   @return [::String]
         #     The filter syntax consists of an expression language for constructing a
         #     predicate from one or more fields of the products being filtered. Filter
-        #     expression is case-sensitive. See more details at this [user
-        #     guide](https://cloud.google.com/retail/docs/filter-and-order#filter).
+        #     expression is case-sensitive. For more information, see
+        #     [Filter](https://cloud.google.com/retail/docs/filter-and-order#filter).
         #
         #     If this field is unrecognizable, an INVALID_ARGUMENT is returned.
         # @!attribute [rw] canonical_filter
         #   @return [::String]
-        #     The filter applied to every search request when quality improvement such as
-        #     query expansion is needed. For example, if a query does not have enough
-        #     results, an expanded query with
-        #     {::Google::Cloud::Retail::V2::SearchRequest#canonical_filter SearchRequest.canonical_filter}
-        #     will be returned as a supplement of the original query. This field is
-        #     strongly recommended to achieve high search quality.
+        #     The default filter that is applied when a user performs a search without
+        #     checking any filters on the search page.
         #
-        #     See {::Google::Cloud::Retail::V2::SearchRequest#filter SearchRequest.filter} for
-        #     more details about filter syntax.
+        #     The filter applied to every search request when quality improvement such as
+        #     query expansion is needed. In the case a query does not have a sufficient
+        #     amount of results this filter will be used to determine whether or not to
+        #     enable the query expansion flow. The original filter will still be used for
+        #     the query expanded search.
+        #     This field is strongly recommended to achieve high search quality.
+        #
+        #     For more information about filter syntax, see
+        #     {::Google::Cloud::Retail::V2::SearchRequest#filter SearchRequest.filter}.
         # @!attribute [rw] order_by
         #   @return [::String]
         #     The order in which products are returned. Products can be ordered by
         #     a field in an {::Google::Cloud::Retail::V2::Product Product} object. Leave it
-        #     unset if ordered by relevance. OrderBy expression is case-sensitive. See
-        #     more details at this [user
-        #     guide](https://cloud.google.com/retail/docs/filter-and-order#order).
+        #     unset if ordered by relevance. OrderBy expression is case-sensitive. For
+        #     more information, see
+        #     [Order](https://cloud.google.com/retail/docs/filter-and-order#order).
         #
         #     If this field is unrecognizable, an INVALID_ARGUMENT is returned.
         # @!attribute [rw] facet_specs
         #   @return [::Array<::Google::Cloud::Retail::V2::SearchRequest::FacetSpec>]
         #     Facet specifications for faceted search. If empty, no facets are returned.
         #
-        #     A maximum of 100 values are allowed. Otherwise, an INVALID_ARGUMENT error
+        #     A maximum of 200 values are allowed. Otherwise, an INVALID_ARGUMENT error
         #     is returned.
         # @!attribute [rw] dynamic_facet_spec
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Cloud::Retail::V2::SearchRequest::DynamicFacetSpec]
+        #     Deprecated. Refer to https://cloud.google.com/retail/docs/configs#dynamic
+        #     to enable dynamic facets. Do not set this field.
+        #
         #     The specification for dynamically generated facets. Notice that only
         #     textual facets can be dynamically generated.
-        #
-        #     This feature requires additional allowlisting. Contact Retail Search
-        #     support team if you are interested in using dynamic facet feature.
         # @!attribute [rw] boost_spec
         #   @return [::Google::Cloud::Retail::V2::SearchRequest::BoostSpec]
-        #     Boost specification to boost certain products. See more details at this
-        #     [user guide](https://cloud.google.com/retail/docs/boosting).
+        #     Boost specification to boost certain products. For more information, see
+        #     [Boost results](https://cloud.google.com/retail/docs/boosting).
         #
-        #     Notice that if both [ServingConfig.boost_control_ids][] and
-        #     [SearchRequest.boost_spec] are set, the boost conditions from both places
-        #     are evaluated. If a search request matches multiple boost conditions,
-        #     the final boost score is equal to the sum of the boost scores from all
-        #     matched boost conditions.
+        #     Notice that if both
+        #     {::Google::Cloud::Retail::V2::ServingConfig#boost_control_ids ServingConfig.boost_control_ids}
+        #     and
+        #     {::Google::Cloud::Retail::V2::SearchRequest#boost_spec SearchRequest.boost_spec}
+        #     are set, the boost conditions from both places are evaluated. If a search
+        #     request matches multiple boost conditions, the final boost score is equal
+        #     to the sum of the boost scores from all matched boost conditions.
         # @!attribute [rw] query_expansion_spec
         #   @return [::Google::Cloud::Retail::V2::SearchRequest::QueryExpansionSpec]
         #     The query expansion specification that specifies the conditions under which
-        #     query expansion will occur. See more details at this [user
-        #     guide](https://cloud.google.com/retail/docs/result-size#query_expansion).
+        #     query expansion occurs. For more information, see [Query
+        #     expansion](https://cloud.google.com/retail/docs/result-size#query_expansion).
         # @!attribute [rw] variant_rollup_keys
         #   @return [::Array<::String>]
         #     The keys to fetch and rollup the matching
         #     {::Google::Cloud::Retail::V2::Product::Type::VARIANT variant}
-        #     {::Google::Cloud::Retail::V2::Product Product}s attributes. The attributes from
-        #     all the matching {::Google::Cloud::Retail::V2::Product::Type::VARIANT variant}
-        #     {::Google::Cloud::Retail::V2::Product Product}s are merged and de-duplicated.
-        #     Notice that rollup {::Google::Cloud::Retail::V2::Product::Type::VARIANT variant}
-        #     {::Google::Cloud::Retail::V2::Product Product}s attributes will lead to extra
-        #     query latency. Maximum number of keys is 10.
+        #     {::Google::Cloud::Retail::V2::Product Product}s attributes,
+        #     {::Google::Cloud::Retail::V2::FulfillmentInfo FulfillmentInfo} or
+        #     {::Google::Cloud::Retail::V2::LocalInventory LocalInventory}s attributes. The
+        #     attributes from all the matching
+        #     {::Google::Cloud::Retail::V2::Product::Type::VARIANT variant}
+        #     {::Google::Cloud::Retail::V2::Product Product}s or
+        #     {::Google::Cloud::Retail::V2::LocalInventory LocalInventory}s are merged and
+        #     de-duplicated. Notice that rollup attributes will lead to extra query
+        #     latency. Maximum number of keys is 30.
         #
         #     For {::Google::Cloud::Retail::V2::FulfillmentInfo FulfillmentInfo}, a
         #     fulfillment type and a fulfillment ID must be provided in the format of
@@ -159,8 +225,10 @@ module Google
         #     * discount
         #     * variantId
         #     * inventory(place_id,price)
+        #     * inventory(place_id,original_price)
         #     * inventory(place_id,attributes.key), where key is any key in the
-        #       [Product.inventories.attributes][] map.
+        #       {::Google::Cloud::Retail::V2::LocalInventory#attributes Product.local_inventories.attributes}
+        #       map.
         #     * attributes.key, where key is any key in the
         #       {::Google::Cloud::Retail::V2::Product#attributes Product.attributes} map.
         #     * pickupInStore.id, where id is any
@@ -204,13 +272,13 @@ module Google
         #     INVALID_ARGUMENT error is returned.
         # @!attribute [rw] page_categories
         #   @return [::Array<::String>]
-        #     The categories associated with a category page. Required for category
+        #     The categories associated with a category page. Must be set for category
         #     navigation queries to achieve good search quality. The format should be
         #     the same as
         #     {::Google::Cloud::Retail::V2::UserEvent#page_categories UserEvent.page_categories};
         #
         #     To represent full path of category, use '>' sign to separate different
-        #     hierarchies. If '>' is part of the category name, please replace it with
+        #     hierarchies. If '>' is part of the category name, replace it with
         #     other character(s).
         #
         #     Category pages include special pages such as sales or promotions. For
@@ -220,6 +288,56 @@ module Google
         #   @return [::Google::Cloud::Retail::V2::SearchRequest::SearchMode]
         #     The search mode of the search request. If not specified, a single search
         #     request triggers both product search and faceted search.
+        # @!attribute [rw] personalization_spec
+        #   @return [::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec]
+        #     The specification for personalization.
+        #
+        #     Notice that if both
+        #     {::Google::Cloud::Retail::V2::ServingConfig#personalization_spec ServingConfig.personalization_spec}
+        #     and
+        #     {::Google::Cloud::Retail::V2::SearchRequest#personalization_spec SearchRequest.personalization_spec}
+        #     are set.
+        #     {::Google::Cloud::Retail::V2::SearchRequest#personalization_spec SearchRequest.personalization_spec}
+        #     will override
+        #     {::Google::Cloud::Retail::V2::ServingConfig#personalization_spec ServingConfig.personalization_spec}.
+        # @!attribute [rw] labels
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     The labels applied to a resource must meet the following requirements:
+        #
+        #     * Each resource can have multiple labels, up to a maximum of 64.
+        #     * Each label must be a key-value pair.
+        #     * Keys have a minimum length of 1 character and a maximum length of 63
+        #       characters and cannot be empty. Values can be empty and have a maximum
+        #       length of 63 characters.
+        #     * Keys and values can contain only lowercase letters, numeric characters,
+        #       underscores, and dashes. All characters must use UTF-8 encoding, and
+        #       international characters are allowed.
+        #     * The key portion of a label must be unique. However, you can use the same
+        #       key with multiple resources.
+        #     * Keys must start with a lowercase letter or international character.
+        #
+        #     For more information, see [Requirements for
+        #     labels](https://cloud.google.com/resource-manager/docs/creating-managing-labels#requirements)
+        #     in the Resource Manager documentation.
+        # @!attribute [rw] spell_correction_spec
+        #   @return [::Google::Cloud::Retail::V2::SearchRequest::SpellCorrectionSpec]
+        #     The spell correction specification that specifies the mode under
+        #     which spell correction will take effect.
+        # @!attribute [rw] entity
+        #   @return [::String]
+        #     The entity for customers that may run multiple different entities, domains,
+        #     sites or regions, for example, `Google US`, `Google Ads`, `Waymo`,
+        #     `google.com`, `youtube.com`, etc.
+        #     If this is set, it should be exactly matched with
+        #     {::Google::Cloud::Retail::V2::UserEvent#entity UserEvent.entity} to get search
+        #     results boosted by entity.
+        # @!attribute [rw] conversational_search_spec
+        #   @return [::Google::Cloud::Retail::V2::SearchRequest::ConversationalSearchSpec]
+        #     Optional. This field specifies all conversational related parameters
+        #     addition to traditional retail search.
+        # @!attribute [rw] tile_navigation_spec
+        #   @return [::Google::Cloud::Retail::V2::SearchRequest::TileNavigationSpec]
+        #     Optional. This field specifies tile navigation related parameters.
         class SearchRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -231,7 +349,7 @@ module Google
           # @!attribute [rw] limit
           #   @return [::Integer]
           #     Maximum of facet values that should be returned for this facet. If
-          #     unspecified, defaults to 20. The maximum allowed value is 300. Values
+          #     unspecified, defaults to 50. The maximum allowed value is 300. Values
           #     above 300 will be coerced to 300.
           #
           #     If this field is negative, an INVALID_ARGUMENT is returned.
@@ -239,19 +357,29 @@ module Google
           #   @return [::Array<::String>]
           #     List of keys to exclude when faceting.
           #
+          #
           #     By default,
           #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#key FacetKey.key}
           #     is not excluded from the filter unless it is listed in this field.
           #
-          #     For example, suppose there are 100 products with color facet "Red" and
-          #     200 products with color facet "Blue". A query containing the filter
-          #     "colorFamilies:ANY("Red")" and have "colorFamilies" as
-          #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#key FacetKey.key}
-          #     will by default return the "Red" with count 100.
+          #     Listing a facet key in this field allows its values to appear as facet
+          #     results, even when they are filtered out of search results. Using this
+          #     field does not affect what search results are returned.
           #
-          #     If this field contains "colorFamilies", then the query returns both the
-          #     "Red" with count 100 and "Blue" with count 200, because the
-          #     "colorFamilies" key is now excluded from the filter.
+          #     For example, suppose there are 100 products with the color facet "Red"
+          #     and 200 products with the color facet "Blue". A query containing the
+          #     filter "colorFamilies:ANY("Red")" and having "colorFamilies" as
+          #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#key FacetKey.key}
+          #     would by default return only "Red" products in the search results, and
+          #     also return "Red" with count 100 as the only color facet. Although there
+          #     are also blue products available, "Blue" would not be shown as an
+          #     available facet value.
+          #
+          #     If "colorFamilies" is listed in "excludedFilterKeys", then the query
+          #     returns the facet values "Red" with count 100 and "Blue" with count
+          #     200, because the "colorFamilies" key is now excluded from the filter.
+          #     Because this field doesn't affect search results, the search results
+          #     are still correctly filtered to return only "Red" products.
           #
           #     A maximum of 100 values are allowed. Otherwise, an INVALID_ARGUMENT error
           #     is returned.
@@ -259,15 +387,15 @@ module Google
           #   @return [::Boolean]
           #     Enables dynamic position for this facet. If set to true, the position of
           #     this facet among all facets in the response is determined by Google
-          #     Retail Search. It will be ordered together with dynamic facets if dynamic
+          #     Retail Search. It is ordered together with dynamic facets if dynamic
           #     facets is enabled. If set to false, the position of this facet in the
-          #     response will be the same as in the request, and it will be ranked before
+          #     response is the same as in the request, and it is ranked before
           #     the facets with dynamic position enable and all dynamic facets.
           #
           #     For example, you may always want to have rating facet returned in
           #     the response, but it's not necessarily to always display the rating facet
           #     at the top. In that case, you can set enable_dynamic_position to true so
-          #     that the position of rating facet in response will be determined by
+          #     that the position of rating facet in response is determined by
           #     Google Retail Search.
           #
           #     Another example, assuming you have the following facets in the request:
@@ -278,13 +406,13 @@ module Google
           #
           #     * "brands", enable_dynamic_position = false
           #
-          #     And also you have a dynamic facets enable, which will generate a facet
-          #     'gender'. Then the final order of the facets in the response can be
+          #     And also you have a dynamic facets enable, which generates a facet
+          #     "gender". Then, the final order of the facets in the response can be
           #     ("price", "brands", "rating", "gender") or ("price", "brands", "gender",
           #     "rating") depends on how Google Retail Search orders "gender" and
-          #     "rating" facets. However, notice that "price" and "brands" will always be
-          #     ranked at 1st and 2nd position since their enable_dynamic_position are
-          #     false.
+          #     "rating" facets. However, notice that "price" and "brands" are always
+          #     ranked at first and second position because their enable_dynamic_position
+          #     values are false.
           class FacetSpec
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -331,19 +459,29 @@ module Google
             #         * "ratingCount"
             #         * "attributes.key"
             #         * "inventory(place_id,price)"
+            #         * "inventory(place_id,original_price)"
             #         * "inventory(place_id,attributes.key)"
             # @!attribute [rw] intervals
             #   @return [::Array<::Google::Cloud::Retail::V2::Interval>]
             #     Set only if values should be bucketized into intervals. Must be set
             #     for facets with numerical values. Must not be set for facet with text
-            #     values. Maximum number of intervals is 30.
+            #     values. Maximum number of intervals is 40.
+            #
+            #     For all numerical facet keys that appear in the list of products from
+            #     the catalog, the percentiles 0, 10, 30, 50, 70, 90, and 100 are
+            #     computed from their distribution weekly. If the model assigns a high
+            #     score to a numerical facet key and its intervals are not specified in
+            #     the search request, these percentiles become the bounds
+            #     for its intervals and are returned in the response. If the
+            #     facet key intervals are specified in the request, then the specified
+            #     intervals are returned instead.
             # @!attribute [rw] restricted_values
             #   @return [::Array<::String>]
             #     Only get facet for the given restricted values. For example, when using
             #     "pickupInStore" as key and set restricted values to
             #     ["store123", "store456"], only facets for "store123" and "store456" are
-            #     returned. Only supported on textual fields and fulfillments.
-            #     Maximum is 20.
+            #     returned. Only supported on predefined textual fields, custom textual
+            #     attributes and fulfillments. Maximum is 20.
             #
             #     Must be set for the fulfillment facet keys:
             #
@@ -369,25 +507,33 @@ module Google
             #     Only get facet values that start with the given string prefix. For
             #     example, suppose "categories" has three values "Women > Shoe",
             #     "Women > Dress" and "Men > Shoe". If set "prefixes" to "Women", the
-            #     "categories" facet will give only "Women > Shoe" and "Women > Dress".
+            #     "categories" facet gives only "Women > Shoe" and "Women > Dress".
             #     Only supported on textual fields. Maximum is 10.
             # @!attribute [rw] contains
             #   @return [::Array<::String>]
             #     Only get facet values that contains the given strings. For example,
             #     suppose "categories" has three values "Women > Shoe",
             #     "Women > Dress" and "Men > Shoe". If set "contains" to "Shoe", the
-            #     "categories" facet will give only "Women > Shoe" and "Men > Shoe".
+            #     "categories" facet gives only "Women > Shoe" and "Men > Shoe".
             #     Only supported on textual fields. Maximum is 10.
+            # @!attribute [rw] case_insensitive
+            #   @return [::Boolean]
+            #     True to make facet keys case insensitive when getting faceting
+            #     values with prefixes or contains; false otherwise.
             # @!attribute [rw] order_by
             #   @return [::String]
-            #     The order in which [Facet.values][] are returned.
+            #     The order in which
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet#values SearchResponse.Facet.values}
+            #     are returned.
             #
             #     Allowed values are:
             #
-            #     * "count desc", which means order by [Facet.FacetValue.count][]
+            #     * "count desc", which means order by
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#count SearchResponse.Facet.values.count}
             #     descending.
             #
-            #     * "value desc", which means order by [Facet.FacetValue.value][]
+            #     * "value desc", which means order by
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#value SearchResponse.Facet.values.value}
             #     descending.
             #       Only applies to textual facets.
             #
@@ -401,16 +547,18 @@ module Google
             # @!attribute [rw] query
             #   @return [::String]
             #     The query that is used to compute facet for the given facet key.
-            #     When provided, it will override the default behavior of facet
+            #     When provided, it overrides the default behavior of facet
             #     computation. The query syntax is the same as a filter expression. See
             #     {::Google::Cloud::Retail::V2::SearchRequest#filter SearchRequest.filter} for
             #     detail syntax and limitations. Notice that there is no limitation on
             #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#key FacetKey.key}
             #     when query is specified.
             #
-            #     In the response, [FacetValue.value][] will be always "1" and
-            #     [FacetValue.count][] will be the number of results that matches the
-            #     query.
+            #     In the response,
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#value SearchResponse.Facet.values.value}
+            #     is always "1" and
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#count SearchResponse.Facet.values.count}
+            #     is the number of results that match the query.
             #
             #     For example, you can set a customized facet for "shipToStore",
             #     where
@@ -418,8 +566,12 @@ module Google
             #     is "customizedShipToStore", and
             #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#query FacetKey.query}
             #     is "availability: ANY(\"IN_STOCK\") AND shipToStore: ANY(\"123\")".
-            #     Then the facet will count the products that are both in stock and ship
+            #     Then the facet counts the products that are both in stock and ship
             #     to store "123".
+            # @!attribute [rw] return_min_max
+            #   @return [::Boolean]
+            #     Returns the min and max value for each numerical facet intervals.
+            #     Ignored for textual facets.
             class FacetKey
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -456,7 +608,15 @@ module Google
           #     Condition boost specifications. If a product matches multiple conditions
           #     in the specifictions, boost scores from these specifications are all
           #     applied and combined in a non-linear way. Maximum number of
-          #     specifications is 10.
+          #     specifications is 20.
+          # @!attribute [rw] skip_boost_spec_validation
+          #   @return [::Boolean]
+          #     Whether to skip boostspec validation. If this field is set to true,
+          #     invalid
+          #     {::Google::Cloud::Retail::V2::SearchRequest::BoostSpec#condition_boost_specs BoostSpec.condition_boost_specs}
+          #     will be ignored and valid
+          #     {::Google::Cloud::Retail::V2::SearchRequest::BoostSpec#condition_boost_specs BoostSpec.condition_boost_specs}
+          #     will still be applied.
           class BoostSpec
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -518,7 +678,8 @@ module Google
 
             # Enum describing under which condition query expansion should occur.
             module Condition
-              # Unspecified query expansion condition. This defaults to
+              # Unspecified query expansion condition. In this case, server behavior
+              # defaults to
               # {::Google::Cloud::Retail::V2::SearchRequest::QueryExpansionSpec::Condition::DISABLED Condition.DISABLED}.
               CONDITION_UNSPECIFIED = 0
 
@@ -532,18 +693,161 @@ module Google
             end
           end
 
+          # The specification for personalization.
+          # @!attribute [rw] mode
+          #   @return [::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec::Mode]
+          #     Defaults to
+          #     {::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec::Mode::AUTO Mode.AUTO}.
+          class PersonalizationSpec
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # The personalization mode of each search request.
+            module Mode
+              # Default value. In this case, server behavior defaults to
+              # {::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec::Mode::AUTO Mode.AUTO}.
+              MODE_UNSPECIFIED = 0
+
+              # Let CRS decide whether to use personalization based on quality of user
+              # event data.
+              AUTO = 1
+
+              # Disable personalization.
+              DISABLED = 2
+            end
+          end
+
+          # The specification for query spell correction.
+          # @!attribute [rw] mode
+          #   @return [::Google::Cloud::Retail::V2::SearchRequest::SpellCorrectionSpec::Mode]
+          #     The mode under which spell correction should take effect to
+          #     replace the original search query. Default to
+          #     {::Google::Cloud::Retail::V2::SearchRequest::SpellCorrectionSpec::Mode::AUTO Mode.AUTO}.
+          class SpellCorrectionSpec
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Enum describing under which mode spell correction should occur.
+            module Mode
+              # Unspecified spell correction mode. In this case, server behavior
+              # defaults to
+              # {::Google::Cloud::Retail::V2::SearchRequest::SpellCorrectionSpec::Mode::AUTO Mode.AUTO}.
+              MODE_UNSPECIFIED = 0
+
+              # Google Retail Search will try to find a spell suggestion if there
+              # is any and put in the
+              # {::Google::Cloud::Retail::V2::SearchResponse#corrected_query SearchResponse.corrected_query}.
+              # The spell suggestion will not be used as the search query.
+              SUGGESTION_ONLY = 1
+
+              # Automatic spell correction built by Google Retail Search. Search will
+              # be based on the corrected query if found.
+              AUTO = 2
+            end
+          end
+
+          # This field specifies all conversational related parameters addition to
+          # traditional retail search.
+          # @!attribute [rw] followup_conversation_requested
+          #   @return [::Boolean]
+          #     This field specifies whether the customer would like to do conversational
+          #     search. If this field is set to true, conversational related extra
+          #     information will be returned from server side, including follow-up
+          #     question, answer options, etc.
+          # @!attribute [rw] conversation_id
+          #   @return [::String]
+          #     This field specifies the conversation id, which maintains the state of
+          #     the conversation between client side and server side. Use the value from
+          #     the previous [ConversationalSearchResult.conversation_id][]. For the
+          #     initial request, this should be empty.
+          # @!attribute [rw] user_answer
+          #   @return [::Google::Cloud::Retail::V2::SearchRequest::ConversationalSearchSpec::UserAnswer]
+          #     This field specifies the current user answer during the conversational
+          #     search. This can be either user selected from suggested answers or user
+          #     input plain text.
+          class ConversationalSearchSpec
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # This field specifies the current user answer during the conversational
+            # search. This can be either user selected from suggested answers or user
+            # input plain text.
+            # @!attribute [rw] text_answer
+            #   @return [::String]
+            #     This field specifies the incremental input text from the user during
+            #     the conversational search.
+            #
+            #     Note: The following fields are mutually exclusive: `text_answer`, `selected_answer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] selected_answer
+            #   @return [::Google::Cloud::Retail::V2::SearchRequest::ConversationalSearchSpec::UserAnswer::SelectedAnswer]
+            #     This field specifies the selected attributes during the
+            #     conversational search. This should be a subset of
+            #     [ConversationalSearchResult.suggested_answers][].
+            #
+            #     Note: The following fields are mutually exclusive: `selected_answer`, `text_answer`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            class UserAnswer
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # This field specifies the selected answers during the conversational
+              # search.
+              # @!attribute [rw] product_attribute_values
+              #   @deprecated This field is deprecated and may be removed in the next major version update.
+              #   @return [::Array<::Google::Cloud::Retail::V2::ProductAttributeValue>]
+              #     This field is deprecated and should not be set.
+              # @!attribute [rw] product_attribute_value
+              #   @return [::Google::Cloud::Retail::V2::ProductAttributeValue]
+              #     This field specifies the selected answer which is a attribute
+              #     key-value.
+              class SelectedAnswer
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
+          end
+
+          # This field specifies tile navigation related parameters.
+          # @!attribute [rw] tile_navigation_requested
+          #   @return [::Boolean]
+          #     This field specifies whether the customer would like to request tile
+          #     navigation.
+          # @!attribute [rw] applied_tiles
+          #   @return [::Array<::Google::Cloud::Retail::V2::Tile>]
+          #     This field specifies the tiles which are already clicked in client side.
+          #     NOTE: This field is not being used for filtering search products. Client
+          #     side should also put all the applied tiles in
+          #     {::Google::Cloud::Retail::V2::SearchRequest#filter SearchRequest.filter}.
+          class TileNavigationSpec
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # The search mode of each search request.
           module SearchMode
             # Default value. In this case both product search and faceted search will
-            # be performed. Both [SearchResponse.SearchResult] and
-            # [SearchResponse.Facet] will be returned.
+            # be performed. Both
+            # {::Google::Cloud::Retail::V2::SearchResponse::SearchResult SearchResponse.SearchResult}
+            # and {::Google::Cloud::Retail::V2::SearchResponse::Facet SearchResponse.Facet}
+            # will be returned.
             SEARCH_MODE_UNSPECIFIED = 0
 
             # Only product search will be performed. The faceted search will be
             # disabled.
             #
-            # Only [SearchResponse.SearchResult] will be returned.
-            # [SearchResponse.Facet] will not be returned, even if
+            # Only
+            # {::Google::Cloud::Retail::V2::SearchResponse::SearchResult SearchResponse.SearchResult}
+            # will be returned.
+            # {::Google::Cloud::Retail::V2::SearchResponse::Facet SearchResponse.Facet} will
+            # not be returned, even if
             # {::Google::Cloud::Retail::V2::SearchRequest#facet_specs SearchRequest.facet_specs}
             # or
             # {::Google::Cloud::Retail::V2::SearchRequest#dynamic_facet_spec SearchRequest.dynamic_facet_spec}
@@ -553,10 +857,14 @@ module Google
             # Only faceted search will be performed. The product search will be
             # disabled.
             #
-            # When in this mode, one or both of [SearchRequest.facet_spec][] and
+            # When in this mode, one or both of
+            # {::Google::Cloud::Retail::V2::SearchRequest#facet_specs SearchRequest.facet_specs}
+            # and
             # {::Google::Cloud::Retail::V2::SearchRequest#dynamic_facet_spec SearchRequest.dynamic_facet_spec}
             # should be set. Otherwise, an INVALID_ARGUMENT error is returned. Only
-            # [SearchResponse.Facet] will be returned. [SearchResponse.SearchResult]
+            # {::Google::Cloud::Retail::V2::SearchResponse::Facet SearchResponse.Facet} will
+            # be returned.
+            # {::Google::Cloud::Retail::V2::SearchResponse::SearchResult SearchResponse.SearchResult}
             # will not be returned.
             FACETED_SEARCH_ONLY = 2
           end
@@ -579,7 +887,9 @@ module Google
         #     matches.
         # @!attribute [rw] corrected_query
         #   @return [::String]
-        #     If spell correction applies, the corrected query. Otherwise, empty.
+        #     Contains the spell corrected query, if found. If the spell correction type
+        #     is AUTOMATIC, then the search results are based on corrected_query.
+        #     Otherwise the original query is used for search.
         # @!attribute [rw] attribution_token
         #   @return [::String]
         #     A unique search token. This should be included in the
@@ -597,10 +907,31 @@ module Google
         # @!attribute [rw] redirect_uri
         #   @return [::String]
         #     The URI of a customer-defined redirect page. If redirect action is
-        #     triggered, no search will be performed, and only
+        #     triggered, no search is performed, and only
         #     {::Google::Cloud::Retail::V2::SearchResponse#redirect_uri redirect_uri} and
         #     {::Google::Cloud::Retail::V2::SearchResponse#attribution_token attribution_token}
-        #     will be set in the response.
+        #     are set in the response.
+        # @!attribute [rw] applied_controls
+        #   @return [::Array<::String>]
+        #     The fully qualified resource name of applied
+        #     [controls](https://cloud.google.com/retail/docs/serving-control-rules).
+        # @!attribute [rw] invalid_condition_boost_specs
+        #   @return [::Array<::Google::Cloud::Retail::V2::SearchRequest::BoostSpec::ConditionBoostSpec>]
+        #     The invalid
+        #     {::Google::Cloud::Retail::V2::SearchRequest::BoostSpec#condition_boost_specs SearchRequest.BoostSpec.condition_boost_specs}
+        #     that are not applied during serving.
+        # @!attribute [rw] experiment_info
+        #   @return [::Array<::Google::Cloud::Retail::V2::ExperimentInfo>]
+        #     Metadata related to A/B testing [Experiment][] associated with this
+        #     response. Only exists when an experiment is triggered.
+        # @!attribute [rw] conversational_search_result
+        #   @return [::Google::Cloud::Retail::V2::SearchResponse::ConversationalSearchResult]
+        #     This field specifies all related information that is needed on client
+        #     side for UI rendering of conversational retail search.
+        # @!attribute [rw] tile_navigation_result
+        #   @return [::Google::Cloud::Retail::V2::SearchResponse::TileNavigationResult]
+        #     This field specifies all related information for tile navigation that will
+        #     be used in client side.
         class SearchResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -677,6 +1008,21 @@ module Google
           #     {::Google::Protobuf::Value google.protobuf.Value}. For example,
           #     `{key: "pickupInStore.store1" value { number_value: 10 }}` means a there
           #     are 10 variants in this product are available in the store "store1".
+          # @!attribute [rw] personal_labels
+          #   @return [::Array<::String>]
+          #     Specifies previous events related to this product for this user based on
+          #     {::Google::Cloud::Retail::V2::UserEvent UserEvent} with same
+          #     {::Google::Cloud::Retail::V2::SearchRequest#visitor_id SearchRequest.visitor_id}
+          #     or {::Google::Cloud::Retail::V2::UserInfo#user_id UserInfo.user_id}.
+          #
+          #     This is set only when
+          #     {::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec#mode SearchRequest.PersonalizationSpec.mode}
+          #     is
+          #     {::Google::Cloud::Retail::V2::SearchRequest::PersonalizationSpec::Mode::AUTO SearchRequest.PersonalizationSpec.Mode.AUTO}.
+          #
+          #     Possible values:
+          #
+          #     * `purchased`: Indicates that this product has been purchased before.
           class SearchResult
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -719,12 +1065,30 @@ module Google
             # @!attribute [rw] value
             #   @return [::String]
             #     Text value of a facet, such as "Black" for facet "colorFamilies".
+            #
+            #     Note: The following fields are mutually exclusive: `value`, `interval`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] interval
             #   @return [::Google::Cloud::Retail::V2::Interval]
             #     Interval value for a facet, such as [10, 20) for facet "price".
+            #
+            #     Note: The following fields are mutually exclusive: `interval`, `value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] count
             #   @return [::Integer]
             #     Number of items that have this facet value.
+            # @!attribute [rw] min_value
+            #   @return [::Float]
+            #     The minimum value in the
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#interval FacetValue.interval}.
+            #     Only supported on numerical facets and returned if
+            #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#return_min_max SearchRequest.FacetSpec.FacetKey.return_min_max}
+            #     is true.
+            # @!attribute [rw] max_value
+            #   @return [::Float]
+            #     The maximum value in the
+            #     {::Google::Cloud::Retail::V2::SearchResponse::Facet::FacetValue#interval FacetValue.interval}.
+            #     Only supported on numerical facets and returned if
+            #     {::Google::Cloud::Retail::V2::SearchRequest::FacetSpec::FacetKey#return_min_max SearchRequest.FacetSpec.FacetKey.return_min_max}
+            #     is true.
             class FacetValue
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -743,6 +1107,113 @@ module Google
           #     {::Google::Cloud::Retail::V2::SearchRequest::QueryExpansionSpec#pin_unexpanded_results SearchRequest.QueryExpansionSpec.pin_unexpanded_results}
           #     is set to true.
           class QueryExpansionInfo
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # This field specifies all related information that is needed on client
+          # side for UI rendering of conversational retail search.
+          # @!attribute [rw] conversation_id
+          #   @return [::String]
+          #     Conversation UUID. This field will be stored in client side storage to
+          #     maintain the conversation session with server and will be used for next
+          #     search request's
+          #     {::Google::Cloud::Retail::V2::SearchRequest::ConversationalSearchSpec#conversation_id SearchRequest.ConversationalSearchSpec.conversation_id}
+          #     to restore conversation state in server.
+          # @!attribute [rw] refined_query
+          #   @return [::String]
+          #     The current refined query for the conversational search. This field
+          #     will be used in customer UI that the query in the search bar should be
+          #     replaced with the refined query. For example, if
+          #     {::Google::Cloud::Retail::V2::SearchRequest#query SearchRequest.query} is
+          #     `dress` and next
+          #     {::Google::Cloud::Retail::V2::SearchRequest::ConversationalSearchSpec::UserAnswer#text_answer SearchRequest.ConversationalSearchSpec.UserAnswer.text_answer}
+          #     is `red color`, which does not match any product attribute value filters,
+          #     the refined query will be `dress, red color`.
+          # @!attribute [rw] additional_filters
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
+          #   @return [::Array<::Google::Cloud::Retail::V2::SearchResponse::ConversationalSearchResult::AdditionalFilter>]
+          #     This field is deprecated but will be kept for backward compatibility.
+          #     There is expected to have only one additional filter and the value will
+          #     be the same to the same as field `additional_filter`.
+          # @!attribute [rw] followup_question
+          #   @return [::String]
+          #     The follow-up question. e.g., `What is the color?`
+          # @!attribute [rw] suggested_answers
+          #   @return [::Array<::Google::Cloud::Retail::V2::SearchResponse::ConversationalSearchResult::SuggestedAnswer>]
+          #     The answer options provided to client for the follow-up question.
+          # @!attribute [rw] additional_filter
+          #   @return [::Google::Cloud::Retail::V2::SearchResponse::ConversationalSearchResult::AdditionalFilter]
+          #     This is the incremental additional filters implied from the current
+          #     user answer. User should add the suggested addition filters to the
+          #     previous
+          #     {::Google::Cloud::Retail::V2::SearchRequest#filter SearchRequest.filter},  and
+          #     use the merged filter in the follow up search request.
+          class ConversationalSearchResult
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Suggested answers to the follow-up question.
+            # @!attribute [rw] product_attribute_value
+            #   @return [::Google::Cloud::Retail::V2::ProductAttributeValue]
+            #     Product attribute value, including an attribute key and an
+            #     attribute value. Other types can be added here in the future.
+            class SuggestedAnswer
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Additional filter that client side need to apply.
+            # @!attribute [rw] product_attribute_value
+            #   @return [::Google::Cloud::Retail::V2::ProductAttributeValue]
+            #     Product attribute value, including an attribute key and an
+            #     attribute value. Other types can be added here in the future.
+            class AdditionalFilter
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+
+          # This field specifies all related information for tile navigation that will
+          # be used in client side.
+          # @!attribute [rw] tiles
+          #   @return [::Array<::Google::Cloud::Retail::V2::Tile>]
+          #     The current tiles that are used for tile navigation, sorted by
+          #     engagement.
+          class TileNavigationResult
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # Metadata for active A/B testing [Experiment][].
+        # @!attribute [rw] serving_config_experiment
+        #   @return [::Google::Cloud::Retail::V2::ExperimentInfo::ServingConfigExperiment]
+        #     A/B test between existing Cloud Retail Search
+        #     {::Google::Cloud::Retail::V2::ServingConfig ServingConfig}s.
+        # @!attribute [rw] experiment
+        #   @return [::String]
+        #     The fully qualified resource name of the experiment that provides the
+        #     serving config under test, should an active experiment exist. For example:
+        #     `projects/*/locations/global/catalogs/default_catalog/experiments/experiment_id`
+        class ExperimentInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Metadata for active serving config A/B tests.
+          # @!attribute [rw] original_serving_config
+          #   @return [::String]
+          #     The fully qualified resource name of the original
+          #     {::Google::Cloud::Retail::V2::SearchRequest#placement SearchRequest.placement}
+          #     in the search request prior to reassignment by experiment API. For
+          #     example: `projects/*/locations/*/catalogs/*/servingConfigs/*`.
+          # @!attribute [rw] experiment_serving_config
+          #   @return [::String]
+          #     The fully qualified resource name of the serving config
+          #     [Experiment.VariantArm.serving_config_id][] responsible for generating
+          #     the search response. For example:
+          #     `projects/*/locations/*/catalogs/*/servingConfigs/*`.
+          class ServingConfigExperiment
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

@@ -19,15 +19,29 @@
 # [START cloudprofiler_v2_generated_ProfilerService_CreateProfile_sync]
 require "google/cloud/profiler/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Profiler::V2::ProfilerService::Client.new
+##
+# Snippet for the create_profile call in the ProfilerService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Profiler::V2::ProfilerService::Client#create_profile.
+#
+def create_profile
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Profiler::V2::ProfilerService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Profiler::V2::CreateProfileRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Profiler::V2::CreateProfileRequest.new
 
-# Call the create_profile method.
-result = client.create_profile request
+  # Call the create_profile method.
+  result = client.create_profile request
 
-# The returned object is of type Google::Cloud::Profiler::V2::Profile.
-p result
+  # The returned object is of type Google::Cloud::Profiler::V2::Profile.
+  p result
+end
 # [END cloudprofiler_v2_generated_ProfilerService_CreateProfile_sync]

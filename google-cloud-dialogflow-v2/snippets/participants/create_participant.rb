@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_Participants_CreateParticipant_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::Participants::Client.new
+##
+# Snippet for the create_participant call in the Participants service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::Participants::Client#create_participant.
+#
+def create_participant
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::Participants::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::CreateParticipantRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::CreateParticipantRequest.new
 
-# Call the create_participant method.
-result = client.create_participant request
+  # Call the create_participant method.
+  result = client.create_participant request
 
-# The returned object is of type Google::Cloud::Dialogflow::V2::Participant.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::V2::Participant.
+  p result
+end
 # [END dialogflow_v2_generated_Participants_CreateParticipant_sync]

@@ -24,23 +24,24 @@ module Google
         # The protocol for the `CreateAlertPolicy` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) in
-        #     which to create the alerting policy. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) in which
+        #     to create the alerting policy. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         #
         #     Note that this field names the parent container in which the alerting
         #     policy will be written, not the name of the created policy. |name| must be
-        #     a host project of a workspace, otherwise INVALID_ARGUMENT error will
+        #     a host project of a Metrics Scope, otherwise INVALID_ARGUMENT error will
         #     return. The alerting policy that is returned will have a name that contains
         #     a normalized representation of this name as a prefix but adds a suffix of
         #     the form `/alertPolicies/[ALERT_POLICY_ID]`, identifying the policy in the
         #     container.
         # @!attribute [rw] alert_policy
         #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy]
-        #     Required. The requested alerting policy. You should omit the `name` field in this
-        #     policy. The name will be returned in the new policy, including
-        #     a new `[ALERT_POLICY_ID]` value.
+        #     Required. The requested alerting policy. You should omit the `name` field
+        #     in this policy. The name will be returned in the new policy, including a
+        #     new `[ALERT_POLICY_ID]` value.
         class CreateAlertPolicyRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -60,8 +61,9 @@ module Google
         # The protocol for the `ListAlertPolicies` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name)
-        #     whose alert policies are to be listed. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) whose
+        #     alert policies are to be listed. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         #
@@ -72,27 +74,28 @@ module Google
         #     operation, instead.
         # @!attribute [rw] filter
         #   @return [::String]
-        #     If provided, this field specifies the criteria that must be met by
-        #     alert policies to be included in the response.
+        #     Optional. If provided, this field specifies the criteria that must be met
+        #     by alert policies to be included in the response.
         #
         #     For more details, see [sorting and
         #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
         # @!attribute [rw] order_by
         #   @return [::String]
-        #     A comma-separated list of fields by which to sort the result. Supports
-        #     the same set of field references as the `filter` field. Entries can be
-        #     prefixed with a minus sign to sort by the field in descending order.
+        #     Optional. A comma-separated list of fields by which to sort the result.
+        #     Supports the same set of field references as the `filter` field. Entries
+        #     can be prefixed with a minus sign to sort by the field in descending order.
         #
         #     For more details, see [sorting and
         #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     The maximum number of results to return in a single response.
+        #     Optional. The maximum number of results to return in a single response.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     If this field is not empty then it must contain the `nextPageToken` value
-        #     returned by a previous call to this method.  Using this field causes the
-        #     method to return more results from the previous method call.
+        #     Optional. If this field is not empty then it must contain the
+        #     `nextPageToken` value returned by a previous call to this method.  Using
+        #     this field causes the method to return more results from the previous
+        #     method call.
         class ListAlertPoliciesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

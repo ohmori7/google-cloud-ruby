@@ -22,8 +22,27 @@ require "gapic/common"
 require "gapic/grpc"
 
 class Google::Cloud::Tpu::ClientConstructionMinitest < Minitest::Test
-  def test_tpu
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_tpu_grpc
+    skip unless Google::Cloud::Tpu.tpu_available?
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
       client = Google::Cloud::Tpu.tpu do |config|
         config.credentials = grpc_channel

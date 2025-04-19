@@ -23,14 +23,16 @@ def upload_encrypted_file bucket_name:, local_file_path:, file_name: nil, encryp
   # The ID of your GCS object
   # file_name = "your-file-name"
 
-  # The key to encrypt the object with
-  # encryption_key = "TIbv/fjexq+VmtXzAlc63J4z5kFmWJ6NdAPQulQBT7g="
+  # The encryption key used for securing the object must be a 32-byte key consisting of raw encrypted data.
+  # Key used should not be base64 encoded.
+
+  # encryption_key = "your-encryption-key"
 
   require "google/cloud/storage"
 
   storage = Google::Cloud::Storage.new
 
-  bucket = storage.bucket bucket_name
+  bucket = storage.bucket bucket_name, skip_lookup: true
 
   file = bucket.create_file local_file_path, file_name, encryption_key: encryption_key
 

@@ -110,10 +110,8 @@ module Grafeas
 
     # Common Vulnerability Scoring System.
     # For details, see https://www.first.org/cvss/specification-document
-    # This is a message we will try to use for storing multiple versions of
-    # CVSS. The intention is that as new versions of CVSS scores get added, we
-    # will be able to modify this message rather than adding new protos for each
-    # new version of the score.
+    # This is a message we will try to use for storing various versions of CVSS
+    # rather than making a separate proto for storing a specific version.
     # @!attribute [rw] base_score
     #   @return [::Float]
     #     The base score is a function of the base metric scores.
@@ -164,6 +162,8 @@ module Grafeas
         ATTACK_COMPLEXITY_LOW = 1
 
         ATTACK_COMPLEXITY_HIGH = 2
+
+        ATTACK_COMPLEXITY_MEDIUM = 3
       end
 
       module Authentication
@@ -210,7 +210,20 @@ module Grafeas
         IMPACT_LOW = 2
 
         IMPACT_NONE = 3
+
+        IMPACT_PARTIAL = 4
+
+        IMPACT_COMPLETE = 5
       end
+    end
+
+    # CVSS Version.
+    module CVSSVersion
+      CVSS_VERSION_UNSPECIFIED = 0
+
+      CVSS_VERSION_2 = 1
+
+      CVSS_VERSION_3 = 2
     end
   end
 end

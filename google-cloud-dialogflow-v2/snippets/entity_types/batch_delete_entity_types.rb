@@ -19,22 +19,36 @@
 # [START dialogflow_v2_generated_EntityTypes_BatchDeleteEntityTypes_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::EntityTypes::Client.new
+##
+# Snippet for the batch_delete_entity_types call in the EntityTypes service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::EntityTypes::Client#batch_delete_entity_types.
+#
+def batch_delete_entity_types
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::EntityTypes::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::BatchDeleteEntityTypesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::BatchDeleteEntityTypesRequest.new
 
-# Call the batch_delete_entity_types method.
-result = client.batch_delete_entity_types request
+  # Call the batch_delete_entity_types method.
+  result = client.batch_delete_entity_types request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END dialogflow_v2_generated_EntityTypes_BatchDeleteEntityTypes_sync]

@@ -19,22 +19,36 @@
 # [START dataproc_v1_generated_WorkflowTemplateService_InstantiateWorkflowTemplate_sync]
 require "google/cloud/dataproc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataproc::V1::WorkflowTemplateService::Client.new
+##
+# Snippet for the instantiate_workflow_template call in the WorkflowTemplateService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataproc::V1::WorkflowTemplateService::Client#instantiate_workflow_template.
+#
+def instantiate_workflow_template
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataproc::V1::WorkflowTemplateService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataproc::V1::InstantiateWorkflowTemplateRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataproc::V1::InstantiateWorkflowTemplateRequest.new
 
-# Call the instantiate_workflow_template method.
-result = client.instantiate_workflow_template request
+  # Call the instantiate_workflow_template method.
+  result = client.instantiate_workflow_template request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END dataproc_v1_generated_WorkflowTemplateService_InstantiateWorkflowTemplate_sync]

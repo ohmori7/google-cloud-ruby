@@ -19,15 +19,29 @@
 # [START websecurityscanner_v1beta_generated_WebSecurityScanner_CreateScanConfig_sync]
 require "google/cloud/web_security_scanner/v1beta"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new
+##
+# Snippet for the create_scan_config call in the WebSecurityScanner service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client#create_scan_config.
+#
+def create_scan_config
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::WebSecurityScanner::V1beta::CreateScanConfigRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::WebSecurityScanner::V1beta::CreateScanConfigRequest.new
 
-# Call the create_scan_config method.
-result = client.create_scan_config request
+  # Call the create_scan_config method.
+  result = client.create_scan_config request
 
-# The returned object is of type Google::Cloud::WebSecurityScanner::V1beta::ScanConfig.
-p result
+  # The returned object is of type Google::Cloud::WebSecurityScanner::V1beta::ScanConfig.
+  p result
+end
 # [END websecurityscanner_v1beta_generated_WebSecurityScanner_CreateScanConfig_sync]

@@ -19,15 +19,29 @@
 # [START dialogflow_v3_generated_Versions_GetVersion_sync]
 require "google/cloud/dialogflow/cx/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::CX::V3::Versions::Client.new
+##
+# Snippet for the get_version call in the Versions service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::CX::V3::Versions::Client#get_version.
+#
+def get_version
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::CX::V3::Versions::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::CX::V3::GetVersionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::CX::V3::GetVersionRequest.new
 
-# Call the get_version method.
-result = client.get_version request
+  # Call the get_version method.
+  result = client.get_version request
 
-# The returned object is of type Google::Cloud::Dialogflow::CX::V3::Version.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::CX::V3::Version.
+  p result
+end
 # [END dialogflow_v3_generated_Versions_GetVersion_sync]

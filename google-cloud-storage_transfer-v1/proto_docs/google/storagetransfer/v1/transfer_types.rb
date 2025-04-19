@@ -59,13 +59,6 @@ module Google
         #   @return [::String]
         #     Required. Azure shared access signature (SAS).
         #
-        #     <aside class="note">
-        #     <strong>Note:</strong>Copying data from Azure Data Lake
-        #     Storage (ADLS) Gen 2 is in [Preview](/products/#product-launch-stages).
-        #     During Preview, if you are copying data from ADLS Gen 2, you must use an
-        #     account SAS.
-        #     </aside>
-        #
         #     For more information about SAS, see
         #     [Grant limited access to Azure Storage resources using shared access
         #     signatures
@@ -75,44 +68,47 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Conditions that determine which objects will be transferred. Applies only
+        # Conditions that determine which objects are transferred. Applies only
         # to Cloud Data Sources such as S3, Azure, and Cloud Storage.
         #
         # The "last modification time" refers to the time of the
         # last change to the object's content or metadata — specifically, this is
         # the `updated` property of Cloud Storage objects, the `LastModified` field
         # of S3 objects, and the `Last-Modified` header of Azure blobs.
+        #
+        # Transfers with a {::Google::Cloud::StorageTransfer::V1::PosixFilesystem PosixFilesystem}
+        # source or destination don't support `ObjectConditions`.
         # @!attribute [rw] min_time_elapsed_since_last_modification
         #   @return [::Google::Protobuf::Duration]
-        #     If specified, only objects with a "last modification time" before
-        #     `NOW` - `min_time_elapsed_since_last_modification` and objects that don't
-        #      have a "last modification time" are transferred.
-        #
-        #     For each {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation}
-        #     started by this {::Google::Cloud::StorageTransfer::V1::TransferJob TransferJob}, `NOW`
-        #     refers to the [start_time]
-        #     [google.storagetransfer.v1.TransferOperation.start_time] of the
-        #     `TransferOperation`.
+        #     Ensures that objects are not transferred until a specific minimum time
+        #     has elapsed after the "last modification time". When a
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation} begins,
+        #     objects with a "last modification time" are transferred only if the elapsed
+        #     time between the
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOperation#start_time start_time} of the
+        #     `TransferOperation` and the "last modification time" of the object is equal
+        #     to or greater than the value of min_time_elapsed_since_last_modification`.
+        #     Objects that do not have a "last modification time" are also transferred.
         # @!attribute [rw] max_time_elapsed_since_last_modification
         #   @return [::Google::Protobuf::Duration]
-        #     If specified, only objects with a "last modification time" on or after
-        #     `NOW` - `max_time_elapsed_since_last_modification` and objects that don't
-        #     have a "last modification time" are transferred.
-        #
-        #     For each {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation}
-        #     started by this {::Google::Cloud::StorageTransfer::V1::TransferJob TransferJob},
-        #     `NOW` refers to the [start_time]
-        #     [google.storagetransfer.v1.TransferOperation.start_time] of the
-        #     `TransferOperation`.
+        #     Ensures that objects are not transferred if a specific maximum time
+        #     has elapsed since the "last modification time".
+        #     When a {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation}
+        #     begins, objects with a "last modification time" are transferred only if the
+        #     elapsed time between the
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOperation#start_time start_time} of the
+        #     `TransferOperation`and the "last modification time" of the object
+        #      is less than the value of max_time_elapsed_since_last_modification`.
+        #     Objects that do not have a "last modification time" are also transferred.
         # @!attribute [rw] include_prefixes
         #   @return [::Array<::String>]
         #     If you specify `include_prefixes`, Storage Transfer Service uses the items
         #     in the `include_prefixes` array to determine which objects to include in a
         #     transfer. Objects must start with one of the matching `include_prefixes`
-        #     for inclusion in the transfer. If [exclude_prefixes]
-        #     [google.storagetransfer.v1.ObjectConditions.exclude_prefixes] is specified,
-        #     objects must not start with any of the `exclude_prefixes` specified for
-        #     inclusion in the transfer.
+        #     for inclusion in the transfer. If
+        #     {::Google::Cloud::StorageTransfer::V1::ObjectConditions#exclude_prefixes exclude_prefixes}
+        #     is specified, objects must not start with any of the `exclude_prefixes`
+        #     specified for inclusion in the transfer.
         #
         #     The following are requirements of `include_prefixes`:
         #
@@ -159,10 +155,10 @@ module Google
         #         namespace. No exclude-prefix may be a prefix of another
         #         exclude-prefix.
         #
-        #       * If [include_prefixes]
-        #         [google.storagetransfer.v1.ObjectConditions.include_prefixes] is
-        #         specified, then each exclude-prefix must start with the value of a path
-        #         explicitly included by `include_prefixes`.
+        #       * If
+        #       {::Google::Cloud::StorageTransfer::V1::ObjectConditions#include_prefixes include_prefixes}
+        #       is specified, then each exclude-prefix must start with the value of a
+        #       path explicitly included by `include_prefixes`.
         #
         #     The max size of `exclude_prefixes` is 1000.
         #
@@ -185,7 +181,7 @@ module Google
         # @!attribute [rw] last_modified_before
         #   @return [::Google::Protobuf::Timestamp]
         #     If specified, only objects with a "last modification time" before this
-        #     timestamp and objects that don't have a "last modification time" will be
+        #     timestamp and objects that don't have a "last modification time" are
         #     transferred.
         class ObjectConditions
           include ::Google::Protobuf::MessageExts
@@ -210,6 +206,21 @@ module Google
         #
         #     The root path value must meet
         #     [Object Name Requirements](/storage/docs/naming#objectnames).
+        # @!attribute [rw] managed_folder_transfer_enabled
+        #   @return [::Boolean]
+        #     Preview. Enables the transfer of managed folders between Cloud Storage
+        #     buckets. Set this option on the gcs_data_source.
+        #
+        #     If set to true:
+        #
+        #     - Managed folders in the source bucket are transferred to the
+        #       destination bucket.
+        #     - Managed folders in the destination bucket are overwritten. Other
+        #       OVERWRITE options are not supported.
+        #
+        #     See
+        #     [Transfer Cloud Storage managed
+        #     folders](/storage-transfer/docs/managed-folders).
         class GcsData
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -226,7 +237,7 @@ module Google
         #   @return [::Google::Cloud::StorageTransfer::V1::AwsAccessKey]
         #     Input only. AWS access key used to sign the API requests to the AWS S3
         #     bucket. Permissions on the bucket must be granted to the access ID of the
-        #     AWS access key. This field is required.
+        #     AWS access key.
         #
         #     For information on our data retention policy for user credentials, see
         #     [User credentials](/storage-transfer/docs/data-retention#user-credentials).
@@ -239,12 +250,55 @@ module Google
         #     a '/'.
         # @!attribute [rw] role_arn
         #   @return [::String]
-        #     Input only. Role arn to support temporary credentials via
-        #     AssumeRoleWithWebIdentity.
+        #     The Amazon Resource Name (ARN) of the role to support temporary
+        #     credentials via `AssumeRoleWithWebIdentity`. For more information about
+        #     ARNs, see [IAM
+        #     ARNs](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns).
         #
-        #     When role arn is provided, transfer service will fetch temporary
-        #     credentials for the session using AssumeRoleWithWebIdentity call for the
-        #     provided role using the [GoogleServiceAccount] for this project.
+        #     When a role ARN is provided, Transfer Service fetches temporary
+        #     credentials for the session using a `AssumeRoleWithWebIdentity` call for
+        #     the provided role using the
+        #     {::Google::Cloud::StorageTransfer::V1::GoogleServiceAccount GoogleServiceAccount} for
+        #     this project.
+        # @!attribute [rw] cloudfront_domain
+        #   @return [::String]
+        #     Optional. The CloudFront distribution domain name pointing to this bucket,
+        #     to use when fetching.
+        #
+        #     See
+        #     [Transfer from S3 via
+        #     CloudFront](https://cloud.google.com/storage-transfer/docs/s3-cloudfront)
+        #     for more information.
+        #
+        #     Format: `https://{id}.cloudfront.net` or any valid custom domain. Must
+        #     begin with `https://`.
+        # @!attribute [rw] credentials_secret
+        #   @return [::String]
+        #     Optional. The Resource name of a secret in Secret Manager.
+        #
+        #     AWS credentials must be stored in Secret Manager in JSON format:
+        #
+        #     {
+        #      "access_key_id": "ACCESS_KEY_ID",
+        #      "secret_access_key": "SECRET_ACCESS_KEY"
+        #     }
+        #
+        #     {::Google::Cloud::StorageTransfer::V1::GoogleServiceAccount GoogleServiceAccount} must
+        #     be granted `roles/secretmanager.secretAccessor` for the resource.
+        #
+        #     See [Configure access to a source: Amazon S3]
+        #     (https://cloud.google.com/storage-transfer/docs/source-amazon-s3#secret_manager)
+        #     for more information.
+        #
+        #     If `credentials_secret` is specified, do not specify
+        #     {::Google::Cloud::StorageTransfer::V1::AwsS3Data#role_arn role_arn} or
+        #     {::Google::Cloud::StorageTransfer::V1::AwsS3Data#aws_access_key aws_access_key}.
+        #
+        #     Format: `projects/{project_number}/secrets/{secret_name}`
+        # @!attribute [rw] managed_private_network
+        #   @return [::Boolean]
+        #     Egress bytes over a Google-managed private network.
+        #     This network is shared between other users of Storage Transfer Service.
         class AwsS3Data
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -277,48 +331,69 @@ module Google
         #     Must be an empty string or full path name that ends with a '/'. This field
         #     is treated as an object prefix. As such, it should generally not begin with
         #     a '/'.
+        # @!attribute [rw] credentials_secret
+        #   @return [::String]
+        #     Optional. The Resource name of a secret in Secret Manager.
+        #
+        #     The Azure SAS token must be stored in Secret Manager in JSON format:
+        #
+        #     {
+        #      "sas_token" : "SAS_TOKEN"
+        #     }
+        #
+        #     {::Google::Cloud::StorageTransfer::V1::GoogleServiceAccount GoogleServiceAccount} must
+        #     be granted `roles/secretmanager.secretAccessor` for the resource.
+        #
+        #     See [Configure access to a source: Microsoft Azure Blob Storage]
+        #     (https://cloud.google.com/storage-transfer/docs/source-microsoft-azure#secret_manager)
+        #     for more information.
+        #
+        #     If `credentials_secret` is specified, do not specify
+        #     {::Google::Cloud::StorageTransfer::V1::AzureBlobStorageData#azure_credentials azure_credentials}.
+        #
+        #     Format: `projects/{project_number}/secrets/{secret_name}`
         class AzureBlobStorageData
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # An HttpData resource specifies a list of objects on the web to be transferred
-        # over HTTP.  The information of the objects to be transferred is contained in
-        # a file referenced by a URL. The first line in the file must be
-        # `"TsvHttpData-1.0"`, which specifies the format of the file.  Subsequent
-        # lines specify the information of the list of objects, one object per list
-        # entry. Each entry has the following tab-delimited fields:
+        # An HttpData resource specifies a list of objects on the web to be
+        #  transferred over HTTP.  The information of the objects to be transferred is
+        #  contained in a file referenced by a URL. The first line in the file must be
+        #  `"TsvHttpData-1.0"`, which specifies the format of the file.  Subsequent
+        #  lines specify the information of the list of objects, one object per list
+        #  entry. Each entry has the following tab-delimited fields:
         #
-        # * **HTTP URL** — The location of the object.
+        #  * **HTTP URL** — The location of the object.
         #
-        # * **Length** — The size of the object in bytes.
+        #  * **Length** — The size of the object in bytes.
         #
-        # * **MD5** — The base64-encoded MD5 hash of the object.
+        #  * **MD5** — The base64-encoded MD5 hash of the object.
         #
-        # For an example of a valid TSV file, see
-        # [Transferring data from
-        # URLs](https://cloud.google.com/storage-transfer/docs/create-url-list).
+        #  For an example of a valid TSV file, see
+        #  [Transferring data from
+        #  URLs](https://cloud.google.com/storage-transfer/docs/create-url-list).
         #
-        # When transferring data based on a URL list, keep the following in mind:
+        #  When transferring data based on a URL list, keep the following in mind:
         #
         # * When an object located at `http(s)://hostname:port/<URL-path>` is
-        # transferred to a data sink, the name of the object at the data sink is
+        #  transferred to a data sink, the name of the object at the data sink is
         # `<hostname>/<URL-path>`.
         #
         # * If the specified size of an object does not match the actual size of the
-        # object fetched, the object will not be transferred.
+        #  object fetched, the object is not transferred.
         #
         # * If the specified MD5 does not match the MD5 computed from the transferred
-        # bytes, the object transfer will fail.
+        #  bytes, the object transfer fails.
         #
         # * Ensure that each URL you specify is publicly accessible. For
-        # example, in Cloud Storage you can
-        # [share an object publicly]
-        # (/storage/docs/cloud-console#_sharingdata) and get a link to it.
+        #  example, in Cloud Storage you can
+        #  [share an object publicly]
+        #  (/storage/docs/cloud-console#_sharingdata) and get a link to it.
         #
         # * Storage Transfer Service obeys `robots.txt` rules and requires the source
-        # HTTP server to support `Range` requests and to return a `Content-Length`
-        # header in each response.
+        #  HTTP server to support `Range` requests and to return a `Content-Length`
+        #  header in each response.
         #
         # * {::Google::Cloud::StorageTransfer::V1::ObjectConditions ObjectConditions} have no
         # effect when filtering objects to transfer.
@@ -332,49 +407,287 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # A POSIX filesystem resource.
+        # @!attribute [rw] root_directory
+        #   @return [::String]
+        #     Root directory path to the filesystem.
+        class PosixFilesystem
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # An HdfsData resource specifies a path within an HDFS entity (e.g. a cluster).
+        # All cluster-specific settings, such as namenodes and ports, are configured on
+        # the transfer agents servicing requests, so HdfsData only contains the root
+        # path to the data in our transfer.
+        # @!attribute [rw] path
+        #   @return [::String]
+        #     Root path to transfer files.
+        class HdfsData
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # An AwsS3CompatibleData resource.
+        # @!attribute [rw] bucket_name
+        #   @return [::String]
+        #     Required. Specifies the name of the bucket.
+        # @!attribute [rw] path
+        #   @return [::String]
+        #     Specifies the root path to transfer objects.
+        #
+        #     Must be an empty string or full path name that ends with a '/'. This
+        #     field is treated as an object prefix. As such, it should generally not
+        #     begin with a '/'.
+        # @!attribute [rw] endpoint
+        #   @return [::String]
+        #     Required. Specifies the endpoint of the storage service.
+        # @!attribute [rw] region
+        #   @return [::String]
+        #     Specifies the region to sign requests with. This can be left blank if
+        #     requests should be signed with an empty region.
+        # @!attribute [rw] s3_metadata
+        #   @return [::Google::Cloud::StorageTransfer::V1::S3CompatibleMetadata]
+        #     A S3 compatible metadata.
+        class AwsS3CompatibleData
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # S3CompatibleMetadata contains the metadata fields that apply to the basic
+        # types of S3-compatible data providers.
+        # @!attribute [rw] auth_method
+        #   @return [::Google::Cloud::StorageTransfer::V1::S3CompatibleMetadata::AuthMethod]
+        #     Specifies the authentication and authorization method used by the storage
+        #     service. When not specified, Transfer Service will attempt to determine
+        #     right auth method to use.
+        # @!attribute [rw] request_model
+        #   @return [::Google::Cloud::StorageTransfer::V1::S3CompatibleMetadata::RequestModel]
+        #     Specifies the API request model used to call the storage service. When not
+        #     specified, the default value of RequestModel
+        #     REQUEST_MODEL_VIRTUAL_HOSTED_STYLE is used.
+        # @!attribute [rw] protocol
+        #   @return [::Google::Cloud::StorageTransfer::V1::S3CompatibleMetadata::NetworkProtocol]
+        #     Specifies the network protocol of the agent. When not specified, the
+        #     default value of NetworkProtocol NETWORK_PROTOCOL_HTTPS is used.
+        # @!attribute [rw] list_api
+        #   @return [::Google::Cloud::StorageTransfer::V1::S3CompatibleMetadata::ListApi]
+        #     The Listing API to use for discovering objects. When not specified,
+        #     Transfer Service will attempt to determine the right API to use.
+        class S3CompatibleMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The authentication and authorization method used by the storage service.
+          module AuthMethod
+            # AuthMethod is not specified.
+            AUTH_METHOD_UNSPECIFIED = 0
+
+            # Auth requests with AWS SigV4.
+            AUTH_METHOD_AWS_SIGNATURE_V4 = 1
+
+            # Auth requests with AWS SigV2.
+            AUTH_METHOD_AWS_SIGNATURE_V2 = 2
+          end
+
+          # The request model of the API.
+          module RequestModel
+            # RequestModel is not specified.
+            REQUEST_MODEL_UNSPECIFIED = 0
+
+            # Perform requests using Virtual Hosted Style.
+            # Example: https://bucket-name.s3.region.amazonaws.com/key-name
+            REQUEST_MODEL_VIRTUAL_HOSTED_STYLE = 1
+
+            # Perform requests using Path Style.
+            # Example: https://s3.region.amazonaws.com/bucket-name/key-name
+            REQUEST_MODEL_PATH_STYLE = 2
+          end
+
+          # The agent network protocol to access the storage service.
+          module NetworkProtocol
+            # NetworkProtocol is not specified.
+            NETWORK_PROTOCOL_UNSPECIFIED = 0
+
+            # Perform requests using HTTPS.
+            NETWORK_PROTOCOL_HTTPS = 1
+
+            # Not recommended: This sends data in clear-text. This is only
+            # appropriate within a closed network or for publicly available data.
+            # Perform requests using HTTP.
+            NETWORK_PROTOCOL_HTTP = 2
+          end
+
+          # The Listing API to use for discovering objects.
+          module ListApi
+            # ListApi is not specified.
+            LIST_API_UNSPECIFIED = 0
+
+            # Perform listing using ListObjectsV2 API.
+            LIST_OBJECTS_V2 = 1
+
+            # Legacy ListObjects API.
+            LIST_OBJECTS = 2
+          end
+        end
+
+        # Represents an agent pool.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Specifies a unique string that identifies the agent pool.
+        #
+        #     Format: `projects/{project_id}/agentPools/{agent_pool_id}`
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Specifies the client-specified AgentPool description.
+        # @!attribute [r] state
+        #   @return [::Google::Cloud::StorageTransfer::V1::AgentPool::State]
+        #     Output only. Specifies the state of the AgentPool.
+        # @!attribute [rw] bandwidth_limit
+        #   @return [::Google::Cloud::StorageTransfer::V1::AgentPool::BandwidthLimit]
+        #     Specifies the bandwidth limit details. If this field is unspecified, the
+        #     default value is set as 'No Limit'.
+        class AgentPool
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Specifies a bandwidth limit for an agent pool.
+          # @!attribute [rw] limit_mbps
+          #   @return [::Integer]
+          #     Bandwidth rate in megabytes per second, distributed across all the agents
+          #     in the pool.
+          class BandwidthLimit
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The state of an AgentPool.
+          module State
+            # Default value. This value is unused.
+            STATE_UNSPECIFIED = 0
+
+            # This is an initialization state. During this stage, resources are
+            # allocated for the AgentPool.
+            CREATING = 1
+
+            # Determines that the AgentPool is created for use. At this state, Agents
+            # can join the AgentPool and participate in the transfer jobs in that pool.
+            CREATED = 2
+
+            # Determines that the AgentPool deletion has been initiated, and all the
+            # resources are scheduled to be cleaned up and freed.
+            DELETING = 3
+          end
+        end
+
         # TransferOptions define the actions to be performed on objects in a transfer.
         # @!attribute [rw] overwrite_objects_already_existing_in_sink
         #   @return [::Boolean]
         #     When to overwrite objects that already exist in the sink. The default is
         #     that only objects that are different from the source are ovewritten. If
         #     true, all objects in the sink whose name matches an object in the source
-        #     will be overwritten with the source object.
+        #     are overwritten with the source object.
         # @!attribute [rw] delete_objects_unique_in_sink
         #   @return [::Boolean]
         #     Whether objects that exist only in the sink should be deleted.
         #
-        #     **Note:** This option and [delete_objects_from_source_after_transfer]
-        #     [google.storagetransfer.v1.TransferOptions.delete_objects_from_source_after_transfer]
+        #     **Note:** This option and
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOptions#delete_objects_from_source_after_transfer delete_objects_from_source_after_transfer}
         #     are mutually exclusive.
         # @!attribute [rw] delete_objects_from_source_after_transfer
         #   @return [::Boolean]
         #     Whether objects should be deleted from the source after they are
         #     transferred to the sink.
         #
-        #     **Note:** This option and [delete_objects_unique_in_sink]
-        #     [google.storagetransfer.v1.TransferOptions.delete_objects_unique_in_sink]
+        #     **Note:** This option and
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOptions#delete_objects_unique_in_sink delete_objects_unique_in_sink}
         #     are mutually exclusive.
+        # @!attribute [rw] overwrite_when
+        #   @return [::Google::Cloud::StorageTransfer::V1::TransferOptions::OverwriteWhen]
+        #     When to overwrite objects that already exist in the sink. If not set,
+        #     overwrite behavior is determined by
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOptions#overwrite_objects_already_existing_in_sink overwrite_objects_already_existing_in_sink}.
+        # @!attribute [rw] metadata_options
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions]
+        #     Represents the selected metadata options for a transfer job.
         class TransferOptions
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Specifies when to overwrite an object in the sink when an object with
+          # matching name is found in the source.
+          module OverwriteWhen
+            # Overwrite behavior is unspecified.
+            OVERWRITE_WHEN_UNSPECIFIED = 0
+
+            # Overwrites destination objects with the source objects, only if the
+            # objects have the same name but different HTTP ETags or checksum values.
+            DIFFERENT = 1
+
+            # Never overwrites a destination object if a source object has the
+            # same name. In this case, the source object is not transferred.
+            NEVER = 2
+
+            # Always overwrite the destination object with the source object, even if
+            # the HTTP Etags or checksum values are the same.
+            ALWAYS = 3
+          end
         end
 
         # Configuration for running a transfer.
         # @!attribute [rw] gcs_data_sink
         #   @return [::Google::Cloud::StorageTransfer::V1::GcsData]
         #     A Cloud Storage data sink.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_data_sink`, `posix_data_sink`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] posix_data_sink
+        #   @return [::Google::Cloud::StorageTransfer::V1::PosixFilesystem]
+        #     A POSIX Filesystem data sink.
+        #
+        #     Note: The following fields are mutually exclusive: `posix_data_sink`, `gcs_data_sink`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] gcs_data_source
         #   @return [::Google::Cloud::StorageTransfer::V1::GcsData]
         #     A Cloud Storage data source.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_data_source`, `aws_s3_data_source`, `http_data_source`, `posix_data_source`, `azure_blob_storage_data_source`, `aws_s3_compatible_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] aws_s3_data_source
         #   @return [::Google::Cloud::StorageTransfer::V1::AwsS3Data]
         #     An AWS S3 data source.
+        #
+        #     Note: The following fields are mutually exclusive: `aws_s3_data_source`, `gcs_data_source`, `http_data_source`, `posix_data_source`, `azure_blob_storage_data_source`, `aws_s3_compatible_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] http_data_source
         #   @return [::Google::Cloud::StorageTransfer::V1::HttpData]
         #     An HTTP URL data source.
+        #
+        #     Note: The following fields are mutually exclusive: `http_data_source`, `gcs_data_source`, `aws_s3_data_source`, `posix_data_source`, `azure_blob_storage_data_source`, `aws_s3_compatible_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] posix_data_source
+        #   @return [::Google::Cloud::StorageTransfer::V1::PosixFilesystem]
+        #     A POSIX Filesystem data source.
+        #
+        #     Note: The following fields are mutually exclusive: `posix_data_source`, `gcs_data_source`, `aws_s3_data_source`, `http_data_source`, `azure_blob_storage_data_source`, `aws_s3_compatible_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] azure_blob_storage_data_source
         #   @return [::Google::Cloud::StorageTransfer::V1::AzureBlobStorageData]
         #     An Azure Blob Storage data source.
+        #
+        #     Note: The following fields are mutually exclusive: `azure_blob_storage_data_source`, `gcs_data_source`, `aws_s3_data_source`, `http_data_source`, `posix_data_source`, `aws_s3_compatible_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] aws_s3_compatible_data_source
+        #   @return [::Google::Cloud::StorageTransfer::V1::AwsS3CompatibleData]
+        #     An AWS S3 compatible data source.
+        #
+        #     Note: The following fields are mutually exclusive: `aws_s3_compatible_data_source`, `gcs_data_source`, `aws_s3_data_source`, `http_data_source`, `posix_data_source`, `azure_blob_storage_data_source`, `hdfs_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] hdfs_data_source
+        #   @return [::Google::Cloud::StorageTransfer::V1::HdfsData]
+        #     An HDFS cluster data source.
+        #
+        #     Note: The following fields are mutually exclusive: `hdfs_data_source`, `gcs_data_source`, `aws_s3_data_source`, `http_data_source`, `posix_data_source`, `azure_blob_storage_data_source`, `aws_s3_compatible_data_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] gcs_intermediate_data_location
+        #   @return [::Google::Cloud::StorageTransfer::V1::GcsData]
+        #     For transfers between file systems, specifies a Cloud Storage bucket
+        #     to be used as an intermediate location through which to transfer data.
+        #
+        #     See [Transfer data between file
+        #     systems](https://cloud.google.com/storage-transfer/docs/file-to-file) for
+        #     more information.
         # @!attribute [rw] object_conditions
         #   @return [::Google::Cloud::StorageTransfer::V1::ObjectConditions]
         #     Only objects that satisfy these object conditions are included in the set
@@ -387,7 +700,246 @@ module Google
         #     is `true` and time-based object conditions such as 'last modification time'
         #     are specified, the request fails with an
         #     {::Google::Rpc::Code::INVALID_ARGUMENT INVALID_ARGUMENT} error.
+        # @!attribute [rw] transfer_manifest
+        #   @return [::Google::Cloud::StorageTransfer::V1::TransferManifest]
+        #     A manifest file provides a list of objects to be transferred from the data
+        #     source. This field points to the location of the manifest file.
+        #     Otherwise, the entire source bucket is used. ObjectConditions still apply.
+        # @!attribute [rw] source_agent_pool_name
+        #   @return [::String]
+        #     Specifies the agent pool name associated with the posix data source. When
+        #     unspecified, the default name is used.
+        # @!attribute [rw] sink_agent_pool_name
+        #   @return [::String]
+        #     Specifies the agent pool name associated with the posix data sink. When
+        #     unspecified, the default name is used.
         class TransferSpec
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Specifies the configuration for a cross-bucket replication job. Cross-bucket
+        # replication copies new or updated objects from a source Cloud Storage bucket
+        # to a destination Cloud Storage bucket. Existing objects in the source bucket
+        # are not copied by a new cross-bucket replication job.
+        # @!attribute [rw] gcs_data_source
+        #   @return [::Google::Cloud::StorageTransfer::V1::GcsData]
+        #     The Cloud Storage bucket from which to replicate objects.
+        # @!attribute [rw] gcs_data_sink
+        #   @return [::Google::Cloud::StorageTransfer::V1::GcsData]
+        #     The Cloud Storage bucket to which to replicate objects.
+        # @!attribute [rw] object_conditions
+        #   @return [::Google::Cloud::StorageTransfer::V1::ObjectConditions]
+        #     Object conditions that determine which objects are transferred. For
+        #     replication jobs, only `include_prefixes` and `exclude_prefixes` are
+        #     supported.
+        # @!attribute [rw] transfer_options
+        #   @return [::Google::Cloud::StorageTransfer::V1::TransferOptions]
+        #     Specifies the metadata options to be applied during replication.
+        #     Delete options are not supported. If a delete option is specified, the
+        #     request fails with an {::Google::Rpc::Code::INVALID_ARGUMENT INVALID_ARGUMENT}
+        #     error.
+        class ReplicationSpec
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Specifies the metadata options for running a transfer.
+        # @!attribute [rw] symlink
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::Symlink]
+        #     Specifies how symlinks should be handled by the transfer. By default,
+        #     symlinks are not preserved. Only applicable to transfers involving
+        #     POSIX file systems, and ignored for other transfers.
+        # @!attribute [rw] mode
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::Mode]
+        #     Specifies how each file's mode attribute should be handled by the transfer.
+        #     By default, mode is not preserved. Only applicable to transfers involving
+        #     POSIX file systems, and ignored for other transfers.
+        # @!attribute [rw] gid
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::GID]
+        #     Specifies how each file's POSIX group ID (GID) attribute should be handled
+        #     by the transfer. By default, GID is not preserved. Only applicable to
+        #     transfers involving POSIX file systems, and ignored for other transfers.
+        # @!attribute [rw] uid
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::UID]
+        #     Specifies how each file's POSIX user ID (UID) attribute should be handled
+        #     by the transfer. By default, UID is not preserved. Only applicable to
+        #     transfers involving POSIX file systems, and ignored for other transfers.
+        # @!attribute [rw] acl
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::Acl]
+        #     Specifies how each object's ACLs should be preserved for transfers between
+        #     Google Cloud Storage buckets. If unspecified, the default behavior is the
+        #     same as ACL_DESTINATION_BUCKET_DEFAULT.
+        # @!attribute [rw] storage_class
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::StorageClass]
+        #     Specifies the storage class to set on objects being transferred to Google
+        #     Cloud Storage buckets.  If unspecified, the default behavior is the same as
+        #     {::Google::Cloud::StorageTransfer::V1::MetadataOptions::StorageClass::STORAGE_CLASS_DESTINATION_BUCKET_DEFAULT STORAGE_CLASS_DESTINATION_BUCKET_DEFAULT}.
+        # @!attribute [rw] temporary_hold
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::TemporaryHold]
+        #     Specifies how each object's temporary hold status should be preserved for
+        #     transfers between Google Cloud Storage buckets.  If unspecified, the
+        #     default behavior is the same as
+        #     {::Google::Cloud::StorageTransfer::V1::MetadataOptions::TemporaryHold::TEMPORARY_HOLD_PRESERVE TEMPORARY_HOLD_PRESERVE}.
+        # @!attribute [rw] kms_key
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::KmsKey]
+        #     Specifies how each object's Cloud KMS customer-managed encryption key
+        #     (CMEK) is preserved for transfers between Google Cloud Storage buckets.  If
+        #     unspecified, the default behavior is the same as
+        #     {::Google::Cloud::StorageTransfer::V1::MetadataOptions::KmsKey::KMS_KEY_DESTINATION_BUCKET_DEFAULT KMS_KEY_DESTINATION_BUCKET_DEFAULT}.
+        # @!attribute [rw] time_created
+        #   @return [::Google::Cloud::StorageTransfer::V1::MetadataOptions::TimeCreated]
+        #     Specifies how each object's `timeCreated` metadata is preserved for
+        #     transfers. If unspecified, the default behavior is the same as
+        #     {::Google::Cloud::StorageTransfer::V1::MetadataOptions::TimeCreated::TIME_CREATED_SKIP TIME_CREATED_SKIP}.
+        #     This behavior is supported for transfers to Cloud Storage buckets from
+        #     Cloud Storage, Amazon S3, S3-compatible storage, and Azure sources.
+        class MetadataOptions
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Whether symlinks should be skipped or preserved during a transfer job.
+          module Symlink
+            # Symlink behavior is unspecified.
+            SYMLINK_UNSPECIFIED = 0
+
+            # Do not preserve symlinks during a transfer job.
+            SYMLINK_SKIP = 1
+
+            # Preserve symlinks during a transfer job.
+            SYMLINK_PRESERVE = 2
+          end
+
+          # Options for handling file mode attribute.
+          module Mode
+            # Mode behavior is unspecified.
+            MODE_UNSPECIFIED = 0
+
+            # Do not preserve mode during a transfer job.
+            MODE_SKIP = 1
+
+            # Preserve mode during a transfer job.
+            MODE_PRESERVE = 2
+          end
+
+          # Options for handling file GID attribute.
+          module GID
+            # GID behavior is unspecified.
+            GID_UNSPECIFIED = 0
+
+            # Do not preserve GID during a transfer job.
+            GID_SKIP = 1
+
+            # Preserve GID during a transfer job.
+            GID_NUMBER = 2
+          end
+
+          # Options for handling file UID attribute.
+          module UID
+            # UID behavior is unspecified.
+            UID_UNSPECIFIED = 0
+
+            # Do not preserve UID during a transfer job.
+            UID_SKIP = 1
+
+            # Preserve UID during a transfer job.
+            UID_NUMBER = 2
+          end
+
+          # Options for handling Cloud Storage object ACLs.
+          module Acl
+            # ACL behavior is unspecified.
+            ACL_UNSPECIFIED = 0
+
+            # Use the destination bucket's default object ACLS, if applicable.
+            ACL_DESTINATION_BUCKET_DEFAULT = 1
+
+            # Preserve the object's original ACLs. This requires the service account
+            # to have `storage.objects.getIamPolicy` permission for the source object.
+            # [Uniform bucket-level
+            # access](https://cloud.google.com/storage/docs/uniform-bucket-level-access)
+            # must not be enabled on either the source or destination buckets.
+            ACL_PRESERVE = 2
+          end
+
+          # Options for handling Google Cloud Storage object storage class.
+          module StorageClass
+            # Storage class behavior is unspecified.
+            STORAGE_CLASS_UNSPECIFIED = 0
+
+            # Use the destination bucket's default storage class.
+            STORAGE_CLASS_DESTINATION_BUCKET_DEFAULT = 1
+
+            # Preserve the object's original storage class. This is only supported for
+            # transfers from Google Cloud Storage buckets. REGIONAL and MULTI_REGIONAL
+            # storage classes will be mapped to STANDARD to ensure they can be written
+            # to the destination bucket.
+            STORAGE_CLASS_PRESERVE = 2
+
+            # Set the storage class to STANDARD.
+            STORAGE_CLASS_STANDARD = 3
+
+            # Set the storage class to NEARLINE.
+            STORAGE_CLASS_NEARLINE = 4
+
+            # Set the storage class to COLDLINE.
+            STORAGE_CLASS_COLDLINE = 5
+
+            # Set the storage class to ARCHIVE.
+            STORAGE_CLASS_ARCHIVE = 6
+          end
+
+          # Options for handling temporary holds for Google Cloud Storage objects.
+          module TemporaryHold
+            # Temporary hold behavior is unspecified.
+            TEMPORARY_HOLD_UNSPECIFIED = 0
+
+            # Do not set a temporary hold on the destination object.
+            TEMPORARY_HOLD_SKIP = 1
+
+            # Preserve the object's original temporary hold status.
+            TEMPORARY_HOLD_PRESERVE = 2
+          end
+
+          # Options for handling the KmsKey setting for Google Cloud Storage objects.
+          module KmsKey
+            # KmsKey behavior is unspecified.
+            KMS_KEY_UNSPECIFIED = 0
+
+            # Use the destination bucket's default encryption settings.
+            KMS_KEY_DESTINATION_BUCKET_DEFAULT = 1
+
+            # Preserve the object's original Cloud KMS customer-managed encryption key
+            # (CMEK) if present. Objects that do not use a Cloud KMS encryption key
+            # will be encrypted using the destination bucket's encryption settings.
+            KMS_KEY_PRESERVE = 2
+          end
+
+          # Options for handling `timeCreated` metadata for Google Cloud Storage
+          # objects.
+          module TimeCreated
+            # TimeCreated behavior is unspecified.
+            TIME_CREATED_UNSPECIFIED = 0
+
+            # Do not preserve the `timeCreated` metadata from the source object.
+            TIME_CREATED_SKIP = 1
+
+            # Preserves the source object's `timeCreated` or `lastModified` metadata in
+            # the `customTime` field in the destination object.  Note that any value
+            # stored in the source object's `customTime` field will not be propagated
+            # to the destination object.
+            TIME_CREATED_PRESERVE_AS_CUSTOM_TIME = 2
+          end
+        end
+
+        # Specifies where the manifest is located.
+        # @!attribute [rw] location
+        #   @return [::String]
+        #     Specifies the path to the manifest in Cloud Storage. The Google-managed
+        #     service account for the transfer must have `storage.objects.get`
+        #     permission for this object. An example path is
+        #     `gs://bucket_name/path/manifest.csv`.
+        class TransferManifest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -402,25 +954,25 @@ module Google
         #     the day after you schedule the transfer request.
         #
         #     **Note:** When starting jobs at or near midnight UTC it is possible that
-        #     a job will start later than expected. For example, if you send an outbound
+        #     a job starts later than expected. For example, if you send an outbound
         #     request on June 1 one millisecond prior to midnight UTC and the Storage
-        #     Transfer Service server receives the request on June 2, then it will create
+        #     Transfer Service server receives the request on June 2, then it creates
         #     a TransferJob with `schedule_start_date` set to June 2 and a
         #     `start_time_of_day` set to midnight UTC. The first scheduled
-        #     {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation} will take
+        #     {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation} takes
         #     place on June 3 at midnight UTC.
         # @!attribute [rw] schedule_end_date
         #   @return [::Google::Type::Date]
         #     The last day a transfer runs. Date boundaries are determined relative to
-        #     UTC time. A job will run once per 24 hours within the following guidelines:
+        #     UTC time. A job runs once per 24 hours within the following guidelines:
         #
         #     *   If `schedule_end_date` and
         #     {::Google::Cloud::StorageTransfer::V1::Schedule#schedule_start_date schedule_start_date}
         #     are the same and in
         #         the future relative to UTC, the transfer is executed only one time.
         #     *   If `schedule_end_date` is later than `schedule_start_date`  and
-        #         `schedule_end_date` is in the future relative to UTC, the job will
-        #         run each day at
+        #         `schedule_end_date` is in the future relative to UTC, the job runs each
+        #         day at
         #         {::Google::Cloud::StorageTransfer::V1::Schedule#start_time_of_day start_time_of_day}
         #         through `schedule_end_date`.
         # @!attribute [rw] start_time_of_day
@@ -468,25 +1020,58 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Specifies the Event-driven transfer options. Event-driven transfers listen to
+        # an event stream to transfer updated files.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Specifies a unique name of the resource such as AWS SQS
+        #     ARN in the form 'arn:aws:sqs:region:account_id:queue_name',
+        #     or Pub/Sub subscription resource name in the form
+        #     'projects/\\{project}/subscriptions/\\{sub}'.
+        # @!attribute [rw] event_stream_start_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Specifies the date and time that Storage Transfer Service starts
+        #     listening for events from this stream. If no start time is specified or
+        #     start time is in the past, Storage Transfer Service starts listening
+        #     immediately.
+        # @!attribute [rw] event_stream_expiration_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Specifies the data and time at which Storage Transfer Service stops
+        #     listening for events from this stream. After this time, any transfers in
+        #     progress will complete, but no new transfers are initiated.
+        class EventStream
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # This resource represents the configuration of a transfer job that runs
         # periodically.
         # @!attribute [rw] name
         #   @return [::String]
         #     A unique name (within the transfer project) assigned when the job is
         #     created.  If this field is empty in a CreateTransferJobRequest, Storage
-        #     Transfer Service will assign a unique name. Otherwise, the specified name
+        #     Transfer Service assigns a unique name. Otherwise, the specified name
         #     is used as the unique name for this job.
         #
         #     If the specified name is in use by a job, the creation request fails with
         #     an {::Google::Rpc::Code::ALREADY_EXISTS ALREADY_EXISTS} error.
         #
         #     This name must start with `"transferJobs/"` prefix and end with a letter or
-        #     a number, and should be no more than 128 characters. This name must not
-        #     start with 'transferJobs/OPI'. 'transferJobs/OPI' is a reserved prefix.
-        #     Example:
+        #     a number, and should be no more than 128 characters. For transfers
+        #     involving PosixFilesystem, this name must start with `transferJobs/OPI`
+        #     specifically. For all other transfer types, this name must not start with
+        #     `transferJobs/OPI`.
+        #
+        #     Non-PosixFilesystem example:
         #     `"transferJobs/^(?!OPI)[A-Za-z0-9-._~]*[A-Za-z0-9]$"`
         #
-        #     Invalid job names will fail with an
+        #     PosixFilesystem example:
+        #     `"transferJobs/OPI^[A-Za-z0-9-._~]*[A-Za-z0-9]$"`
+        #
+        #     Applications must not rely on the enforcement of naming requirements
+        #     involving OPI.
+        #
+        #     Invalid job names fail with an
         #     {::Google::Rpc::Code::INVALID_ARGUMENT INVALID_ARGUMENT} error.
         # @!attribute [rw] description
         #   @return [::String]
@@ -494,19 +1079,29 @@ module Google
         #     bytes when Unicode-encoded.
         # @!attribute [rw] project_id
         #   @return [::String]
-        #     The ID of the Google Cloud Platform Project that owns the job.
+        #     The ID of the Google Cloud project that owns the job.
         # @!attribute [rw] transfer_spec
         #   @return [::Google::Cloud::StorageTransfer::V1::TransferSpec]
         #     Transfer specification.
+        # @!attribute [rw] replication_spec
+        #   @return [::Google::Cloud::StorageTransfer::V1::ReplicationSpec]
+        #     Replication specification.
         # @!attribute [rw] notification_config
         #   @return [::Google::Cloud::StorageTransfer::V1::NotificationConfig]
         #     Notification configuration.
+        # @!attribute [rw] logging_config
+        #   @return [::Google::Cloud::StorageTransfer::V1::LoggingConfig]
+        #     Logging configuration.
         # @!attribute [rw] schedule
         #   @return [::Google::Cloud::StorageTransfer::V1::Schedule]
         #     Specifies schedule for the transfer job.
-        #     This is an optional field. When the field is not set, the job will never
-        #     execute a transfer, unless you invoke RunTransferJob or update the job to
+        #     This is an optional field. When the field is not set, the job never
+        #     executes a transfer, unless you invoke RunTransferJob or update the job to
         #     have a non-empty schedule.
+        # @!attribute [rw] event_stream
+        #   @return [::Google::Cloud::StorageTransfer::V1::EventStream]
+        #     Specifies the event stream for the transfer job for event-driven transfers.
+        #     When EventStream is specified, the Schedule fields are ignored.
         # @!attribute [rw] status
         #   @return [::Google::Cloud::StorageTransfer::V1::TransferJob::Status]
         #     Status of the job. This value MUST be specified for
@@ -540,10 +1135,10 @@ module Google
             # Zero is an illegal value.
             STATUS_UNSPECIFIED = 0
 
-            # New transfers will be performed based on the schedule.
+            # New transfers are performed based on the schedule.
             ENABLED = 1
 
-            # New transfers will not be scheduled.
+            # New transfers are not scheduled.
             DISABLED = 2
 
             # This is a soft delete state. After a transfer job is set to this
@@ -579,7 +1174,7 @@ module Google
         #   @return [::Array<::Google::Cloud::StorageTransfer::V1::ErrorLogEntry>]
         #     Error samples.
         #
-        #     At most 5 error log entries will be recorded for a given
+        #     At most 5 error log entries are recorded for a given
         #     error code for a single transfer operation.
         class ErrorSummary
           include ::Google::Protobuf::MessageExts
@@ -643,13 +1238,40 @@ module Google
         # @!attribute [rw] bytes_failed_to_delete_from_sink
         #   @return [::Integer]
         #     Bytes that failed to be deleted from the data sink.
+        # @!attribute [rw] directories_found_from_source
+        #   @return [::Integer]
+        #     For transfers involving PosixFilesystem only.
+        #
+        #     Number of directories found while listing. For example, if the root
+        #     directory of the transfer is `base/` and there are two other directories,
+        #     `a/` and `b/` under this directory, the count after listing `base/`,
+        #     `base/a/` and `base/b/` is 3.
+        # @!attribute [rw] directories_failed_to_list_from_source
+        #   @return [::Integer]
+        #     For transfers involving PosixFilesystem only.
+        #
+        #     Number of listing failures for each directory found at the source.
+        #     Potential failures when listing a directory include permission failure or
+        #     block failure. If listing a directory fails, no files in the directory are
+        #     transferred.
+        # @!attribute [rw] directories_successfully_listed_from_source
+        #   @return [::Integer]
+        #     For transfers involving PosixFilesystem only.
+        #
+        #     Number of successful listings for each directory found at the source.
+        # @!attribute [rw] intermediate_objects_cleaned_up
+        #   @return [::Integer]
+        #     Number of successfully cleaned up intermediate objects.
+        # @!attribute [rw] intermediate_objects_failed_cleaned_up
+        #   @return [::Integer]
+        #     Number of intermediate objects failed cleaned up.
         class TransferCounters
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Specification to configure notifications published to Cloud Pub/Sub.
-        # Notifications will be published to the customer-provided topic using the
+        # Specification to configure notifications published to Pub/Sub.
+        # Notifications are published to the customer-provided topic using the
         # following `PubsubMessage.attributes`:
         #
         # * `"eventType"`: one of the
@@ -667,14 +1289,14 @@ module Google
         # {::Google::Cloud::StorageTransfer::V1::TransferOperation#name name} of the
         # `TransferOperation`
         #
-        # The `PubsubMessage.data` will contain a
+        # The `PubsubMessage.data` contains a
         # {::Google::Cloud::StorageTransfer::V1::TransferOperation TransferOperation} resource
         # formatted according to the specified `PayloadFormat`.
         # @!attribute [rw] pubsub_topic
         #   @return [::String]
-        #     Required. The `Topic.name` of the Cloud Pub/Sub topic to which to publish
+        #     Required. The `Topic.name` of the Pub/Sub topic to which to publish
         #     notifications. Must be of the format: `projects/{project}/topics/{topic}`.
-        #     Not matching this format will result in an
+        #     Not matching this format results in an
         #     {::Google::Rpc::Code::INVALID_ARGUMENT INVALID_ARGUMENT} error.
         # @!attribute [rw] event_types
         #   @return [::Array<::Google::Cloud::StorageTransfer::V1::NotificationConfig::EventType>]
@@ -725,19 +1347,77 @@ module Google
           end
         end
 
+        # Specifies the logging behavior for transfer operations.
+        #
+        # Logs can be sent to Cloud Logging for all transfer types. See
+        # [Read transfer
+        # logs](https://cloud.google.com/storage-transfer/docs/read-transfer-logs) for
+        # details.
+        # @!attribute [rw] log_actions
+        #   @return [::Array<::Google::Cloud::StorageTransfer::V1::LoggingConfig::LoggableAction>]
+        #     Specifies the actions to be logged. If empty, no logs are generated.
+        # @!attribute [rw] log_action_states
+        #   @return [::Array<::Google::Cloud::StorageTransfer::V1::LoggingConfig::LoggableActionState>]
+        #     States in which `log_actions` are logged. If empty, no logs are generated.
+        # @!attribute [rw] enable_onprem_gcs_transfer_logs
+        #   @return [::Boolean]
+        #     For PosixFilesystem transfers, enables
+        #     [file system transfer
+        #     logs](https://cloud.google.com/storage-transfer/docs/on-prem-transfer-log-format)
+        #     instead of, or in addition to, Cloud Logging.
+        #
+        #     This option ignores [LoggableAction] and [LoggableActionState]. If these
+        #     are set, Cloud Logging will also be enabled for this transfer.
+        class LoggingConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Loggable actions.
+          module LoggableAction
+            # Default value. This value is unused.
+            LOGGABLE_ACTION_UNSPECIFIED = 0
+
+            # Listing objects in a bucket.
+            FIND = 1
+
+            # Deleting objects at the source or the destination.
+            DELETE = 2
+
+            # Copying objects to Google Cloud Storage.
+            COPY = 3
+          end
+
+          # Loggable action states.
+          module LoggableActionState
+            # Default value. This value is unused.
+            LOGGABLE_ACTION_STATE_UNSPECIFIED = 0
+
+            # `LoggableAction` completed successfully. `SUCCEEDED` actions are
+            # logged as [INFO][google.logging.type.LogSeverity.INFO].
+            SUCCEEDED = 1
+
+            # `LoggableAction` terminated in an error state. `FAILED` actions are
+            # logged as [ERROR][google.logging.type.LogSeverity.ERROR].
+            FAILED = 2
+          end
+        end
+
         # A description of the execution of a transfer.
         # @!attribute [rw] name
         #   @return [::String]
         #     A globally unique ID assigned by the system.
         # @!attribute [rw] project_id
         #   @return [::String]
-        #     The ID of the Google Cloud Platform Project that owns the operation.
+        #     The ID of the Google Cloud project that owns the operation.
         # @!attribute [rw] transfer_spec
         #   @return [::Google::Cloud::StorageTransfer::V1::TransferSpec]
         #     Transfer specification.
         # @!attribute [rw] notification_config
         #   @return [::Google::Cloud::StorageTransfer::V1::NotificationConfig]
         #     Notification configuration.
+        # @!attribute [rw] logging_config
+        #   @return [::Google::Cloud::StorageTransfer::V1::LoggingConfig]
+        #     Cloud Logging configuration.
         # @!attribute [rw] start_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Start time of this transfer execution.
@@ -782,6 +1462,9 @@ module Google
 
             # Temporarily delayed by the system. No user action is required.
             QUEUED = 6
+
+            # The operation is suspending and draining the ongoing work to completion.
+            SUSPENDING = 7
           end
         end
       end

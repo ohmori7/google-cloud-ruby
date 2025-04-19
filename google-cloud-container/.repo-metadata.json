@@ -3,6 +3,7 @@
     "api_shortname": "container",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-container/latest",
     "distribution_name": "google-cloud-container",
+    "is_cloud": true,
     "language": "ruby",
     "name": "container",
     "name_pretty": "Kubernetes Engine API",
@@ -13,5 +14,5 @@
     "ruby-cloud-description": "Builds and manages container-based applications, powered by the open source Kubernetes technology.",
     "ruby-cloud-env-prefix": "CONTAINER",
     "ruby-cloud-product-url": "https://cloud.google.com/kubernetes-engine",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

@@ -27,41 +27,205 @@ module Google
             ##
             # Create a fully-qualified Analysis resource string.
             #
+            # @overload analysis_path(project:, location:, conversation:, analysis:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/conversations/{conversation}/analyses/{analysis}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param conversation [String]
+            #   @param analysis [String]
+            #
+            # @overload analysis_path(project:, location:, authorized_view_set:, authorized_view:, conversation:, analysis:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}/analyses/{analysis}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param authorized_view_set [String]
+            #   @param authorized_view [String]
+            #   @param conversation [String]
+            #   @param analysis [String]
+            #
+            # @return [::String]
+            def analysis_path **args
+              resources = {
+                "analysis:conversation:location:project" => (proc do |project:, location:, conversation:, analysis:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+                  raise ::ArgumentError, "conversation cannot contain /" if conversation.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/conversations/#{conversation}/analyses/#{analysis}"
+                end),
+                "analysis:authorized_view:authorized_view_set:conversation:location:project" => (proc do |project:, location:, authorized_view_set:, authorized_view:, conversation:, analysis:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view_set cannot contain /" if authorized_view_set.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view cannot contain /" if authorized_view.to_s.include? "/"
+                  raise ::ArgumentError, "conversation cannot contain /" if conversation.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/authorizedViewSets/#{authorized_view_set}/authorizedViews/#{authorized_view}/conversations/#{conversation}/analyses/#{analysis}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified AnalysisRule resource string.
+            #
             # The resource will be in the following format:
             #
-            # `projects/{project}/locations/{location}/conversations/{conversation}/analyses/{analysis}`
+            # `projects/{project}/locations/{location}/analysisRules/{analysis_rule}`
             #
             # @param project [String]
             # @param location [String]
-            # @param conversation [String]
-            # @param analysis [String]
+            # @param analysis_rule [String]
             #
             # @return [::String]
-            def analysis_path project:, location:, conversation:, analysis:
+            def analysis_rule_path project:, location:, analysis_rule:
               raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
               raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
-              raise ::ArgumentError, "conversation cannot contain /" if conversation.to_s.include? "/"
 
-              "projects/#{project}/locations/#{location}/conversations/#{conversation}/analyses/#{analysis}"
+              "projects/#{project}/locations/#{location}/analysisRules/#{analysis_rule}"
             end
 
             ##
             # Create a fully-qualified Conversation resource string.
             #
+            # @overload conversation_path(project:, location:, conversation:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/conversations/{conversation}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param conversation [String]
+            #
+            # @overload conversation_path(project:, location:, authorized_view_set:, authorized_view:, conversation:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param authorized_view_set [String]
+            #   @param authorized_view [String]
+            #   @param conversation [String]
+            #
+            # @return [::String]
+            def conversation_path **args
+              resources = {
+                "conversation:location:project" => (proc do |project:, location:, conversation:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/conversations/#{conversation}"
+                end),
+                "authorized_view:authorized_view_set:conversation:location:project" => (proc do |project:, location:, authorized_view_set:, authorized_view:, conversation:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view_set cannot contain /" if authorized_view_set.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view cannot contain /" if authorized_view.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/authorizedViewSets/#{authorized_view_set}/authorizedViews/#{authorized_view}/conversations/#{conversation}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
+            # Create a fully-qualified ConversationProfile resource string.
+            #
             # The resource will be in the following format:
             #
-            # `projects/{project}/locations/{location}/conversations/{conversation}`
+            # `projects/{project}/locations/{location}/conversationProfiles/{conversation_profile}`
             #
             # @param project [String]
             # @param location [String]
-            # @param conversation [String]
+            # @param conversation_profile [String]
             #
             # @return [::String]
-            def conversation_path project:, location:, conversation:
+            def conversation_profile_path project:, location:, conversation_profile:
               raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
               raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
 
-              "projects/#{project}/locations/#{location}/conversations/#{conversation}"
+              "projects/#{project}/locations/#{location}/conversationProfiles/#{conversation_profile}"
+            end
+
+            ##
+            # Create a fully-qualified EncryptionSpec resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/encryptionSpec`
+            #
+            # @param project [String]
+            # @param location [String]
+            #
+            # @return [::String]
+            def encryption_spec_path project:, location:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/encryptionSpec"
+            end
+
+            ##
+            # Create a fully-qualified FeedbackLabel resource string.
+            #
+            # @overload feedback_label_path(project:, location:, conversation:, feedback_label:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/conversations/{conversation}/feedbackLabels/{feedback_label}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param conversation [String]
+            #   @param feedback_label [String]
+            #
+            # @overload feedback_label_path(project:, location:, authorized_view_set:, authorized_view:, conversation:, feedback_label:)
+            #   The resource will be in the following format:
+            #
+            #   `projects/{project}/locations/{location}/authorizedViewSets/{authorized_view_set}/authorizedViews/{authorized_view}/conversations/{conversation}/feedbackLabels/{feedback_label}`
+            #
+            #   @param project [String]
+            #   @param location [String]
+            #   @param authorized_view_set [String]
+            #   @param authorized_view [String]
+            #   @param conversation [String]
+            #   @param feedback_label [String]
+            #
+            # @return [::String]
+            def feedback_label_path **args
+              resources = {
+                "conversation:feedback_label:location:project" => (proc do |project:, location:, conversation:, feedback_label:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+                  raise ::ArgumentError, "conversation cannot contain /" if conversation.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/conversations/#{conversation}/feedbackLabels/#{feedback_label}"
+                end),
+                "authorized_view:authorized_view_set:conversation:feedback_label:location:project" => (proc do |project:, location:, authorized_view_set:, authorized_view:, conversation:, feedback_label:|
+                  raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+                  raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view_set cannot contain /" if authorized_view_set.to_s.include? "/"
+                  raise ::ArgumentError, "authorized_view cannot contain /" if authorized_view.to_s.include? "/"
+                  raise ::ArgumentError, "conversation cannot contain /" if conversation.to_s.include? "/"
+
+                  "projects/#{project}/locations/#{location}/authorizedViewSets/#{authorized_view_set}/authorizedViews/#{authorized_view}/conversations/#{conversation}/feedbackLabels/#{feedback_label}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
             end
 
             ##
@@ -183,6 +347,107 @@ module Google
               raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}/phraseMatchers/#{phrase_matcher}"
+            end
+
+            ##
+            # Create a fully-qualified QaQuestion resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}/qaQuestions/{qa_question}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param qa_scorecard [String]
+            # @param revision [String]
+            # @param qa_question [String]
+            #
+            # @return [::String]
+            def qa_question_path project:, location:, qa_scorecard:, revision:, qa_question:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "qa_scorecard cannot contain /" if qa_scorecard.to_s.include? "/"
+              raise ::ArgumentError, "revision cannot contain /" if revision.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/qaScorecards/#{qa_scorecard}/revisions/#{revision}/qaQuestions/#{qa_question}"
+            end
+
+            ##
+            # Create a fully-qualified QaScorecard resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param qa_scorecard [String]
+            #
+            # @return [::String]
+            def qa_scorecard_path project:, location:, qa_scorecard:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/qaScorecards/#{qa_scorecard}"
+            end
+
+            ##
+            # Create a fully-qualified QaScorecardResult resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/qaScorecardResults/{qa_scorecard_result}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param qa_scorecard_result [String]
+            #
+            # @return [::String]
+            def qa_scorecard_result_path project:, location:, qa_scorecard_result:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/qaScorecardResults/#{qa_scorecard_result}"
+            end
+
+            ##
+            # Create a fully-qualified QaScorecardRevision resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/qaScorecards/{qa_scorecard}/revisions/{revision}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param qa_scorecard [String]
+            # @param revision [String]
+            #
+            # @return [::String]
+            def qa_scorecard_revision_path project:, location:, qa_scorecard:, revision:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "qa_scorecard cannot contain /" if qa_scorecard.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/qaScorecards/#{qa_scorecard}/revisions/#{revision}"
+            end
+
+            ##
+            # Create a fully-qualified Recognizer resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/recognizers/{recognizer}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param recognizer [String]
+            #
+            # @return [::String]
+            def recognizer_path project:, location:, recognizer:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/recognizers/#{recognizer}"
             end
 
             ##

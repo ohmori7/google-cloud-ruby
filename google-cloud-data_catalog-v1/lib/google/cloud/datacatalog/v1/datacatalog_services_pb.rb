@@ -24,6 +24,8 @@ module Google
     module DataCatalog
       module V1
         module DataCatalog
+          # Deprecated: Please use Dataplex Catalog instead.
+          #
           # Data Catalog API service allows you to discover, understand, and manage
           # your data.
           class Service
@@ -138,6 +140,18 @@ module Google
             # To get a list of both custom and automatically created entries, use
             # [SearchCatalog][google.cloud.datacatalog.v1.DataCatalog.SearchCatalog].
             rpc :ListEntries, ::Google::Cloud::DataCatalog::V1::ListEntriesRequest, ::Google::Cloud::DataCatalog::V1::ListEntriesResponse
+            # Modifies entry overview, part of the business context of an
+            # [Entry][google.cloud.datacatalog.v1.Entry].
+            #
+            # To call this method, you must have the `datacatalog.entries.updateOverview`
+            # IAM permission on the corresponding project.
+            rpc :ModifyEntryOverview, ::Google::Cloud::DataCatalog::V1::ModifyEntryOverviewRequest, ::Google::Cloud::DataCatalog::V1::EntryOverview
+            # Modifies contacts, part of the business context of an
+            # [Entry][google.cloud.datacatalog.v1.Entry].
+            #
+            # To call this method, you must have the `datacatalog.entries.updateContacts`
+            # IAM permission on the corresponding project.
+            rpc :ModifyEntryContacts, ::Google::Cloud::DataCatalog::V1::ModifyEntryContactsRequest, ::Google::Cloud::DataCatalog::V1::Contacts
             # Creates a tag template.
             #
             # You must enable the Data Catalog API in the project identified by the
@@ -213,7 +227,29 @@ module Google
             # Deletes a tag.
             rpc :DeleteTag, ::Google::Cloud::DataCatalog::V1::DeleteTagRequest, ::Google::Protobuf::Empty
             # Lists tags assigned to an [Entry][google.cloud.datacatalog.v1.Entry].
+            # The [columns][google.cloud.datacatalog.v1.Tag.column] in the response are
+            # lowercased.
             rpc :ListTags, ::Google::Cloud::DataCatalog::V1::ListTagsRequest, ::Google::Cloud::DataCatalog::V1::ListTagsResponse
+            # `ReconcileTags` creates or updates a list of tags on the entry.
+            # If the
+            # [ReconcileTagsRequest.force_delete_missing][google.cloud.datacatalog.v1.ReconcileTagsRequest.force_delete_missing]
+            # parameter is set, the operation deletes tags not included in the input tag
+            # list.
+            #
+            # `ReconcileTags` returns a [long-running operation]
+            # [google.longrunning.Operation] resource that can be queried with
+            # [Operations.GetOperation][google.longrunning.Operations.GetOperation]
+            # to return [ReconcileTagsMetadata]
+            # [google.cloud.datacatalog.v1.ReconcileTagsMetadata] and
+            # a [ReconcileTagsResponse]
+            # [google.cloud.datacatalog.v1.ReconcileTagsResponse] message.
+            rpc :ReconcileTags, ::Google::Cloud::DataCatalog::V1::ReconcileTagsRequest, ::Google::Longrunning::Operation
+            # Marks an [Entry][google.cloud.datacatalog.v1.Entry] as starred by
+            # the current user. Starring information is private to each user.
+            rpc :StarEntry, ::Google::Cloud::DataCatalog::V1::StarEntryRequest, ::Google::Cloud::DataCatalog::V1::StarEntryResponse
+            # Marks an [Entry][google.cloud.datacatalog.v1.Entry] as NOT starred by
+            # the current user. Starring information is private to each user.
+            rpc :UnstarEntry, ::Google::Cloud::DataCatalog::V1::UnstarEntryRequest, ::Google::Cloud::DataCatalog::V1::UnstarEntryResponse
             # Sets an access control policy for a resource. Replaces any existing
             # policy.
             #
@@ -269,6 +305,38 @@ module Google
             #
             # No Google IAM permissions are required to call this method.
             rpc :TestIamPermissions, ::Google::Iam::V1::TestIamPermissionsRequest, ::Google::Iam::V1::TestIamPermissionsResponse
+            # Imports entries from a source, such as data previously dumped into a
+            # Cloud Storage bucket, into Data Catalog. Import of entries
+            # is a sync operation that reconciles the state of the third-party system
+            # with the Data Catalog.
+            #
+            # `ImportEntries` accepts source data snapshots of a third-party system.
+            # Snapshot should be delivered as a .wire or base65-encoded .txt file
+            # containing a sequence of Protocol Buffer messages of
+            # [DumpItem][google.cloud.datacatalog.v1.DumpItem] type.
+            #
+            # `ImportEntries` returns a [long-running operation]
+            # [google.longrunning.Operation] resource that can be queried with
+            # [Operations.GetOperation][google.longrunning.Operations.GetOperation]
+            # to return
+            # [ImportEntriesMetadata][google.cloud.datacatalog.v1.ImportEntriesMetadata]
+            # and an
+            # [ImportEntriesResponse][google.cloud.datacatalog.v1.ImportEntriesResponse]
+            # message.
+            rpc :ImportEntries, ::Google::Cloud::DataCatalog::V1::ImportEntriesRequest, ::Google::Longrunning::Operation
+            # Sets the configuration related to the migration to Dataplex for an
+            # organization or project.
+            rpc :SetConfig, ::Google::Cloud::DataCatalog::V1::SetConfigRequest, ::Google::Cloud::DataCatalog::V1::MigrationConfig
+            # Retrieves the configuration related to the migration from Data Catalog to
+            # Dataplex for a specific organization, including all the projects under it
+            # which have a separate configuration set.
+            rpc :RetrieveConfig, ::Google::Cloud::DataCatalog::V1::RetrieveConfigRequest, ::Google::Cloud::DataCatalog::V1::OrganizationConfig
+            # Retrieves the effective configuration related to the migration from Data
+            # Catalog to Dataplex for a specific organization or project. If there is no
+            # specific configuration set for the resource, the setting is checked
+            # hierarchicahlly through the ancestors of the resource, starting from the
+            # resource itself.
+            rpc :RetrieveEffectiveConfig, ::Google::Cloud::DataCatalog::V1::RetrieveEffectiveConfigRequest, ::Google::Cloud::DataCatalog::V1::MigrationConfig
           end
 
           Stub = Service.rpc_stub_class

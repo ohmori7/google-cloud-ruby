@@ -45,9 +45,9 @@ module Google
         # + Partner data
         # + Public data
         # ```
-        # @!attribute [r] name
+        # @!attribute [rw] name
         #   @return [::String]
-        #     Output only. Resource name of this taxonomy in URL format.
+        #     Identifier. Resource name of this taxonomy in URL format.
         #
         #     Note: Policy tag manager generates unique taxonomy IDs.
         # @!attribute [rw] display_name
@@ -57,6 +57,8 @@ module Google
         #     The name can't start or end with spaces, must contain only Unicode letters,
         #     numbers, underscores, dashes, and spaces, and be at most 200 bytes long
         #     when encoded in UTF-8.
+        #
+        #     The taxonomy display name must be unique within an organization.
         # @!attribute [rw] description
         #   @return [::String]
         #     Optional. Description of this taxonomy. If not set, defaults to empty.
@@ -72,11 +74,28 @@ module Google
         #     Output only. Creation and modification timestamps of this taxonomy.
         # @!attribute [rw] activated_policy_types
         #   @return [::Array<::Google::Cloud::DataCatalog::V1::Taxonomy::PolicyType>]
-        #     Optional. A list of policy types that are activated for this taxonomy. If not set,
-        #     defaults to an empty list.
+        #     Optional. A list of policy types that are activated for this taxonomy. If
+        #     not set, defaults to an empty list.
+        # @!attribute [r] service
+        #   @return [::Google::Cloud::DataCatalog::V1::Taxonomy::Service]
+        #     Output only. Identity of the service which owns the Taxonomy. This field is
+        #     only populated when the taxonomy is created by a Google Cloud service.
+        #     Currently only 'DATAPLEX' is supported.
         class Taxonomy
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The source system of the Taxonomy.
+          # @!attribute [rw] name
+          #   @return [::Google::Cloud::DataCatalog::V1::ManagingSystem]
+          #     The Google Cloud service name.
+          # @!attribute [rw] identity
+          #   @return [::String]
+          #     The service agent for the service.
+          class Service
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
 
           # Defines policy types where the policy tags can be used for.
           module PolicyType
@@ -101,9 +120,9 @@ module Google
         # ```
         #
         # Where the "Geolocation" policy tag contains three children.
-        # @!attribute [r] name
+        # @!attribute [rw] name
         #   @return [::String]
-        #     Output only. Resource name of this policy tag in the URL format.
+        #     Identifier. Resource name of this policy tag in the URL format.
         #
         #     The policy tag manager generates unique taxonomy IDs and policy tag IDs.
         # @!attribute [rw] display_name
@@ -194,6 +213,10 @@ module Google
         #     the first page is returned.
         #
         #     The token is returned in the response to a previous list request.
+        # @!attribute [rw] filter
+        #   @return [::String]
+        #     Supported field for filter is 'service' and value is 'dataplex'.
+        #     Eg: service=dataplex.
         class ListTaxonomiesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

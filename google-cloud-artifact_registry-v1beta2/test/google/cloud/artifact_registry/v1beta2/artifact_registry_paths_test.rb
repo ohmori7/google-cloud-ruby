@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/artifact_registry/v1beta2/artifact_registry"
 
 class ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::ClientPathsT
 
   def test_project_settings_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::ClientPathsT
 
   def test_repository_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::ClientPathsT
 
   def test_tag_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new do |config|
         config.credentials = grpc_channel
       end

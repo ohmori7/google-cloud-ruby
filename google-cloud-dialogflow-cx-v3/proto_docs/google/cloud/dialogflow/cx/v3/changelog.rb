@@ -22,11 +22,12 @@ module Google
     module Dialogflow
       module CX
         module V3
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#list_changelogs Changelogs.ListChangelogs}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#list_changelogs Changelogs.ListChangelogs}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent containing the changelogs.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] filter
           #   @return [::String]
           #     The filter string. Supports filter by user_email, resource, type and
@@ -61,7 +62,8 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#list_changelogs Changelogs.ListChangelogs}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#list_changelogs Changelogs.ListChangelogs}.
           # @!attribute [rw] changelogs
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::Changelog>]
           #     The list of changelogs. There will be a maximum number of items returned
@@ -76,12 +78,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#get_changelog Changelogs.GetChangelog}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Changelogs::Client#get_changelog Changelogs.GetChangelog}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the changelog to get.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/changelogs/<Changelog ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/changelogs/<ChangelogID>`.
           class GetChangelogRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -91,8 +94,8 @@ module Google
           # @!attribute [rw] name
           #   @return [::String]
           #     The unique identifier of the changelog.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/changelogs/<Changelog ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/changelogs/<ChangelogID>`.
           # @!attribute [rw] user_email
           #   @return [::String]
           #     Email address of the authenticated user.
@@ -111,6 +114,9 @@ module Google
           # @!attribute [rw] create_time
           #   @return [::Google::Protobuf::Timestamp]
           #     The timestamp of the change.
+          # @!attribute [rw] language_code
+          #   @return [::String]
+          #     The affected language code of the change.
           class Changelog
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods

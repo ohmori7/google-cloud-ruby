@@ -19,15 +19,29 @@
 # [START gkehub_v1_generated_GkeHub_GetMembership_sync]
 require "google/cloud/gke_hub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+##
+# Snippet for the get_membership call in the GkeHub service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::GkeHub::V1::GkeHub::Client#get_membership.
+#
+def get_membership
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::GkeHub::V1::GetMembershipRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::GkeHub::V1::GetMembershipRequest.new
 
-# Call the get_membership method.
-result = client.get_membership request
+  # Call the get_membership method.
+  result = client.get_membership request
 
-# The returned object is of type Google::Cloud::GkeHub::V1::Membership.
-p result
+  # The returned object is of type Google::Cloud::GkeHub::V1::Membership.
+  p result
+end
 # [END gkehub_v1_generated_GkeHub_GetMembership_sync]

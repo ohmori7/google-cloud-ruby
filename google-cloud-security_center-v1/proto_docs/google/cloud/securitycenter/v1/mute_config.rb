@@ -26,10 +26,14 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     This field will be ignored if provided on config creation. Format
-        #     "organizations/\\{organization}/muteConfigs/\\{mute_config}"
-        #     "folders/\\{folder}/muteConfigs/\\{mute_config}"
-        #     "projects/\\{project}/muteConfigs/\\{mute_config}"
+        #     `organizations/{organization}/muteConfigs/{mute_config}`
+        #     `folders/{folder}/muteConfigs/{mute_config}`
+        #     `projects/{project}/muteConfigs/{mute_config}`
+        #     `organizations/{organization}/locations/global/muteConfigs/{mute_config}`
+        #     `folders/{folder}/locations/global/muteConfigs/{mute_config}`
+        #     `projects/{project}/locations/global/muteConfigs/{mute_config}`
         # @!attribute [rw] display_name
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
         #     The human readable name to be displayed for the mute config.
         # @!attribute [rw] description
@@ -37,11 +41,11 @@ module Google
         #     A description of the mute config.
         # @!attribute [rw] filter
         #   @return [::String]
-        #     Required. An expression that defines the filter to apply across create/update events
-        #     of findings. While creating a filter string, be mindful of the
-        #     scope in which the mute configuration is being created. E.g., If a filter
-        #     contains project = X but is created under the project = Y scope, it might
-        #     not match any findings.
+        #     Required. An expression that defines the filter to apply across
+        #     create/update events of findings. While creating a filter string, be
+        #     mindful of the scope in which the mute configuration is being created.
+        #     E.g., If a filter contains project = X but is created under the project = Y
+        #     scope, it might not match any findings.
         #
         #     The following field and operator combinations are supported:
         #
@@ -72,9 +76,39 @@ module Google
         #     Output only. Email address of the user who last edited the mute config.
         #     This field is set by the server and will be ignored if provided on config
         #     creation or update.
+        # @!attribute [rw] type
+        #   @return [::Google::Cloud::SecurityCenter::V1::MuteConfig::MuteConfigType]
+        #     Optional. The type of the mute config, which determines what type of mute
+        #     state the config affects. The static mute state takes precedence over the
+        #     dynamic mute state. Immutable after creation. STATIC by default if not set
+        #     during creation.
+        # @!attribute [rw] expiry_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Optional. The expiry of the mute config. Only applicable for dynamic
+        #     configs. If the expiry is set, when the config expires, it is removed from
+        #     all findings.
         class MuteConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The type of MuteConfig.
+          module MuteConfigType
+            # Unused.
+            MUTE_CONFIG_TYPE_UNSPECIFIED = 0
+
+            # A static mute config, which sets the static mute state of future matching
+            # findings to muted. Once the static mute state has been set, finding or
+            # config modifications will not affect the state.
+            STATIC = 1
+
+            # A dynamic mute config, which is applied to existing and future matching
+            # findings, setting their dynamic mute state to "muted". If the config is
+            # updated or deleted, or a matching finding is updated, such that the
+            # finding doesn't match the config, the config will be removed from the
+            # finding, and the finding's dynamic mute state may become "unmuted"
+            # (unless other configs still match).
+            DYNAMIC = 2
+          end
         end
       end
     end

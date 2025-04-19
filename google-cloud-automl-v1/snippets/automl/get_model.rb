@@ -19,15 +19,29 @@
 # [START automl_v1_generated_AutoML_GetModel_sync]
 require "google/cloud/automl/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AutoML::V1::AutoML::Client.new
+##
+# Snippet for the get_model call in the AutoML service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AutoML::V1::AutoML::Client#get_model.
+#
+def get_model
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AutoML::V1::AutoML::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AutoML::V1::GetModelRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AutoML::V1::GetModelRequest.new
 
-# Call the get_model method.
-result = client.get_model request
+  # Call the get_model method.
+  result = client.get_model request
 
-# The returned object is of type Google::Cloud::AutoML::V1::Model.
-p result
+  # The returned object is of type Google::Cloud::AutoML::V1::Model.
+  p result
+end
 # [END automl_v1_generated_AutoML_GetModel_sync]

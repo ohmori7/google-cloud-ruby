@@ -19,15 +19,29 @@
 # [START datacatalog_v1_generated_DataCatalog_CreateEntry_sync]
 require "google/cloud/data_catalog/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
+##
+# Snippet for the create_entry call in the DataCatalog service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataCatalog::V1::DataCatalog::Client#create_entry.
+#
+def create_entry
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataCatalog::V1::DataCatalog::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataCatalog::V1::CreateEntryRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataCatalog::V1::CreateEntryRequest.new
 
-# Call the create_entry method.
-result = client.create_entry request
+  # Call the create_entry method.
+  result = client.create_entry request
 
-# The returned object is of type Google::Cloud::DataCatalog::V1::Entry.
-p result
+  # The returned object is of type Google::Cloud::DataCatalog::V1::Entry.
+  p result
+end
 # [END datacatalog_v1_generated_DataCatalog_CreateEntry_sync]

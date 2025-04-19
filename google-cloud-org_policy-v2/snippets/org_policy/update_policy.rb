@@ -19,15 +19,29 @@
 # [START orgpolicy_v2_generated_OrgPolicy_UpdatePolicy_sync]
 require "google/cloud/org_policy/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OrgPolicy::V2::OrgPolicy::Client.new
+##
+# Snippet for the update_policy call in the OrgPolicy service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OrgPolicy::V2::OrgPolicy::Client#update_policy.
+#
+def update_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OrgPolicy::V2::OrgPolicy::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OrgPolicy::V2::UpdatePolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OrgPolicy::V2::UpdatePolicyRequest.new
 
-# Call the update_policy method.
-result = client.update_policy request
+  # Call the update_policy method.
+  result = client.update_policy request
 
-# The returned object is of type Google::Cloud::OrgPolicy::V2::Policy.
-p result
+  # The returned object is of type Google::Cloud::OrgPolicy::V2::Policy.
+  p result
+end
 # [END orgpolicy_v2_generated_OrgPolicy_UpdatePolicy_sync]

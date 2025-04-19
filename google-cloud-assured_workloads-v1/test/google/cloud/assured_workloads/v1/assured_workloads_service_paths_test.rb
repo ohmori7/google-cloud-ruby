@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/assured_workloads/v1/assured_workloads_service"
 
 class ::Google::Cloud::AssuredWorkloads::V1::AssuredWorkloadsService::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::AssuredWorkloads::V1::AssuredWorkloadsService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -35,9 +53,21 @@ class ::Google::Cloud::AssuredWorkloads::V1::AssuredWorkloadsService::ClientPath
     end
   end
 
+  def test_violation_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::AssuredWorkloads::V1::AssuredWorkloadsService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.violation_path organization: "value0", location: "value1", workload: "value2", violation: "value3"
+      assert_equal "organizations/value0/locations/value1/workloads/value2/violations/value3", path
+    end
+  end
+
   def test_workload_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::AssuredWorkloads::V1::AssuredWorkloadsService::Client.new do |config|
         config.credentials = grpc_channel
       end

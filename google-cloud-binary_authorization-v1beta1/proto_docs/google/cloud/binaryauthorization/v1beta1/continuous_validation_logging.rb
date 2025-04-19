@@ -25,17 +25,27 @@ module Google
         # @!attribute [rw] pod_event
         #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent]
         #     Pod event.
-        # @!attribute [rw] unsupported_policy_event
-        #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::UnsupportedPolicyEvent]
-        #     Unsupported policy event.
+        #
+        #     Note: The following fields are mutually exclusive: `pod_event`, `config_error_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] config_error_event
+        #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ConfigErrorEvent]
+        #     Config error event.
+        #
+        #     Note: The following fields are mutually exclusive: `config_error_event`, `pod_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ContinuousValidationEvent
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # An auditing event for one Pod.
+          # @!attribute [rw] pod_namespace
+          #   @return [::String]
+          #     The k8s namespace of the Pod.
           # @!attribute [rw] pod
           #   @return [::String]
           #     The name of the Pod.
+          # @!attribute [rw] policy_name
+          #   @return [::String]
+          #     The name of the policy.
           # @!attribute [rw] deploy_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Deploy time of the Pod from k8s.
@@ -56,15 +66,101 @@ module Google
             # @!attribute [rw] image
             #   @return [::String]
             #     The name of the image.
+            # @!attribute [rw] container_name
+            #   @return [::String]
+            #     The name of the container.
+            # @!attribute [rw] container_type
+            #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent::ImageDetails::ContainerType]
+            #     The container type that this image belongs to.
             # @!attribute [rw] result
             #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent::ImageDetails::AuditResult]
             #     The result of the audit for this image.
             # @!attribute [rw] description
             #   @return [::String]
             #     Description of the above result.
+            # @!attribute [rw] check_results
+            #   @return [::Array<::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent::ImageDetails::CheckResult>]
+            #     List of check results.
             class ImageDetails
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # @!attribute [rw] check_set_index
+              #   @return [::String]
+              #     The index of the check set.
+              # @!attribute [rw] check_set_name
+              #   @return [::String]
+              #     The name of the check set.
+              # @!attribute [rw] check_set_scope
+              #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent::ImageDetails::CheckResult::CheckSetScope]
+              #     The scope of the check set.
+              # @!attribute [rw] check_index
+              #   @return [::String]
+              #     The index of the check.
+              # @!attribute [rw] check_name
+              #   @return [::String]
+              #     The name of the check.
+              # @!attribute [rw] check_type
+              #   @return [::String]
+              #     The type of the check.
+              # @!attribute [rw] verdict
+              #   @return [::Google::Cloud::BinaryAuthorization::V1beta1::ContinuousValidationEvent::ContinuousValidationPodEvent::ImageDetails::CheckResult::CheckVerdict]
+              #     The verdict of this check.
+              # @!attribute [rw] explanation
+              #   @return [::String]
+              #     User-friendly explanation of this check result.
+              class CheckResult
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+
+                # A scope specifier for check sets.
+                # @!attribute [rw] kubernetes_service_account
+                #   @return [::String]
+                #     Matches a single Kubernetes service account, e.g.
+                #     'my-namespace:my-service-account'.
+                #     `kubernetes_service_account` scope is always more specific than
+                #     `kubernetes_namespace` scope for the same namespace.
+                #
+                #     Note: The following fields are mutually exclusive: `kubernetes_service_account`, `kubernetes_namespace`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+                # @!attribute [rw] kubernetes_namespace
+                #   @return [::String]
+                #     Matches all Kubernetes service accounts in the provided
+                #     namespace, unless a more specific `kubernetes_service_account`
+                #     scope already matched.
+                #
+                #     Note: The following fields are mutually exclusive: `kubernetes_namespace`, `kubernetes_service_account`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+                class CheckSetScope
+                  include ::Google::Protobuf::MessageExts
+                  extend ::Google::Protobuf::MessageExts::ClassMethods
+                end
+
+                # Result of evaluating one check.
+                module CheckVerdict
+                  # We should always have a verdict. This is an error.
+                  CHECK_VERDICT_UNSPECIFIED = 0
+
+                  # The check was successfully evaluated and the image did not satisfy
+                  # the check.
+                  NON_CONFORMANT = 1
+                end
+              end
+
+              # The container type.
+              module ContainerType
+                # The container type should always be specified. This is an error.
+                CONTAINER_TYPE_UNSPECIFIED = 0
+
+                # A regular deployment.
+                CONTAINER = 1
+
+                # Init container defined as specified at
+                # https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+                INIT_CONTAINER = 2
+
+                # Ephemeral container defined as specified at
+                # https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/
+                EPHEMERAL_CONTAINER = 3
+              end
 
               # Result of the audit.
               module AuditResult
@@ -89,11 +185,12 @@ module Google
             end
           end
 
-          # An event describing that the project policy is unsupported by CV.
+          # An event describing a user-actionable configuration issue that prevents CV
+          # from auditing.
           # @!attribute [rw] description
           #   @return [::String]
-          #     A description of the unsupported policy.
-          class UnsupportedPolicyEvent
+          #     A description of the issue.
+          class ConfigErrorEvent
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

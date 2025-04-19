@@ -19,15 +19,29 @@
 # [START cloudkms_v1_generated_KeyManagementService_MacSign_sync]
 require "google/cloud/kms/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+##
+# Snippet for the mac_sign call in the KeyManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Kms::V1::KeyManagementService::Client#mac_sign.
+#
+def mac_sign
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Kms::V1::MacSignRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Kms::V1::MacSignRequest.new
 
-# Call the mac_sign method.
-result = client.mac_sign request
+  # Call the mac_sign method.
+  result = client.mac_sign request
 
-# The returned object is of type Google::Cloud::Kms::V1::MacSignResponse.
-p result
+  # The returned object is of type Google::Cloud::Kms::V1::MacSignResponse.
+  p result
+end
 # [END cloudkms_v1_generated_KeyManagementService_MacSign_sync]

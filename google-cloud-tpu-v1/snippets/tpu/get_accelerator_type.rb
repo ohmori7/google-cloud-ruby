@@ -19,15 +19,29 @@
 # [START tpu_v1_generated_Tpu_GetAcceleratorType_sync]
 require "google/cloud/tpu/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Tpu::V1::Tpu::Client.new
+##
+# Snippet for the get_accelerator_type call in the Tpu service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Tpu::V1::Tpu::Client#get_accelerator_type.
+#
+def get_accelerator_type
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Tpu::V1::Tpu::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Tpu::V1::GetAcceleratorTypeRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Tpu::V1::GetAcceleratorTypeRequest.new
 
-# Call the get_accelerator_type method.
-result = client.get_accelerator_type request
+  # Call the get_accelerator_type method.
+  result = client.get_accelerator_type request
 
-# The returned object is of type Google::Cloud::Tpu::V1::AcceleratorType.
-p result
+  # The returned object is of type Google::Cloud::Tpu::V1::AcceleratorType.
+  p result
+end
 # [END tpu_v1_generated_Tpu_GetAcceleratorType_sync]

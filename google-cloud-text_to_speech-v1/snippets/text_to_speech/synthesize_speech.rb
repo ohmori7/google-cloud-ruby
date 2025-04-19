@@ -19,15 +19,29 @@
 # [START texttospeech_v1_generated_TextToSpeech_SynthesizeSpeech_sync]
 require "google/cloud/text_to_speech/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::TextToSpeech::V1::TextToSpeech::Client.new
+##
+# Snippet for the synthesize_speech call in the TextToSpeech service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::TextToSpeech::V1::TextToSpeech::Client#synthesize_speech.
+#
+def synthesize_speech
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::TextToSpeech::V1::TextToSpeech::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::TextToSpeech::V1::SynthesizeSpeechRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::TextToSpeech::V1::SynthesizeSpeechRequest.new
 
-# Call the synthesize_speech method.
-result = client.synthesize_speech request
+  # Call the synthesize_speech method.
+  result = client.synthesize_speech request
 
-# The returned object is of type Google::Cloud::TextToSpeech::V1::SynthesizeSpeechResponse.
-p result
+  # The returned object is of type Google::Cloud::TextToSpeech::V1::SynthesizeSpeechResponse.
+  p result
+end
 # [END texttospeech_v1_generated_TextToSpeech_SynthesizeSpeech_sync]

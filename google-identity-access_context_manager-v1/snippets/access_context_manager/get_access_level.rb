@@ -19,15 +19,29 @@
 # [START accesscontextmanager_v1_generated_AccessContextManager_GetAccessLevel_sync]
 require "google/identity/access_context_manager/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
+##
+# Snippet for the get_access_level call in the AccessContextManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Identity::AccessContextManager::V1::AccessContextManager::Client#get_access_level.
+#
+def get_access_level
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Identity::AccessContextManager::V1::GetAccessLevelRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Identity::AccessContextManager::V1::GetAccessLevelRequest.new
 
-# Call the get_access_level method.
-result = client.get_access_level request
+  # Call the get_access_level method.
+  result = client.get_access_level request
 
-# The returned object is of type Google::Identity::AccessContextManager::V1::AccessLevel.
-p result
+  # The returned object is of type Google::Identity::AccessContextManager::V1::AccessLevel.
+  p result
+end
 # [END accesscontextmanager_v1_generated_AccessContextManager_GetAccessLevel_sync]

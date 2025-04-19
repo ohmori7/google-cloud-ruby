@@ -19,15 +19,29 @@
 # [START appengine_v1_generated_AuthorizedCertificates_DeleteAuthorizedCertificate_sync]
 require "google/cloud/app_engine/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AppEngine::V1::AuthorizedCertificates::Client.new
+##
+# Snippet for the delete_authorized_certificate call in the AuthorizedCertificates service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AppEngine::V1::AuthorizedCertificates::Client#delete_authorized_certificate.
+#
+def delete_authorized_certificate
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AppEngine::V1::AuthorizedCertificates::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AppEngine::V1::DeleteAuthorizedCertificateRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AppEngine::V1::DeleteAuthorizedCertificateRequest.new
 
-# Call the delete_authorized_certificate method.
-result = client.delete_authorized_certificate request
+  # Call the delete_authorized_certificate method.
+  result = client.delete_authorized_certificate request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END appengine_v1_generated_AuthorizedCertificates_DeleteAuthorizedCertificate_sync]

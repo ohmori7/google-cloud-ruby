@@ -131,7 +131,7 @@ module Google
           # methods below are public visibility only for unit testing
           # rubocop:disable Style/StringLiterals
           def escape_characters str
-            str.split("").map do |s|
+            str.chars.map do |s|
               if s.ascii_only?
                 case s
                 when "\\"
@@ -207,7 +207,7 @@ module Google
 
           def error_msg attr_name
             "Service account credentials '#{attr_name}' is missing. To generate service account credentials " \
-            "see https://cloud.google.com/iam/docs/service-accounts"
+              "see https://cloud.google.com/iam/docs/service-accounts"
           end
 
           def service_account_signer signer
@@ -243,7 +243,7 @@ module Google
             headers_arr = canonical_headers.map do |k, v|
               [k.downcase, v.strip.gsub(/[^\S\t]+/, " ").gsub(/\t+/, " ")]
             end
-            canonical_headers = Hash[headers_arr]
+            canonical_headers = headers_arr.to_h
             canonical_headers["host"] = host_name virtual_hosted_style, bucket_bound_hostname
 
             canonical_headers = canonical_headers.sort_by(&:first).to_h
@@ -295,13 +295,13 @@ module Google
           ##
           # The external path to the bucket, with trailing slash.
           def bucket_path path_style
-            return "/#{@bucket_name}/" if path_style
+            "/#{@bucket_name}/" if path_style
           end
 
           ##
           # The external url to the file.
           def ext_url scheme, virtual_hosted_style, bucket_bound_hostname
-            url = GOOGLEAPIS_URL.dup
+            url = @service.service.root_url.chomp "/"
             if virtual_hosted_style
               parts = url.split "//"
               parts[1] = "#{@bucket_name}.#{parts[1]}"
@@ -326,7 +326,7 @@ module Google
           #
           def post_object_ext_path
             path = "/#{@bucket_name}/#{@file_name}"
-            escaped = Addressable::URI.escape path
+            escaped = Addressable::URI.encode_component path, Addressable::URI::CharacterClasses::PATH
             special_var = "${filename}"
             # Restore the unencoded `${filename}` variable, if present.
             if path.include? special_var

@@ -19,15 +19,29 @@
 # [START monitoring_v3_generated_NotificationChannelService_SendNotificationChannelVerificationCode_sync]
 require "google/cloud/monitoring/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
+##
+# Snippet for the send_notification_channel_verification_code call in the NotificationChannelService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Monitoring::V3::NotificationChannelService::Client#send_notification_channel_verification_code.
+#
+def send_notification_channel_verification_code
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Monitoring::V3::SendNotificationChannelVerificationCodeRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Monitoring::V3::SendNotificationChannelVerificationCodeRequest.new
 
-# Call the send_notification_channel_verification_code method.
-result = client.send_notification_channel_verification_code request
+  # Call the send_notification_channel_verification_code method.
+  result = client.send_notification_channel_verification_code request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END monitoring_v3_generated_NotificationChannelService_SendNotificationChannelVerificationCode_sync]

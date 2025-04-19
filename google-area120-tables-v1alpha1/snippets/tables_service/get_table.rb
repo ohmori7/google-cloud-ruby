@@ -19,15 +19,29 @@
 # [START area120tables_v1alpha1_generated_TablesService_GetTable_sync]
 require "google/area120/tables/v1alpha1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Area120::Tables::V1alpha1::TablesService::Client.new
+##
+# Snippet for the get_table call in the TablesService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Area120::Tables::V1alpha1::TablesService::Client#get_table.
+#
+def get_table
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Area120::Tables::V1alpha1::TablesService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Area120::Tables::V1alpha1::GetTableRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Area120::Tables::V1alpha1::GetTableRequest.new
 
-# Call the get_table method.
-result = client.get_table request
+  # Call the get_table method.
+  result = client.get_table request
 
-# The returned object is of type Google::Area120::Tables::V1alpha1::Table.
-p result
+  # The returned object is of type Google::Area120::Tables::V1alpha1::Table.
+  p result
+end
 # [END area120tables_v1alpha1_generated_TablesService_GetTable_sync]

@@ -21,7 +21,7 @@ module Google
   module Cloud
     module Memcache
       module V1
-        VERSION = "0.2.5"
+        VERSION = "2.0.0"
       end
     end
   end

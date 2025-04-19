@@ -35,7 +35,8 @@ module Google
         #   @return [::String]
         #     Model to use for the feature.
         #     Supported values: "builtin/stable" (the default if unset) and
-        #     "builtin/latest".
+        #     "builtin/latest". `DOCUMENT_TEXT_DETECTION` and `TEXT_DETECTION` also
+        #     support "builtin/weekly" for the bleeding edge release updated weekly.
         class Feature
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -377,6 +378,7 @@ module Google
         #   @return [::Float]
         #     Overall score of the result. Range [0, 1].
         # @!attribute [rw] confidence
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Float]
         #     **Deprecated. Use `score` instead.**
         #     The accuracy of the entity detection in an image.
@@ -451,37 +453,15 @@ module Google
         #     Likelihood that this is a medical image.
         # @!attribute [rw] violence
         #   @return [::Google::Cloud::Vision::V1::Likelihood]
-        #     Likelihood that this image contains violent content.
+        #     Likelihood that this image contains violent content. Violent content may
+        #     include death, serious harm, or injury to individuals or groups of
+        #     individuals.
         # @!attribute [rw] racy
         #   @return [::Google::Cloud::Vision::V1::Likelihood]
         #     Likelihood that the request image contains racy content. Racy content may
         #     include (but is not limited to) skimpy or sheer clothing, strategically
         #     covered nudity, lewd or provocative poses, or close-ups of sensitive
         #     body areas.
-        # @!attribute [rw] adult_confidence
-        #   @return [::Float]
-        #     Confidence of adult_score. Range [0, 1]. 0 means not confident, 1 means
-        #     very confident.
-        # @!attribute [rw] spoof_confidence
-        #   @return [::Float]
-        #     Confidence of spoof_score. Range [0, 1]. 0 means not confident, 1 means
-        #     very confident.
-        # @!attribute [rw] medical_confidence
-        #   @return [::Float]
-        #     Confidence of medical_score. Range [0, 1]. 0 means not confident, 1 means
-        #     very confident.
-        # @!attribute [rw] violence_confidence
-        #   @return [::Float]
-        #     Confidence of violence_score. Range [0, 1]. 0 means not confident, 1 means
-        #     very confident.
-        # @!attribute [rw] racy_confidence
-        #   @return [::Float]
-        #     Confidence of racy_score. Range [0, 1]. 0 means not confident, 1 means very
-        #     confident.
-        # @!attribute [rw] nsfw_confidence
-        #   @return [::Float]
-        #     Confidence of nsfw_score. Range [0, 1]. 0 means not confident, 1 means very
-        #     confident.
         class SafeSearchAnnotation
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -576,8 +556,9 @@ module Google
 
         # Parameters for web detection request.
         # @!attribute [rw] include_geo_results
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Boolean]
-        #     Whether to include results derived from the geo information in the image.
+        #     This field has no effect on results.
         class WebDetectionParams
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -590,6 +571,15 @@ module Google
         #     By default, Cloud Vision API only includes confidence score for
         #     DOCUMENT_TEXT_DETECTION result. Set the flag to true to include confidence
         #     score for TEXT_DETECTION as well.
+        # @!attribute [rw] advanced_ocr_options
+        #   @return [::Array<::String>]
+        #     A list of advanced OCR options to further fine-tune OCR behavior.
+        #     Current valid values are:
+        #
+        #     - `legacy_layout`: a heuristics layout detection algorithm, which serves as
+        #     an alternative to the current ML-based layout detection algorithm.
+        #     Customers can choose the best suitable layout algorithm based on their
+        #     situation.
         class TextDetectionParams
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -729,9 +719,26 @@ module Google
         #         `eu`: The European Union.
         #
         #     Example: `projects/project-A/locations/eu`.
+        # @!attribute [rw] labels
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. The labels with user-defined metadata for the request.
+        #
+        #     Label keys and values can be no longer than 63 characters
+        #     (Unicode codepoints), can only contain lowercase letters, numeric
+        #     characters, underscores and dashes. International characters are allowed.
+        #     Label values are optional. Label keys must start with a letter.
         class BatchAnnotateImagesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
         # Response to a batch image annotation request.
@@ -814,9 +821,26 @@ module Google
         #         `eu`: The European Union.
         #
         #     Example: `projects/project-A/locations/eu`.
+        # @!attribute [rw] labels
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. The labels with user-defined metadata for the request.
+        #
+        #     Label keys and values can be no longer than 63 characters
+        #     (Unicode codepoints), can only contain lowercase letters, numeric
+        #     characters, underscores and dashes. International characters are allowed.
+        #     Label values are optional. Label keys must start with a letter.
         class BatchAnnotateFilesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
         # A list of file annotation responses.
@@ -877,9 +901,26 @@ module Google
         #         `eu`: The European Union.
         #
         #     Example: `projects/project-A/locations/eu`.
+        # @!attribute [rw] labels
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. The labels with user-defined metadata for the request.
+        #
+        #     Label keys and values can be no longer than 63 characters
+        #     (Unicode codepoints), can only contain lowercase letters, numeric
+        #     characters, underscores and dashes. International characters are allowed.
+        #     Label values are optional. Label keys must start with a letter.
         class AsyncBatchAnnotateImagesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
         # Response to an async batch image annotation request.
@@ -910,9 +951,26 @@ module Google
         #         `eu`: The European Union.
         #
         #     Example: `projects/project-A/locations/eu`.
+        # @!attribute [rw] labels
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     Optional. The labels with user-defined metadata for the request.
+        #
+        #     Label keys and values can be no longer than 63 characters
+        #     (Unicode codepoints), can only contain lowercase letters, numeric
+        #     characters, underscores and dashes. International characters are allowed.
+        #     Label values are optional. Label keys must start with a letter.
         class AsyncBatchAnnotateFilesRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class LabelsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
         # Response to an async batch file annotation request.

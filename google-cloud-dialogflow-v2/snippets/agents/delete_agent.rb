@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_Agents_DeleteAgent_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::Agents::Client.new
+##
+# Snippet for the delete_agent call in the Agents service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::Agents::Client#delete_agent.
+#
+def delete_agent
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::Agents::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::DeleteAgentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::DeleteAgentRequest.new
 
-# Call the delete_agent method.
-result = client.delete_agent request
+  # Call the delete_agent method.
+  result = client.delete_agent request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END dialogflow_v2_generated_Agents_DeleteAgent_sync]

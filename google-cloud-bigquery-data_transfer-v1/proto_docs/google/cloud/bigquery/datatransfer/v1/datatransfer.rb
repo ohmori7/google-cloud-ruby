@@ -52,7 +52,7 @@ module Google
           #     For integer and double values specifies minimum allowed value.
           # @!attribute [rw] max_value
           #   @return [::Google::Protobuf::DoubleValue]
-          #     For integer and double values specifies maxminum allowed value.
+          #     For integer and double values specifies maximum allowed value.
           # @!attribute [rw] fields
           #   @return [::Array<::Google::Cloud::Bigquery::DataTransfer::V1::DataSourceParameter>]
           #     Deprecated. This field has no effect.
@@ -100,6 +100,9 @@ module Google
 
               # Page ID for a Google+ Page.
               PLUS_PAGE = 6
+
+              # List of strings parameter.
+              LIST = 7
             end
           end
 
@@ -125,9 +128,11 @@ module Google
           #     scopes needed by a data source to prepare data and ingest them into
           #     BigQuery, e.g., https://www.googleapis.com/auth/bigquery
           # @!attribute [rw] transfer_type
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::TransferType]
           #     Deprecated. This field has no effect.
           # @!attribute [rw] supports_multiple_transfers
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Boolean]
           #     Deprecated. This field has no effect.
           # @!attribute [rw] update_deadline_seconds
@@ -213,8 +218,8 @@ module Google
           # A request to get data source info.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The field will contain name of the resource requested, for example:
-          #     `projects/{project_id}/dataSources/{data_source_id}` or
+          #     Required. The field will contain name of the resource requested, for
+          #     example: `projects/{project_id}/dataSources/{data_source_id}` or
           #     `projects/{project_id}/locations/{location_id}/dataSources/{data_source_id}`
           class GetDataSourceRequest
             include ::Google::Protobuf::MessageExts
@@ -224,9 +229,9 @@ module Google
           # Request to list supported data sources and their data transfer settings.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The BigQuery project id for which data sources should be returned.
-          #     Must be in the form: `projects/{project_id}` or
-          #     `projects/{project_id}/locations/{location_id}
+          #     Required. The BigQuery project id for which data sources should be
+          #     returned. Must be in the form: `projects/{project_id}` or
+          #     `projects/{project_id}/locations/{location_id}`
           # @!attribute [rw] page_token
           #   @return [::String]
           #     Pagination token, which can be used to request a specific page
@@ -258,98 +263,142 @@ module Google
           end
 
           # A request to create a data transfer configuration. If new credentials are
-          # needed for this transfer configuration, an authorization code must be
-          # provided. If an authorization code is provided, the transfer configuration
-          # will be associated with the user id corresponding to the authorization code.
+          # needed for this transfer configuration, authorization info must be provided.
+          # If authorization info is provided, the transfer configuration will be
+          # associated with the user id corresponding to the authorization info.
           # Otherwise, the transfer configuration will be associated with the calling
           # user.
+          #
+          # When using a cross project service account for creating a transfer config,
+          # you must enable cross project service account usage. For more information,
+          # see [Disable attachment of service accounts to resources in other
+          # projects](https://cloud.google.com/resource-manager/docs/organization-policy/restricting-service-accounts#disable_cross_project_service_accounts).
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The BigQuery project id where the transfer configuration should be created.
-          #     Must be in the format projects/\\{project_id}/locations/\\{location_id} or
-          #     projects/\\{project_id}. If specified location and location of the
-          #     destination bigquery dataset do not match - the request will fail.
+          #     Required. The BigQuery project id where the transfer configuration should
+          #     be created. Must be in the format
+          #     projects/\\{project_id}/locations/\\{location_id} or projects/\\{project_id}. If
+          #     specified location and location of the destination bigquery dataset do not
+          #     match - the request will fail.
           # @!attribute [rw] transfer_config
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig]
           #     Required. Data transfer configuration to create.
           # @!attribute [rw] authorization_code
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::String]
-          #     Optional OAuth2 authorization code to use with this transfer configuration.
-          #     This is required if new credentials are needed, as indicated by
-          #     `CheckValidCreds`.
-          #     In order to obtain authorization_code, please make a
-          #     request to
-          #     https://www.gstatic.com/bigquerydatatransfer/oauthz/auth?client_id=<datatransferapiclientid>&scope=<data_source_scopes>&redirect_uri=<redirect_uri>
+          #     Deprecated: Authorization code was required when
+          #     `transferConfig.dataSourceId` is 'youtube_channel' but it is no longer used
+          #     in any data sources. Use `version_info` instead.
           #
-          #     * client_id should be OAuth client_id of BigQuery DTS API for the given
-          #       data source returned by ListDataSources method.
-          #     * data_source_scopes are the scopes returned by ListDataSources method.
-          #     * redirect_uri is an optional parameter. If not specified, then
-          #       authorization code is posted to the opener of authorization flow window.
-          #       Otherwise it will be sent to the redirect uri. A special value of
-          #       urn:ietf:wg:oauth:2.0:oob means that authorization code should be
-          #       returned in the title bar of the browser, with the page text prompting
-          #       the user to copy the code and paste it in the application.
+          #     Optional OAuth2 authorization code to use with this transfer configuration.
+          #     This is required only if `transferConfig.dataSourceId` is 'youtube_channel'
+          #     and new credentials are needed, as indicated by `CheckValidCreds`. In order
+          #     to obtain authorization_code, make a request to the following URL:
+          #     <pre class="prettyprint" suppresswarning="true">
+          #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=authorization_code&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+          #     </pre>
+          #     * The <var>client_id</var> is the OAuth client_id of the data source as
+          #     returned by ListDataSources method.
+          #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+          #     method.
+          #
+          #     Note that this should not be set when `service_account_name` is used to
+          #     create the transfer config.
           # @!attribute [rw] version_info
           #   @return [::String]
-          #     Optional version info. If users want to find a very recent access token,
-          #     that is, immediately after approving access, users have to set the
-          #     version_info claim in the token request. To obtain the version_info, users
-          #     must use the "none+gsession" response type. which be return a
-          #     version_info back in the authorization response which be be put in a JWT
-          #     claim in the token request.
+          #     Optional version info. This parameter replaces `authorization_code` which
+          #     is no longer used in any data sources. This is required only if
+          #     `transferConfig.dataSourceId` is 'youtube_channel' *or* new credentials
+          #     are needed, as indicated by `CheckValidCreds`. In order to obtain version
+          #     info, make a request to the following URL:
+          #     <pre class="prettyprint" suppresswarning="true">
+          #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=version_info&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+          #     </pre>
+          #     * The <var>client_id</var> is the OAuth client_id of the data source as
+          #     returned by ListDataSources method.
+          #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+          #     method.
+          #
+          #     Note that this should not be set when `service_account_name` is used to
+          #     create the transfer config.
           # @!attribute [rw] service_account_name
           #   @return [::String]
-          #     Optional service account name. If this field is set, transfer config will
-          #     be created with this service account credentials. It requires that
-          #     requesting user calling this API has permissions to act as this service
+          #     Optional service account email. If this field is set, the transfer config
+          #     will be created with this service account's credentials. It requires that
+          #     the requesting user calling this API has permissions to act as this service
           #     account.
+          #
+          #     Note that not all data sources support service account credentials when
+          #     creating a transfer config. For the latest list of data sources, read about
+          #     [using service
+          #     accounts](https://cloud.google.com/bigquery-transfer/docs/use-service-accounts).
           class CreateTransferConfigRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
           # A request to update a transfer configuration. To update the user id of the
-          # transfer configuration, an authorization code needs to be provided.
+          # transfer configuration, authorization info needs to be provided.
+          #
+          # When using a cross project service account for updating a transfer config,
+          # you must enable cross project service account usage. For more information,
+          # see [Disable attachment of service accounts to resources in other
+          # projects](https://cloud.google.com/resource-manager/docs/organization-policy/restricting-service-accounts#disable_cross_project_service_accounts).
           # @!attribute [rw] transfer_config
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig]
           #     Required. Data transfer configuration to create.
           # @!attribute [rw] authorization_code
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::String]
-          #     Optional OAuth2 authorization code to use with this transfer configuration.
-          #     If it is provided, the transfer configuration will be associated with the
-          #     authorizing user.
-          #     In order to obtain authorization_code, please make a
-          #     request to
-          #     https://www.gstatic.com/bigquerydatatransfer/oauthz/auth?client_id=<datatransferapiclientid>&scope=<data_source_scopes>&redirect_uri=<redirect_uri>
+          #     Deprecated: Authorization code was required when
+          #     `transferConfig.dataSourceId` is 'youtube_channel' but it is no longer used
+          #     in any data sources. Use `version_info` instead.
           #
-          #     * client_id should be OAuth client_id of BigQuery DTS API for the given
-          #       data source returned by ListDataSources method.
-          #     * data_source_scopes are the scopes returned by ListDataSources method.
-          #     * redirect_uri is an optional parameter. If not specified, then
-          #       authorization code is posted to the opener of authorization flow window.
-          #       Otherwise it will be sent to the redirect uri. A special value of
-          #       urn:ietf:wg:oauth:2.0:oob means that authorization code should be
-          #       returned in the title bar of the browser, with the page text prompting
-          #       the user to copy the code and paste it in the application.
+          #     Optional OAuth2 authorization code to use with this transfer configuration.
+          #     This is required only if `transferConfig.dataSourceId` is 'youtube_channel'
+          #     and new credentials are needed, as indicated by `CheckValidCreds`. In order
+          #     to obtain authorization_code, make a request to the following URL:
+          #     <pre class="prettyprint" suppresswarning="true">
+          #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=authorization_code&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+          #     </pre>
+          #     * The <var>client_id</var> is the OAuth client_id of the data source as
+          #     returned by ListDataSources method.
+          #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+          #     method.
+          #
+          #     Note that this should not be set when `service_account_name` is used to
+          #     update the transfer config.
           # @!attribute [rw] update_mask
           #   @return [::Google::Protobuf::FieldMask]
           #     Required. Required list of fields to be updated in this request.
           # @!attribute [rw] version_info
           #   @return [::String]
-          #     Optional version info. If users want to find a very recent access token,
-          #     that is, immediately after approving access, users have to set the
-          #     version_info claim in the token request. To obtain the version_info, users
-          #     must use the "none+gsession" response type. which be return a
-          #     version_info back in the authorization response which be be put in a JWT
-          #     claim in the token request.
+          #     Optional version info. This parameter replaces `authorization_code` which
+          #     is no longer used in any data sources. This is required only if
+          #     `transferConfig.dataSourceId` is 'youtube_channel' *or* new credentials
+          #     are needed, as indicated by `CheckValidCreds`. In order to obtain version
+          #     info, make a request to the following URL:
+          #     <pre class="prettyprint" suppresswarning="true">
+          #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=version_info&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+          #     </pre>
+          #     * The <var>client_id</var> is the OAuth client_id of the data source as
+          #     returned by ListDataSources method.
+          #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+          #     method.
+          #
+          #     Note that this should not be set when `service_account_name` is used to
+          #     update the transfer config.
           # @!attribute [rw] service_account_name
           #   @return [::String]
-          #     Optional service account name. If this field is set and
-          #     "service_account_name" is set in update_mask, transfer config will be
-          #     updated to use this service account credentials. It requires that
-          #     requesting user calling this API has permissions to act as this service
+          #     Optional service account email. If this field is set, the transfer config
+          #     will be created with this service account's credentials. It requires that
+          #     the requesting user calling this API has permissions to act as this service
           #     account.
+          #
+          #     Note that not all data sources support service account credentials when
+          #     creating a transfer config. For the latest list of data sources, read about
+          #     [using service
+          #     accounts](https://cloud.google.com/bigquery-transfer/docs/use-service-accounts).
           class UpdateTransferConfigRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -358,8 +407,8 @@ module Google
           # A request to get data transfer information.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The field will contain name of the resource requested, for example:
-          #     `projects/{project_id}/transferConfigs/{config_id}` or
+          #     Required. The field will contain name of the resource requested, for
+          #     example: `projects/{project_id}/transferConfigs/{config_id}` or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`
           class GetTransferConfigRequest
             include ::Google::Protobuf::MessageExts
@@ -370,8 +419,8 @@ module Google
           # and log messages will be deleted as well.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The field will contain name of the resource requested, for example:
-          #     `projects/{project_id}/transferConfigs/{config_id}` or
+          #     Required. The field will contain name of the resource requested, for
+          #     example: `projects/{project_id}/transferConfigs/{config_id}` or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`
           class DeleteTransferConfigRequest
             include ::Google::Protobuf::MessageExts
@@ -381,8 +430,9 @@ module Google
           # A request to get data transfer run information.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The field will contain name of the resource requested, for example:
-          #     `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}` or
+          #     Required. The field will contain name of the resource requested, for
+          #     example: `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}`
+          #     or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}/runs/{run_id}`
           class GetTransferRunRequest
             include ::Google::Protobuf::MessageExts
@@ -392,8 +442,9 @@ module Google
           # A request to delete data transfer run information.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The field will contain name of the resource requested, for example:
-          #     `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}` or
+          #     Required. The field will contain name of the resource requested, for
+          #     example: `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}`
+          #     or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}/runs/{run_id}`
           class DeleteTransferRunRequest
             include ::Google::Protobuf::MessageExts
@@ -403,7 +454,7 @@ module Google
           # A request to list data transfers configured for a BigQuery project.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The BigQuery project id for which data sources
+          #     Required. The BigQuery project id for which transfer configs
           #     should be returned: `projects/{project_id}` or
           #     `projects/{project_id}/locations/{location_id}`
           # @!attribute [rw] data_source_ids
@@ -442,8 +493,8 @@ module Google
           # A request to list data transfer runs.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. Name of transfer configuration for which transfer runs should be retrieved.
-          #     Format of transfer configuration resource name is:
+          #     Required. Name of transfer configuration for which transfer runs should be
+          #     retrieved. Format of transfer configuration resource name is:
           #     `projects/{project_id}/transferConfigs/{config_id}` or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`.
           # @!attribute [rw] states
@@ -587,16 +638,25 @@ module Google
           # A request to start manual transfer runs.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Transfer configuration name in the form:
+          #     Required. Transfer configuration name in the form:
           #     `projects/{project_id}/transferConfigs/{config_id}` or
           #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`.
           # @!attribute [rw] requested_time_range
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::StartManualTransferRunsRequest::TimeRange]
-          #     Time range for the transfer runs that should be started.
+          #     A time_range start and end timestamp for historical data files or reports
+          #     that are scheduled to be transferred by the scheduled transfer run.
+          #     requested_time_range must be a past time and cannot include future time
+          #     values.
+          #
+          #     Note: The following fields are mutually exclusive: `requested_time_range`, `requested_run_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] requested_run_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Specific run_time for a transfer run to be started. The
-          #     requested_run_time must not be in the future.
+          #     A run_time timestamp for historical data files or reports
+          #     that are scheduled to be transferred by the scheduled transfer run.
+          #     requested_run_time must be a past time and cannot include future time
+          #     values.
+          #
+          #     Note: The following fields are mutually exclusive: `requested_run_time`, `requested_time_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class StartManualTransferRunsRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -634,13 +694,28 @@ module Google
           # BigQuery UI's `Transfer` tab.
           # @!attribute [rw] name
           #   @return [::String]
-          #     The name of the project resource in the form:
+          #     Required. The name of the project resource in the form:
           #     `projects/{project_id}`
           # @!attribute [rw] data_source_ids
           #   @return [::Array<::String>]
           #     Data sources that are enrolled. It is required to provide at least one
           #     data source id.
           class EnrollDataSourcesRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A request to unenroll a set of data sources so they are no longer visible in
+          # the BigQuery UI's `Transfer` tab.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Required. The name of the project resource in the form:
+          #     `projects/{project_id}`
+          # @!attribute [rw] data_source_ids
+          #   @return [::Array<::String>]
+          #     Data sources that are unenrolled. It is required to provide at least one
+          #     data source id.
+          class UnenrollDataSourcesRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

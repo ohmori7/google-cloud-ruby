@@ -1,5 +1,32 @@
 # Release History
 
+### 1.8.0 (2025-03-11)
+
+#### Features
+
+* Update minimum Ruby version to 3.0 ([#29261](https://github.com/googleapis/google-cloud-ruby/issues/29261)) 
+#### Bug Fixes
+
+* Improved performance of the autoload at startup ([#28104](https://github.com/googleapis/google-cloud-ruby/issues/28104)) 
+
+### 1.7.1 (2024-08-05)
+
+#### Bug Fixes
+
+* Fixed exception when pretty-printing a client object in a Rails environment ([#26567](https://github.com/googleapis/google-cloud-ruby/issues/26567)) 
+
+### 1.7.0 (2024-03-07)
+
+#### Features
+
+* Update minimum supported Ruby version to 2.7 ([#25298](https://github.com/googleapis/google-cloud-ruby/issues/25298)) 
+
+### 1.6.1 (2023-12-05)
+
+#### Bug Fixes
+
+* Allow dependency on google-cloud-env 2.x ([#23626](https://github.com/googleapis/google-cloud-ruby/issues/23626)) 
+
 ### 1.6.0 / 2021-03-10
 
 #### Features

@@ -19,21 +19,33 @@
 # [START gkehub_v1_generated_GkeHub_ListFeatures_sync]
 require "google/cloud/gke_hub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+##
+# Snippet for the list_features call in the GkeHub service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::GkeHub::V1::GkeHub::Client#list_features.
+#
+def list_features
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::GkeHub::V1::ListFeaturesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::GkeHub::V1::ListFeaturesRequest.new
 
-# Call the list_features method.
-result = client.list_features request
+  # Call the list_features method.
+  result = client.list_features request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::GkeHub::V1::Feature.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::GkeHub::V1::Feature.
+    p item
+  end
 end
 # [END gkehub_v1_generated_GkeHub_ListFeatures_sync]

@@ -43,15 +43,15 @@ module Google
         #     https://cloud.google.com/recommender/docs/insights/insight-types.
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     Optional. The maximum number of results to return from this request.  Non-positive
-        #     values are ignored. If not specified, the server will determine the number
-        #     of results to return.
+        #     Optional. The maximum number of results to return from this request.
+        #     Non-positive values are ignored. If not specified, the server will
+        #     determine the number of results to return.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     Optional. If present, retrieves the next batch of results from the preceding call to
-        #     this method. `page_token` must be the value of `next_page_token` from the
-        #     previous response. The values of other method parameters must be identical
-        #     to those in the previous call.
+        #     Optional. If present, retrieves the next batch of results from the
+        #     preceding call to this method. `page_token` must be the value of
+        #     `next_page_token` from the previous response. The values of other method
+        #     parameters must be identical to those in the previous call.
         # @!attribute [rw] filter
         #   @return [::String]
         #     Optional. Filter expression to restrict the insights returned. Supported
@@ -63,6 +63,8 @@ module Google
         #
         #     * `severity`
         #
+        #     * `targetResources`
+        #
         #     Examples:
         #
         #     * `stateInfo.state = ACTIVE OR stateInfo.state = DISMISSED`
@@ -71,7 +73,12 @@ module Google
         #
         #     * `severity = CRITICAL OR severity = HIGH`
         #
+        #     * `targetResources :
+        #     //compute.googleapis.com/projects/1234/zones/us-central1-a/instances/instance-1`
+        #
         #     * `stateInfo.state = ACTIVE AND (severity = CRITICAL OR severity = HIGH)`
+        #
+        #     The max allowed filter length is 500 characters.
         #
         #     (These expressions are based on the filter language described at
         #     https://google.aip.dev/160)
@@ -108,8 +115,8 @@ module Google
         #     Required. Name of the insight.
         # @!attribute [rw] state_metadata
         #   @return [::Google::Protobuf::Map{::String => ::String}]
-        #     Optional. State properties user wish to include with this state.  Full replace of the
-        #     current state_metadata.
+        #     Optional. State properties user wish to include with this state.  Full
+        #     replace of the current state_metadata.
         # @!attribute [rw] etag
         #   @return [::String]
         #     Required. Fingerprint of the Insight. Provides optimistic locking.
@@ -149,15 +156,15 @@ module Google
         #     https://cloud.google.com/recommender/docs/recommenders.
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     Optional. The maximum number of results to return from this request.  Non-positive
-        #     values are ignored. If not specified, the server will determine the number
-        #     of results to return.
+        #     Optional. The maximum number of results to return from this request.
+        #     Non-positive values are ignored. If not specified, the server will
+        #     determine the number of results to return.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     Optional. If present, retrieves the next batch of results from the preceding call to
-        #     this method. `page_token` must be the value of `next_page_token` from the
-        #     previous response. The values of other method parameters must be identical
-        #     to those in the previous call.
+        #     Optional. If present, retrieves the next batch of results from the
+        #     preceding call to this method. `page_token` must be the value of
+        #     `next_page_token` from the previous response. The values of other method
+        #     parameters must be identical to those in the previous call.
         # @!attribute [rw] filter
         #   @return [::String]
         #     Filter expression to restrict the recommendations returned. Supported
@@ -169,6 +176,8 @@ module Google
         #
         #     * `priority`
         #
+        #     * `targetResources`
+        #
         #     Examples:
         #
         #     * `stateInfo.state = ACTIVE OR stateInfo.state = DISMISSED`
@@ -177,7 +186,12 @@ module Google
         #
         #     * `priority = P1 OR priority = P2`
         #
+        #     * `targetResources :
+        #     //compute.googleapis.com/projects/1234/zones/us-central1-a/instances/instance-1`
+        #
         #     * `stateInfo.state = ACTIVE AND (priority = P1 OR priority = P2)`
+        #
+        #     The max allowed filter length is 500 characters.
         #
         #     (These expressions are based on the filter language described at
         #     https://google.aip.dev/160)
@@ -204,6 +218,18 @@ module Google
         #   @return [::String]
         #     Required. Name of the recommendation.
         class GetRecommendationRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request for the `MarkRecommendationDismissed` Method.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the recommendation.
+        # @!attribute [rw] etag
+        #   @return [::String]
+        #     Fingerprint of the Recommendation. Provides optimistic locking.
+        class MarkRecommendationDismissedRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -287,6 +313,76 @@ module Google
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
+        end
+
+        # Request for the GetRecommenderConfig` method.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the Recommendation Config to get.
+        #
+        #     Acceptable formats:
+        #
+        #     * `projects/[PROJECT_NUMBER]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]/config`
+        #
+        #     * `projects/[PROJECT_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]/config`
+        #
+        #     * `organizations/[ORGANIZATION_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]/config`
+        #
+        #     * `billingAccounts/[BILLING_ACCOUNT_ID]/locations/[LOCATION]/recommenders/[RECOMMENDER_ID]/config`
+        class GetRecommenderConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request for the `UpdateRecommenderConfig` method.
+        # @!attribute [rw] recommender_config
+        #   @return [::Google::Cloud::Recommender::V1::RecommenderConfig]
+        #     Required. The RecommenderConfig to update.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     The list of fields to be updated.
+        # @!attribute [rw] validate_only
+        #   @return [::Boolean]
+        #     If true, validate the request and preview the change, but do not actually
+        #     update it.
+        class UpdateRecommenderConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request for the GetInsightTypeConfig` method.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the InsightTypeConfig to get.
+        #
+        #     Acceptable formats:
+        #
+        #     * `projects/[PROJECT_NUMBER]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]/config`
+        #
+        #     * `projects/[PROJECT_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]/config`
+        #
+        #     * `organizations/[ORGANIZATION_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]/config`
+        #
+        #     * `billingAccounts/[BILLING_ACCOUNT_ID]/locations/[LOCATION]/insightTypes/[INSIGHT_TYPE_ID]/config`
+        class GetInsightTypeConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request for the `UpdateInsightTypeConfig` method.
+        # @!attribute [rw] insight_type_config
+        #   @return [::Google::Cloud::Recommender::V1::InsightTypeConfig]
+        #     Required. The InsightTypeConfig to update.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     The list of fields to be updated.
+        # @!attribute [rw] validate_only
+        #   @return [::Boolean]
+        #     If true, validate the request and preview the change, but do not actually
+        #     update it.
+        class UpdateInsightTypeConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
       end
     end

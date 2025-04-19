@@ -19,15 +19,29 @@
 # [START cloudshell_v1_generated_CloudShellService_GetEnvironment_sync]
 require "google/cloud/shell/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Shell::V1::CloudShellService::Client.new
+##
+# Snippet for the get_environment call in the CloudShellService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Shell::V1::CloudShellService::Client#get_environment.
+#
+def get_environment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Shell::V1::CloudShellService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Shell::V1::GetEnvironmentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Shell::V1::GetEnvironmentRequest.new
 
-# Call the get_environment method.
-result = client.get_environment request
+  # Call the get_environment method.
+  result = client.get_environment request
 
-# The returned object is of type Google::Cloud::Shell::V1::Environment.
-p result
+  # The returned object is of type Google::Cloud::Shell::V1::Environment.
+  p result
+end
 # [END cloudshell_v1_generated_CloudShellService_GetEnvironment_sync]

@@ -12,7 +12,7 @@ class InstancesSmokeTest < Minitest::Test
     @default_zone = "us-central1-a"
     @default_project = ENV["COMPUTE_TEST_PROJECT"]
     @machine_type = "zones/#{@default_zone}/machineTypes/n1-standard-1"
-    @image =  "projects/debian-cloud/global/images/family/debian-10"
+    @image =  "projects/debian-cloud/global/images/family/debian-11"
     @client = ::Google::Cloud::Compute::V1::Instances::Rest::Client.new
     @client_ops = ::Google::Cloud::Compute::V1::ZoneOperations::Rest::Client.new
     @name = "rbgapic#{rand 10_000_000}"
@@ -77,13 +77,6 @@ class InstancesSmokeTest < Minitest::Test
     assert_match(/The resource '[^']+' was not found/, exception.message)
   end
 
-  def test_client_error_no_prj
-    exception = assert_raises Google::Cloud::InvalidArgumentError do
-      @client.get instance: "nonexists1123512345", zone: @default_zone
-    end
-    assert exception.message.include?("An error has occurred when making a REST request: Invalid resource field value in the request.")
-  end
-
   def test_update_desc_to_empty
     # We test here: 1)set body field to empty string
     #               2)optional body field not set
@@ -102,13 +95,8 @@ class InstancesSmokeTest < Minitest::Test
   private
 
   def wait_for_zonal_op operation, op_type
-    operation = operation.operation
     $stdout.puts "Waiting for zonal #{op_type} operation #{operation.name}."
-    starttime = Time.now
-    while (operation.status != :DONE) && (Time.now < starttime + 200)
-      operation = @client_ops.get operation: operation.name, project: @default_project, zone: @default_zone
-      sleep 3
-    end
+    operation.wait_until_done!
   end
 
   def read_instance

@@ -22,13 +22,79 @@ module Google
     module Dialogflow
       module CX
         module V3
+          # Stores information about feedback provided by users about a response.
+          # @!attribute [rw] rating
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback::Rating]
+          #     Optional. Rating from user for the specific Dialogflow response.
+          # @!attribute [rw] rating_reason
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback::RatingReason]
+          #     Optional. In case of thumbs down rating provided, users can optionally
+          #     provide context about the rating.
+          # @!attribute [rw] custom_rating
+          #   @return [::String]
+          #     Optional. Custom rating from the user about the provided answer, with
+          #     maximum length of 1024 characters. For example, client could use a
+          #     customized JSON object to indicate the rating.
+          class AnswerFeedback
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Stores extra information about why users provided thumbs down rating.
+            # @!attribute [rw] reason_labels
+            #   @return [::Array<::String>]
+            #     Optional. Custom reason labels for thumbs down rating provided by the
+            #     user. The maximum number of labels allowed is 10 and the maximum length
+            #     of a single label is 128 characters.
+            # @!attribute [rw] feedback
+            #   @return [::String]
+            #     Optional. Additional feedback about the rating.
+            #     This field can be populated without choosing a predefined `reason`.
+            class RatingReason
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Represents thumbs up/down rating provided by user about a response.
+            module Rating
+              # Rating not specified.
+              RATING_UNSPECIFIED = 0
+
+              # Thumbs up feedback from user.
+              THUMBS_UP = 1
+
+              # Thumbs down feedback from user.
+              THUMBS_DOWN = 2
+            end
+          end
+
+          # The request to set the feedback for a bot answer.
+          # @!attribute [rw] session
+          #   @return [::String]
+          #     Required. The name of the session the feedback was sent to.
+          # @!attribute [rw] response_id
+          #   @return [::String]
+          #     Required. ID of the response to update its feedback. This is the same as
+          #     DetectIntentResponse.response_id.
+          # @!attribute [rw] answer_feedback
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback]
+          #     Required. Feedback provided for a bot answer.
+          # @!attribute [rw] update_mask
+          #   @return [::Google::Protobuf::FieldMask]
+          #     Optional. The mask to control which fields to update. If the mask is not
+          #     present, all fields will be updated.
+          class SubmitAnswerFeedbackRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # The request to detect user's intent.
           # @!attribute [rw] session
           #   @return [::String]
           #     Required. The name of the session this query is sent to.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/sessions/<Session ID>` or `projects/<Project ID>/locations/<Location
-          #     ID>/agents/<Agent ID>/environments/<Environment ID>/sessions/<Session ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/sessions/<Session
+          #     ID>` or
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/sessions/<SessionID>`.
           #     If `Environment ID` is not specified, we assume default 'draft'
           #     environment.
           #     It's up to the API caller to choose an appropriate `Session ID`. It can be
@@ -68,9 +134,9 @@ module Google
           #     The audio data bytes encoded as specified in the request.
           #     Note: The output audio is generated based on the values of default platform
           #     text responses found in the
-          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#response_messages `query_result.response_messages`} field. If
-          #     multiple default text responses exist, they will be concatenated when
-          #     generating audio. If no default platform text responses exist, the
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#response_messages `query_result.response_messages`}
+          #     field. If multiple default text responses exist, they will be concatenated
+          #     when generating audio. If no default platform text responses exist, the
           #     generated audio content will be empty.
           #
           #     In some scenarios, multiple output audio fields may be present in the
@@ -107,24 +173,29 @@ module Google
           end
 
           # The top-level message sent by the client to the
-          # {::Google::Cloud::Dialogflow::CX::V3::Sessions::Client#streaming_detect_intent Sessions.StreamingDetectIntent} method.
+          # {::Google::Cloud::Dialogflow::CX::V3::Sessions::Client#streaming_detect_intent Sessions.StreamingDetectIntent}
+          # method.
           #
           # Multiple request messages should be sent in order:
           #
           # 1.  The first message must contain
           #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#session session},
-          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_input query_input} plus optionally
-          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_params query_params}. If the client
-          #     wants to receive an audio response, it should also contain
+          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_input query_input}
+          #     plus optionally
+          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_params query_params}.
+          #     If the client wants to receive an audio response, it should also contain
           #     {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#output_audio_config output_audio_config}.
           #
-          # 2.  If {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_input query_input} was set to
-          #     {::Google::Cloud::Dialogflow::CX::V3::AudioInput#config query_input.audio.config}, all subsequent messages
-          #     must contain {::Google::Cloud::Dialogflow::CX::V3::AudioInput#audio query_input.audio.audio} to continue with
-          #     Speech recognition.
-          #     If you decide to rather detect an intent from text
-          #     input after you already started Speech recognition, please send a message
-          #     with {::Google::Cloud::Dialogflow::CX::V3::QueryInput#text query_input.text}.
+          # 2.  If
+          # {::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest#query_input query_input}
+          # was set to
+          #     {::Google::Cloud::Dialogflow::CX::V3::AudioInput#config query_input.audio.config},
+          #     all subsequent messages must contain
+          #     {::Google::Cloud::Dialogflow::CX::V3::AudioInput#audio query_input.audio.audio}
+          #     to continue with Speech recognition. If you decide to rather detect an
+          #     intent from text input after you already started Speech recognition,
+          #     please send a message with
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryInput#text query_input.text}.
           #
           #     However, note that:
           #
@@ -137,9 +208,10 @@ module Google
           # @!attribute [rw] session
           #   @return [::String]
           #     The name of the session this query is sent to.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/sessions/<Session ID>` or `projects/<Project ID>/locations/<Location
-          #     ID>/agents/<Agent ID>/environments/<Environment ID>/sessions/<Session ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/sessions/<SessionID>`
+          #     or
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/sessions/<SessionID>`.
           #     If `Environment ID` is not specified, we assume default 'draft'
           #     environment.
           #     It's up to the API caller to choose an appropriate `Session ID`. It can be
@@ -168,40 +240,122 @@ module Google
           #     response stream still contains only one final `DetectIntentResponse` even
           #     if some `Fulfillment`s in the agent have been configured to return partial
           #     responses.
+          # @!attribute [rw] enable_debugging_info
+          #   @return [::Boolean]
+          #     If true, `StreamingDetectIntentResponse.debugging_info` will get populated.
           class StreamingDetectIntentRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
+          # Cloud conversation info for easier debugging.
+          # It will get populated in `StreamingDetectIntentResponse` or
+          # `StreamingAnalyzeContentResponse` when the flag `enable_debugging_info` is
+          # set to true in corresponding requests.
+          # @!attribute [rw] audio_data_chunks
+          #   @return [::Integer]
+          #     Number of input audio data chunks in streaming requests.
+          # @!attribute [rw] result_end_time_offset
+          #   @return [::Google::Protobuf::Duration]
+          #     Time offset of the end of speech utterance relative to the
+          #     beginning of the first audio chunk.
+          # @!attribute [rw] first_audio_duration
+          #   @return [::Google::Protobuf::Duration]
+          #     Duration of first audio chunk.
+          # @!attribute [rw] single_utterance
+          #   @return [::Boolean]
+          #     Whether client used single utterance mode.
+          # @!attribute [rw] speech_partial_results_end_times
+          #   @return [::Array<::Google::Protobuf::Duration>]
+          #     Time offsets of the speech partial results relative to the beginning of
+          #     the stream.
+          # @!attribute [rw] speech_final_results_end_times
+          #   @return [::Array<::Google::Protobuf::Duration>]
+          #     Time offsets of the speech final results (is_final=true) relative to the
+          #     beginning of the stream.
+          # @!attribute [rw] partial_responses
+          #   @return [::Integer]
+          #     Total number of partial responses.
+          # @!attribute [rw] speaker_id_passive_latency_ms_offset
+          #   @return [::Integer]
+          #     Time offset of Speaker ID stream close time relative to the Speech stream
+          #     close time in milliseconds. Only meaningful for conversations involving
+          #     passive verification.
+          # @!attribute [rw] bargein_event_triggered
+          #   @return [::Boolean]
+          #     Whether a barge-in event is triggered in this request.
+          # @!attribute [rw] speech_single_utterance
+          #   @return [::Boolean]
+          #     Whether speech uses single utterance mode.
+          # @!attribute [rw] dtmf_partial_results_times
+          #   @return [::Array<::Google::Protobuf::Duration>]
+          #     Time offsets of the DTMF partial results relative to the beginning of
+          #     the stream.
+          # @!attribute [rw] dtmf_final_results_times
+          #   @return [::Array<::Google::Protobuf::Duration>]
+          #     Time offsets of the DTMF final results relative to the beginning of
+          #     the stream.
+          # @!attribute [rw] single_utterance_end_time_offset
+          #   @return [::Google::Protobuf::Duration]
+          #     Time offset of the end-of-single-utterance signal relative to the
+          #     beginning of the stream.
+          # @!attribute [rw] no_speech_timeout
+          #   @return [::Google::Protobuf::Duration]
+          #     No speech timeout settings for the stream.
+          # @!attribute [rw] endpointing_timeout
+          #   @return [::Google::Protobuf::Duration]
+          #     Speech endpointing timeout settings for the stream.
+          # @!attribute [rw] is_input_text
+          #   @return [::Boolean]
+          #     Whether the streaming terminates with an injected text query.
+          # @!attribute [rw] client_half_close_time_offset
+          #   @return [::Google::Protobuf::Duration]
+          #     Client half close time in terms of input audio duration.
+          # @!attribute [rw] client_half_close_streaming_time_offset
+          #   @return [::Google::Protobuf::Duration]
+          #     Client half close time in terms of API streaming duration.
+          class CloudConversationDebuggingInfo
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # The top-level message returned from the
-          # {::Google::Cloud::Dialogflow::CX::V3::Sessions::Client#streaming_detect_intent StreamingDetectIntent} method.
+          # {::Google::Cloud::Dialogflow::CX::V3::Sessions::Client#streaming_detect_intent StreamingDetectIntent}
+          # method.
           #
-          # Multiple response messages (N) can be returned in order.
-          #
-          # The first (N-1) responses set either the `recognition_result` or
-          # `detect_intent_response` field, depending on the request:
+          # Multiple response messages can be returned in order:
           #
           # *   If the `StreamingDetectIntentRequest.query_input.audio` field was
-          #     set, and the `StreamingDetectIntentRequest.enable_partial_response`
-          #     field was false, the `recognition_result` field is populated for each
-          #     of the (N-1) responses.
-          #     See the {::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult StreamingRecognitionResult} message for details
-          #     about the result message sequence.
+          #     set, the first M messages contain `recognition_result`.
+          #     Each `recognition_result` represents a more complete transcript of what
+          #     the user said. The last `recognition_result` has `is_final` set to
+          #     `true`.
           #
           # *   If the `StreamingDetectIntentRequest.enable_partial_response` field was
           #     true, the `detect_intent_response` field is populated for each
-          #     of the (N-1) responses, where 1 <= N <= 4.
-          #     These responses set the {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse#response_type DetectIntentResponse.response_type} field
-          #     to `PARTIAL`.
+          #     of the following N responses, where 0 <= N <= 5.
+          #     These responses set the
+          #     {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse#response_type DetectIntentResponse.response_type}
+          #     field to `PARTIAL`.
           #
-          # For the final Nth response message, the `detect_intent_response` is fully
-          # populated, and {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse#response_type DetectIntentResponse.response_type} is set to `FINAL`.
+          # For the last response message, the `detect_intent_response` is fully
+          # populated, and
+          # {::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse#response_type DetectIntentResponse.response_type}
+          # is set to `FINAL`.
           # @!attribute [rw] recognition_result
           #   @return [::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult]
           #     The result of speech recognition.
+          #
+          #     Note: The following fields are mutually exclusive: `recognition_result`, `detect_intent_response`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] detect_intent_response
           #   @return [::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse]
           #     The response from detect intent.
+          #
+          #     Note: The following fields are mutually exclusive: `detect_intent_response`, `recognition_result`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] debugging_info
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::CloudConversationDebuggingInfo]
+          #     Debugging info that would get populated when
+          #     `StreamingDetectIntentRequest.enable_debugging_info` is set to true.
           class StreamingDetectIntentResponse
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -278,7 +432,8 @@ module Google
           # @!attribute [rw] speech_word_info
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::SpeechWordInfo>]
           #     Word-specific information for the words recognized by Speech in
-          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult#transcript transcript}. Populated if and only if `message_type` = `TRANSCRIPT` and
+          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult#transcript transcript}.
+          #     Populated if and only if `message_type` = `TRANSCRIPT` and
           #     [InputAudioConfig.enable_word_info] is set.
           # @!attribute [rw] speech_end_offset
           #   @return [::Google::Protobuf::Duration]
@@ -300,14 +455,14 @@ module Google
               # Message contains a (possibly partial) transcript.
               TRANSCRIPT = 1
 
-              # Event indicates that the server has detected the end of the user's speech
-              # utterance and expects no additional speech. Therefore, the server will
-              # not process additional audio (although it may subsequently return
+              # This event indicates that the server has detected the end of the user's
+              # speech utterance and expects no additional speech. Therefore, the server
+              # will not process additional audio (although it may subsequently return
               # additional results). The client should stop sending additional audio
               # data, half-close the gRPC connection, and wait for any additional results
               # until the server closes the gRPC connection. This message is only sent if
-              # {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#single_utterance `single_utterance`} was set to
-              # `true`, and is not used otherwise.
+              # {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#single_utterance `single_utterance`}
+              # was set to `true`, and is not used otherwise.
               END_OF_SINGLE_UTTERANCE = 2
             end
           end
@@ -356,30 +511,29 @@ module Google
           #     map, associative array, symbol table, dictionary, or JSON object
           #     composed of a collection of (MapKey, MapValue) pairs:
           #
-          #     -   MapKey type: string
-          #     -   MapKey value: parameter name
-          #     -   MapValue type:
-          #         -   If parameter's entity type is a composite entity: map
-          #         -   Else: depending on parameter value type, could be one of string,
-          #             number, boolean, null, list or map
-          #     -   MapValue value:
-          #         -   If parameter's entity type is a composite entity:
-          #             map from composite entity property names to property values
-          #         -   Else: parameter value
+          #     * MapKey type: string
+          #     * MapKey value: parameter name
+          #     * MapValue type: If parameter's entity type is a composite entity then use
+          #     map, otherwise, depending on the parameter value type, it could be one of
+          #     string, number, boolean, null, list or map.
+          #     * MapValue value: If parameter's entity type is a composite entity then use
+          #     map from composite entity property names to property values, otherwise,
+          #     use parameter value.
           # @!attribute [rw] current_page
           #   @return [::String]
-          #     The unique identifier of the {::Google::Cloud::Dialogflow::CX::V3::Page page} to override the [current
-          #     page][QueryResult.current_page] in the session.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>/pages/<Page ID>`.
+          #     The unique identifier of the {::Google::Cloud::Dialogflow::CX::V3::Page page} to
+          #     override the [current page][QueryResult.current_page] in the session.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/pages/<PageID>`.
           #
           #     If `current_page` is specified, the previous state of the session will be
           #     ignored by Dialogflow, including the [previous
           #     page][QueryResult.current_page] and the [previous session
           #     parameters][QueryResult.parameters].
-          #     In most cases, {::Google::Cloud::Dialogflow::CX::V3::QueryParameters#current_page current_page} and
-          #     {::Google::Cloud::Dialogflow::CX::V3::QueryParameters#parameters parameters} should be configured together to
-          #     direct a session to a specific state.
+          #     In most cases,
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryParameters#current_page current_page}
+          #     and {::Google::Cloud::Dialogflow::CX::V3::QueryParameters#parameters parameters}
+          #     should be configured together to direct a session to a specific state.
           # @!attribute [rw] disable_webhook
           #   @return [::Boolean]
           #     Whether to disable webhook calls for this request.
@@ -400,13 +554,63 @@ module Google
           # @!attribute [rw] flow_versions
           #   @return [::Array<::String>]
           #     A list of flow versions to override for the request.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>/versions/<Version ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/versions/<VersionID>`.
           #
           #     If version 1 of flow X is included in this list, the traffic of
           #     flow X will go through version 1 regardless of the version configuration in
           #     the environment. Each flow can have at most one version specified in this
           #     list.
+          # @!attribute [rw] channel
+          #   @return [::String]
+          #     The channel which this query is for.
+          #
+          #     If specified, only the
+          #     {::Google::Cloud::Dialogflow::CX::V3::ResponseMessage ResponseMessage} associated
+          #     with the channel will be returned. If no
+          #     {::Google::Cloud::Dialogflow::CX::V3::ResponseMessage ResponseMessage} is
+          #     associated with the channel, it falls back to the
+          #     {::Google::Cloud::Dialogflow::CX::V3::ResponseMessage ResponseMessage} with
+          #     unspecified channel.
+          #
+          #     If unspecified, the
+          #     {::Google::Cloud::Dialogflow::CX::V3::ResponseMessage ResponseMessage} with
+          #     unspecified channel will be returned.
+          # @!attribute [rw] session_ttl
+          #   @return [::Google::Protobuf::Duration]
+          #     Optional. Configure lifetime of the Dialogflow session.
+          #     By default, a Dialogflow session remains active and its data is stored for
+          #     30 minutes after the last request is sent for the session.
+          #     This value should be no longer than 1 day.
+          # @!attribute [rw] end_user_metadata
+          #   @return [::Google::Protobuf::Struct]
+          #     Optional. Information about the end-user to improve the relevance and
+          #     accuracy of generative answers.
+          #
+          #     This will be interpreted and used by a language model, so, for good
+          #     results, the data should be self-descriptive, and in a simple structure.
+          #
+          #     Example:
+          #
+          #     ```json
+          #     {
+          #       "subscription plan": "Business Premium Plus",
+          #       "devices owned": [
+          #         \\{"model": "Google Pixel 7"},
+          #         \\{"model": "Google Pixel Tablet"}
+          #       ]
+          #     }
+          #     ```
+          # @!attribute [rw] search_config
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::SearchConfig]
+          #     Optional. Search configuration for UCS search queries.
+          # @!attribute [rw] populate_data_store_connection_signals
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
+          #   @return [::Boolean]
+          #     Optional. If set to true and data stores are involved in serving the
+          #     request then
+          #     DetectIntentResponse.query_result.data_store_connection_signals
+          #     will be filled with data that can help evaluations.
           class QueryParameters
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -421,30 +625,231 @@ module Google
             end
           end
 
+          # Search configuration for UCS search queries.
+          # @!attribute [rw] boost_specs
+          #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::BoostSpecs>]
+          #     Optional. Boosting configuration for the datastores.
+          #
+          #     Maps from datastore name to their boost configuration. Do not specify more
+          #     than one BoostSpecs for each datastore name. If multiple BoostSpecs are
+          #     provided for the same datastore name, the behavior is undefined.
+          # @!attribute [rw] filter_specs
+          #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::FilterSpecs>]
+          #     Optional. Filter configuration for the datastores.
+          #
+          #     Maps from datastore name to the filter expression for that datastore. Do
+          #     not specify more than one FilterSpecs for each datastore name. If multiple
+          #     FilterSpecs are provided for the same datastore name, the behavior is
+          #     undefined.
+          class SearchConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Boost specification to boost certain documents.
+          # A copy of google.cloud.discoveryengine.v1main.BoostSpec, field documentation
+          # is available at
+          # https://cloud.google.com/generative-ai-app-builder/docs/reference/rest/v1alpha/BoostSpec
+          # @!attribute [rw] condition_boost_specs
+          #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::BoostSpec::ConditionBoostSpec>]
+          #     Optional. Condition boost specifications. If a document matches multiple
+          #     conditions in the specifications, boost scores from these specifications
+          #     are all applied and combined in a non-linear way. Maximum number of
+          #     specifications is 20.
+          class BoostSpec
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Boost applies to documents which match a condition.
+            # @!attribute [rw] condition
+            #   @return [::String]
+            #     Optional. An expression which specifies a boost condition. The syntax and
+            #     supported fields are the same as a filter expression.
+            #     Examples:
+            #
+            #     * To boost documents with document ID "doc_1" or "doc_2", and
+            #     color
+            #       "Red" or "Blue":
+            #         * (id: ANY("doc_1", "doc_2")) AND (color: ANY("Red","Blue"))
+            # @!attribute [rw] boost
+            #   @return [::Float]
+            #     Optional. Strength of the condition boost, which should be in [-1, 1].
+            #     Negative boost means demotion. Default is 0.0.
+            #
+            #     Setting to 1.0 gives the document a big promotion. However, it does not
+            #     necessarily mean that the boosted document will be the top result at
+            #     all times, nor that other documents will be excluded. Results could
+            #     still be shown even when none of them matches the condition. And
+            #     results that are significantly more relevant to the search query can
+            #     still trump your heavily favored but irrelevant documents.
+            #
+            #     Setting to -1.0 gives the document a big demotion. However, results
+            #     that are deeply relevant might still be shown. The document will have
+            #     an upstream battle to get a fairly high ranking, but it is not blocked
+            #     out completely.
+            #
+            #     Setting to 0.0 means no boost applied. The boosting condition is
+            #     ignored.
+            # @!attribute [rw] boost_control_spec
+            #   @return [::Google::Cloud::Dialogflow::CX::V3::BoostSpec::ConditionBoostSpec::BoostControlSpec]
+            #     Optional. Complex specification for custom ranking based on customer
+            #     defined attribute value.
+            class ConditionBoostSpec
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Specification for custom ranking based on customer specified attribute
+              # value. It provides more controls for customized ranking than the simple
+              # (condition, boost) combination above.
+              # @!attribute [rw] field_name
+              #   @return [::String]
+              #     Optional. The name of the field whose value will be used to determine
+              #     the boost amount.
+              # @!attribute [rw] attribute_type
+              #   @return [::Google::Cloud::Dialogflow::CX::V3::BoostSpec::ConditionBoostSpec::BoostControlSpec::AttributeType]
+              #     Optional. The attribute type to be used to determine the boost amount.
+              #     The attribute value can be derived from the field value of the
+              #     specified field_name. In the case of numerical it is straightforward
+              #     i.e. attribute_value = numerical_field_value. In the case of freshness
+              #     however, attribute_value = (time.now() - datetime_field_value).
+              # @!attribute [rw] interpolation_type
+              #   @return [::Google::Cloud::Dialogflow::CX::V3::BoostSpec::ConditionBoostSpec::BoostControlSpec::InterpolationType]
+              #     Optional. The interpolation type to be applied to connect the control
+              #     points listed below.
+              # @!attribute [rw] control_points
+              #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::BoostSpec::ConditionBoostSpec::BoostControlSpec::ControlPoint>]
+              #     Optional. The control points used to define the curve. The monotonic
+              #     function (defined through the interpolation_type above) passes through
+              #     the control points listed here.
+              class BoostControlSpec
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+
+                # The control points used to define the curve. The curve defined
+                # through these control points can only be monotonically increasing
+                # or decreasing(constant values are acceptable).
+                # @!attribute [rw] attribute_value
+                #   @return [::String]
+                #     Optional. Can be one of:
+                #     1. The numerical field value.
+                #     2. The duration spec for freshness:
+                #     The value must be formatted as an XSD `dayTimeDuration` value (a
+                #     restricted subset of an ISO 8601 duration value). The pattern for
+                #     this is: `[nD][T[nH][nM][nS]]`.
+                # @!attribute [rw] boost_amount
+                #   @return [::Float]
+                #     Optional. The value between -1 to 1 by which to boost the score if
+                #     the attribute_value evaluates to the value specified above.
+                class ControlPoint
+                  include ::Google::Protobuf::MessageExts
+                  extend ::Google::Protobuf::MessageExts::ClassMethods
+                end
+
+                # The attribute(or function) for which the custom ranking is to be
+                # applied.
+                module AttributeType
+                  # Unspecified AttributeType.
+                  ATTRIBUTE_TYPE_UNSPECIFIED = 0
+
+                  # The value of the numerical field will be used to dynamically update
+                  # the boost amount. In this case, the attribute_value (the x value)
+                  # of the control point will be the actual value of the numerical
+                  # field for which the boost_amount is specified.
+                  NUMERICAL = 1
+
+                  # For the freshness use case the attribute value will be the duration
+                  # between the current time and the date in the datetime field
+                  # specified. The value must be formatted as an XSD `dayTimeDuration`
+                  # value (a restricted subset of an ISO 8601 duration value). The
+                  # pattern for this is: `[nD][T[nH][nM][nS]]`.
+                  # E.g. `5D`, `3DT12H30M`, `T24H`.
+                  FRESHNESS = 2
+                end
+
+                # The interpolation type to be applied. Default will be linear
+                # (Piecewise Linear).
+                module InterpolationType
+                  # Interpolation type is unspecified. In this case, it defaults to
+                  # Linear.
+                  INTERPOLATION_TYPE_UNSPECIFIED = 0
+
+                  # Piecewise linear interpolation will be applied.
+                  LINEAR = 1
+                end
+              end
+            end
+          end
+
+          # Boost specifications for data stores.
+          # @!attribute [rw] data_stores
+          #   @return [::Array<::String>]
+          #     Optional. Data Stores where the boosting configuration is applied. The full
+          #     names of the referenced data stores. Formats:
+          #     `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}`
+          #     `projects/{project}/locations/{location}/dataStores/{data_store}`
+          # @!attribute [rw] spec
+          #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::BoostSpec>]
+          #     Optional. A list of boosting specifications.
+          class BoostSpecs
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Filter specifications for data stores.
+          # @!attribute [rw] data_stores
+          #   @return [::Array<::String>]
+          #     Optional. Data Stores where the boosting configuration is applied. The full
+          #     names of the referenced data stores. Formats:
+          #     `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}`
+          #     `projects/{project}/locations/{location}/dataStores/{data_store}`
+          # @!attribute [rw] filter
+          #   @return [::String]
+          #     Optional. The filter expression to be applied.
+          #     Expression syntax is documented at
+          #     https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata#filter-expression-syntax
+          class FilterSpecs
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # Represents the query input. It can contain one of:
           #
-          # 1.  A conversational query in the form of text.
+          # 1. A conversational query in the form of text.
           #
-          # 2.  An intent query that specifies which intent to trigger.
+          # 2. An intent query that specifies which intent to trigger.
           #
-          # 3.  Natural language speech audio to be processed.
+          # 3. Natural language speech audio to be processed.
           #
-          # 4.  An event to be triggered.
+          # 4. An event to be triggered.
+          #
+          # 5. DTMF digits to invoke an intent and fill in parameter value.
+          #
+          # 6. The results of a tool executed by the client.
           # @!attribute [rw] text
           #   @return [::Google::Cloud::Dialogflow::CX::V3::TextInput]
           #     The natural language text to be processed.
+          #
+          #     Note: The following fields are mutually exclusive: `text`, `intent`, `audio`, `event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] intent
           #   @return [::Google::Cloud::Dialogflow::CX::V3::IntentInput]
           #     The intent to be triggered.
+          #
+          #     Note: The following fields are mutually exclusive: `intent`, `text`, `audio`, `event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] audio
           #   @return [::Google::Cloud::Dialogflow::CX::V3::AudioInput]
           #     The natural language speech audio to be processed.
+          #
+          #     Note: The following fields are mutually exclusive: `audio`, `text`, `intent`, `event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] event
           #   @return [::Google::Cloud::Dialogflow::CX::V3::EventInput]
           #     The event to be triggered.
+          #
+          #     Note: The following fields are mutually exclusive: `event`, `text`, `intent`, `audio`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] dtmf
           #   @return [::Google::Cloud::Dialogflow::CX::V3::DtmfInput]
           #     The DTMF event to be handled.
+          #
+          #     Note: The following fields are mutually exclusive: `dtmf`, `text`, `intent`, `audio`, `event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     Required. The language of the input. See [Language
@@ -459,26 +864,37 @@ module Google
           # Represents the result of a conversational query.
           # @!attribute [rw] text
           #   @return [::String]
-          #     If {::Google::Cloud::Dialogflow::CX::V3::TextInput natural language text} was provided as input, this field
-          #     will contain a copy of the text.
+          #     If {::Google::Cloud::Dialogflow::CX::V3::TextInput natural language text} was
+          #     provided as input, this field will contain a copy of the text.
+          #
+          #     Note: The following fields are mutually exclusive: `text`, `trigger_intent`, `transcript`, `trigger_event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] trigger_intent
           #   @return [::String]
-          #     If an {::Google::Cloud::Dialogflow::CX::V3::IntentInput intent} was provided as input, this field will
-          #     contain a copy of the intent identifier.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/intents/<Intent ID>`.
+          #     If an {::Google::Cloud::Dialogflow::CX::V3::IntentInput intent} was provided as
+          #     input, this field will contain a copy of the intent identifier. Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/intents/<IntentID>`.
+          #
+          #     Note: The following fields are mutually exclusive: `trigger_intent`, `text`, `transcript`, `trigger_event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] transcript
           #   @return [::String]
-          #     If {::Google::Cloud::Dialogflow::CX::V3::AudioInput natural language speech audio} was provided as input,
+          #     If [natural language speech
+          #     audio][google.cloud.dialogflow.cx.v3.AudioInput] was provided as input,
           #     this field will contain the transcript for the audio.
+          #
+          #     Note: The following fields are mutually exclusive: `transcript`, `text`, `trigger_intent`, `trigger_event`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] trigger_event
           #   @return [::String]
-          #     If an {::Google::Cloud::Dialogflow::CX::V3::EventInput event} was provided as input, this field will contain
-          #     the name of the event.
+          #     If an {::Google::Cloud::Dialogflow::CX::V3::EventInput event} was provided as
+          #     input, this field will contain the name of the event.
+          #
+          #     Note: The following fields are mutually exclusive: `trigger_event`, `text`, `trigger_intent`, `transcript`, `dtmf`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] dtmf
           #   @return [::Google::Cloud::Dialogflow::CX::V3::DtmfInput]
-          #     If a [DTMF][DTMFInput] was provided as input, this field will contain
-          #     a copy of the [DTMFInput][].
+          #     If a {::Google::Cloud::Dialogflow::CX::V3::DtmfInput DTMF} was provided as
+          #     input, this field will contain a copy of the
+          #     {::Google::Cloud::Dialogflow::CX::V3::DtmfInput DtmfInput}.
+          #
+          #     Note: The following fields are mutually exclusive: `dtmf`, `text`, `trigger_intent`, `transcript`, `trigger_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     The language that was triggered during intent detection.
@@ -487,46 +903,68 @@ module Google
           #     for a list of the currently supported language codes.
           # @!attribute [rw] parameters
           #   @return [::Google::Protobuf::Struct]
-          #     The collected {::Google::Cloud::Dialogflow::CX::V3::SessionInfo#parameters session parameters}.
+          #     The collected [session
+          #     parameters][google.cloud.dialogflow.cx.v3.SessionInfo.parameters].
           #
           #     Depending on your protocol or client library language, this is a
           #     map, associative array, symbol table, dictionary, or JSON object
           #     composed of a collection of (MapKey, MapValue) pairs:
           #
-          #     -   MapKey type: string
-          #     -   MapKey value: parameter name
-          #     -   MapValue type:
-          #         -   If parameter's entity type is a composite entity: map
-          #         -   Else: depending on parameter value type, could be one of string,
-          #             number, boolean, null, list or map
-          #     -   MapValue value:
-          #         -   If parameter's entity type is a composite entity:
-          #             map from composite entity property names to property values
-          #         -   Else: parameter value
+          #     * MapKey type: string
+          #     * MapKey value: parameter name
+          #     * MapValue type: If parameter's entity type is a composite entity then use
+          #     map, otherwise, depending on the parameter value type, it could be one of
+          #     string, number, boolean, null, list or map.
+          #     * MapValue value: If parameter's entity type is a composite entity then use
+          #     map from composite entity property names to property values, otherwise,
+          #     use parameter value.
           # @!attribute [rw] response_messages
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::ResponseMessage>]
           #     The list of rich messages returned to the client. Responses vary from
           #     simple text messages to more sophisticated, structured payloads used
           #     to drive complex logic.
+          # @!attribute [rw] webhook_ids
+          #   @return [::Array<::String>]
+          #     The list of webhook ids in the order of call sequence.
+          # @!attribute [rw] webhook_display_names
+          #   @return [::Array<::String>]
+          #     The list of webhook display names in the order of call sequence.
+          # @!attribute [rw] webhook_latencies
+          #   @return [::Array<::Google::Protobuf::Duration>]
+          #     The list of webhook latencies in the order of call sequence.
+          # @!attribute [rw] webhook_tags
+          #   @return [::Array<::String>]
+          #     The list of webhook tags in the order of call sequence.
           # @!attribute [rw] webhook_statuses
           #   @return [::Array<::Google::Rpc::Status>]
           #     The list of webhook call status in the order of call sequence.
           # @!attribute [rw] webhook_payloads
           #   @return [::Array<::Google::Protobuf::Struct>]
-          #     The list of webhook payload in {::Google::Cloud::Dialogflow::CX::V3::WebhookResponse#payload WebhookResponse.payload}, in
-          #     the order of call sequence. If some webhook call fails or doesn't return
+          #     The list of webhook payload in
+          #     {::Google::Cloud::Dialogflow::CX::V3::WebhookResponse#payload WebhookResponse.payload},
+          #     in the order of call sequence. If some webhook call fails or doesn't return
           #     any payload, an empty `Struct` would be used instead.
           # @!attribute [rw] current_page
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Page]
-          #     The current {::Google::Cloud::Dialogflow::CX::V3::Page Page}. Some, not all fields are filled in this message,
-          #     including but not limited to `name` and `display_name`.
-          # @!attribute [rw] intent
-          #   @return [::Google::Cloud::Dialogflow::CX::V3::Intent]
-          #     The {::Google::Cloud::Dialogflow::CX::V3::Intent Intent} that matched the conversational query. Some, not all fields
-          #     are filled in this message, including but not limited to: `name` and
+          #     The current {::Google::Cloud::Dialogflow::CX::V3::Page Page}. Some, not all
+          #     fields are filled in this message, including but not limited to `name` and
           #     `display_name`.
-          #     This field is deprecated, please use {::Google::Cloud::Dialogflow::CX::V3::QueryResult#match QueryResult.match} instead.
+          # @!attribute [rw] current_flow
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::Flow]
+          #     The current {::Google::Cloud::Dialogflow::CX::V3::Flow Flow}. Some, not all
+          #     fields are filled in this message, including but not limited to `name` and
+          #     `display_name`.
+          # @!attribute [rw] intent
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::Intent]
+          #     The {::Google::Cloud::Dialogflow::CX::V3::Intent Intent} that matched the
+          #     conversational query. Some, not all fields are filled in this message,
+          #     including but not limited to: `name` and `display_name`. This field is
+          #     deprecated, please use
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#match QueryResult.match}
+          #     instead.
           # @!attribute [rw] intent_detection_confidence
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Float]
           #     The intent detection confidence. Values range from 0.0 (completely
           #     uncertain) to 1.0 (completely certain).
@@ -534,20 +972,52 @@ module Google
           #     help match the best intent within the classification threshold.
           #     This value may change for the same end-user expression at any time due to a
           #     model retraining or change in implementation.
-          #     This field is deprecated, please use {::Google::Cloud::Dialogflow::CX::V3::QueryResult#match QueryResult.match} instead.
+          #     This field is deprecated, please use
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#match QueryResult.match}
+          #     instead.
           # @!attribute [rw] match
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Match]
           #     Intent match result, could be an intent or an event.
           # @!attribute [rw] diagnostic_info
           #   @return [::Google::Protobuf::Struct]
           #     The free-form diagnostic info. For example, this field could contain
-          #     webhook call latency. The string keys of the Struct's fields map can change
-          #     without notice.
+          #     webhook call latency. The fields of this data can change without notice,
+          #     so you should not write code that depends on its structure.
+          #
+          #     One of the fields is called "Alternative Matched Intents", which may
+          #     aid with debugging. The following describes these intent results:
+          #
+          #     - The list is empty if no intent was matched to end-user input.
+          #     - Only intents that are referenced in the currently active flow are
+          #       included.
+          #     - The matched intent is included.
+          #     - Other intents that could have matched end-user input, but did not match
+          #       because they are referenced by intent routes that are out of
+          #       [scope](https://cloud.google.com/dialogflow/cx/docs/concept/handler#scope),
+          #       are included.
+          #     - Other intents referenced by intent routes in scope that matched end-user
+          #       input, but had a lower confidence score.
           # @!attribute [rw] sentiment_analysis_result
           #   @return [::Google::Cloud::Dialogflow::CX::V3::SentimentAnalysisResult]
           #     The sentiment analyss result, which depends on
           #     [`analyze_query_text_sentiment`]
-          #     [google.cloud.dialogflow.cx.v3.QueryParameters.analyze_query_text_sentiment], specified in the request.
+          #     [google.cloud.dialogflow.cx.v3.QueryParameters.analyze_query_text_sentiment],
+          #     specified in the request.
+          # @!attribute [rw] advanced_settings
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AdvancedSettings]
+          #     Returns the current advanced settings including IVR settings. Even though
+          #     the operations configured by these settings are performed by Dialogflow,
+          #     the client may need to perform special logic at the moment. For example, if
+          #     Dialogflow exports audio to Google Cloud Storage, then the client may need
+          #     to wait for the resulting object to appear in the bucket before proceeding.
+          # @!attribute [rw] allow_answer_feedback
+          #   @return [::Boolean]
+          #     Indicates whether the Thumbs up/Thumbs down rating controls are need to be
+          #     shown for the response in the Dialogflow Messenger widget.
+          # @!attribute [rw] data_store_connection_signals
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::DataStoreConnectionSignals]
+          #     Optional. Data store connection feature output signals.
+          #     Filled only when data stores are involved in serving the query.
           class QueryResult
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -556,8 +1026,7 @@ module Google
           # Represents the natural language text to be processed.
           # @!attribute [rw] text
           #   @return [::String]
-          #     Required. The UTF-8 encoded natural language text to be processed. Text length must
-          #     not exceed 256 characters.
+          #     Required. The UTF-8 encoded natural language text to be processed.
           class TextInput
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -568,8 +1037,8 @@ module Google
           # @!attribute [rw] intent
           #   @return [::String]
           #     Required. The unique identifier of the intent.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/intents/<Intent ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/intents/<IntentID>`.
           class IntentInput
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -582,9 +1051,10 @@ module Google
           # @!attribute [rw] audio
           #   @return [::String]
           #     The natural language speech audio to be processed.
-          #     A single request can contain up to 1 minute of speech audio data.
-          #     The {::Google::Cloud::Dialogflow::CX::V3::QueryResult#transcript transcribed text} cannot contain more than 256
-          #     bytes.
+          #     A single request can contain up to 2 minutes of speech audio data.
+          #     The [transcribed
+          #     text][google.cloud.dialogflow.cx.v3.QueryResult.transcript] cannot contain
+          #     more than 256 bytes.
           #
           #     For non-streaming audio detect intent, both `config` and `audio` must be
           #     provided.
@@ -619,13 +1089,15 @@ module Google
           # Represents one match result of [MatchIntent][].
           # @!attribute [rw] intent
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Intent]
-          #     The {::Google::Cloud::Dialogflow::CX::V3::Intent Intent} that matched the query. Some, not all fields are filled in
-          #     this message, including but not limited to: `name` and `display_name`. Only
-          #     filled for {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `INTENT`} match type.
+          #     The {::Google::Cloud::Dialogflow::CX::V3::Intent Intent} that matched the query.
+          #     Some, not all fields are filled in this message, including but not limited
+          #     to: `name` and `display_name`. Only filled for
+          #     {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `INTENT`} match type.
           # @!attribute [rw] event
           #   @return [::String]
           #     The event that matched the query. Filled for
-          #     {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `EVENT`}, {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `NO_MATCH`} and
+          #     {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `EVENT`},
+          #     {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `NO_MATCH`} and
           #     {::Google::Cloud::Dialogflow::CX::V3::Match::MatchType `NO_INPUT`} match types.
           # @!attribute [rw] parameters
           #   @return [::Google::Protobuf::Struct]
@@ -635,16 +1107,14 @@ module Google
           #     map, associative array, symbol table, dictionary, or JSON object
           #     composed of a collection of (MapKey, MapValue) pairs:
           #
-          #     -   MapKey type: string
-          #     -   MapKey value: parameter name
-          #     -   MapValue type:
-          #         -   If parameter's entity type is a composite entity: map
-          #         -   Else: depending on parameter value type, could be one of string,
-          #             number, boolean, null, list or map
-          #     -   MapValue value:
-          #         -   If parameter's entity type is a composite entity:
-          #             map from composite entity property names to property values
-          #         -   Else: parameter value
+          #     * MapKey type: string
+          #     * MapKey value: parameter name
+          #     * MapValue type: If parameter's entity type is a composite entity then use
+          #     map, otherwise, depending on the parameter value type, it could be one of
+          #     string, number, boolean, null, list or map.
+          #     * MapValue value: If parameter's entity type is a composite entity then use
+          #     map from composite entity property names to property values, otherwise,
+          #     use parameter value.
           # @!attribute [rw] resolved_input
           #   @return [::String]
           #     Final text input which was matched during MatchIntent. This value can be
@@ -687,6 +1157,12 @@ module Google
 
               # The query directly triggered an event.
               EVENT = 6
+
+              # The query was matched to a Knowledge Connector answer.
+              KNOWLEDGE_CONNECTOR = 8
+
+              # The query was handled by a [`Playbook`][Playbook].
+              PLAYBOOK = 9
             end
           end
 
@@ -694,9 +1170,10 @@ module Google
           # @!attribute [rw] session
           #   @return [::String]
           #     Required. The name of the session this query is sent to.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/sessions/<Session ID>` or `projects/<Project ID>/locations/<Location
-          #     ID>/agents/<Agent ID>/environments/<Environment ID>/sessions/<Session ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/sessions/<SessionID>`
+          #     or
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/environments/<EnvironmentID>/sessions/<SessionID>`.
           #     If `Environment ID` is not specified, we assume default 'draft'
           #     environment.
           #     It's up to the API caller to choose an appropriate `Session ID`. It can be
@@ -711,6 +1188,9 @@ module Google
           # @!attribute [rw] query_input
           #   @return [::Google::Cloud::Dialogflow::CX::V3::QueryInput]
           #     Required. The input specification.
+          # @!attribute [rw] persist_parameter_changes
+          #   @return [::Boolean]
+          #     Persist session parameter changes from `query_params`.
           class MatchIntentRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -719,30 +1199,39 @@ module Google
           # Response of [MatchIntent][].
           # @!attribute [rw] text
           #   @return [::String]
-          #     If {::Google::Cloud::Dialogflow::CX::V3::TextInput natural language text} was provided as input, this field
-          #     will contain a copy of the text.
+          #     If {::Google::Cloud::Dialogflow::CX::V3::TextInput natural language text} was
+          #     provided as input, this field will contain a copy of the text.
+          #
+          #     Note: The following fields are mutually exclusive: `text`, `trigger_intent`, `transcript`, `trigger_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] trigger_intent
           #   @return [::String]
-          #     If an {::Google::Cloud::Dialogflow::CX::V3::IntentInput intent} was provided as input, this field will
-          #     contain a copy of the intent identifier.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/intents/<Intent ID>`.
+          #     If an {::Google::Cloud::Dialogflow::CX::V3::IntentInput intent} was provided as
+          #     input, this field will contain a copy of the intent identifier. Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/intents/<IntentID>`.
+          #
+          #     Note: The following fields are mutually exclusive: `trigger_intent`, `text`, `transcript`, `trigger_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] transcript
           #   @return [::String]
-          #     If {::Google::Cloud::Dialogflow::CX::V3::AudioInput natural language speech audio} was provided as input,
+          #     If [natural language speech
+          #     audio][google.cloud.dialogflow.cx.v3.AudioInput] was provided as input,
           #     this field will contain the transcript for the audio.
+          #
+          #     Note: The following fields are mutually exclusive: `transcript`, `text`, `trigger_intent`, `trigger_event`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] trigger_event
           #   @return [::String]
-          #     If an {::Google::Cloud::Dialogflow::CX::V3::EventInput event} was provided as input, this field will
-          #     contain a copy of the event name.
+          #     If an {::Google::Cloud::Dialogflow::CX::V3::EventInput event} was provided as
+          #     input, this field will contain a copy of the event name.
+          #
+          #     Note: The following fields are mutually exclusive: `trigger_event`, `text`, `trigger_intent`, `transcript`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] matches
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::Match>]
           #     Match results, if more than one, ordered descendingly by the confidence
           #     we have that the particular intent matches the query.
           # @!attribute [rw] current_page
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Page]
-          #     The current {::Google::Cloud::Dialogflow::CX::V3::Page Page}. Some, not all fields are filled in this message,
-          #     including but not limited to `name` and `display_name`.
+          #     The current {::Google::Cloud::Dialogflow::CX::V3::Page Page}. Some, not all
+          #     fields are filled in this message, including but not limited to `name` and
+          #     `display_name`.
           class MatchIntentResponse
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -777,9 +1266,9 @@ module Google
           #     The audio data bytes encoded as specified in the request.
           #     Note: The output audio is generated based on the values of default platform
           #     text responses found in the
-          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#response_messages `query_result.response_messages`} field. If
-          #     multiple default text responses exist, they will be concatenated when
-          #     generating audio. If no default platform text responses exist, the
+          #     {::Google::Cloud::Dialogflow::CX::V3::QueryResult#response_messages `query_result.response_messages`}
+          #     field. If multiple default text responses exist, they will be concatenated
+          #     when generating audio. If no default platform text responses exist, the
           #     generated audio content will be empty.
           #
           #     In some scenarios, multiple output audio fields may be present in the
@@ -799,7 +1288,7 @@ module Google
           # @!attribute [rw] score
           #   @return [::Float]
           #     Sentiment score between -1.0 (negative sentiment) and 1.0 (positive
-          #     sentiment).
+          #      sentiment).
           # @!attribute [rw] magnitude
           #   @return [::Float]
           #     A non-negative number in the [0, +inf) range, which represents the absolute

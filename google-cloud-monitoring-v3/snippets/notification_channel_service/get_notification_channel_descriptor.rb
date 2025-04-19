@@ -19,15 +19,29 @@
 # [START monitoring_v3_generated_NotificationChannelService_GetNotificationChannelDescriptor_sync]
 require "google/cloud/monitoring/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
+##
+# Snippet for the get_notification_channel_descriptor call in the NotificationChannelService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Monitoring::V3::NotificationChannelService::Client#get_notification_channel_descriptor.
+#
+def get_notification_channel_descriptor
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Monitoring::V3::NotificationChannelService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Monitoring::V3::GetNotificationChannelDescriptorRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Monitoring::V3::GetNotificationChannelDescriptorRequest.new
 
-# Call the get_notification_channel_descriptor method.
-result = client.get_notification_channel_descriptor request
+  # Call the get_notification_channel_descriptor method.
+  result = client.get_notification_channel_descriptor request
 
-# The returned object is of type Google::Cloud::Monitoring::V3::NotificationChannelDescriptor.
-p result
+  # The returned object is of type Google::Cloud::Monitoring::V3::NotificationChannelDescriptor.
+  p result
+end
 # [END monitoring_v3_generated_NotificationChannelService_GetNotificationChannelDescriptor_sync]

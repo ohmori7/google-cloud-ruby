@@ -25,6 +25,65 @@ module Google
           # Path helper methods for the TranslationService API.
           module Paths
             ##
+            # Create a fully-qualified AdaptiveMtDataset resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/adaptiveMtDatasets/{dataset}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param dataset [String]
+            #
+            # @return [::String]
+            def adaptive_mt_dataset_path project:, location:, dataset:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/adaptiveMtDatasets/#{dataset}"
+            end
+
+            ##
+            # Create a fully-qualified AdaptiveMtFile resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/adaptiveMtDatasets/{dataset}/adaptiveMtFiles/{file}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param dataset [String]
+            # @param file [String]
+            #
+            # @return [::String]
+            def adaptive_mt_file_path project:, location:, dataset:, file:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "dataset cannot contain /" if dataset.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/adaptiveMtDatasets/#{dataset}/adaptiveMtFiles/#{file}"
+            end
+
+            ##
+            # Create a fully-qualified Dataset resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/datasets/{dataset}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param dataset [String]
+            #
+            # @return [::String]
+            def dataset_path project:, location:, dataset:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/datasets/#{dataset}"
+            end
+
+            ##
             # Create a fully-qualified Glossary resource string.
             #
             # The resource will be in the following format:
@@ -44,6 +103,27 @@ module Google
             end
 
             ##
+            # Create a fully-qualified GlossaryEntry resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/glossaries/{glossary}/glossaryEntries/{glossary_entry}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param glossary [String]
+            # @param glossary_entry [String]
+            #
+            # @return [::String]
+            def glossary_entry_path project:, location:, glossary:, glossary_entry:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+              raise ::ArgumentError, "glossary cannot contain /" if glossary.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/glossaries/#{glossary}/glossaryEntries/#{glossary_entry}"
+            end
+
+            ##
             # Create a fully-qualified Location resource string.
             #
             # The resource will be in the following format:
@@ -58,6 +138,25 @@ module Google
               raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
 
               "projects/#{project}/locations/#{location}"
+            end
+
+            ##
+            # Create a fully-qualified Model resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `projects/{project}/locations/{location}/models/{model}`
+            #
+            # @param project [String]
+            # @param location [String]
+            # @param model [String]
+            #
+            # @return [::String]
+            def model_path project:, location:, model:
+              raise ::ArgumentError, "project cannot contain /" if project.to_s.include? "/"
+              raise ::ArgumentError, "location cannot contain /" if location.to_s.include? "/"
+
+              "projects/#{project}/locations/#{location}/models/#{model}"
             end
 
             extend self

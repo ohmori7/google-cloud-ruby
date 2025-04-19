@@ -41,9 +41,26 @@ class ::Google::Cloud::Dialogflow::CX::V3::Agents::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -360,14 +377,20 @@ class ::Google::Cloud::Dialogflow::CX::V3::Agents::ClientTest < Minitest::Test
     # Create request parameters for a unary method.
     name = "hello world"
     agent_uri = "hello world"
+    data_format = :DATA_FORMAT_UNSPECIFIED
     environment = "hello world"
+    git_destination = {}
+    include_bigquery_export_settings = true
 
     export_agent_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :export_agent, name
       assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest, request
       assert_equal "hello world", request["name"]
       assert_equal "hello world", request["agent_uri"]
+      assert_equal :DATA_FORMAT_UNSPECIFIED, request["data_format"]
       assert_equal "hello world", request["environment"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest::GitDestination), request["git_destination"]
+      assert_equal true, request["include_bigquery_export_settings"]
       refute_nil options
     end
 
@@ -378,35 +401,35 @@ class ::Google::Cloud::Dialogflow::CX::V3::Agents::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.export_agent({ name: name, agent_uri: agent_uri, environment: environment }) do |response, operation|
+      client.export_agent({ name: name, agent_uri: agent_uri, data_format: data_format, environment: environment, git_destination: git_destination, include_bigquery_export_settings: include_bigquery_export_settings }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.export_agent name: name, agent_uri: agent_uri, environment: environment do |response, operation|
+      client.export_agent name: name, agent_uri: agent_uri, data_format: data_format, environment: environment, git_destination: git_destination, include_bigquery_export_settings: include_bigquery_export_settings do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.export_agent ::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest.new(name: name, agent_uri: agent_uri, environment: environment) do |response, operation|
+      client.export_agent ::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest.new(name: name, agent_uri: agent_uri, data_format: data_format, environment: environment, git_destination: git_destination, include_bigquery_export_settings: include_bigquery_export_settings) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.export_agent({ name: name, agent_uri: agent_uri, environment: environment }, grpc_options) do |response, operation|
+      client.export_agent({ name: name, agent_uri: agent_uri, data_format: data_format, environment: environment, git_destination: git_destination, include_bigquery_export_settings: include_bigquery_export_settings }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.export_agent(::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest.new(name: name, agent_uri: agent_uri, environment: environment), grpc_options) do |response, operation|
+      client.export_agent(::Google::Cloud::Dialogflow::CX::V3::ExportAgentRequest.new(name: name, agent_uri: agent_uri, data_format: data_format, environment: environment, git_destination: git_destination, include_bigquery_export_settings: include_bigquery_export_settings), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -605,11 +628,132 @@ class ::Google::Cloud::Dialogflow::CX::V3::Agents::ClientTest < Minitest::Test
     end
   end
 
+  def test_get_generative_settings
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    language_code = "hello world"
+
+    get_generative_settings_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_generative_settings, name
+      assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal "hello world", request["language_code"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_generative_settings_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::CX::V3::Agents::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_generative_settings({ name: name, language_code: language_code }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_generative_settings name: name, language_code: language_code do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_generative_settings ::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest.new(name: name, language_code: language_code) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_generative_settings({ name: name, language_code: language_code }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_generative_settings(::Google::Cloud::Dialogflow::CX::V3::GetGenerativeSettingsRequest.new(name: name, language_code: language_code), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_generative_settings_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_generative_settings
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    generative_settings = {}
+    update_mask = {}
+
+    update_generative_settings_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_generative_settings, name
+      assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::GenerativeSettings), request["generative_settings"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_generative_settings_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::CX::V3::Agents::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_generative_settings({ generative_settings: generative_settings, update_mask: update_mask }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_generative_settings generative_settings: generative_settings, update_mask: update_mask do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_generative_settings ::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest.new(generative_settings: generative_settings, update_mask: update_mask) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_generative_settings({ generative_settings: generative_settings, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_generative_settings(::Google::Cloud::Dialogflow::CX::V3::UpdateGenerativeSettingsRequest.new(generative_settings: generative_settings, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_generative_settings_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Dialogflow::CX::V3::Agents::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -627,7 +771,8 @@ class ::Google::Cloud::Dialogflow::CX::V3::Agents::ClientTest < Minitest::Test
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Dialogflow::CX::V3::Agents::Client.new do |config|
         config.credentials = grpc_channel
       end

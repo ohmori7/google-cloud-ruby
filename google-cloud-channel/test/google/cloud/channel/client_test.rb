@@ -20,15 +20,66 @@ require "helper"
 require "google/cloud/channel"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Channel::ClientConstructionMinitest < Minitest::Test
-  def test_cloud_channel_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_cloud_channel_reports_service_grpc
+    skip unless Google::Cloud::Channel.cloud_channel_reports_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Channel.cloud_channel_service do |config|
+      client = Google::Cloud::Channel.cloud_channel_reports_service transport: :grpc do |config|
+        config.credentials = grpc_channel
+      end
+      assert_kind_of Google::Cloud::Channel::V1::CloudChannelReportsService::Client, client
+    end
+  end
+
+  def test_cloud_channel_reports_service_rest
+    skip unless Google::Cloud::Channel.cloud_channel_reports_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Channel.cloud_channel_reports_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Channel::V1::CloudChannelReportsService::Rest::Client, client
+    end
+  end
+
+  def test_cloud_channel_service_grpc
+    skip unless Google::Cloud::Channel.cloud_channel_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
+      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+      client = Google::Cloud::Channel.cloud_channel_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Channel::V1::CloudChannelService::Client, client
+    end
+  end
+
+  def test_cloud_channel_service_rest
+    skip unless Google::Cloud::Channel.cloud_channel_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Channel.cloud_channel_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Channel::V1::CloudChannelService::Rest::Client, client
     end
   end
 end

@@ -19,15 +19,29 @@
 # [START domains_v1beta1_generated_Domains_GetRegistration_sync]
 require "google/cloud/domains/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Domains::V1beta1::Domains::Client.new
+##
+# Snippet for the get_registration call in the Domains service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Domains::V1beta1::Domains::Client#get_registration.
+#
+def get_registration
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Domains::V1beta1::Domains::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Domains::V1beta1::GetRegistrationRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Domains::V1beta1::GetRegistrationRequest.new
 
-# Call the get_registration method.
-result = client.get_registration request
+  # Call the get_registration method.
+  result = client.get_registration request
 
-# The returned object is of type Google::Cloud::Domains::V1beta1::Registration.
-p result
+  # The returned object is of type Google::Cloud::Domains::V1beta1::Registration.
+  p result
+end
 # [END domains_v1beta1_generated_Domains_GetRegistration_sync]

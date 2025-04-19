@@ -19,15 +19,29 @@
 # [START automl_v1_generated_AutoML_UpdateDataset_sync]
 require "google/cloud/automl/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::AutoML::V1::AutoML::Client.new
+##
+# Snippet for the update_dataset call in the AutoML service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::AutoML::V1::AutoML::Client#update_dataset.
+#
+def update_dataset
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::AutoML::V1::AutoML::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::AutoML::V1::UpdateDatasetRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::AutoML::V1::UpdateDatasetRequest.new
 
-# Call the update_dataset method.
-result = client.update_dataset request
+  # Call the update_dataset method.
+  result = client.update_dataset request
 
-# The returned object is of type Google::Cloud::AutoML::V1::Dataset.
-p result
+  # The returned object is of type Google::Cloud::AutoML::V1::Dataset.
+  p result
+end
 # [END automl_v1_generated_AutoML_UpdateDataset_sync]

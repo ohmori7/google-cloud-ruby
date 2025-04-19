@@ -19,21 +19,33 @@
 # [START privateca_v1beta1_generated_CertificateAuthorityService_ListCertificateRevocationLists_sync]
 require "google/cloud/security/private_ca/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
+##
+# Snippet for the list_certificate_revocation_lists call in the CertificateAuthorityService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client#list_certificate_revocation_lists.
+#
+def list_certificate_revocation_lists
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Security::PrivateCA::V1beta1::ListCertificateRevocationListsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Security::PrivateCA::V1beta1::ListCertificateRevocationListsRequest.new
 
-# Call the list_certificate_revocation_lists method.
-result = client.list_certificate_revocation_lists request
+  # Call the list_certificate_revocation_lists method.
+  result = client.list_certificate_revocation_lists request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Security::PrivateCA::V1beta1::CertificateRevocationList.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Security::PrivateCA::V1beta1::CertificateRevocationList.
+    p item
+  end
 end
 # [END privateca_v1beta1_generated_CertificateAuthorityService_ListCertificateRevocationLists_sync]

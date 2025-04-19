@@ -19,15 +19,29 @@
 # [START dataproc_v1_generated_BatchController_DeleteBatch_sync]
 require "google/cloud/dataproc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataproc::V1::BatchController::Client.new
+##
+# Snippet for the delete_batch call in the BatchController service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataproc::V1::BatchController::Client#delete_batch.
+#
+def delete_batch
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataproc::V1::BatchController::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataproc::V1::DeleteBatchRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataproc::V1::DeleteBatchRequest.new
 
-# Call the delete_batch method.
-result = client.delete_batch request
+  # Call the delete_batch method.
+  result = client.delete_batch request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END dataproc_v1_generated_BatchController_DeleteBatch_sync]

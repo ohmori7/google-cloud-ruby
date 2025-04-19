@@ -30,6 +30,12 @@ module Google
           # A service handles job management, including job CRUD, enumeration and search.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "jobs.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -91,8 +97,6 @@ module Google
 
                 default_config.rpcs.search_jobs.timeout = 30.0
 
-                default_config.rpcs.search_jobs_for_alert.timeout = 30.0
-
                 default_config
               end
               yield @configure if block_given?
@@ -117,6 +121,15 @@ module Google
             def configure
               yield @config if block_given?
               @config
+            end
+
+            ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @job_service_stub.universe_domain
             end
 
             ##
@@ -152,8 +165,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -166,15 +180,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @job_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Talent::V4::JobService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @job_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -183,6 +212,15 @@ module Google
             # @return [::Google::Cloud::Talent::V4::JobService::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @job_service_stub.logger
+            end
 
             # Service calls
 
@@ -249,10 +287,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -273,7 +312,6 @@ module Google
 
               @job_service_stub.call_rpc :create_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -326,14 +364,14 @@ module Google
             #   # Call the batch_create_jobs method.
             #   result = client.batch_create_jobs request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def batch_create_jobs request, options = nil
@@ -347,10 +385,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.batch_create_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -372,7 +411,7 @@ module Google
               @job_service_stub.call_rpc :batch_create_jobs, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -438,10 +477,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -462,7 +502,6 @@ module Google
 
               @job_service_stub.call_rpc :get_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -494,8 +533,10 @@ module Google
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     Strongly recommended for the best service experience.
             #
-            #     If {::Google::Cloud::Talent::V4::UpdateJobRequest#update_mask update_mask} is provided, only the specified fields in
-            #     {::Google::Cloud::Talent::V4::UpdateJobRequest#job job} are updated. Otherwise all the fields are updated.
+            #     If {::Google::Cloud::Talent::V4::UpdateJobRequest#update_mask update_mask} is
+            #     provided, only the specified fields in
+            #     {::Google::Cloud::Talent::V4::UpdateJobRequest#job job} are updated. Otherwise
+            #     all the fields are updated.
             #
             #     A field mask to restrict the fields that are updated. Only
             #     top level fields of {::Google::Cloud::Talent::V4::Job Job} are supported.
@@ -534,10 +575,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -558,7 +600,6 @@ module Google
 
               @job_service_stub.call_rpc :update_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -594,17 +635,19 @@ module Google
             #     Strongly recommended for the best service experience. Be aware that it will
             #     also increase latency when checking the status of a batch operation.
             #
-            #     If {::Google::Cloud::Talent::V4::BatchUpdateJobsRequest#update_mask update_mask} is provided, only the specified fields in
-            #     {::Google::Cloud::Talent::V4::Job Job} are updated. Otherwise all the fields are updated.
+            #     If {::Google::Cloud::Talent::V4::BatchUpdateJobsRequest#update_mask update_mask}
+            #     is provided, only the specified fields in {::Google::Cloud::Talent::V4::Job Job}
+            #     are updated. Otherwise all the fields are updated.
             #
             #     A field mask to restrict the fields that are updated. Only
             #     top level fields of {::Google::Cloud::Talent::V4::Job Job} are supported.
             #
-            #     If {::Google::Cloud::Talent::V4::BatchUpdateJobsRequest#update_mask update_mask} is provided, The {::Google::Cloud::Talent::V4::Job Job} inside
-            #     [JobResult][JobOperationResult.JobResult]
+            #     If {::Google::Cloud::Talent::V4::BatchUpdateJobsRequest#update_mask update_mask}
+            #     is provided, The {::Google::Cloud::Talent::V4::Job Job} inside
+            #     {::Google::Cloud::Talent::V4::JobResult JobResult}
             #     will only contains fields that is updated, plus the Id of the Job.
-            #     Otherwise,  {::Google::Cloud::Talent::V4::Job Job} will include all fields, which can yield a very
-            #     large response.
+            #     Otherwise,  {::Google::Cloud::Talent::V4::Job Job} will include all fields,
+            #     which can yield a very large response.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -626,14 +669,14 @@ module Google
             #   # Call the batch_update_jobs method.
             #   result = client.batch_update_jobs request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def batch_update_jobs request, options = nil
@@ -647,10 +690,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.batch_update_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -672,7 +716,7 @@ module Google
               @job_service_stub.call_rpc :batch_update_jobs, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -740,10 +784,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_job.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -764,7 +809,6 @@ module Google
 
               @job_service_stub.call_rpc :delete_job, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -823,14 +867,14 @@ module Google
             #   # Call the batch_delete_jobs method.
             #   result = client.batch_delete_jobs request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def batch_delete_jobs request, options = nil
@@ -844,10 +888,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.batch_delete_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -869,7 +914,7 @@ module Google
               @job_service_stub.call_rpc :batch_delete_jobs, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -927,14 +972,17 @@ module Google
             #   @param page_size [::Integer]
             #     The maximum number of jobs to be returned per page of results.
             #
-            #     If {::Google::Cloud::Talent::V4::ListJobsRequest#job_view job_view} is set to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_ID_ONLY JobView.JOB_VIEW_ID_ONLY}, the maximum allowed
-            #     page size is 1000. Otherwise, the maximum allowed page size is 100.
+            #     If {::Google::Cloud::Talent::V4::ListJobsRequest#job_view job_view} is set to
+            #     {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_ID_ONLY JobView.JOB_VIEW_ID_ONLY},
+            #     the maximum allowed page size is 1000. Otherwise, the maximum allowed page
+            #     size is 100.
             #
             #     Default is 100 if empty or a number < 1 is specified.
             #   @param job_view [::Google::Cloud::Talent::V4::JobView]
             #     The desired job attributes returned for jobs in the
-            #     search response. Defaults to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_FULL JobView.JOB_VIEW_FULL} if no value is
-            #     specified.
+            #     search response. Defaults to
+            #     {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_FULL JobView.JOB_VIEW_FULL} if no
+            #     value is specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Talent::V4::Job>]
@@ -956,13 +1004,11 @@ module Google
             #   # Call the list_jobs method.
             #   result = client.list_jobs request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Talent::V4::Job.
-            #     p response
+            #     p item
             #   end
             #
             def list_jobs request, options = nil
@@ -976,10 +1022,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1001,18 +1048,20 @@ module Google
               @job_service_stub.call_rpc :list_jobs, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @job_service_stub, :list_jobs, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Searches for jobs using the provided {::Google::Cloud::Talent::V4::SearchJobsRequest SearchJobsRequest}.
+            # Searches for jobs using the provided
+            # {::Google::Cloud::Talent::V4::SearchJobsRequest SearchJobsRequest}.
             #
-            # This call constrains the {::Google::Cloud::Talent::V4::Job#visibility visibility} of jobs
-            # present in the database, and only returns jobs that the caller has
-            # permission to search against.
+            # This call constrains the
+            # {::Google::Cloud::Talent::V4::Job#visibility visibility} of jobs present in the
+            # database, and only returns jobs that the caller has permission to search
+            # against.
             #
             # @overload search_jobs(request, options = nil)
             #   Pass arguments to `search_jobs` via a request object, either of type
@@ -1024,7 +1073,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_jobs(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil)
+            # @overload search_jobs(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil, relevance_threshold: nil)
             #   Pass arguments to `search_jobs` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1037,11 +1086,12 @@ module Google
             #   @param search_mode [::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode]
             #     Mode of a search.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode::JOB_SEARCH SearchMode.JOB_SEARCH}.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode::JOB_SEARCH SearchMode.JOB_SEARCH}.
             #   @param request_metadata [::Google::Cloud::Talent::V4::RequestMetadata, ::Hash]
-            #     Required. The meta information collected about the job searcher, used to improve the
-            #     search quality of the service. The identifiers (such as `user_id`) are
-            #     provided by users, and must be unique and consistent.
+            #     Required. The meta information collected about the job searcher, used to
+            #     improve the search quality of the service. The identifiers (such as
+            #     `user_id`) are provided by users, and must be unique and consistent.
             #   @param job_query [::Google::Cloud::Talent::V4::JobQuery, ::Hash]
             #     Query used to search against jobs, such as keyword, location filters, etc.
             #   @param enable_broadening [::Boolean]
@@ -1061,6 +1111,8 @@ module Google
             #     for each distinct attribute value.
             #     * `count(numeric_histogram_facet, list of buckets)`: Count the number of
             #     matching entities within each bucket.
+            #
+            #     A maximum of 200 histogram buckets are supported.
             #
             #     Data types:
             #
@@ -1083,23 +1135,32 @@ module Google
             #
             #     Job histogram facets:
             #
-            #     * company_display_name: histogram by {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}.
-            #     * employment_type: histogram by {::Google::Cloud::Talent::V4::Job#employment_types Job.employment_types}, for example,
+            #     * company_display_name: histogram by
+            #     {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}.
+            #     * employment_type: histogram by
+            #     {::Google::Cloud::Talent::V4::Job#employment_types Job.employment_types}, for
+            #     example,
             #       "FULL_TIME", "PART_TIME".
-            #     * company_size: histogram by {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
+            #     * company_size (DEPRECATED): histogram by
+            #     {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
             #     "MEDIUM", "BIG".
-            #     * publish_time_in_day: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_day: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in days.
             #       Must specify list of numeric buckets in spec.
-            #     * publish_time_in_month: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_month: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in months.
             #       Must specify list of numeric buckets in spec.
-            #     * publish_time_in_year: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_year: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in years.
             #       Must specify list of numeric buckets in spec.
-            #     * degree_types: histogram by the {::Google::Cloud::Talent::V4::Job#degree_types Job.degree_types}, for example,
+            #     * degree_types: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#degree_types Job.degree_types}, for example,
             #       "Bachelors", "Masters".
-            #     * job_level: histogram by the {::Google::Cloud::Talent::V4::Job#job_level Job.job_level}, for example, "Entry
+            #     * job_level: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#job_level Job.job_level}, for example, "Entry
             #       Level".
             #     * country: histogram by the country code of jobs, for example, "US", "FR".
             #     * admin1: histogram by the admin1 code of jobs, which is a global
@@ -1114,25 +1175,31 @@ module Google
             #       and longitude), for example, 37.4038522,-122.0987765. Since the
             #       coordinates of a city center can change, customers may need to refresh
             #       them periodically.
-            #     * locale: histogram by the {::Google::Cloud::Talent::V4::Job#language_code Job.language_code}, for example, "en-US",
+            #     * locale: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#language_code Job.language_code}, for example,
+            #     "en-US",
             #       "fr-FR".
-            #     * language: histogram by the language subtag of the {::Google::Cloud::Talent::V4::Job#language_code Job.language_code},
+            #     * language: histogram by the language subtag of the
+            #     {::Google::Cloud::Talent::V4::Job#language_code Job.language_code},
             #       for example, "en", "fr".
-            #     * category: histogram by the {::Google::Cloud::Talent::V4::JobCategory JobCategory}, for example,
+            #     * category: histogram by the
+            #     {::Google::Cloud::Talent::V4::JobCategory JobCategory}, for example,
             #       "COMPUTER_AND_IT", "HEALTHCARE".
             #     * base_compensation_unit: histogram by the
-            #       {::Google::Cloud::Talent::V4::CompensationInfo::CompensationUnit CompensationInfo.CompensationUnit} of base
-            #       salary, for example, "WEEKLY", "MONTHLY".
+            #       {::Google::Cloud::Talent::V4::CompensationInfo::CompensationUnit CompensationInfo.CompensationUnit}
+            #       of base salary, for example, "WEEKLY", "MONTHLY".
             #     * base_compensation: histogram by the base salary. Must specify list of
             #       numeric buckets to group results by.
             #     * annualized_base_compensation: histogram by the base annualized salary.
             #       Must specify list of numeric buckets to group results by.
             #     * annualized_total_compensation: histogram by the total annualized salary.
             #       Must specify list of numeric buckets to group results by.
-            #     * string_custom_attribute: histogram by string {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
+            #     * string_custom_attribute: histogram by string
+            #     {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
             #       Values can be accessed via square bracket notations like
             #       string_custom_attribute["key1"].
-            #     * numeric_custom_attribute: histogram by numeric {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
+            #     * numeric_custom_attribute: histogram by numeric
+            #     {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
             #       Values can be accessed via square bracket notations like
             #       numeric_custom_attribute["key1"]. Must specify list of numeric buckets to
             #       group results by.
@@ -1147,11 +1214,14 @@ module Google
             #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative")])`
             #   @param job_view [::Google::Cloud::Talent::V4::JobView]
             #     The desired job attributes returned for jobs in the search response.
-            #     Defaults to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if no value is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if
+            #     no value is specified.
             #   @param offset [::Integer]
             #     An integer that specifies the current offset (that is, starting result
             #     location, amongst the jobs deemed by the API as relevant) in search
-            #     results. This field is only considered if {::Google::Cloud::Talent::V4::SearchJobsRequest#page_token page_token} is unset.
+            #     results. This field is only considered if
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#page_token page_token} is unset.
             #
             #     The maximum allowed value is 5000. Otherwise an error is thrown.
             #
@@ -1165,8 +1235,9 @@ module Google
             #     response time. The value can be between 1 and 100.
             #   @param page_token [::String]
             #     The token specifying the current offset within
-            #     search results. See {::Google::Cloud::Talent::V4::SearchJobsResponse#next_page_token SearchJobsResponse.next_page_token} for
-            #     an explanation of how to obtain the next set of query results.
+            #     search results. See
+            #     {::Google::Cloud::Talent::V4::SearchJobsResponse#next_page_token SearchJobsResponse.next_page_token}
+            #     for an explanation of how to obtain the next set of query results.
             #   @param order_by [::String]
             #     The criteria determining how search results are sorted. Default is
             #     `"relevance desc"`.
@@ -1176,33 +1247,36 @@ module Google
             #     * `"relevance desc"`: By relevance descending, as determined by the API
             #       algorithms. Relevance thresholding of query results is only available
             #       with this ordering.
-            #     * `"posting_publish_time desc"`: By {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * `"posting_publish_time desc"`: By
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       descending.
-            #     * `"posting_update_time desc"`: By {::Google::Cloud::Talent::V4::Job#posting_update_time Job.posting_update_time}
+            #     * `"posting_update_time desc"`: By
+            #     {::Google::Cloud::Talent::V4::Job#posting_update_time Job.posting_update_time}
             #       descending.
             #     * `"title"`: By {::Google::Cloud::Talent::V4::Job#title Job.title} ascending.
-            #     * `"title desc"`: By {::Google::Cloud::Talent::V4::Job#title Job.title} descending.
+            #     * `"title desc"`: By {::Google::Cloud::Talent::V4::Job#title Job.title}
+            #     descending.
             #     * `"annualized_base_compensation"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range} ascending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range}
+            #       ascending. Jobs whose annualized base compensation is unspecified are put
+            #       at the end of search results.
             #     * `"annualized_base_compensation desc"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range} descending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range}
+            #       descending. Jobs whose annualized base compensation is unspecified are
+            #       put at the end of search results.
             #     * `"annualized_total_compensation"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range} ascending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range}
+            #       ascending. Jobs whose annualized base compensation is unspecified are put
+            #       at the end of search results.
             #     * `"annualized_total_compensation desc"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range} descending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range}
+            #       descending. Jobs whose annualized base compensation is unspecified are
+            #       put at the end of search results.
             #     * `"custom_ranking desc"`: By the relevance score adjusted to the
-            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#ranking_expression SearchJobsRequest.CustomRankingInfo.ranking_expression} with weight
-            #       factor assigned by
-            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#importance_level SearchJobsRequest.CustomRankingInfo.importance_level} in descending
-            #       order.
+            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#ranking_expression SearchJobsRequest.CustomRankingInfo.ranking_expression}
+            #       with weight factor assigned by
+            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#importance_level SearchJobsRequest.CustomRankingInfo.importance_level}
+            #       in descending order.
             #     * Location sorting: Use the special syntax to order jobs by distance:<br>
             #       `"distance_from('Hawaii')"`: Order by distance from Hawaii.<br>
             #       `"distance_from(19.89, 155.5)"`: Order by distance from a coordinate.<br>
@@ -1226,36 +1300,46 @@ module Google
             #     displayed to the job seeker higher up in the results, with the other jobs
             #     being displayed lower down in the results.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::DiversificationLevel::SIMPLE DiversificationLevel.SIMPLE} if no value
-            #     is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::DiversificationLevel::SIMPLE DiversificationLevel.SIMPLE}
+            #     if no value is specified.
             #   @param custom_ranking_info [::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo, ::Hash]
             #     Controls over how job documents get ranked on top of existing relevance
             #     score (determined by API algorithm).
             #   @param disable_keyword_match [::Boolean]
             #     This field is deprecated. Please use
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} going forward.
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode}
+            #     going forward.
             #
             #     To migrate, disable_keyword_match set to false maps to
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}, and disable_keyword_match set to
-            #     true maps to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}. If
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} is set, this field is ignored.
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL},
+            #     and disable_keyword_match set to true maps to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}.
+            #     If
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode}
+            #     is set, this field is ignored.
             #
-            #     Controls whether to disable exact keyword match on {::Google::Cloud::Talent::V4::Job#title Job.title},
-            #     {::Google::Cloud::Talent::V4::Job#description Job.description}, {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}, {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
-            #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When disable keyword match is turned off, a
-            #     keyword match returns jobs that do not match given category filters when
-            #     there are matching keywords. For example, for the query "program manager,"
-            #     a result is returned even if the job posting has the title "software
-            #     developer," which doesn't fall into "program manager" ontology, but does
-            #     have "program manager" appearing in its description.
+            #     Controls whether to disable exact keyword match on
+            #     {::Google::Cloud::Talent::V4::Job#title Job.title},
+            #     {::Google::Cloud::Talent::V4::Job#description Job.description},
+            #     {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name},
+            #     {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
+            #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When
+            #     disable keyword match is turned off, a keyword match returns jobs that do
+            #     not match given category filters when there are matching keywords. For
+            #     example, for the query "program manager," a result is returned even if the
+            #     job posting has the title "software developer," which doesn't fall into
+            #     "program manager" ontology, but does have "program manager" appearing in
+            #     its description.
             #
             #     For queries like "cloud" that don't contain title or
             #     location specific ontology, jobs with "cloud" keyword matches are returned
             #     regardless of this flag's value.
             #
-            #     Use {::Google::Cloud::Talent::V4::Company#keyword_searchable_job_custom_attributes Company.keyword_searchable_job_custom_attributes} if
-            #     company-specific globally matched custom field/attribute string values are
-            #     needed. Enabling keyword match improves recall of subsequent search
+            #     Use
+            #     {::Google::Cloud::Talent::V4::Company#keyword_searchable_job_custom_attributes Company.keyword_searchable_job_custom_attributes}
+            #     if company-specific globally matched custom field/attribute string values
+            #     are needed. Enabling keyword match improves recall of subsequent search
             #     requests.
             #
             #     Defaults to false.
@@ -1263,8 +1347,15 @@ module Google
             #     Controls what keyword match options to use. If both keyword_match_mode and
             #     disable_keyword_match are set, keyword_match_mode will take precedence.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL} if no value
-            #     is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}
+            #     if no value is specified.
+            #   @param relevance_threshold [::Google::Cloud::Talent::V4::SearchJobsRequest::RelevanceThreshold]
+            #     Optional. The relevance threshold of the search results.
+            #
+            #     Default to Google defined threshold, leveraging a balance of
+            #     precision and recall to deliver both highly accurate results and
+            #     comprehensive coverage of relevant information.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Talent::V4::SearchJobsResponse]
@@ -1300,10 +1391,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_jobs.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1324,23 +1416,24 @@ module Google
 
               @job_service_stub.call_rpc :search_jobs, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Searches for jobs using the provided {::Google::Cloud::Talent::V4::SearchJobsRequest SearchJobsRequest}.
+            # Searches for jobs using the provided
+            # {::Google::Cloud::Talent::V4::SearchJobsRequest SearchJobsRequest}.
             #
             # This API call is intended for the use case of targeting passive job
             # seekers (for example, job seekers who have signed up to receive email
             # alerts about potential job opportunities), it has different algorithmic
             # adjustments that are designed to specifically target passive job seekers.
             #
-            # This call constrains the {::Google::Cloud::Talent::V4::Job#visibility visibility} of jobs
-            # present in the database, and only returns jobs the caller has
-            # permission to search against.
+            # This call constrains the
+            # {::Google::Cloud::Talent::V4::Job#visibility visibility} of jobs present in the
+            # database, and only returns jobs the caller has permission to search
+            # against.
             #
             # @overload search_jobs_for_alert(request, options = nil)
             #   Pass arguments to `search_jobs_for_alert` via a request object, either of type
@@ -1352,7 +1445,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_jobs_for_alert(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil)
+            # @overload search_jobs_for_alert(parent: nil, search_mode: nil, request_metadata: nil, job_query: nil, enable_broadening: nil, histogram_queries: nil, job_view: nil, offset: nil, max_page_size: nil, page_token: nil, order_by: nil, diversification_level: nil, custom_ranking_info: nil, disable_keyword_match: nil, keyword_match_mode: nil, relevance_threshold: nil)
             #   Pass arguments to `search_jobs_for_alert` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1365,11 +1458,12 @@ module Google
             #   @param search_mode [::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode]
             #     Mode of a search.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode::JOB_SEARCH SearchMode.JOB_SEARCH}.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::SearchMode::JOB_SEARCH SearchMode.JOB_SEARCH}.
             #   @param request_metadata [::Google::Cloud::Talent::V4::RequestMetadata, ::Hash]
-            #     Required. The meta information collected about the job searcher, used to improve the
-            #     search quality of the service. The identifiers (such as `user_id`) are
-            #     provided by users, and must be unique and consistent.
+            #     Required. The meta information collected about the job searcher, used to
+            #     improve the search quality of the service. The identifiers (such as
+            #     `user_id`) are provided by users, and must be unique and consistent.
             #   @param job_query [::Google::Cloud::Talent::V4::JobQuery, ::Hash]
             #     Query used to search against jobs, such as keyword, location filters, etc.
             #   @param enable_broadening [::Boolean]
@@ -1389,6 +1483,8 @@ module Google
             #     for each distinct attribute value.
             #     * `count(numeric_histogram_facet, list of buckets)`: Count the number of
             #     matching entities within each bucket.
+            #
+            #     A maximum of 200 histogram buckets are supported.
             #
             #     Data types:
             #
@@ -1411,23 +1507,32 @@ module Google
             #
             #     Job histogram facets:
             #
-            #     * company_display_name: histogram by {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}.
-            #     * employment_type: histogram by {::Google::Cloud::Talent::V4::Job#employment_types Job.employment_types}, for example,
+            #     * company_display_name: histogram by
+            #     {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}.
+            #     * employment_type: histogram by
+            #     {::Google::Cloud::Talent::V4::Job#employment_types Job.employment_types}, for
+            #     example,
             #       "FULL_TIME", "PART_TIME".
-            #     * company_size: histogram by {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
+            #     * company_size (DEPRECATED): histogram by
+            #     {::Google::Cloud::Talent::V4::CompanySize CompanySize}, for example, "SMALL",
             #     "MEDIUM", "BIG".
-            #     * publish_time_in_day: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_day: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in days.
             #       Must specify list of numeric buckets in spec.
-            #     * publish_time_in_month: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_month: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in months.
             #       Must specify list of numeric buckets in spec.
-            #     * publish_time_in_year: histogram by the {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * publish_time_in_year: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       in years.
             #       Must specify list of numeric buckets in spec.
-            #     * degree_types: histogram by the {::Google::Cloud::Talent::V4::Job#degree_types Job.degree_types}, for example,
+            #     * degree_types: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#degree_types Job.degree_types}, for example,
             #       "Bachelors", "Masters".
-            #     * job_level: histogram by the {::Google::Cloud::Talent::V4::Job#job_level Job.job_level}, for example, "Entry
+            #     * job_level: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#job_level Job.job_level}, for example, "Entry
             #       Level".
             #     * country: histogram by the country code of jobs, for example, "US", "FR".
             #     * admin1: histogram by the admin1 code of jobs, which is a global
@@ -1442,25 +1547,31 @@ module Google
             #       and longitude), for example, 37.4038522,-122.0987765. Since the
             #       coordinates of a city center can change, customers may need to refresh
             #       them periodically.
-            #     * locale: histogram by the {::Google::Cloud::Talent::V4::Job#language_code Job.language_code}, for example, "en-US",
+            #     * locale: histogram by the
+            #     {::Google::Cloud::Talent::V4::Job#language_code Job.language_code}, for example,
+            #     "en-US",
             #       "fr-FR".
-            #     * language: histogram by the language subtag of the {::Google::Cloud::Talent::V4::Job#language_code Job.language_code},
+            #     * language: histogram by the language subtag of the
+            #     {::Google::Cloud::Talent::V4::Job#language_code Job.language_code},
             #       for example, "en", "fr".
-            #     * category: histogram by the {::Google::Cloud::Talent::V4::JobCategory JobCategory}, for example,
+            #     * category: histogram by the
+            #     {::Google::Cloud::Talent::V4::JobCategory JobCategory}, for example,
             #       "COMPUTER_AND_IT", "HEALTHCARE".
             #     * base_compensation_unit: histogram by the
-            #       {::Google::Cloud::Talent::V4::CompensationInfo::CompensationUnit CompensationInfo.CompensationUnit} of base
-            #       salary, for example, "WEEKLY", "MONTHLY".
+            #       {::Google::Cloud::Talent::V4::CompensationInfo::CompensationUnit CompensationInfo.CompensationUnit}
+            #       of base salary, for example, "WEEKLY", "MONTHLY".
             #     * base_compensation: histogram by the base salary. Must specify list of
             #       numeric buckets to group results by.
             #     * annualized_base_compensation: histogram by the base annualized salary.
             #       Must specify list of numeric buckets to group results by.
             #     * annualized_total_compensation: histogram by the total annualized salary.
             #       Must specify list of numeric buckets to group results by.
-            #     * string_custom_attribute: histogram by string {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
+            #     * string_custom_attribute: histogram by string
+            #     {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
             #       Values can be accessed via square bracket notations like
             #       string_custom_attribute["key1"].
-            #     * numeric_custom_attribute: histogram by numeric {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
+            #     * numeric_custom_attribute: histogram by numeric
+            #     {::Google::Cloud::Talent::V4::Job#custom_attributes Job.custom_attributes}.
             #       Values can be accessed via square bracket notations like
             #       numeric_custom_attribute["key1"]. Must specify list of numeric buckets to
             #       group results by.
@@ -1475,11 +1586,14 @@ module Google
             #       [bucket(MIN, 0, "negative"), bucket(0, MAX, "non-negative")])`
             #   @param job_view [::Google::Cloud::Talent::V4::JobView]
             #     The desired job attributes returned for jobs in the search response.
-            #     Defaults to {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if no value is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::JobView::JOB_VIEW_SMALL JobView.JOB_VIEW_SMALL} if
+            #     no value is specified.
             #   @param offset [::Integer]
             #     An integer that specifies the current offset (that is, starting result
             #     location, amongst the jobs deemed by the API as relevant) in search
-            #     results. This field is only considered if {::Google::Cloud::Talent::V4::SearchJobsRequest#page_token page_token} is unset.
+            #     results. This field is only considered if
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#page_token page_token} is unset.
             #
             #     The maximum allowed value is 5000. Otherwise an error is thrown.
             #
@@ -1493,8 +1607,9 @@ module Google
             #     response time. The value can be between 1 and 100.
             #   @param page_token [::String]
             #     The token specifying the current offset within
-            #     search results. See {::Google::Cloud::Talent::V4::SearchJobsResponse#next_page_token SearchJobsResponse.next_page_token} for
-            #     an explanation of how to obtain the next set of query results.
+            #     search results. See
+            #     {::Google::Cloud::Talent::V4::SearchJobsResponse#next_page_token SearchJobsResponse.next_page_token}
+            #     for an explanation of how to obtain the next set of query results.
             #   @param order_by [::String]
             #     The criteria determining how search results are sorted. Default is
             #     `"relevance desc"`.
@@ -1504,33 +1619,36 @@ module Google
             #     * `"relevance desc"`: By relevance descending, as determined by the API
             #       algorithms. Relevance thresholding of query results is only available
             #       with this ordering.
-            #     * `"posting_publish_time desc"`: By {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
+            #     * `"posting_publish_time desc"`: By
+            #     {::Google::Cloud::Talent::V4::Job#posting_publish_time Job.posting_publish_time}
             #       descending.
-            #     * `"posting_update_time desc"`: By {::Google::Cloud::Talent::V4::Job#posting_update_time Job.posting_update_time}
+            #     * `"posting_update_time desc"`: By
+            #     {::Google::Cloud::Talent::V4::Job#posting_update_time Job.posting_update_time}
             #       descending.
             #     * `"title"`: By {::Google::Cloud::Talent::V4::Job#title Job.title} ascending.
-            #     * `"title desc"`: By {::Google::Cloud::Talent::V4::Job#title Job.title} descending.
+            #     * `"title desc"`: By {::Google::Cloud::Talent::V4::Job#title Job.title}
+            #     descending.
             #     * `"annualized_base_compensation"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range} ascending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range}
+            #       ascending. Jobs whose annualized base compensation is unspecified are put
+            #       at the end of search results.
             #     * `"annualized_base_compensation desc"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range} descending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_base_compensation_range CompensationInfo.annualized_base_compensation_range}
+            #       descending. Jobs whose annualized base compensation is unspecified are
+            #       put at the end of search results.
             #     * `"annualized_total_compensation"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range} ascending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range}
+            #       ascending. Jobs whose annualized base compensation is unspecified are put
+            #       at the end of search results.
             #     * `"annualized_total_compensation desc"`: By job's
-            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range} descending. Jobs
-            #       whose annualized base compensation is unspecified are put at the end of
-            #       search results.
+            #       {::Google::Cloud::Talent::V4::CompensationInfo#annualized_total_compensation_range CompensationInfo.annualized_total_compensation_range}
+            #       descending. Jobs whose annualized base compensation is unspecified are
+            #       put at the end of search results.
             #     * `"custom_ranking desc"`: By the relevance score adjusted to the
-            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#ranking_expression SearchJobsRequest.CustomRankingInfo.ranking_expression} with weight
-            #       factor assigned by
-            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#importance_level SearchJobsRequest.CustomRankingInfo.importance_level} in descending
-            #       order.
+            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#ranking_expression SearchJobsRequest.CustomRankingInfo.ranking_expression}
+            #       with weight factor assigned by
+            #       {::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo#importance_level SearchJobsRequest.CustomRankingInfo.importance_level}
+            #       in descending order.
             #     * Location sorting: Use the special syntax to order jobs by distance:<br>
             #       `"distance_from('Hawaii')"`: Order by distance from Hawaii.<br>
             #       `"distance_from(19.89, 155.5)"`: Order by distance from a coordinate.<br>
@@ -1554,36 +1672,46 @@ module Google
             #     displayed to the job seeker higher up in the results, with the other jobs
             #     being displayed lower down in the results.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::DiversificationLevel::SIMPLE DiversificationLevel.SIMPLE} if no value
-            #     is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::DiversificationLevel::SIMPLE DiversificationLevel.SIMPLE}
+            #     if no value is specified.
             #   @param custom_ranking_info [::Google::Cloud::Talent::V4::SearchJobsRequest::CustomRankingInfo, ::Hash]
             #     Controls over how job documents get ranked on top of existing relevance
             #     score (determined by API algorithm).
             #   @param disable_keyword_match [::Boolean]
             #     This field is deprecated. Please use
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} going forward.
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode}
+            #     going forward.
             #
             #     To migrate, disable_keyword_match set to false maps to
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}, and disable_keyword_match set to
-            #     true maps to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}. If
-            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode} is set, this field is ignored.
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL},
+            #     and disable_keyword_match set to true maps to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_DISABLED KeywordMatchMode.KEYWORD_MATCH_DISABLED}.
+            #     If
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest#keyword_match_mode SearchJobsRequest.keyword_match_mode}
+            #     is set, this field is ignored.
             #
-            #     Controls whether to disable exact keyword match on {::Google::Cloud::Talent::V4::Job#title Job.title},
-            #     {::Google::Cloud::Talent::V4::Job#description Job.description}, {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name}, {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
-            #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When disable keyword match is turned off, a
-            #     keyword match returns jobs that do not match given category filters when
-            #     there are matching keywords. For example, for the query "program manager,"
-            #     a result is returned even if the job posting has the title "software
-            #     developer," which doesn't fall into "program manager" ontology, but does
-            #     have "program manager" appearing in its description.
+            #     Controls whether to disable exact keyword match on
+            #     {::Google::Cloud::Talent::V4::Job#title Job.title},
+            #     {::Google::Cloud::Talent::V4::Job#description Job.description},
+            #     {::Google::Cloud::Talent::V4::Job#company_display_name Job.company_display_name},
+            #     {::Google::Cloud::Talent::V4::Job#addresses Job.addresses},
+            #     {::Google::Cloud::Talent::V4::Job#qualifications Job.qualifications}. When
+            #     disable keyword match is turned off, a keyword match returns jobs that do
+            #     not match given category filters when there are matching keywords. For
+            #     example, for the query "program manager," a result is returned even if the
+            #     job posting has the title "software developer," which doesn't fall into
+            #     "program manager" ontology, but does have "program manager" appearing in
+            #     its description.
             #
             #     For queries like "cloud" that don't contain title or
             #     location specific ontology, jobs with "cloud" keyword matches are returned
             #     regardless of this flag's value.
             #
-            #     Use {::Google::Cloud::Talent::V4::Company#keyword_searchable_job_custom_attributes Company.keyword_searchable_job_custom_attributes} if
-            #     company-specific globally matched custom field/attribute string values are
-            #     needed. Enabling keyword match improves recall of subsequent search
+            #     Use
+            #     {::Google::Cloud::Talent::V4::Company#keyword_searchable_job_custom_attributes Company.keyword_searchable_job_custom_attributes}
+            #     if company-specific globally matched custom field/attribute string values
+            #     are needed. Enabling keyword match improves recall of subsequent search
             #     requests.
             #
             #     Defaults to false.
@@ -1591,8 +1719,15 @@ module Google
             #     Controls what keyword match options to use. If both keyword_match_mode and
             #     disable_keyword_match are set, keyword_match_mode will take precedence.
             #
-            #     Defaults to {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL} if no value
-            #     is specified.
+            #     Defaults to
+            #     {::Google::Cloud::Talent::V4::SearchJobsRequest::KeywordMatchMode::KEYWORD_MATCH_ALL KeywordMatchMode.KEYWORD_MATCH_ALL}
+            #     if no value is specified.
+            #   @param relevance_threshold [::Google::Cloud::Talent::V4::SearchJobsRequest::RelevanceThreshold]
+            #     Optional. The relevance threshold of the search results.
+            #
+            #     Default to Google defined threshold, leveraging a balance of
+            #     precision and recall to deliver both highly accurate results and
+            #     comprehensive coverage of relevant information.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Talent::V4::SearchJobsResponse]
@@ -1628,10 +1763,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_jobs_for_alert.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Talent::V4::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1652,7 +1788,6 @@ module Google
 
               @job_service_stub.call_rpc :search_jobs_for_alert, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1688,20 +1823,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"jobs.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1736,11 +1878,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "jobs.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "jobs.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1755,6 +1911,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1773,6 +1931,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

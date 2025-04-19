@@ -28,9 +28,12 @@ module Google
   module Cloud
     module Compute
       module V1
-        # To load this service and instantiate a REST client:
+        ##
+        # The ServiceAttachments API.
         #
-        #     require "google/cloud/compute/v1/service_attachments"
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/compute/v1/service_attachments/rest"
         #     client = ::Google::Cloud::Compute::V1::ServiceAttachments::Rest::Client.new
         #
         module ServiceAttachments

@@ -44,15 +44,94 @@ module Google
           #     Specifies time to start scheduling transfer runs. The first run will be
           #     scheduled at or after the start time according to a recurrence pattern
           #     defined in the schedule string. The start time can be changed at any
-          #     moment. The time when a data transfer can be trigerred manually is not
+          #     moment. The time when a data transfer can be triggered manually is not
           #     limited by this option.
           # @!attribute [rw] end_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Defines time to stop scheduling transfer runs. A transfer run cannot be
           #     scheduled at or after the end time. The end time can be changed at any
-          #     moment. The time when a data transfer can be trigerred manually is not
+          #     moment. The time when a data transfer can be triggered manually is not
           #     limited by this option.
           class ScheduleOptions
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # V2 options customizing different types of data transfer schedule.
+          # This field supports existing time-based and manual transfer schedule. Also
+          # supports Event-Driven transfer schedule. ScheduleOptionsV2 cannot be used
+          # together with ScheduleOptions/Schedule.
+          # @!attribute [rw] time_based_schedule
+          #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::TimeBasedSchedule]
+          #     Time based transfer schedule options. This is the default schedule
+          #     option.
+          #
+          #     Note: The following fields are mutually exclusive: `time_based_schedule`, `manual_schedule`, `event_driven_schedule`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] manual_schedule
+          #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::ManualSchedule]
+          #     Manual transfer schedule. If set, the transfer run will not be
+          #     auto-scheduled by the system, unless the client invokes
+          #     StartManualTransferRuns.  This is equivalent to
+          #     disable_auto_scheduling = true.
+          #
+          #     Note: The following fields are mutually exclusive: `manual_schedule`, `time_based_schedule`, `event_driven_schedule`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] event_driven_schedule
+          #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::EventDrivenSchedule]
+          #     Event driven transfer schedule options. If set, the transfer will be
+          #     scheduled upon events arrial.
+          #
+          #     Note: The following fields are mutually exclusive: `event_driven_schedule`, `time_based_schedule`, `manual_schedule`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          class ScheduleOptionsV2
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Options customizing the time based transfer schedule.
+          # Options are migrated from the original ScheduleOptions message.
+          # @!attribute [rw] schedule
+          #   @return [::String]
+          #     Data transfer schedule.
+          #     If the data source does not support a custom schedule, this should be
+          #     empty. If it is empty, the default value for the data source will be used.
+          #     The specified times are in UTC.
+          #     Examples of valid format:
+          #     `1st,3rd monday of month 15:30`,
+          #     `every wed,fri of jan,jun 13:15`, and
+          #     `first sunday of quarter 00:00`.
+          #     See more explanation about the format here:
+          #     https://cloud.google.com/appengine/docs/flexible/python/scheduling-jobs-with-cron-yaml#the_schedule_format
+          #
+          #     NOTE: The minimum interval time between recurring transfers depends on the
+          #     data source; refer to the documentation for your data source.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Specifies time to start scheduling transfer runs. The first run will be
+          #     scheduled at or after the start time according to a recurrence pattern
+          #     defined in the schedule string. The start time can be changed at any
+          #     moment.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Defines time to stop scheduling transfer runs. A transfer run cannot be
+          #     scheduled at or after the end time. The end time can be changed at any
+          #     moment.
+          class TimeBasedSchedule
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Options customizing manual transfers schedule.
+          class ManualSchedule
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Options customizing EventDriven transfers schedule.
+          # @!attribute [rw] pubsub_subscription
+          #   @return [::String]
+          #     Pub/Sub subscription name used to receive events.
+          #     Only Google Cloud Storage data source support this option.
+          #     Format: projects/\\{project}/subscriptions/\\{subscription}
+          class EventDrivenSchedule
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -74,10 +153,11 @@ module Google
           # appropriate data source service account.
           # @!attribute [rw] name
           #   @return [::String]
-          #     The resource name of the transfer config.
-          #     Transfer config names have the form
-          #     `projects/{project_id}/locations/{region}/transferConfigs/{config_id}`.
-          #     Where `config_id` is usually a uuid, even though it is not
+          #     Identifier. The resource name of the transfer config.
+          #     Transfer config names have the form either
+          #     `projects/{project_id}/locations/{region}/transferConfigs/{config_id}` or
+          #     `projects/{project_id}/transferConfigs/{config_id}`,
+          #     where `config_id` is usually a UUID, even though it is not
           #     guaranteed or required. The name is ignored when creating a transfer
           #     config.
           # @!attribute [rw] destination_dataset_id
@@ -88,7 +168,9 @@ module Google
           #     User specified display name for the data transfer.
           # @!attribute [rw] data_source_id
           #   @return [::String]
-          #     Data source id. Cannot be changed once data transfer is created.
+          #     Data source ID. This cannot be changed once data transfer is created. The
+          #     full list of available data source IDs can be returned through an API call:
+          #     https://cloud.google.com/bigquery-transfer/docs/reference/datatransfer/rest/v1/projects.locations.dataSources/list
           # @!attribute [rw] params
           #   @return [::Google::Protobuf::Struct]
           #     Parameters specific to each data source. For more information see the
@@ -99,8 +181,7 @@ module Google
           #   @return [::String]
           #     Data transfer schedule.
           #     If the data source does not support a custom schedule, this should be
-          #     empty. If it is empty, the default value for the data source will be
-          #     used.
+          #     empty. If it is empty, the default value for the data source will be used.
           #     The specified times are in UTC.
           #     Examples of valid format:
           #     `1st,3rd monday of month 15:30`,
@@ -114,18 +195,23 @@ module Google
           # @!attribute [rw] schedule_options
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::ScheduleOptions]
           #     Options customizing the data transfer schedule.
+          # @!attribute [rw] schedule_options_v2
+          #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::ScheduleOptionsV2]
+          #     Options customizing different types of data transfer schedule.
+          #     This field replaces "schedule" and "schedule_options" fields.
+          #     ScheduleOptionsV2 cannot be used together with ScheduleOptions/Schedule.
           # @!attribute [rw] data_refresh_window_days
           #   @return [::Integer]
           #     The number of days to look back to automatically refresh the data.
           #     For example, if `data_refresh_window_days = 10`, then every day
           #     BigQuery reingests data for [today-10, today-1], rather than ingesting data
           #     for just [today-1].
-          #     Only valid if the data source supports the feature. Set the value to  0
+          #     Only valid if the data source supports the feature. Set the value to 0
           #     to use the default value.
           # @!attribute [rw] disabled
           #   @return [::Boolean]
-          #     Is this config disabled. When set to true, no runs are scheduled
-          #     for a given transfer.
+          #     Is this config disabled. When set to true, no runs will be scheduled for
+          #     this transfer config.
           # @!attribute [r] update_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Output only. Data transfer modification time. Ignored by server on input.
@@ -147,17 +233,37 @@ module Google
           #     associated with this transfer config finish.
           #
           #     The format for specifying a pubsub topic is:
-          #     `projects/{project}/topics/{topic}`
+          #     `projects/{project_id}/topics/{topic_id}`
           # @!attribute [rw] email_preferences
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::EmailPreferences]
           #     Email notifications will be sent according to these preferences
           #     to the email address of the user who owns this transfer config.
           # @!attribute [r] owner_info
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::UserInfo]
-          #     Output only. Information about the user whose credentials are used to transfer data.
-          #     Populated only for `transferConfigs.get` requests. In case the user
-          #     information is not available, this field will not be populated.
+          #     Output only. Information about the user whose credentials are used to
+          #     transfer data. Populated only for `transferConfigs.get` requests. In case
+          #     the user information is not available, this field will not be populated.
+          # @!attribute [rw] encryption_configuration
+          #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::EncryptionConfiguration]
+          #     The encryption configuration part. Currently, it is only used for the
+          #     optional KMS key name. The BigQuery service account of your project must be
+          #     granted permissions to use the key. Read methods will return the key name
+          #     applied in effect. Write methods will apply the key if it is present, or
+          #     otherwise try to apply project default keys if it is absent.
+          # @!attribute [r] error
+          #   @return [::Google::Rpc::Status]
+          #     Output only. Error code with detailed information about reason of the
+          #     latest config failure.
           class TransferConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Represents the encryption configuration for a transfer.
+          # @!attribute [rw] kms_key_name
+          #   @return [::Google::Protobuf::StringValue]
+          #     The name of the KMS key used for encrypting BigQuery data.
+          class EncryptionConfiguration
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -165,7 +271,7 @@ module Google
           # Represents a data transfer run.
           # @!attribute [rw] name
           #   @return [::String]
-          #     The resource name of the transfer run.
+          #     Identifier. The resource name of the transfer run.
           #     Transfer run names have the form
           #     `projects/{project_id}/locations/{location}/transferConfigs/{config_id}/runs/{run_id}`.
           #     The name is ignored when creating a transfer run.
@@ -192,9 +298,10 @@ module Google
           #     Output only. Last time the data transfer run state was updated.
           # @!attribute [r] params
           #   @return [::Google::Protobuf::Struct]
-          #     Output only. Parameters specific to each data source. For more information see the
-          #     bq tab in the 'Setting up a data transfer' section for each data source.
-          #     For example the parameters for Cloud Storage transfers are listed here:
+          #     Output only. Parameters specific to each data source. For more information
+          #     see the bq tab in the 'Setting up a data transfer' section for each data
+          #     source. For example the parameters for Cloud Storage transfers are listed
+          #     here:
           #     https://cloud.google.com/bigquery-transfer/docs/cloud-storage-transfer#bq
           # @!attribute [r] destination_dataset_id
           #   @return [::String]
@@ -221,7 +328,7 @@ module Google
           #     transfer run finishes.
           #
           #     The format for specifying a pubsub topic is:
-          #     `projects/{project}/topics/{topic}`
+          #     `projects/{project_id}/topics/{topic_id}`
           # @!attribute [r] email_preferences
           #   @return [::Google::Cloud::Bigquery::DataTransfer::V1::EmailPreferences]
           #     Output only. Email notifications will be sent according to these
@@ -263,6 +370,7 @@ module Google
           end
 
           # DEPRECATED. Represents data transfer type.
+          # @deprecated This enum is deprecated and may be removed in the next major version update.
           module TransferType
             # Invalid or Unknown transfer type placeholder.
             TRANSFER_TYPE_UNSPECIFIED = 0

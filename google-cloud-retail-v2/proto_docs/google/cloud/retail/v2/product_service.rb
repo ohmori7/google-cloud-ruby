@@ -21,7 +21,9 @@ module Google
   module Cloud
     module Retail
       module V2
-        # Request message for [CreateProduct][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#create_product ProductService.CreateProduct}
+        # method.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The parent catalog resource name, such as
@@ -51,7 +53,9 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [GetProduct][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#get_product ProductService.GetProduct}
+        # method.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
@@ -69,7 +73,9 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [UpdateProduct][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#update_product ProductService.UpdateProduct}
+        # method.
         # @!attribute [rw] product
         #   @return [::Google::Cloud::Retail::V2::Product]
         #     Required. The product to update/create.
@@ -91,6 +97,11 @@ module Google
         #
         #     If an unsupported or unknown field is provided, an INVALID_ARGUMENT error
         #     is returned.
+        #
+        #     The attribute key can be updated by setting the mask path as
+        #     "attributes.$\\{key_name}". If a key name is present in the mask but not in
+        #     the patching product from the request, this key will be deleted after the
+        #     update.
         # @!attribute [rw] allow_missing
         #   @return [::Boolean]
         #     If set to true, and the {::Google::Cloud::Retail::V2::Product Product} is not
@@ -101,7 +112,9 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [DeleteProduct][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#delete_product ProductService.DeleteProduct}
+        # method.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
@@ -233,11 +246,14 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [SetInventory][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#set_inventory ProductService.SetInventory}
+        # method.
         # @!attribute [rw] inventory
         #   @return [::Google::Cloud::Retail::V2::Product]
         #     Required. The inventory information to update. The allowable fields to
         #     update are:
+        #
         #     * {::Google::Cloud::Retail::V2::Product#price_info Product.price_info}
         #     * {::Google::Cloud::Retail::V2::Product#availability Product.availability}
         #     * {::Google::Cloud::Retail::V2::Product#available_quantity Product.available_quantity}
@@ -245,8 +261,9 @@ module Google
         #     The updated inventory fields must be specified in
         #     {::Google::Cloud::Retail::V2::SetInventoryRequest#set_mask SetInventoryRequest.set_mask}.
         #
-        #     If [SetInventoryRequest.inventory.name][] is empty or invalid, an
-        #     INVALID_ARGUMENT error is returned.
+        #     If
+        #     {::Google::Cloud::Retail::V2::Product#name SetInventoryRequest.inventory.name}
+        #     is empty or invalid, an INVALID_ARGUMENT error is returned.
         #
         #     If the caller does not have permission to update the
         #     {::Google::Cloud::Retail::V2::Product Product} named in
@@ -263,6 +280,25 @@ module Google
         #     provided or default value for
         #     {::Google::Cloud::Retail::V2::SetInventoryRequest#set_time SetInventoryRequest.set_time}.
         #
+        #     The caller can replace place IDs for a subset of fulfillment types in the
+        #     following ways:
+        #
+        #     * Adds "fulfillment_info" in
+        #     {::Google::Cloud::Retail::V2::SetInventoryRequest#set_mask SetInventoryRequest.set_mask}
+        #     * Specifies only the desired fulfillment types and corresponding place IDs
+        #     to update in
+        #     {::Google::Cloud::Retail::V2::Product#fulfillment_info SetInventoryRequest.inventory.fulfillment_info}
+        #
+        #     The caller can clear all place IDs from a subset of fulfillment types in
+        #     the following ways:
+        #
+        #     * Adds "fulfillment_info" in
+        #     {::Google::Cloud::Retail::V2::SetInventoryRequest#set_mask SetInventoryRequest.set_mask}
+        #     * Specifies only the desired fulfillment types to clear in
+        #     {::Google::Cloud::Retail::V2::Product#fulfillment_info SetInventoryRequest.inventory.fulfillment_info}
+        #     * Checks that only the desired fulfillment info types have empty
+        #     {::Google::Cloud::Retail::V2::FulfillmentInfo#place_ids SetInventoryRequest.inventory.fulfillment_info.place_ids}
+        #
         #     The last update time is recorded for the following inventory fields:
         #     * {::Google::Cloud::Retail::V2::Product#price_info Product.price_info}
         #     * {::Google::Cloud::Retail::V2::Product#availability Product.availability}
@@ -270,12 +306,15 @@ module Google
         #     * {::Google::Cloud::Retail::V2::Product#fulfillment_info Product.fulfillment_info}
         #
         #     If a full overwrite of inventory information while ignoring timestamps is
-        #     needed, [UpdateProduct][] should be invoked instead.
+        #     needed,
+        #     {::Google::Cloud::Retail::V2::ProductService::Client#update_product ProductService.UpdateProduct}
+        #     should be invoked instead.
         # @!attribute [rw] set_mask
         #   @return [::Google::Protobuf::FieldMask]
         #     Indicates which inventory fields in the provided
-        #     {::Google::Cloud::Retail::V2::Product Product} to update. If not set or set with
-        #     empty paths, all inventory fields will be updated.
+        #     {::Google::Cloud::Retail::V2::Product Product} to update.
+        #
+        #     At least one field must be provided.
         #
         #     If an unsupported or unknown field is provided, an INVALID_ARGUMENT error
         #     is returned and the entire update will be ignored.
@@ -299,21 +338,25 @@ module Google
 
         # Metadata related to the progress of the SetInventory operation.
         # Currently empty because there is no meaningful metadata populated from the
-        # [SetInventory][] method.
+        # {::Google::Cloud::Retail::V2::ProductService::Client#set_inventory ProductService.SetInventory}
+        # method.
         class SetInventoryMetadata
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # Response of the SetInventoryRequest.  Currently empty because
-        # there is no meaningful response populated from the [SetInventory][]
+        # there is no meaningful response populated from the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#set_inventory ProductService.SetInventory}
         # method.
         class SetInventoryResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [AddFulfillmentPlaces][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_fulfillment_places ProductService.AddFulfillmentPlaces}
+        # method.
         # @!attribute [rw] product
         #   @return [::String]
         #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
@@ -343,7 +386,8 @@ module Google
         #     If this field is set to an invalid value other than these, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     This field directly corresponds to [Product.fulfillment_info.type][].
+        #     This field directly corresponds to
+        #     {::Google::Cloud::Retail::V2::FulfillmentInfo#type Product.fulfillment_info.type}.
         # @!attribute [rw] place_ids
         #   @return [::Array<::String>]
         #     Required. The IDs for this
@@ -381,21 +425,150 @@ module Google
 
         # Metadata related to the progress of the AddFulfillmentPlaces operation.
         # Currently empty because there is no meaningful metadata populated from the
-        # [AddFulfillmentPlaces][] method.
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_fulfillment_places ProductService.AddFulfillmentPlaces}
+        # method.
         class AddFulfillmentPlacesMetadata
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # Response of the AddFulfillmentPlacesRequest.  Currently empty because
-        # there is no meaningful response populated from the [AddFulfillmentPlaces][]
+        # there is no meaningful response populated from the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_fulfillment_places ProductService.AddFulfillmentPlaces}
         # method.
         class AddFulfillmentPlacesResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Request message for [RemoveFulfillmentPlaces][] method.
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_local_inventories ProductService.AddLocalInventories}
+        # method.
+        # @!attribute [rw] product
+        #   @return [::String]
+        #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
+        #     such as
+        #     `projects/*/locations/global/catalogs/default_catalog/branches/default_branch/products/some_product_id`.
+        #
+        #     If the caller does not have permission to access the
+        #     {::Google::Cloud::Retail::V2::Product Product}, regardless of whether or not it
+        #     exists, a PERMISSION_DENIED error is returned.
+        # @!attribute [rw] local_inventories
+        #   @return [::Array<::Google::Cloud::Retail::V2::LocalInventory>]
+        #     Required. A list of inventory information at difference places. Each place
+        #     is identified by its place ID. At most 3000 inventories are allowed per
+        #     request.
+        # @!attribute [rw] add_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     Indicates which inventory fields in the provided list of
+        #     {::Google::Cloud::Retail::V2::LocalInventory LocalInventory} to update. The
+        #     field is updated to the provided value.
+        #
+        #     If a field is set while the place does not have a previous local inventory,
+        #     the local inventory at that store is created.
+        #
+        #     If a field is set while the value of that field is not provided, the
+        #     original field value, if it exists, is deleted.
+        #
+        #     If the mask is not set or set with empty paths, all inventory fields will
+        #     be updated.
+        #
+        #     If an unsupported or unknown field is provided, an INVALID_ARGUMENT error
+        #     is returned and the entire update will be ignored.
+        # @!attribute [rw] add_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time when the inventory updates are issued. Used to prevent
+        #     out-of-order updates on local inventory fields. If not provided, the
+        #     internal system time will be used.
+        # @!attribute [rw] allow_missing
+        #   @return [::Boolean]
+        #     If set to true, and the {::Google::Cloud::Retail::V2::Product Product} is not
+        #     found, the local inventory will still be processed and retained for at most
+        #     1 day and processed once the {::Google::Cloud::Retail::V2::Product Product} is
+        #     created. If set to false, a NOT_FOUND error is returned if the
+        #     {::Google::Cloud::Retail::V2::Product Product} is not found.
+        class AddLocalInventoriesRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Metadata related to the progress of the AddLocalInventories operation.
+        # Currently empty because there is no meaningful metadata populated from the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_local_inventories ProductService.AddLocalInventories}
+        # method.
+        class AddLocalInventoriesMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Response of the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_local_inventories ProductService.AddLocalInventories}
+        # API.  Currently empty because there is no meaningful response populated from
+        # the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#add_local_inventories ProductService.AddLocalInventories}
+        # method.
+        class AddLocalInventoriesResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_local_inventories ProductService.RemoveLocalInventories}
+        # method.
+        # @!attribute [rw] product
+        #   @return [::String]
+        #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
+        #     such as
+        #     `projects/*/locations/global/catalogs/default_catalog/branches/default_branch/products/some_product_id`.
+        #
+        #     If the caller does not have permission to access the
+        #     {::Google::Cloud::Retail::V2::Product Product}, regardless of whether or not it
+        #     exists, a PERMISSION_DENIED error is returned.
+        # @!attribute [rw] place_ids
+        #   @return [::Array<::String>]
+        #     Required. A list of place IDs to have their inventory deleted.
+        #     At most 3000 place IDs are allowed per request.
+        # @!attribute [rw] remove_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time when the inventory deletions are issued. Used to prevent
+        #     out-of-order updates and deletions on local inventory fields. If not
+        #     provided, the internal system time will be used.
+        # @!attribute [rw] allow_missing
+        #   @return [::Boolean]
+        #     If set to true, and the {::Google::Cloud::Retail::V2::Product Product} is not
+        #     found, the local inventory removal request will still be processed and
+        #     retained for at most 1 day and processed once the
+        #     {::Google::Cloud::Retail::V2::Product Product} is created. If set to false, a
+        #     NOT_FOUND error is returned if the
+        #     {::Google::Cloud::Retail::V2::Product Product} is not found.
+        class RemoveLocalInventoriesRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Metadata related to the progress of the RemoveLocalInventories operation.
+        # Currently empty because there is no meaningful metadata populated from the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_local_inventories ProductService.RemoveLocalInventories}
+        # method.
+        class RemoveLocalInventoriesMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Response of the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_local_inventories ProductService.RemoveLocalInventories}
+        # API.  Currently empty because there is no meaningful response populated from
+        # the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_local_inventories ProductService.RemoveLocalInventories}
+        # method.
+        class RemoveLocalInventoriesResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request message for
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_fulfillment_places ProductService.RemoveFulfillmentPlaces}
+        # method.
         # @!attribute [rw] product
         #   @return [::String]
         #     Required. Full resource name of {::Google::Cloud::Retail::V2::Product Product},
@@ -425,7 +598,8 @@ module Google
         #     If this field is set to an invalid value other than these, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     This field directly corresponds to [Product.fulfillment_info.type][].
+        #     This field directly corresponds to
+        #     {::Google::Cloud::Retail::V2::FulfillmentInfo#type Product.fulfillment_info.type}.
         # @!attribute [rw] place_ids
         #   @return [::Array<::String>]
         #     Required. The IDs for this
@@ -458,14 +632,16 @@ module Google
 
         # Metadata related to the progress of the RemoveFulfillmentPlaces operation.
         # Currently empty because there is no meaningful metadata populated from the
-        # [RemoveFulfillmentPlaces][] method.
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_fulfillment_places ProductService.RemoveFulfillmentPlaces}
+        # method.
         class RemoveFulfillmentPlacesMetadata
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # Response of the RemoveFulfillmentPlacesRequest. Currently empty because there
-        # is no meaningful response populated from the [RemoveFulfillmentPlaces][]
+        # is no meaningful response populated from the
+        # {::Google::Cloud::Retail::V2::ProductService::Client#remove_fulfillment_places ProductService.RemoveFulfillmentPlaces}
         # method.
         class RemoveFulfillmentPlacesResponse
           include ::Google::Protobuf::MessageExts

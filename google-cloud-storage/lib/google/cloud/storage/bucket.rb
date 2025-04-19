@@ -110,6 +110,24 @@ module Google
         end
 
         ##
+        # The autoclass configuration of the bucket
+        #
+        # @return [Google::Apis::StorageV1::Bucket::Autoclass]
+        #
+        def autoclass
+          @gapi.autoclass
+        end
+
+        ##
+        # The object retention configuration of the bucket
+        #
+        # @return [Google::Apis::StorageV1::Bucket::ObjectRetention]
+        #
+        def object_retention
+          @gapi.object_retention
+        end
+
+        ##
         # The name of the bucket.
         #
         # @return [String]
@@ -279,7 +297,7 @@ module Google
         #
         # @return [String]
         #
-        # @see https://cloud.google.com/storage/docs/concepts-techniques
+        # @see https://cloud.google.com/storage/docs/locations
         #
         def location
           @gapi.location
@@ -299,6 +317,20 @@ module Google
         #
         def location_type
           @gapi.location_type
+        end
+
+        ##
+        # Returns the list of regional locations for custom dual-region buckets.
+        #
+        # @return [String, nil] Returns nil if the property has not been set before creation,
+        # if the bucket's resource has not been loaded from the server,
+        # or if the bucket is not a dual-regions bucket.
+
+        # @see https://cloud.google.com/storage/docs/json_api/v1/buckets and
+        # https://cloud.google.com/storage/docs/locations
+        #
+        def data_locations
+          @gapi.custom_placement_config&.data_locations
         end
 
         ##
@@ -391,6 +423,77 @@ module Google
         def storage_class= new_storage_class
           @gapi.storage_class = storage_class_for new_storage_class
           patch_gapi! :storage_class
+        end
+
+        ##
+        # Whether Autoclass is enabled for the bucket.
+        #
+        # @return [Boolean]
+        #
+        def autoclass_enabled
+          @gapi.autoclass&.enabled?
+        end
+
+        ##
+        # Toggle time of the autoclass
+        #
+        # @return [DateTime]
+        #
+        def autoclass_toggle_time
+          @gapi.autoclass&.toggle_time
+        end
+
+        ##
+        # Terminal Storage class of the autoclass
+        #
+        # @return [String]
+        #
+        def autoclass_terminal_storage_class
+          @gapi.autoclass&.terminal_storage_class
+        end
+
+        ##
+        # Update time at which the autoclass terminal storage class was last modified
+        #
+        # @return [DateTime]
+        #
+        def autoclass_terminal_storage_class_update_time
+          @gapi.autoclass&.terminal_storage_class_update_time
+        end
+
+        ##
+        # Updates bucket's autoclass configuration. This defines the default class for objects in the
+        # bucket and down/up-grades the storage class of objects based on the access patterns.
+        # Accepted values are `:false`, and `:true`.
+        #
+        # For more information, see [Storage
+        # Classes](https://cloud.google.com/storage/docs/using-autoclass).
+        #
+        # @param [Boolean] toggle for autoclass configuration of the bucket.
+        #
+        def autoclass_enabled= toggle
+          @gapi.autoclass ||= API::Bucket::Autoclass.new
+          @gapi.autoclass.enabled = toggle
+          patch_gapi! :autoclass
+        end
+
+        ##
+        # Update method to update all attributes of autoclass of a bucket
+        # It accepts params as a Hash of attributes in the following format:
+        #
+        #     { enabled: true, terminal_storage_class: "ARCHIVE" }
+        #
+        # terminal_storage_class field is optional. It defaults to `NEARLINE`.
+        # Valid terminal_storage_class values are `NEARLINE` and `ARCHIVE`.
+        #
+        # @param [Hash(String => String)] autoclass_attributes
+        #
+        def update_autoclass autoclass_attributes
+          @gapi.autoclass ||= API::Bucket::Autoclass.new
+          autoclass_attributes.each do |k, v|
+            @gapi.autoclass.send "#{k}=", v
+          end
+          patch_gapi! :autoclass
         end
 
         ##
@@ -879,7 +982,7 @@ module Google
         #
         def uniform_bucket_level_access= new_uniform_bucket_level_access
           @gapi.iam_configuration ||= API::Bucket::IamConfiguration.new
-          @gapi.iam_configuration.uniform_bucket_level_access ||= \
+          @gapi.iam_configuration.uniform_bucket_level_access ||=
             API::Bucket::IamConfiguration::UniformBucketLevelAccess.new
           @gapi.iam_configuration.uniform_bucket_level_access.enabled = new_uniform_bucket_level_access
           patch_gapi! :iam_configuration
@@ -1092,6 +1195,121 @@ module Google
         end
 
         ##
+        # The bucket's soft delete policy. If this policy is set, any deleted
+        # objects will be soft-deleted according to the time specified in the
+        # policy.
+        # This value can be modified by calling {#soft_delete_policy=}.
+        #
+        # @return [Google::Apis::StorageV1::Bucket::SoftDeletePolicy] The default retention policy is for 7
+        # days.
+        #
+        # @example
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   bucket.soft_delete_policy
+        #
+        def soft_delete_policy
+          @gapi.soft_delete_policy
+        end
+
+        ##
+        # Sets the value for Soft Delete Policy in the bucket. This value can
+        # be queried by calling {#soft_delete_policy}.
+        #
+        # @param [Google::Apis::StorageV1::Bucket::SoftDeletePolicy,
+        #         Hash(String => String)] new_soft_delete_policy The bucket's
+        #         new Soft Delete Policy.
+        #
+        # @example Set Soft Delete Policy to 10 days using SoftDeletePolicy class:
+        #   require "google/cloud/storage"
+        #   require "date"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   soft_delete_policy = Google::Apis::StorageV1::Bucket::SoftDeletePolicy.new
+        #   soft_delete_policy.retention_duration_seconds = 10*24*60*60
+        #
+        #   bucket.soft_delete_policy = soft_delete_policy
+        #
+        # @example Set Soft Delete Policy to 5 days using Hash:
+        #   require "google/cloud/storage"
+        #   require "date"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   soft_delete_policy = { retention_duration_seconds: 432000 }
+        #   bucket.soft_delete_policy = soft_delete_policy
+        #
+        def soft_delete_policy= new_soft_delete_policy
+          @gapi.soft_delete_policy = new_soft_delete_policy || {}
+          patch_gapi! :soft_delete_policy
+        end
+
+        ##
+        # The bucket's hierarchical namespace (Folders) configuration.
+        # This value can be modified by calling {#hierarchical_namespace=}.
+        #
+        # @return [Google::Apis::StorageV1::Bucket::HierarchicalNamespace]
+        #
+        # @example
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   bucket.hierarchical_namespace
+        #
+        def hierarchical_namespace
+          @gapi.hierarchical_namespace
+        end
+
+        ##
+        # Sets the value of Hierarchical Namespace (Folders) for the bucket.
+        # This can only be enabled at bucket create time. If this is enabled,
+        # Uniform Bucket-Level Access must also be enabled.
+        # This value can be queried by calling {#hierarchical_namespace}.
+        #
+        # @param [Google::Apis::StorageV1::Bucket::HierarchicalNamespace,
+        #         Hash(String => String)] new_hierarchical_namespace The
+        #         bucket's new Hierarchical Namespace Configuration.
+        #
+        # @example Enabled Hierarchical Namespace using HierarchicalNamespace class:
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   hierarchical_namespace = Google::Apis::StorageV1::Bucket::HierarchicalNamespace.new
+        #   hierarchical_namespace.enabled = true
+        #
+        #   bucket.hierarchical_namespace = hierarchical_namespace
+        #
+        # @example Disable Hierarchical Namespace using Hash:
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   hierarchical_namespace = { enabled: false }
+        #   bucket.hierarchical_namespace = hierarchical_namespace
+        #
+        def hierarchical_namespace= new_hierarchical_namespace
+          @gapi.hierarchical_namespace = new_hierarchical_namespace || {}
+          patch_gapi! :hierarchical_namespace
+        end
+
+        ##
         # Updates the bucket with changes made in the given block in a single
         # PATCH request. The following attributes may be set: {#cors},
         # {#logging_bucket=}, {#logging_prefix=}, {#versioning=},
@@ -1156,9 +1374,9 @@ module Google
           updater.check_for_mutable_cors!
           updater.check_for_mutable_lifecycle!
           return if updater.updates.empty?
-          patch_gapi! updater.updates,
-                      if_metageneration_match: if_metageneration_match,
-                      if_metageneration_not_match: if_metageneration_not_match
+          update_gapi! updater.updates,
+                       if_metageneration_match: if_metageneration_match,
+                       if_metageneration_not_match: if_metageneration_not_match
         end
 
         ##
@@ -1205,6 +1423,9 @@ module Google
         #   `prefixes` are omitted.
         # @param [String] token A previously-returned page token representing
         #   part of the larger set of results to view.
+        # @param [String] match_glob A glob pattern used to filter results returned in items (e.g. `foo*bar`).
+        #    The string value must be UTF-8 encoded. See:
+        #    https://cloud.google.com/storage/docs/json_api/v1/objects/list#list-object-glob
         # @param [Integer] max Maximum number of items plus prefixes to return.
         #   As duplicate prefixes are omitted, fewer total results may be
         #   returned than requested. The default value of this parameter is
@@ -1213,6 +1434,11 @@ module Google
         #   as distinct results. The default is `false`. For more information,
         #   see [Object Versioning
         #   ](https://cloud.google.com/storage/docs/object-versioning).
+        # @param [Boolean] include_folders_as_prefixes If `true`, will also include
+        #   folders and managed folders, besides objects, in the returned prefixes.
+        #   Only applicable if delimiter is set to '/'.
+        # @param [Boolean] soft_deleted If true, only soft-deleted object
+        #   versions will be listed. The default is false.
         #
         # @return [Array<Google::Cloud::Storage::File>] (See
         #   {Google::Cloud::Storage::File::List})
@@ -1240,14 +1466,22 @@ module Google
         #   end
         #
         def files prefix: nil, delimiter: nil, token: nil, max: nil,
-                  versions: nil
+                  versions: nil, match_glob: nil, include_folders_as_prefixes: nil,
+                  soft_deleted: nil
           ensure_service!
           gapi = service.list_files name, prefix: prefix, delimiter: delimiter,
                                           token: token, max: max,
                                           versions: versions,
-                                          user_project: user_project
+                                          user_project: user_project,
+                                          match_glob: match_glob,
+                                          include_folders_as_prefixes: include_folders_as_prefixes,
+                                          soft_deleted: soft_deleted
           File::List.from_gapi gapi, service, name, prefix, delimiter, max,
-                               versions, user_project: user_project
+                               versions,
+                               user_project: user_project,
+                               match_glob: match_glob,
+                               include_folders_as_prefixes: include_folders_as_prefixes,
+                               soft_deleted: soft_deleted
         end
         alias find_files files
 
@@ -1283,6 +1517,8 @@ module Google
         # @param [String] encryption_key Optional. The customer-supplied,
         #   AES-256 encryption key used to encrypt the file, if one was provided
         #   to {#create_file}. (Not used if `skip_lookup` is also set.)
+        # @param [Boolean] soft_deleted Optional. If true, only soft-deleted
+        #   object versions will be listed. The default is false.
         #
         # @return [Google::Cloud::Storage::File, nil] Returns nil if file does
         #   not exist
@@ -1304,7 +1540,8 @@ module Google
                  if_metageneration_match: nil,
                  if_metageneration_not_match: nil,
                  skip_lookup: nil,
-                 encryption_key: nil
+                 encryption_key: nil,
+                 soft_deleted: nil
           ensure_service!
           if skip_lookup
             return File.new_lazy name, path, service,
@@ -1317,7 +1554,8 @@ module Google
                                               if_metageneration_match: if_metageneration_match,
                                               if_metageneration_not_match: if_metageneration_not_match,
                                               key: encryption_key,
-                                              user_project: user_project
+                                              user_project: user_project,
+                                              soft_deleted: soft_deleted
           File.from_gapi gapi, service, user_project: user_project
         rescue Google::Cloud::NotFoundError
           nil
@@ -1597,6 +1835,77 @@ module Google
         end
         alias upload_file create_file
         alias new_file create_file
+
+        ##
+        # Restores a soft-deleted object.
+        #
+        # @param [String] file_path
+        #   Name of the file.
+        # @param [Fixnum] generation
+        #   Selects a specific revision of this object.
+        # @param [Boolean] copy_source_acl
+        #   If true, copies the source file's ACL; otherwise, uses the
+        #   bucket's default file ACL. The default is false.
+        # @param [Fixnum] if_generation_match
+        #   Makes the operation conditional on whether the file's one live
+        #   generation matches the given value. Setting to 0 makes the
+        #   operation succeed only if there are no live versions of the file.
+        # @param [Fixnum] if_generation_not_match
+        #   Makes the operation conditional on whether none of the file's live
+        #   generations match the given value. If no live file exists, the
+        #   precondition fails. Setting to 0 makes the operation succeed only
+        #   if there is a live version of the file.
+        # @param [Fixnum] if_metageneration_match
+        #   Makes the operation conditional on whether the file's one live
+        #   metageneration matches the given value.
+        # @param [Fixnum] if_metageneration_not_match
+        #   Makes the operation conditional on whether none of the object's
+        #   live metagenerations match the given value.
+        # @param [String] projection
+        #   Set of properties to return. Defaults to full.
+        # @param [String] user_project
+        #   The project to be billed for this request. Required for Requester
+        #   Pays buckets.
+        # @param [String] fields
+        #   Selector specifying which fields to include in a partial response.
+        #
+        # @return [Google::Cloud::Storage::File]
+        #
+        # @example
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket"
+        #
+        #   bucket.restore_file "path/of/file", <generation-of-the-file>
+        #
+        def restore_file file_path,
+                         generation,
+                         copy_source_acl: nil,
+                         if_generation_match: nil,
+                         if_generation_not_match: nil,
+                         if_metageneration_match: nil,
+                         if_metageneration_not_match: nil,
+                         projection: nil,
+                         user_project: nil,
+                         fields: nil,
+                         options: {}
+          ensure_service!
+          gapi = service.restore_file name,
+                                      file_path,
+                                      generation,
+                                      copy_source_acl: File::Acl.predefined_rule_for(copy_source_acl),
+                                      if_generation_match: if_generation_match,
+                                      if_generation_not_match: if_generation_not_match,
+                                      if_metageneration_match: if_metageneration_match,
+                                      if_metageneration_not_match: if_metageneration_not_match,
+                                      projection: projection,
+                                      user_project: user_project,
+                                      fields: fields,
+                                      options: options
+          File.from_gapi gapi, service, user_project: user_project
+        end
 
         ##
         # Concatenates a list of existing files in the bucket into a new file in
@@ -1969,6 +2278,31 @@ module Google
           else
             raise ArgumentError, "version '#{version}' not supported"
           end
+        end
+
+        # Fetches generation of the bucket
+        # @example
+        #   require "google/cloud/storage"
+        #   storage = Google::Cloud::Storage.new
+        #   bucket = storage.bucket "my-bucket"
+        #   generation= bucket.generation
+        def generation
+          @gapi.generation
+        end
+
+        # Fetches soft_delete_time of a soft deleted bucket
+        # @example
+        #   bucket.delete
+        #   bucket.soft_delete_time
+        def soft_delete_time
+          @gapi.soft_delete_time
+        end
+
+        # Fetches hard_delete_time of a soft deleted bucket
+        # @example
+        #   bucket.hard_delete_time
+        def hard_delete_time
+          @gapi.hard_delete_time
         end
 
         ##
@@ -2810,6 +3144,51 @@ module Google
         alias refresh! reload!
 
         ##
+        # Moves File from source to destination path within the same HNS-enabled bucket
+        # This Operation is being performed at server side
+        # @param [String] source_file The file name in existing bucket
+        # @param [String] destination_file The new filename to be created on bucket
+        # If the destination path includes non-existent parent folders, they will be created.
+        # @example
+        #   require "google/cloud/storage"
+        #   storage = Google::Cloud::Storage.new
+        #   bucket  = storage.bucket bucket_name, skip_lookup: true
+        #   bucket.move_file source_file_name, destination_file_name
+        def move_file source_file,
+                      destination_file,
+                      if_generation_match: nil,
+                      if_generation_not_match: nil,
+                      if_metageneration_match: nil,
+                      if_metageneration_not_match: nil,
+                      if_source_generation_match: nil,
+                      if_source_generation_not_match: nil,
+                      if_source_metageneration_match: nil,
+                      if_source_metageneration_not_match: nil,
+                      user_project: nil,
+                      fields: nil,
+                      quota_user: nil,
+                      user_ip: nil,
+                      options: {}
+          ensure_service!
+          service.move_file name,
+                            source_file,
+                            destination_file,
+                            if_generation_match: if_generation_match,
+                            if_generation_not_match: if_generation_not_match,
+                            if_metageneration_match: if_metageneration_match,
+                            if_metageneration_not_match: if_metageneration_not_match,
+                            if_source_generation_match: if_source_generation_match,
+                            if_source_generation_not_match: if_source_generation_not_match,
+                            if_source_metageneration_match: if_source_metageneration_match,
+                            if_source_metageneration_not_match: if_source_metageneration_not_match,
+                            user_project: user_project,
+                            fields: fields,
+                            quota_user: quota_user,
+                            user_ip: user_ip,
+                            options: options
+        end
+
+        ##
         # Determines whether the bucket exists in the Storage service.
         #
         # @return [Boolean] true if the bucket exists in the Storage service.
@@ -2878,15 +3257,35 @@ module Google
           attributes.flatten!
           return if attributes.empty?
           ensure_service!
-          patch_args = Hash[attributes.map do |attr|
+          patch_args = attributes.to_h do |attr|
             [attr, @gapi.send(attr)]
-          end]
+          end
           patch_gapi = API::Bucket.new(**patch_args)
           @gapi = service.patch_bucket name,
                                        patch_gapi,
                                        if_metageneration_match: if_metageneration_match,
                                        if_metageneration_not_match: if_metageneration_not_match,
                                        user_project: user_project
+          @lazy = nil
+          self
+        end
+
+        def update_gapi! attributes,
+                         if_metageneration_match: nil,
+                         if_metageneration_not_match: nil
+          attributes = Array(attributes)
+          attributes.flatten!
+          return if attributes.empty?
+          ensure_service!
+          update_args = attributes.to_h do |attr|
+            [attr, @gapi.send(attr)]
+          end
+          update_gapi = API::Bucket.new(**update_args)
+          @gapi = service.update_bucket name,
+                                        update_gapi,
+                                        if_metageneration_match: if_metageneration_match,
+                                        if_metageneration_not_match: if_metageneration_not_match,
+                                        user_project: user_project
           @lazy = nil
           self
         end

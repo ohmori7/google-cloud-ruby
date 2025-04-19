@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/vm_migration/v1/vm_migration"
 
 class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_clone_job_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_cutover_job_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_datacenter_connector_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_group_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,7 +91,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -85,7 +103,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_migrating_vm_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -95,9 +113,21 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
     end
   end
 
+  def test_replication_cycle_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.replication_cycle_path project: "value0", location: "value1", source: "value2", migrating_vm: "value3", replication_cycle: "value4"
+      assert_equal "projects/value0/locations/value1/sources/value2/migratingVms/value3/replicationCycles/value4", path
+    end
+  end
+
   def test_source_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -109,7 +139,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_target_project_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -121,7 +151,7 @@ class ::Google::Cloud::VMMigration::V1::VMMigration::ClientPathsTest < Minitest:
 
   def test_utilization_report_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::VMMigration::V1::VMMigration::Client.new do |config|
         config.credentials = grpc_channel
       end

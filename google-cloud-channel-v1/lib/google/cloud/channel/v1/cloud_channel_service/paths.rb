@@ -42,6 +42,25 @@ module Google
             end
 
             ##
+            # Create a fully-qualified ChannelPartnerRepricingConfig resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `accounts/{account}/channelPartnerLinks/{channel_partner}/channelPartnerRepricingConfigs/{channel_partner_repricing_config}`
+            #
+            # @param account [String]
+            # @param channel_partner [String]
+            # @param channel_partner_repricing_config [String]
+            #
+            # @return [::String]
+            def channel_partner_repricing_config_path account:, channel_partner:, channel_partner_repricing_config:
+              raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
+              raise ::ArgumentError, "channel_partner cannot contain /" if channel_partner.to_s.include? "/"
+
+              "accounts/#{account}/channelPartnerLinks/#{channel_partner}/channelPartnerRepricingConfigs/#{channel_partner_repricing_config}"
+            end
+
+            ##
             # Create a fully-qualified Customer resource string.
             #
             # The resource will be in the following format:
@@ -56,6 +75,25 @@ module Google
               raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
 
               "accounts/#{account}/customers/#{customer}"
+            end
+
+            ##
+            # Create a fully-qualified CustomerRepricingConfig resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `accounts/{account}/customers/{customer}/customerRepricingConfigs/{customer_repricing_config}`
+            #
+            # @param account [String]
+            # @param customer [String]
+            # @param customer_repricing_config [String]
+            #
+            # @return [::String]
+            def customer_repricing_config_path account:, customer:, customer_repricing_config:
+              raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
+              raise ::ArgumentError, "customer cannot contain /" if customer.to_s.include? "/"
+
+              "accounts/#{account}/customers/#{customer}/customerRepricingConfigs/#{customer_repricing_config}"
             end
 
             ##
@@ -106,6 +144,23 @@ module Google
             # @return [::String]
             def product_path product:
               "products/#{product}"
+            end
+
+            ##
+            # Create a fully-qualified SkuGroup resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `accounts/{account}/skuGroups/{sku_group}`
+            #
+            # @param account [String]
+            # @param sku_group [String]
+            #
+            # @return [::String]
+            def sku_group_path account:, sku_group:
+              raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
+
+              "accounts/#{account}/skuGroups/#{sku_group}"
             end
 
             extend self

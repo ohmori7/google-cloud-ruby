@@ -30,14 +30,10 @@ module Google
             #
             # Google Cloud Datastore Admin API
             #
-            #
             # The Datastore Admin API provides several admin services for Cloud Datastore.
             #
-            # -----------------------------------------------------------------------------
-            # ## Concepts
-            #
-            # Project, namespace, kind, and entity as defined in the Google Cloud Datastore
-            # API.
+            # Concepts: Project, namespace, kind, and entity as defined in the Google Cloud
+            # Datastore API.
             #
             # Operation: An Operation represents work being performed in the background.
             #
@@ -45,52 +41,48 @@ module Google
             # specified as a combination of kinds and namespaces (either or both of which
             # may be all).
             #
-            # -----------------------------------------------------------------------------
-            # ## Services
+            # Export/Import Service:
             #
-            # # Export/Import
-            #
-            # The Export/Import service provides the ability to copy all or a subset of
+            # - The Export/Import service provides the ability to copy all or a subset of
             # entities to/from Google Cloud Storage.
-            #
-            # Exported data may be imported into Cloud Datastore for any Google Cloud
+            # - Exported data may be imported into Cloud Datastore for any Google Cloud
             # Platform project. It is not restricted to the export source project. It is
             # possible to export from one project and then import into another.
-            #
-            # Exported data can also be loaded into Google BigQuery for analysis.
-            #
-            # Exports and imports are performed asynchronously. An Operation resource is
+            # - Exported data can also be loaded into Google BigQuery for analysis.
+            # - Exports and imports are performed asynchronously. An Operation resource is
             # created for each export/import. The state (including any errors encountered)
             # of the export/import may be queried via the Operation resource.
             #
-            # # Index
+            # Index Service:
             #
-            # The index service manages Cloud Datastore composite indexes.
-            #
-            # Index creation and deletion are performed asynchronously.
+            # - The index service manages Cloud Datastore composite indexes.
+            # - Index creation and deletion are performed asynchronously.
             # An Operation resource is created for each such asynchronous operation.
             # The state of the operation (including any errors encountered)
             # may be queried via the Operation resource.
             #
-            # # Operation
+            # Operation Service:
             #
-            # The Operations collection provides a record of actions performed for the
+            # - The Operations collection provides a record of actions performed for the
             # specified project (including any operations in progress). Operations are not
             # created directly but through calls on other collections or resources.
-            #
-            # An operation that is not yet done may be cancelled. The request to cancel is
-            # asynchronous and the operation may continue to run for some time after the
+            # - An operation that is not yet done may be cancelled. The request to cancel
+            # is asynchronous and the operation may continue to run for some time after the
             # request to cancel is made.
-            #
-            # An operation that is done may be deleted so that it is no longer listed as
+            # - An operation that is done may be deleted so that it is no longer listed as
             # part of the Operation collection.
-            #
-            # ListOperations returns all pending operations, but not completed operations.
-            #
-            # Operations are created by service DatastoreAdmin,
-            # but are accessed via service google.longrunning.Operations.
+            # - ListOperations returns all pending operations, but not completed
+            # operations.
+            # - Operations are created by service DatastoreAdmin, but are accessed via
+            # service google.longrunning.Operations.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "datastore.$UNIVERSE_DOMAIN$"
+
               # @private
               attr_reader :datastore_admin_stub
 
@@ -168,6 +160,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @datastore_admin_stub.universe_domain
+              end
+
+              ##
               # Create a new DatastoreAdmin client object.
               #
               # @example
@@ -200,8 +201,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -214,15 +216,30 @@ module Google
                   config.credentials = credentials
                   config.quota_project = @quota_project_id
                   config.endpoint = @config.endpoint
+                  config.universe_domain = @config.universe_domain
                 end
 
                 @datastore_admin_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Datastore::Admin::V1::DatastoreAdmin::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @datastore_admin_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
               end
 
               ##
@@ -231,6 +248,15 @@ module Google
               # @return [::Google::Cloud::Datastore::Admin::V1::DatastoreAdmin::Operations]
               #
               attr_reader :operations_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @datastore_admin_stub.logger
+              end
 
               # Service calls
 
@@ -279,8 +305,8 @@ module Google
               #
               #     The resulting files will be nested deeper than the specified URL prefix.
               #     The final output URL will be provided in the
-              #     {::Google::Cloud::Datastore::Admin::V1::ExportEntitiesResponse#output_url google.datastore.admin.v1.ExportEntitiesResponse.output_url} field. That
-              #     value should be used for subsequent ImportEntities operations.
+              #     {::Google::Cloud::Datastore::Admin::V1::ExportEntitiesResponse#output_url google.datastore.admin.v1.ExportEntitiesResponse.output_url}
+              #     field. That value should be used for subsequent ImportEntities operations.
               #
               #     By nesting the data files deeper, the same Cloud Storage bucket can be used
               #     in multiple ExportEntities operations without conflict.
@@ -305,14 +331,14 @@ module Google
               #   # Call the export_entities method.
               #   result = client.export_entities request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def export_entities request, options = nil
@@ -326,10 +352,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.export_entities.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -351,7 +378,7 @@ module Google
                 @datastore_admin_stub.call_rpc :export_entities, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -384,8 +411,9 @@ module Google
               #   @param labels [::Hash{::String => ::String}]
               #     Client-assigned labels.
               #   @param input_url [::String]
-              #     Required. The full resource URL of the external storage location. Currently, only
-              #     Google Cloud Storage is supported. So input_url should be of the form:
+              #     Required. The full resource URL of the external storage location.
+              #     Currently, only Google Cloud Storage is supported. So input_url should be
+              #     of the form:
               #     `gs://BUCKET_NAME[/NAMESPACE_PATH]/OVERALL_EXPORT_METADATA_FILE`, where
               #     `BUCKET_NAME` is the name of the Cloud Storage bucket, `NAMESPACE_PATH` is
               #     an optional Cloud Storage namespace path (this is not a Cloud Datastore
@@ -423,14 +451,14 @@ module Google
               #   # Call the import_entities method.
               #   result = client.import_entities request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def import_entities request, options = nil
@@ -444,10 +472,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.import_entities.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -469,7 +498,7 @@ module Google
                 @datastore_admin_stub.call_rpc :import_entities, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -478,9 +507,9 @@ module Google
               ##
               # Creates the specified index.
               # A newly created index's initial state is `CREATING`. On completion of the
-              # returned {::Google::Longrunning::Operation google.longrunning.Operation}, the state will be `READY`.
-              # If the index already exists, the call will return an `ALREADY_EXISTS`
-              # status.
+              # returned {::Google::Longrunning::Operation google.longrunning.Operation}, the
+              # state will be `READY`. If the index already exists, the call will return an
+              # `ALREADY_EXISTS` status.
               #
               # During index creation, the process could result in an error, in which
               # case the index will move to the `ERROR` state. The process can be recovered
@@ -532,14 +561,14 @@ module Google
               #   # Call the create_index method.
               #   result = client.create_index request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def create_index request, options = nil
@@ -553,10 +582,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -578,7 +608,7 @@ module Google
                 @datastore_admin_stub.call_rpc :create_index, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -589,7 +619,8 @@ module Google
               # An index can only be deleted if it is in a `READY` or `ERROR` state. On
               # successful execution of the request, the index will be in a `DELETING`
               # {::Google::Cloud::Datastore::Admin::V1::Index::State state}. And on completion of the
-              # returned {::Google::Longrunning::Operation google.longrunning.Operation}, the index will be removed.
+              # returned {::Google::Longrunning::Operation google.longrunning.Operation}, the
+              # index will be removed.
               #
               # During index deletion, the process could result in an error, in which
               # case the index will move to the `ERROR` state. The process can be recovered
@@ -636,14 +667,14 @@ module Google
               #   # Call the delete_index method.
               #   result = client.delete_index request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def delete_index request, options = nil
@@ -657,10 +688,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -685,7 +717,7 @@ module Google
                 @datastore_admin_stub.call_rpc :delete_index, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -748,10 +780,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -775,7 +808,6 @@ module Google
 
                 @datastore_admin_stub.call_rpc :get_index, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -830,13 +862,11 @@ module Google
               #   # Call the list_indexes method.
               #   result = client.list_indexes request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Datastore::Admin::V1::Index.
-              #     p response
+              #     p item
               #   end
               #
               def list_indexes request, options = nil
@@ -850,10 +880,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_indexes.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Datastore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -875,7 +906,7 @@ module Google
                 @datastore_admin_stub.call_rpc :list_indexes, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @datastore_admin_stub, :list_indexes, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -911,20 +942,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"datastore.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -959,11 +997,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "datastore.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "datastore.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -978,6 +1030,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -996,6 +1050,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##

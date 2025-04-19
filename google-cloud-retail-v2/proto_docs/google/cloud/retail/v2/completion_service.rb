@@ -21,7 +21,7 @@ module Google
   module Cloud
     module Retail
       module V2
-        # Auto-complete parameters.
+        # Autocomplete parameters.
         # @!attribute [rw] catalog
         #   @return [::String]
         #     Required. Catalog for which the completion is performed.
@@ -35,26 +35,30 @@ module Google
         #     The maximum number of allowed characters is 255.
         # @!attribute [rw] visitor_id
         #   @return [::String]
-        #     A unique identifier for tracking visitors. For example, this could be
-        #     implemented with an HTTP cookie, which should be able to uniquely identify
-        #     a visitor on a single device. This unique identifier should not change if
-        #     the visitor logs in or out of the website.
+        #     Required field. A unique identifier for tracking visitors. For example,
+        #     this could be implemented with an HTTP cookie, which should be able to
+        #     uniquely identify a visitor on a single device. This unique identifier
+        #     should not change if the visitor logs in or out of the website.
         #
         #     The field must be a UTF-8 encoded string with a length limit of 128
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         # @!attribute [rw] language_codes
         #   @return [::Array<::String>]
-        #     The list of languages of the query. This is
-        #     the BCP-47 language code, such as "en-US" or "sr-Latn".
-        #     For more information, see
-        #     [Tags for Identifying Languages](https://tools.ietf.org/html/bcp47).
+        #     Note that this field applies for `user-data` dataset only. For requests
+        #     with `cloud-retail` dataset, setting this field has no effect.
         #
-        #     The maximum number of allowed characters is 255.
-        #     Only "en-US" is currently supported.
+        #     The language filters applied to the output suggestions. If set, it should
+        #     contain the language of the query. If not set, suggestions are returned
+        #     without considering language restrictions. This is the BCP-47 language
+        #     code, such as "en-US" or "sr-Latn". For more information, see [Tags for
+        #     Identifying Languages](https://tools.ietf.org/html/bcp47). The maximum
+        #     number of language codes is 3.
         # @!attribute [rw] device_type
         #   @return [::String]
-        #     The device type context for completion suggestions.
-        #     It is useful to apply different suggestions on different device types, e.g.
+        #     The device type context for completion suggestions. We recommend that you
+        #     leave this field empty.
+        #
+        #     It can apply different suggestions on different device types, e.g.
         #     `DESKTOP`, `MOBILE`. If it is empty, the suggestions are across all device
         #     types.
         #
@@ -79,22 +83,36 @@ module Google
         #
         #     * user-data
         #
-        #     * cloud-retail
-        #       This option requires additional allowlisting. Before using cloud-retail,
-        #       contact Cloud Retail support team first.
+        #     * cloud-retail:
+        #       This option requires enabling auto-learning function first. See
+        #       [guidelines](https://cloud.google.com/retail/docs/completion-overview#generated-completion-dataset).
         # @!attribute [rw] max_suggestions
         #   @return [::Integer]
         #     Completion max suggestions. If left unset or set to 0, then will fallback
-        #     to the configured value [CompletionConfig.max_suggestions][].
+        #     to the configured value
+        #     {::Google::Cloud::Retail::V2::CompletionConfig#max_suggestions CompletionConfig.max_suggestions}.
         #
         #     The maximum allowed max suggestions is 20. If it is set higher, it will be
         #     capped by 20.
+        # @!attribute [rw] enable_attribute_suggestions
+        #   @return [::Boolean]
+        #     If true, attribute suggestions are enabled and provided in the response.
+        #
+        #     This field is only available for the "cloud-retail" dataset.
+        # @!attribute [rw] entity
+        #   @return [::String]
+        #     The entity for customers who run multiple entities, domains, sites, or
+        #     regions, for example, `Google US`, `Google Ads`, `Waymo`,
+        #     `google.com`, `youtube.com`, etc.
+        #     If this is set, it must be an exact match with
+        #     {::Google::Cloud::Retail::V2::UserEvent#entity UserEvent.entity} to get
+        #     per-entity autocomplete results.
         class CompleteQueryRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Response of the auto-complete query.
+        # Response of the autocomplete query.
         # @!attribute [rw] completion_results
         #   @return [::Array<::Google::Cloud::Retail::V2::CompleteQueryResponse::CompletionResult>]
         #     Results of the matching suggestions. The result list is ordered and the
@@ -102,28 +120,43 @@ module Google
         # @!attribute [rw] attribution_token
         #   @return [::String]
         #     A unique complete token. This should be included in the
-        #     {::Google::Cloud::Retail::V2::SearchRequest SearchRequest} resulting from this
-        #     completion, which enables accurate attribution of complete model
-        #     performance.
+        #     {::Google::Cloud::Retail::V2::UserEvent#completion_detail UserEvent.completion_detail}
+        #     for search events resulting from this completion, which enables accurate
+        #     attribution of complete model performance.
         # @!attribute [rw] recent_search_results
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Array<::Google::Cloud::Retail::V2::CompleteQueryResponse::RecentSearchResult>]
-        #     Matched recent searches of this user. The maximum number of recent searches
-        #     is 10. This field is a restricted feature. Contact Retail Search support
-        #     team if you are interested in enabling it.
+        #     Deprecated. Matched recent searches of this user. The maximum number of
+        #     recent searches is 10. This field is a restricted feature. If you want to
+        #     enable it, contact Retail Search support.
         #
         #     This feature is only available when
         #     {::Google::Cloud::Retail::V2::CompleteQueryRequest#visitor_id CompleteQueryRequest.visitor_id}
         #     field is set and {::Google::Cloud::Retail::V2::UserEvent UserEvent} is imported.
         #     The recent searches satisfy the follow rules:
+        #
         #      * They are ordered from latest to oldest.
+        #
         #      * They are matched with
         #      {::Google::Cloud::Retail::V2::CompleteQueryRequest#query CompleteQueryRequest.query}
         #      case insensitively.
-        #      * They are transformed to lower cases.
+        #
+        #      * They are transformed to lower case.
+        #
         #      * They are UTF-8 safe.
         #
         #     Recent searches are deduplicated. More recent searches will be reserved
         #     when duplication happens.
+        # @!attribute [rw] attribute_results
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Retail::V2::CompleteQueryResponse::AttributeResult}]
+        #     A map of matched attribute suggestions. This field is only available for
+        #     "cloud-retail" dataset.
+        #
+        #     Current supported keys:
+        #
+        #     * `brands`
+        #
+        #     * `categories`
         class CompleteQueryResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -134,7 +167,15 @@ module Google
           #     The suggestion for the query.
           # @!attribute [rw] attributes
           #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Retail::V2::CustomAttribute}]
-          #     Additional custom attributes ingested through BigQuery.
+          #     Custom attributes for the suggestion term.
+          #
+          #     * For "user-data", the attributes are additional custom attributes
+          #     ingested through BigQuery.
+          #
+          #     * For "cloud-retail", the attributes are product attributes generated
+          #     by Cloud Retail. It requires
+          #     {::Google::Cloud::Retail::V2::UserEvent#product_details UserEvent.product_details}
+          #     is imported properly.
           class CompletionResult
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -149,11 +190,30 @@ module Google
             end
           end
 
-          # Recent search of this user.
+          # Deprecated: Recent search of this user.
+          # @deprecated This message is deprecated and may be removed in the next major version update.
           # @!attribute [rw] recent_search
           #   @return [::String]
           #     The recent search query.
           class RecentSearchResult
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Resource that represents attribute results.
+          # The list of suggestions for the attribute.
+          # @!attribute [rw] suggestions
+          #   @return [::Array<::String>]
+          class AttributeResult
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::Retail::V2::CompleteQueryResponse::AttributeResult]
+          class AttributeResultsEntry
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

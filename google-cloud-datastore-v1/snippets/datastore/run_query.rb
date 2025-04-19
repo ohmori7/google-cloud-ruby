@@ -19,15 +19,29 @@
 # [START datastore_v1_generated_Datastore_RunQuery_sync]
 require "google/cloud/datastore/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastore::V1::Datastore::Client.new
+##
+# Snippet for the run_query call in the Datastore service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastore::V1::Datastore::Client#run_query.
+#
+def run_query
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastore::V1::Datastore::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastore::V1::RunQueryRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastore::V1::RunQueryRequest.new
 
-# Call the run_query method.
-result = client.run_query request
+  # Call the run_query method.
+  result = client.run_query request
 
-# The returned object is of type Google::Cloud::Datastore::V1::RunQueryResponse.
-p result
+  # The returned object is of type Google::Cloud::Datastore::V1::RunQueryResponse.
+  p result
+end
 # [END datastore_v1_generated_Datastore_RunQuery_sync]

@@ -28,9 +28,12 @@ module Google
   module Cloud
     module Compute
       module V1
-        # To load this service and instantiate a REST client:
+        ##
+        # The PublicAdvertisedPrefixes API.
         #
-        #     require "google/cloud/compute/v1/public_advertised_prefixes"
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/compute/v1/public_advertised_prefixes/rest"
         #     client = ::Google::Cloud::Compute::V1::PublicAdvertisedPrefixes::Rest::Client.new
         #
         module PublicAdvertisedPrefixes

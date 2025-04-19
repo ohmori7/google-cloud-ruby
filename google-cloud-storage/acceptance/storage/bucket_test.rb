@@ -29,7 +29,7 @@ describe Google::Cloud::Storage::Bucket, :storage do
 
   before do
     # always reset the bucket permissions
-    bucket.acl.private!
+    safe_gcs_execute { bucket.acl.private! }
   end
 
   it "creates and gets and updates and deletes a bucket" do
@@ -48,6 +48,7 @@ describe Google::Cloud::Storage::Bucket, :storage do
     _(one_off_bucket.labels).must_equal({})
     _(one_off_bucket.location_type).must_equal "multi-region"
     _(one_off_bucket.user_project).must_equal true
+    _(one_off_bucket.hierarchical_namespace).must_be_nil
     one_off_bucket.update do |b|
       b.storage_class = :nearline
       b.website_main = "index.html"
@@ -156,7 +157,9 @@ describe Google::Cloud::Storage::Bucket, :storage do
                                    is_live: true,
                                    matches_storage_class: ["STANDARD"],
                                    noncurrent_time_before: noncurrent_time_before, # string in RFC 3339 format with only the date part also ok
-                                   num_newer_versions: 3
+                                   num_newer_versions: 3,
+                                   matches_prefix: ["some_prefix"],
+                                   matches_suffix: ["some_suffix"]
 
     end
 
@@ -173,6 +176,8 @@ describe Google::Cloud::Storage::Bucket, :storage do
     _(bucket.lifecycle.last.matches_storage_class).must_equal ["STANDARD"]
     _(bucket.lifecycle.last.noncurrent_time_before).must_equal noncurrent_time_before
     _(bucket.lifecycle.last.num_newer_versions).must_equal 3
+    _(bucket.lifecycle.last.matches_prefix).must_equal ["some_prefix"]
+    _(bucket.lifecycle.last.matches_suffix).must_equal ["some_suffix"]
 
     bucket.reload!
 
@@ -187,6 +192,8 @@ describe Google::Cloud::Storage::Bucket, :storage do
       l.last.matches_storage_class = ["NEARLINE"]
       l.last.noncurrent_time_before = "2019-03-16"
       l.last.num_newer_versions = 4
+      l.last.matches_prefix = ["some_other_prefix"]
+      l.last.matches_suffix = ["some_other_suffix"]
 
 
       _(l.last.created_before).must_be_kind_of String
@@ -199,6 +206,8 @@ describe Google::Cloud::Storage::Bucket, :storage do
     _(bucket.lifecycle.last.custom_time_before).must_equal custom_time_before_2
     _(bucket.lifecycle.last.noncurrent_time_before).must_be_kind_of Date
     _(bucket.lifecycle.last.noncurrent_time_before).must_equal noncurrent_time_before_2
+    _(bucket.lifecycle.last.matches_prefix).must_equal ["some_other_prefix"]
+    _(bucket.lifecycle.last.matches_suffix).must_equal ["some_other_suffix"]
 
 
     bucket.reload!
@@ -219,6 +228,35 @@ describe Google::Cloud::Storage::Bucket, :storage do
     _(bucket.lifecycle.last.noncurrent_time_before).must_be_kind_of Date
     _(bucket.lifecycle.last.noncurrent_time_before).must_equal noncurrent_time_before_2
     _(bucket.lifecycle.last.num_newer_versions).must_equal 4
+    _(bucket.lifecycle.last.matches_prefix).must_equal ["some_other_prefix"]
+    _(bucket.lifecycle.last.matches_suffix).must_equal ["some_other_suffix"]
+
+    bucket.lifecycle do |l|
+      l.delete_at(bucket.lifecycle.count - 1)
+    end
+
+    bucket.reload!
+
+    _(bucket.lifecycle.count).must_equal original_count
+  end
+
+  it "adds lifecycle action IncompleteMultipartUpload to bucket" do
+    original_count = bucket.lifecycle.count
+
+    bucket.lifecycle do |l|
+      l.add_abort_incomplete_multipart_upload_rule age: 10,
+                                                   matches_prefix: ["images/", :some_prefix],
+                                                   matches_suffix: [".pdf", :some_suffix]
+    end
+
+    bucket.reload!
+
+    _(bucket.lifecycle).wont_be :empty?
+    _(bucket.lifecycle.count).must_equal original_count + 1
+    _(bucket.lifecycle.last.action).must_equal "AbortIncompleteMultipartUpload"
+    _(bucket.lifecycle.last.age).must_equal 10
+    _(bucket.lifecycle.last.matches_prefix).must_equal ["images/", "some_prefix"]
+    _(bucket.lifecycle.last.matches_suffix).must_equal [".pdf", "some_suffix"]
 
     bucket.lifecycle do |l|
       l.delete_at(bucket.lifecycle.count - 1)
@@ -232,6 +270,50 @@ describe Google::Cloud::Storage::Bucket, :storage do
   it "does not error when getting a file that does not exist" do
     random_bucket = storage.bucket "#{bucket_name}_does_not_exist"
     _(random_bucket).must_be :nil?
+  end
+
+  it "does not create a new bucket when both autoclass and storage_class are specified" do
+    one_off_bucket_name = "#{bucket_name}_one_off"
+
+    _(storage.bucket(one_off_bucket_name)).must_be :nil?
+
+    err = expect { storage.create_bucket one_off_bucket_name, user_project: true, autoclass_enabled: true, storage_class: "nearline" }.must_raise Google::Cloud::InvalidArgumentError
+    _(err.message).must_match /default storage class on bucket with Autoclass enabled to storage class other than STANDARD/
+  end
+
+  it "creates new bucket with autoclass config and then updates it" do
+    one_off_bucket_name = "#{bucket_name}_one_off"
+
+    _(storage.bucket(one_off_bucket_name)).must_be :nil?
+
+    one_off_bucket = safe_gcs_execute { storage.create_bucket one_off_bucket_name, user_project: true, autoclass_enabled: true }
+    _(storage.bucket(one_off_bucket_name)).wont_be :nil?
+    _(one_off_bucket.user_project).must_equal true
+    _(one_off_bucket.autoclass_enabled).must_equal true
+    _(one_off_bucket.autoclass_terminal_storage_class).must_equal 'NEARLINE'
+    _(one_off_bucket.autoclass_terminal_storage_class_update_time).wont_be :nil?
+    prev_toggle_time = one_off_bucket.autoclass_toggle_time
+
+    one_off_bucket.update do |b|
+      b.update_autoclass({ enabled: true, terminal_storage_class: "ARCHIVE"})
+    end
+    _(one_off_bucket.autoclass_enabled).must_equal true
+    _(one_off_bucket.autoclass_terminal_storage_class).must_equal "ARCHIVE"
+
+    one_off_bucket.update do |b|
+      b.autoclass_enabled= false
+    end
+    _(one_off_bucket.autoclass_enabled).must_equal false
+
+    one_off_bucket_copy = storage.bucket one_off_bucket_name, user_project: true
+    _(one_off_bucket_copy).wont_be :nil?
+    _(one_off_bucket_copy.user_project).must_equal true
+    _(one_off_bucket_copy.autoclass_enabled).must_equal false
+    refute one_off_bucket_copy.autoclass_toggle_time == prev_toggle_time
+
+    one_off_bucket.files.all &:delete
+    safe_gcs_execute { one_off_bucket.delete }
+    _(storage.bucket(one_off_bucket_name)).must_be :nil?
   end
 
   describe "anonymous project" do
@@ -259,5 +341,48 @@ describe Google::Cloud::Storage::Bucket, :storage do
     safe_gcs_execute { single_use_bucket.delete }
 
     _(storage.bucket(single_use_bucket_name)).must_be :nil?
+  end
+
+  it "creates a dual region bucket" do
+    one_off_bucket_name = "multi_loc_#{bucket_name}"
+    _(storage.bucket(one_off_bucket_name)).must_be :nil?
+
+    one_off_bucket = safe_gcs_execute do
+      storage.create_bucket one_off_bucket_name,
+                            location: "US",
+                            custom_placement_config: { data_locations: ["US-EAST1", "US-WEST1"] }
+    end
+
+    _(storage.bucket(one_off_bucket_name)).wont_be :nil?
+
+    _(one_off_bucket.name).must_equal one_off_bucket_name
+    _(one_off_bucket.location).must_equal "US"
+    _(one_off_bucket.data_locations).must_equal ["US-EAST1", "US-WEST1"]
+    _(one_off_bucket.location_type).must_equal "dual-region"
+
+    safe_gcs_execute { one_off_bucket.delete }
+
+    _(storage.bucket(one_off_bucket_name)).must_be :nil?
+  end
+
+  it "creates new bucket with hierarchical namespace enabled" do
+    hns_bucket_name = "hns_#{bucket_name}"
+    hierarchical_namespace = Google::Apis::StorageV1::Bucket::HierarchicalNamespace.new(enabled: true)
+
+    _(storage.bucket(hns_bucket_name)).must_be_nil
+
+    hns_bucket = safe_gcs_execute {
+      storage.create_bucket hns_bucket_name do |b|
+        b.uniform_bucket_level_access = true
+        b.hierarchical_namespace = hierarchical_namespace
+      end
+    }
+
+    _(hns_bucket.hierarchical_namespace).wont_be_nil
+    _(hns_bucket.hierarchical_namespace.enabled).must_equal true
+
+    safe_gcs_execute { hns_bucket.delete }
+
+    _(storage.bucket(hns_bucket_name)).must_be :nil?
   end
 end

@@ -19,15 +19,29 @@
 # [START cloudtrace_v1_generated_TraceService_PatchTraces_sync]
 require "google/cloud/trace/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Trace::V1::TraceService::Client.new
+##
+# Snippet for the patch_traces call in the TraceService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Trace::V1::TraceService::Client#patch_traces.
+#
+def patch_traces
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Trace::V1::TraceService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Trace::V1::PatchTracesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Trace::V1::PatchTracesRequest.new
 
-# Call the patch_traces method.
-result = client.patch_traces request
+  # Call the patch_traces method.
+  result = client.patch_traces request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END cloudtrace_v1_generated_TraceService_PatchTraces_sync]

@@ -19,15 +19,29 @@
 # [START bigqueryreservation_v1_generated_ReservationService_CreateCapacityCommitment_sync]
 require "google/cloud/bigquery/reservation/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new
+##
+# Snippet for the create_capacity_commitment call in the ReservationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client#create_capacity_commitment.
+#
+def create_capacity_commitment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigquery::Reservation::V1::ReservationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigquery::Reservation::V1::CreateCapacityCommitmentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigquery::Reservation::V1::CreateCapacityCommitmentRequest.new
 
-# Call the create_capacity_commitment method.
-result = client.create_capacity_commitment request
+  # Call the create_capacity_commitment method.
+  result = client.create_capacity_commitment request
 
-# The returned object is of type Google::Cloud::Bigquery::Reservation::V1::CapacityCommitment.
-p result
+  # The returned object is of type Google::Cloud::Bigquery::Reservation::V1::CapacityCommitment.
+  p result
+end
 # [END bigqueryreservation_v1_generated_ReservationService_CreateCapacityCommitment_sync]

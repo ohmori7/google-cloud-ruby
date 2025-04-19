@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/retail/v2/prediction_service_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -30,6 +31,12 @@ module Google
           # Service for making recommendation prediction.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "retail.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -96,6 +103,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @prediction_service_stub.universe_domain
+            end
+
+            ##
             # Create a new PredictionService client object.
             #
             # @example
@@ -128,8 +144,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -140,11 +157,49 @@ module Google
 
               @prediction_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Retail::V2::PredictionService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @prediction_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @prediction_service_stub.endpoint
+                config.universe_domain = @prediction_service_stub.universe_domain
+                config.logger = @prediction_service_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @prediction_service_stub.logger
             end
 
             # Service calls
@@ -169,26 +224,41 @@ module Google
             #
             #   @param placement [::String]
             #     Required. Full resource name of the format:
-            #     \\{name=projects/*/locations/global/catalogs/default_catalog/placements/*}
-            #     The ID of the Recommendations AI placement. Before you can request
-            #     predictions from your model, you must create at least one placement for it.
-            #     For more information, see [Managing
-            #     placements](https://cloud.google.com/retail/recommendations-ai/docs/manage-placements).
+            #     `{placement=projects/*/locations/global/catalogs/default_catalog/servingConfigs/*}`
+            #     or
+            #     `{placement=projects/*/locations/global/catalogs/default_catalog/placements/*}`.
+            #     We recommend using the `servingConfigs` resource. `placements` is a legacy
+            #     resource.
+            #     The ID of the Recommendations AI serving config or placement.
+            #     Before you can request predictions from your model, you must create at
+            #     least one serving config or placement for it. For more information, see
+            #     [Manage serving configs]
+            #     (https://cloud.google.com/retail/docs/manage-configs).
             #
-            #     The full list of available placements can be seen at
-            #     https://console.cloud.google.com/recommendation/catalogs/default_catalog/placements
+            #     The full list of available serving configs can be seen at
+            #     https://console.cloud.google.com/ai/retail/catalogs/default_catalog/configs
             #   @param user_event [::Google::Cloud::Retail::V2::UserEvent, ::Hash]
             #     Required. Context about the user, what they are looking at and what action
             #     they took to trigger the predict request. Note that this user event detail
             #     won't be ingested to userEvent logs. Thus, a separate userEvent write
             #     request is required for event logging.
+            #
+            #     Don't set
+            #     {::Google::Cloud::Retail::V2::UserEvent#visitor_id UserEvent.visitor_id} or
+            #     {::Google::Cloud::Retail::V2::UserInfo#user_id UserInfo.user_id} to the same
+            #     fixed ID for different users. If you are trying to receive non-personalized
+            #     recommendations (not recommended; this can negatively impact model
+            #     performance), instead set
+            #     {::Google::Cloud::Retail::V2::UserEvent#visitor_id UserEvent.visitor_id} to a
+            #     random unique ID and leave
+            #     {::Google::Cloud::Retail::V2::UserInfo#user_id UserInfo.user_id} unset.
             #   @param page_size [::Integer]
-            #     Maximum number of results to return per page. Set this property
-            #     to the number of prediction results needed. If zero, the service will
-            #     choose a reasonable default. The maximum allowed value is 100. Values
-            #     above 100 will be coerced to 100.
+            #     Maximum number of results to return. Set this property to the number of
+            #     prediction results needed. If zero, the service will choose a reasonable
+            #     default. The maximum allowed value is 100. Values above 100 will be coerced
+            #     to 100.
             #   @param page_token [::String]
-            #     The previous PredictResponse.next_page_token.
+            #     This field is not used; leave it unset.
             #   @param filter [::String]
             #     Filter for restricting prediction results with a length limit of 5,000
             #     characters. Accepts values for tags and the `filterOutOfStockItems` flag.
@@ -213,9 +283,22 @@ module Google
             #      * filterOutOfStockItems  tag=(-"promotional")
             #      * filterOutOfStockItems
             #
-            #     If your filter blocks all prediction results, nothing will be returned. If
-            #     you want generic (unfiltered) popular products to be returned instead, set
-            #     `strictFiltering` to false in `PredictRequest.params`.
+            #     If your filter blocks all prediction results, the API will return *no*
+            #     results. If instead you want empty result sets to return generic
+            #     (unfiltered) popular products, set `strictFiltering` to False in
+            #     `PredictRequest.params`. Note that the API will never return items with
+            #     storageStatus of "EXPIRED" or "DELETED" regardless of filter choices.
+            #
+            #     If `filterSyntaxV2` is set to true under the `params` field, then
+            #     attribute-based expressions are expected instead of the above described
+            #     tag-based syntax. Examples:
+            #
+            #      * (colors: ANY("Red", "Blue")) AND NOT (categories: ANY("Phones"))
+            #      * (availability: ANY("IN_STOCK")) AND
+            #        (colors: ANY("Red") OR categories: ANY("Phones"))
+            #
+            #     For more information, see
+            #     [Filter recommendations](https://cloud.google.com/retail/docs/filter-recs).
             #   @param validate_only [::Boolean]
             #     Use validate only mode for this prediction query. If set to true, a
             #     dummy model will be used that returns arbitrary products.
@@ -232,7 +315,7 @@ module Google
             #     * `returnScore`: Boolean. If set to true, the prediction 'score'
             #        corresponding to each returned product will be set in the
             #        `results.metadata` field in the prediction response. The given
-            #        'score' indicates the probability of an product being clicked/purchased
+            #        'score' indicates the probability of a product being clicked/purchased
             #        given the user's context and history.
             #     * `strictFiltering`: Boolean. True by default. If set to false, the service
             #        will return generic (unfiltered) popular products instead of empty if
@@ -247,13 +330,15 @@ module Google
             #        'medium-diversity', 'high-diversity', 'auto-diversity'}. This gives
             #        request-level control and adjusts prediction results based on product
             #        category.
+            #     * `filterSyntaxV2`: Boolean. False by default. If set to true, the `filter`
+            #       field is interpreteted according to the new, attribute-based syntax.
             #   @param labels [::Hash{::String => ::String}]
             #     The labels applied to a resource must meet the following requirements:
             #
             #     * Each resource can have multiple labels, up to a maximum of 64.
             #     * Each label must be a key-value pair.
             #     * Keys have a minimum length of 1 character and a maximum length of 63
-            #       characters, and cannot be empty. Values can be empty, and have a maximum
+            #       characters and cannot be empty. Values can be empty and have a maximum
             #       length of 63 characters.
             #     * Keys and values can contain only lowercase letters, numeric characters,
             #       underscores, and dashes. All characters must use UTF-8 encoding, and
@@ -300,10 +385,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.predict.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Retail::V2::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -324,7 +410,6 @@ module Google
 
               @prediction_service_stub.call_rpc :predict, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -360,20 +445,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"retail.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -408,11 +500,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "retail.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "retail.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -427,6 +533,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -445,6 +553,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

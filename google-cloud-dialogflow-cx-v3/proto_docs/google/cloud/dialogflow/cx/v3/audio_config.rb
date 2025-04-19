@@ -50,6 +50,42 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
+          # Configuration of the barge-in behavior. Barge-in instructs the API to return
+          # a detected utterance at a proper time while the client is playing back the
+          # response audio from a previous request. When the client sees the
+          # utterance, it should stop the playback and immediately get ready for
+          # receiving the responses for the current request.
+          #
+          # The barge-in handling requires the client to start streaming audio input
+          # as soon as it starts playing back the audio from the previous response. The
+          # playback is modeled into two phases:
+          #
+          # * No barge-in phase: which goes first and during which speech detection
+          #   should not be carried out.
+          #
+          # * Barge-in phase: which follows the no barge-in phase and during which
+          #   the API starts speech detection and may inform the client that an utterance
+          #   has been detected. Note that no-speech event is not expected in this
+          #   phase.
+          #
+          # The client provides this configuration in terms of the durations of those
+          # two phases. The durations are measured in terms of the audio length from the
+          # start of the input audio.
+          #
+          # No-speech event is a response with END_OF_UTTERANCE without any transcript
+          # following up.
+          # @!attribute [rw] no_barge_in_duration
+          #   @return [::Google::Protobuf::Duration]
+          #     Duration that is not eligible for barge-in at the beginning of the input
+          #     audio.
+          # @!attribute [rw] total_duration
+          #   @return [::Google::Protobuf::Duration]
+          #     Total duration for the playback at the beginning of the input audio.
+          class BargeInConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # Instructs the speech recognizer on how to process the audio content.
           # @!attribute [rw] audio_encoding
           #   @return [::Google::Cloud::Dialogflow::CX::V3::AudioEncoding]
@@ -63,10 +99,12 @@ module Google
           #     more details.
           # @!attribute [rw] enable_word_info
           #   @return [::Boolean]
-          #     Optional. If `true`, Dialogflow returns {::Google::Cloud::Dialogflow::CX::V3::SpeechWordInfo SpeechWordInfo} in
-          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult StreamingRecognitionResult} with information about the recognized speech
-          #     words, e.g. start and end time offsets. If false or unspecified, Speech
-          #     doesn't return any word-level information.
+          #     Optional. If `true`, Dialogflow returns
+          #     {::Google::Cloud::Dialogflow::CX::V3::SpeechWordInfo SpeechWordInfo} in
+          #     {::Google::Cloud::Dialogflow::CX::V3::StreamingRecognitionResult StreamingRecognitionResult}
+          #     with information about the recognized speech words, e.g. start and end time
+          #     offsets. If false or unspecified, Speech doesn't return any word-level
+          #     information.
           # @!attribute [rw] phrase_hints
           #   @return [::Array<::String>]
           #     Optional. A list of strings containing words and phrases that the speech
@@ -77,20 +115,14 @@ module Google
           #     for more details.
           # @!attribute [rw] model
           #   @return [::String]
-          #     Optional. Which Speech model to select for the given request. Select the
-          #     model best suited to your domain to get best results. If a model is not
-          #     explicitly specified, then we auto-select a model based on the parameters
-          #     in the InputAudioConfig.
-          #     If enhanced speech model is enabled for the agent and an enhanced
-          #     version of the specified model for the language does not exist, then the
-          #     speech is recognized using the standard version of the specified model.
-          #     Refer to
-          #     [Cloud Speech API
-          #     documentation](https://cloud.google.com/speech-to-text/docs/basics#select-model)
-          #     for more details.
+          #     Optional. Which Speech model to select for the given request.
+          #     For more information, see
+          #     [Speech
+          #     models](https://cloud.google.com/dialogflow/cx/docs/concept/speech-models).
           # @!attribute [rw] model_variant
           #   @return [::Google::Cloud::Dialogflow::CX::V3::SpeechModelVariant]
-          #     Optional. Which variant of the {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#model Speech model} to use.
+          #     Optional. Which variant of the [Speech
+          #     model][google.cloud.dialogflow.cx.v3.InputAudioConfig.model] to use.
           # @!attribute [rw] single_utterance
           #   @return [::Boolean]
           #     Optional. If `false` (default), recognition does not cease until the
@@ -101,6 +133,15 @@ module Google
           #     client should close the stream and start a new request with a new stream as
           #     needed.
           #     Note: This setting is relevant only for streaming methods.
+          # @!attribute [rw] barge_in_config
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::BargeInConfig]
+          #     Configuration of barge-in behavior during the streaming of input audio.
+          # @!attribute [rw] opt_out_conformer_model_migration
+          #   @return [::Boolean]
+          #     If `true`, the request will opt out for STT conformer model migration.
+          #     This field will be deprecated once force migration takes place in June
+          #     2024. Please refer to [Dialogflow CX Speech model
+          #     migration](https://cloud.google.com/dialogflow/cx/docs/concept/speech-model-migration).
           class InputAudioConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -119,10 +160,10 @@ module Google
           #   @return [::Google::Cloud::Dialogflow::CX::V3::SsmlVoiceGender]
           #     Optional. The preferred gender of the voice. If not set, the service will
           #     choose a voice based on the other parameters such as language_code and
-          #     {::Google::Cloud::Dialogflow::CX::V3::VoiceSelectionParams#name name}. Note that this is only a preference, not requirement. If a
-          #     voice of the appropriate gender is not available, the synthesizer
-          #     substitutes a voice with a different gender rather than failing the
-          #     request.
+          #     {::Google::Cloud::Dialogflow::CX::V3::VoiceSelectionParams#name name}. Note that
+          #     this is only a preference, not requirement. If a voice of the appropriate
+          #     gender is not available, the synthesizer substitutes a voice with a
+          #     different gender rather than failing the request.
           class VoiceSelectionParams
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -177,9 +218,46 @@ module Google
           # @!attribute [rw] synthesize_speech_config
           #   @return [::Google::Cloud::Dialogflow::CX::V3::SynthesizeSpeechConfig]
           #     Optional. Configuration of how speech should be synthesized.
+          #     If not specified,
+          #     {::Google::Cloud::Dialogflow::CX::V3::Agent#text_to_speech_settings Agent.text_to_speech_settings}
+          #     is applied.
           class OutputAudioConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Settings related to speech synthesizing.
+          # @!attribute [rw] synthesize_speech_configs
+          #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Dialogflow::CX::V3::SynthesizeSpeechConfig}]
+          #     Configuration of how speech should be synthesized, mapping from language
+          #     (https://cloud.google.com/dialogflow/cx/docs/reference/language) to
+          #     SynthesizeSpeechConfig.
+          #
+          #     These settings affect:
+          #
+          #      - The [phone
+          #      gateway](https://cloud.google.com/dialogflow/cx/docs/concept/integration/phone-gateway)
+          #        synthesize configuration set via
+          #        {::Google::Cloud::Dialogflow::CX::V3::Agent#text_to_speech_settings Agent.text_to_speech_settings}.
+          #
+          #      - How speech is synthesized when invoking
+          #      {::Google::Cloud::Dialogflow::CX::V3::Sessions::Client session} APIs.
+          #        {::Google::Cloud::Dialogflow::CX::V3::Agent#text_to_speech_settings Agent.text_to_speech_settings}
+          #        only applies if
+          #        {::Google::Cloud::Dialogflow::CX::V3::OutputAudioConfig#synthesize_speech_config OutputAudioConfig.synthesize_speech_config}
+          #        is not specified.
+          class TextToSpeechSettings
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::Google::Cloud::Dialogflow::CX::V3::SynthesizeSpeechConfig]
+            class SynthesizeSpeechConfigsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
           # Audio encoding of the audio content sent in the conversational query request.
@@ -229,9 +307,13 @@ module Google
             # is replaced with a single byte containing the block length. Only Speex
             # wideband is supported. `sample_rate_hertz` must be 16000.
             AUDIO_ENCODING_SPEEX_WITH_HEADER_BYTE = 7
+
+            # 8-bit samples that compand 13-bit audio samples using G.711 PCMU/a-law.
+            AUDIO_ENCODING_ALAW = 8
           end
 
-          # Variant of the specified {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#model Speech model} to use.
+          # Variant of the specified [Speech
+          # model][google.cloud.dialogflow.cx.v3.InputAudioConfig.model] to use.
           #
           # See the [Cloud Speech
           # documentation](https://cloud.google.com/speech-to-text/docs/enhanced-models)
@@ -245,10 +327,6 @@ module Google
 
             # Use the best available variant of the [Speech
             # model][InputAudioConfig.model] that the caller is eligible for.
-            #
-            # Please see the [Dialogflow
-            # docs](https://cloud.google.com/dialogflow/docs/data-logging) for
-            # how to make your project eligible for enhanced models.
             USE_BEST_AVAILABLE = 1
 
             # Use standard model variant even if an enhanced model is available.  See the
@@ -260,17 +338,12 @@ module Google
             # Use an enhanced model variant:
             #
             # * If an enhanced variant does not exist for the given
-            #   {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#model model} and request language, Dialogflow falls
-            #   back to the standard variant.
+            #   {::Google::Cloud::Dialogflow::CX::V3::InputAudioConfig#model model} and request
+            #   language, Dialogflow falls back to the standard variant.
             #
             #   The [Cloud Speech
             #   documentation](https://cloud.google.com/speech-to-text/docs/enhanced-models)
             #   describes which models have enhanced variants.
-            #
-            # * If the API caller isn't eligible for enhanced models, Dialogflow returns
-            #   an error.  Please see the [Dialogflow
-            #   docs](https://cloud.google.com/dialogflow/docs/data-logging)
-            #   for how to make your project eligible.
             USE_ENHANCED = 3
           end
 
@@ -314,6 +387,9 @@ module Google
 
             # 8-bit samples that compand 14-bit audio samples using G.711 PCMU/mu-law.
             OUTPUT_AUDIO_ENCODING_MULAW = 5
+
+            # 8-bit samples that compand 13-bit audio samples using G.711 PCMU/a-law.
+            OUTPUT_AUDIO_ENCODING_ALAW = 6
           end
         end
       end

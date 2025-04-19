@@ -19,15 +19,29 @@
 # [START dataqna_v1alpha_generated_AutoSuggestionService_SuggestQueries_sync]
 require "google/cloud/dataqna/v1alpha"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataQnA::V1alpha::AutoSuggestionService::Client.new
+##
+# Snippet for the suggest_queries call in the AutoSuggestionService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataQnA::V1alpha::AutoSuggestionService::Client#suggest_queries.
+#
+def suggest_queries
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataQnA::V1alpha::AutoSuggestionService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataQnA::V1alpha::SuggestQueriesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataQnA::V1alpha::SuggestQueriesRequest.new
 
-# Call the suggest_queries method.
-result = client.suggest_queries request
+  # Call the suggest_queries method.
+  result = client.suggest_queries request
 
-# The returned object is of type Google::Cloud::DataQnA::V1alpha::SuggestQueriesResponse.
-p result
+  # The returned object is of type Google::Cloud::DataQnA::V1alpha::SuggestQueriesResponse.
+  p result
+end
 # [END dataqna_v1alpha_generated_AutoSuggestionService_SuggestQueries_sync]

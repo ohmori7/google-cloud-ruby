@@ -19,25 +19,34 @@ desc "Updates all release levels in repo-metadata.json files"
 flag :git_remote, "--remote=NAME" do
   desc "The name of the git remote to use as the pull request head. If omitted, does not open a pull request."
 end
+flag :enable_fork, "--fork" do
+  desc "Use a fork to open the pull request"
+end
 
 include :exec, e: true
+include "yoshi-pr-generator"
 
 def run
   require "json"
-  require "pull_request_generator"
-  extend PullRequestGenerator
+
+  yoshi_utils.git_ensure_identity
+  if enable_fork
+    set :git_remote, "pull-request-fork" unless git_remote
+    yoshi_utils.gh_ensure_fork remote: git_remote
+  end
 
   updated, pr_result = update_release_levels
   output_result updated, pr_result
 end
 
 def update_release_levels
-  timestamp = Time.now.utc.strftime("%Y%m%d-%H%M%S")
+  timestamp = Time.now.utc.strftime "%Y%m%d-%H%M%S"
   branch_name = "pr/update-release-levels-#{timestamp}"
   updated = []
-  pr_result = generate_pull_request git_remote: git_remote,
-                                    branch_name: branch_name,
-                                    commit_message: "chore: Update release levels in repo-metadata" do
+  pr_result = yoshi_pr_generator.capture enabled: !git_remote.nil?,
+                                         remote: git_remote,
+                                         branch_name: branch_name,
+                                         commit_message: "chore: Update release levels in repo-metadata" do
     selected_gems.each do |gem_name|
       updated << gem_name if update_gem gem_name
     end
@@ -48,23 +57,21 @@ end
 def output_result updated, pr_result, *style
   puts "Updated: #{updated.inspect}", *style
   case pr_result
-  when :opened
-    puts "Created pull request", *style
+  when Integer
+    puts "Created pull request #{pr_request}", *style
   when :unchanged
     puts "No pull request created because nothing changed", *style
-  when :disabled
-    puts "Results left in the local directory", *style
   else
-    puts "Unknown result #{result.inspect}", *style
+    puts "Results left in the local directory", *style
   end
 end
 
 def selected_gems
   Dir.chdir context_directory
   Dir.glob("*/.repo-metadata.json")
-    .map { |path| File.dirname path }
-    .find_all { |gem_name| File.file? "#{gem_name}/#{gem_name}.gemspec" }
-    .sort
+     .map { |path| File.dirname path }
+     .find_all { |gem_name| File.file? "#{gem_name}/#{gem_name}.gemspec" }
+     .sort
 end
 
 def update_gem gem_name
@@ -76,9 +83,7 @@ def update_gem gem_name
     return false
   end
   logger.info "Updated repo-metadata for #{gem_name}"
-  File.open "#{gem_name}/.repo-metadata.json", "w" do |file|
-    file.write updated_metadata
-  end
+  File.write "#{gem_name}/.repo-metadata.json", updated_metadata
   true
 end
 

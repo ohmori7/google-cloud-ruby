@@ -1,5 +1,151 @@
 # Release History
 
+### 1.3.0 (2025-01-29)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.2.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.1.1 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+
+### 1.1.0 (2024-08-02)
+
+#### Features
+
+* Support for ComplianceOccurrence#version 
+* Support for DiscoveryOccurrence#vulnerability_attestation 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.16.1 (2024-04-19)
+
+#### Bug Fixes
+
+* Set the transport of grafeas back to grpc only ([#25439](https://github.com/googleapis/google-cloud-ruby/issues/25439)) 
+
+### 0.16.0 (2024-03-18)
+
+#### Features
+
+* Support InTotoSlsaProvenanceV1 ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+* Support new field "extra_details" in VulnerabilityOccurrence ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+* Support new field "impact" in Impact ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+* Support new field "in_toto_slsa_provenance_v1" in BuildOccurrence ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+* Support new field "sbom_status" in DiscoveryOccurence, Occurence and Note ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+* Support new field "vulnerability_id" in Assessment ([#25380](https://github.com/googleapis/google-cloud-ruby/issues/25380)) 
+
+### 0.15.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24881](https://github.com/googleapis/google-cloud-ruby/issues/24881)) 
+
+### 0.14.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files ([#24517](https://github.com/googleapis/google-cloud-ruby/issues/24517)) 
+
+### 0.14.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.14.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23790](https://github.com/googleapis/google-cloud-ruby/issues/23790)) 
+
+### 0.13.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22926](https://github.com/googleapis/google-cloud-ruby/issues/22926)) 
+
+### 0.12.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.12.0 (2023-05-31)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21681](https://github.com/googleapis/google-cloud-ruby/issues/21681)) 
+
+### 0.11.0 (2023-05-04)
+
+#### Features
+
+* Added support for bulk writer ([#21426](https://github.com/googleapis/google-cloud-ruby/issues/21426)) 
+
+### 0.10.0 (2023-04-16)
+
+#### Features
+
+* Update AttackComplexity and Authentication enums 
+
+### 0.9.0 (2023-03-15)
+
+#### Features
+
+* Add vulnerability assessment options ([#20892](https://github.com/googleapis/google-cloud-ruby/issues/20892)) 
+
+### 0.8.0 (2023-03-05)
+
+#### Features
+
+* Report the CVSS V2 score for a vulnerability ([#20597](https://github.com/googleapis/google-cloud-ruby/issues/20597)) 
+
+### 0.7.0 (2022-10-03)
+
+#### Features
+
+* add new analysis status and cvss version fields ([#19238](https://github.com/googleapis/google-cloud-ruby/issues/19238)) 
+
+### 0.6.1 (2022-07-27)
+
+* No significant updates
+
+### 0.6.0 (2022-07-08)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 0.5.0 (2022-06-14)
+
+#### Features
+
+* Added a number of fields, including package type, CPE URI, and architecture, to the PackageNoteand PackageOccurrence data structures
+* Added benchmark document name field to ComplianceVersion
+* Added file location field to the PackageIssue data structure
+* Added support for SLSA provenance version 0.2
+#### Bug Fixes
+
+* Deprecated the CPE URI from the Location data structure
+
 ### 0.4.0 / 2022-01-13
 
 #### Features

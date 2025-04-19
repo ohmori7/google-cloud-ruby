@@ -19,15 +19,29 @@
 # [START essentialcontacts_v1_generated_EssentialContactsService_UpdateContact_sync]
 require "google/cloud/essential_contacts/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::EssentialContacts::V1::EssentialContactsService::Client.new
+##
+# Snippet for the update_contact call in the EssentialContactsService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::EssentialContacts::V1::EssentialContactsService::Client#update_contact.
+#
+def update_contact
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::EssentialContacts::V1::EssentialContactsService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::EssentialContacts::V1::UpdateContactRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::EssentialContacts::V1::UpdateContactRequest.new
 
-# Call the update_contact method.
-result = client.update_contact request
+  # Call the update_contact method.
+  result = client.update_contact request
 
-# The returned object is of type Google::Cloud::EssentialContacts::V1::Contact.
-p result
+  # The returned object is of type Google::Cloud::EssentialContacts::V1::Contact.
+  p result
+end
 # [END essentialcontacts_v1_generated_EssentialContactsService_UpdateContact_sync]

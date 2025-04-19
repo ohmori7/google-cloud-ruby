@@ -53,6 +53,7 @@ module Google
         #     channel of the corresponding type. Each label includes a
         #     description for how that field should be populated.
         # @!attribute [rw] supported_tiers
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Array<::Google::Cloud::Monitoring::V3::ServiceTier>]
         #     The tiers that support this notification channel; the project service tier
         #     must be one of the supported_tiers.
@@ -72,10 +73,12 @@ module Google
         # @!attribute [rw] type
         #   @return [::String]
         #     The type of the notification channel. This field matches the
-        #     value of the {::Google::Cloud::Monitoring::V3::NotificationChannelDescriptor#type NotificationChannelDescriptor.type} field.
+        #     value of the
+        #     {::Google::Cloud::Monitoring::V3::NotificationChannelDescriptor#type NotificationChannelDescriptor.type}
+        #     field.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The full REST resource name for this channel. The format is:
+        #     Identifier. The full REST resource name for this channel. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/notificationChannels/[CHANNEL_ID]
         #
@@ -95,8 +98,8 @@ module Google
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     Configuration fields that define the channel and its behavior. The
         #     permissible and required labels are specified in the
-        #     {::Google::Cloud::Monitoring::V3::NotificationChannelDescriptor#labels NotificationChannelDescriptor.labels} of the
-        #     `NotificationChannelDescriptor` corresponding to the `type` field.
+        #     {::Google::Cloud::Monitoring::V3::NotificationChannelDescriptor#labels NotificationChannelDescriptor.labels}
+        #     of the `NotificationChannelDescriptor` corresponding to the `type` field.
         # @!attribute [rw] user_labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     User-supplied key/value data that does not need to conform to

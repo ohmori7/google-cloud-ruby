@@ -28,9 +28,12 @@ module Google
   module Cloud
     module Compute
       module V1
-        # To load this service and instantiate a REST client:
+        ##
+        # The PublicDelegatedPrefixes API.
         #
-        #     require "google/cloud/compute/v1/public_delegated_prefixes"
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/compute/v1/public_delegated_prefixes/rest"
         #     client = ::Google::Cloud::Compute::V1::PublicDelegatedPrefixes::Rest::Client.new
         #
         module PublicDelegatedPrefixes

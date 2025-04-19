@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :monitoring do |config|
-  config.add_field! :endpoint,      "monitoring.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,6 +39,7 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -48,28 +49,33 @@ module Google
       # Create a new client object for AlertPolicyService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::AlertPolicyService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/AlertPolicyService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::AlertPolicyService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-AlertPolicyService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the AlertPolicyService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
       #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the AlertPolicyService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.alert_policy_service_available?}.
+      #
       # ## About AlertPolicyService
       #
       # The AlertPolicyService API is used to manage (list, create, delete,
-      # edit) alert policies in Stackdriver Monitoring. An alerting policy is
+      # edit) alert policies in Cloud Monitoring. An alerting policy is
       # a description of the conditions under which some aspect of your
       # system is considered to be "unhealthy" and the ways to notify
       # people or services about this state. In addition to using this API, alert
       # policies can also be managed through
-      # [Stackdriver Monitoring](https://cloud.google.com/monitoring/docs/),
+      # [Cloud Monitoring](https://cloud.google.com/monitoring/docs/),
       # which can be reached by clicking the "Monitoring" tab in
-      # [Cloud Console](https://console.cloud.google.com/).
+      # [Cloud console](https://console.cloud.google.com/).
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [AlertPolicyService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.alert_policy_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -78,20 +84,51 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:AlertPolicyService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:AlertPolicyService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AlertPolicyService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.alert_policy_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AlertPolicyService service,
+      # or if the versioned client gem needs an update to support the AlertPolicyService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.alert_policy_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :AlertPolicyService
+        service_module = service_module.const_get :AlertPolicyService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for GroupService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::GroupService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/GroupService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::GroupService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-GroupService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the GroupService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the GroupService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.group_service_available?}.
       #
       # ## About GroupService
       #
@@ -110,7 +147,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [GroupService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.group_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -119,20 +156,51 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:GroupService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:GroupService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GroupService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.group_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GroupService service,
+      # or if the versioned client gem needs an update to support the GroupService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.group_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :GroupService
+        service_module = service_module.const_get :GroupService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for MetricService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::MetricService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/MetricService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::MetricService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-MetricService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the MetricService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the MetricService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.metric_service_available?}.
       #
       # ## About MetricService
       #
@@ -141,7 +209,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [MetricService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.metric_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -150,20 +218,51 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:MetricService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:MetricService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the MetricService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.metric_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the MetricService service,
+      # or if the versioned client gem needs an update to support the MetricService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.metric_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :MetricService
+        service_module = service_module.const_get :MetricService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for NotificationChannelService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::NotificationChannelService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/NotificationChannelService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::NotificationChannelService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-NotificationChannelService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the NotificationChannelService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the NotificationChannelService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.notification_channel_service_available?}.
       #
       # ## About NotificationChannelService
       #
@@ -172,7 +271,7 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [NotificationChannelService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.notification_channel_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -181,30 +280,61 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:NotificationChannelService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:NotificationChannelService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the NotificationChannelService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.notification_channel_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the NotificationChannelService service,
+      # or if the versioned client gem needs an update to support the NotificationChannelService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.notification_channel_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :NotificationChannelService
+        service_module = service_module.const_get :NotificationChannelService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for QueryService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::QueryService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/QueryService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::QueryService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-QueryService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the QueryService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
       #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the QueryService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.query_service_available?}.
+      #
       # ## About QueryService
       #
-      # The QueryService API is used to manage time series data in Stackdriver
+      # The QueryService API is used to manage time series data in Cloud
       # Monitoring. Time series data is a collection of data points that describes
       # the time-varying values of a metric.
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [QueryService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.query_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -213,31 +343,62 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:QueryService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:QueryService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the QueryService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.query_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the QueryService service,
+      # or if the versioned client gem needs an update to support the QueryService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.query_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :QueryService
+        service_module = service_module.const_get :QueryService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ServiceMonitoringService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::ServiceMonitoringService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/ServiceMonitoringService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::ServiceMonitoringService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-ServiceMonitoringService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ServiceMonitoringService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
       #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the ServiceMonitoringService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.service_monitoring_service_available?}.
+      #
       # ## About ServiceMonitoringService
       #
       # The Cloud Monitoring Service-Oriented Monitoring API has endpoints for
-      # managing and querying aspects of a workspace's services. These include the
-      # `Service`'s monitored resources, its Service-Level Objectives, and a taxonomy
-      # of categorized Health Metrics.
+      # managing and querying aspects of a Metrics Scope's services. These include
+      # the `Service`'s monitored resources, its Service-Level Objectives, and a
+      # taxonomy of categorized Health Metrics.
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [ServiceMonitoringService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.service_monitoring_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -246,35 +407,129 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:ServiceMonitoringService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:ServiceMonitoringService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ServiceMonitoringService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.service_monitoring_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ServiceMonitoringService service,
+      # or if the versioned client gem needs an update to support the ServiceMonitoringService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.service_monitoring_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :ServiceMonitoringService
+        service_module = service_module.const_get :ServiceMonitoringService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for SnoozeService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Monitoring::V3::SnoozeService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-SnoozeService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the SnoozeService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the SnoozeService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.snooze_service_available?}.
+      #
+      # ## About SnoozeService
+      #
+      # The SnoozeService API is used to temporarily prevent an alert policy from
+      # generating alerts. A Snooze is a description of the criteria under which one
+      # or more alert policies should not fire alerts for the specified duration.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.snooze_service version: :v3, &block
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:SnoozeService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SnoozeService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.snooze_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SnoozeService service,
+      # or if the versioned client gem needs an update to support the SnoozeService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.snooze_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :SnoozeService
+        service_module = service_module.const_get :SnoozeService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for UptimeCheckService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Monitoring::V3::UptimeCheckService::Client](https://googleapis.dev/ruby/google-cloud-monitoring-v3/latest/Google/Cloud/Monitoring/V3/UptimeCheckService/Client.html)
-      # for version V3 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Monitoring::V3::UptimeCheckService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-monitoring-v3/latest/Google-Cloud-Monitoring-V3-UptimeCheckService-Client)
+      # for a gRPC client for version V3 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the UptimeCheckService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
       #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the UptimeCheckService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Monitoring.uptime_check_service_available?}.
+      #
       # ## About UptimeCheckService
       #
       # The UptimeCheckService API is used to manage (list, create, delete, edit)
-      # Uptime check configurations in the Stackdriver Monitoring product. An Uptime
+      # Uptime check configurations in the Cloud Monitoring product. An Uptime
       # check is a piece of configuration that determines which resources and
       # services to monitor for availability. These configurations can also be
-      # configured interactively by navigating to the [Cloud Console]
-      # (http://console.cloud.google.com), selecting the appropriate project,
-      # clicking on "Monitoring" on the left-hand side to navigate to Stackdriver,
-      # and then clicking on "Uptime".
+      # configured interactively by navigating to the [Cloud console]
+      # (https://console.cloud.google.com), selecting the appropriate project,
+      # clicking on "Monitoring" on the left-hand side to navigate to Cloud
+      # Monitoring, and then clicking on "Uptime".
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v3`.
-      # @return [UptimeCheckService::Client] A client object for the specified version.
+      # @return [::Object] A client object for the specified version.
       #
       def self.uptime_check_service version: :v3, &block
         require "google/cloud/monitoring/#{version.to_s.downcase}"
@@ -283,8 +538,34 @@ module Google
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Monitoring.const_get package_name
-        package_module.const_get(:UptimeCheckService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Monitoring.const_get(package_name).const_get(:UptimeCheckService)
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the UptimeCheckService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Monitoring.uptime_check_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the UptimeCheckService service,
+      # or if the versioned client gem needs an update to support the UptimeCheckService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v3`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.uptime_check_service_available? version: :v3
+        require "google/cloud/monitoring/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Monitoring
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Monitoring.const_get package_name
+        return false unless service_module.const_defined? :UptimeCheckService
+        service_module = service_module.const_get :UptimeCheckService
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -304,7 +585,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

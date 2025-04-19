@@ -24,9 +24,22 @@ module Google
         # Request message for Bigtable.ReadRows.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table from which to read.
+        #     Optional. The unique name of the table from which to read.
+        #
         #     Values are of the form
         #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView from which to read.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
+        # @!attribute [rw] materialized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the MaterializedView from which to read.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/materializedViews/<materialized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
@@ -43,9 +56,42 @@ module Google
         #   @return [::Integer]
         #     The read will stop after committing to N rows' worth of results. The
         #     default (zero) is to return all results.
+        # @!attribute [rw] request_stats_view
+        #   @return [::Google::Cloud::Bigtable::V2::ReadRowsRequest::RequestStatsView]
+        #     The view into RequestStats, as described above.
+        # @!attribute [rw] reversed
+        #   @return [::Boolean]
+        #     Experimental API - Please note that this API is currently experimental
+        #     and can change in the future.
+        #
+        #     Return rows in lexiographical descending order of the row keys. The row
+        #     contents will not be affected by this flag.
+        #
+        #     Example result set:
+        #
+        #         [
+        #           {key: "k2", "f:col1": "v1", "f:col2": "v1"},
+        #           {key: "k1", "f:col1": "v2", "f:col2": "v2"}
+        #         ]
         class ReadRowsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The desired view into RequestStats that should be returned in the response.
+          #
+          # See also: RequestStats message.
+          module RequestStatsView
+            # The default / unset value. The API will default to the NONE option below.
+            REQUEST_STATS_VIEW_UNSPECIFIED = 0
+
+            # Do not include any RequestStats in the response. This will leave the
+            # RequestStats embedded message unset in the response.
+            REQUEST_STATS_NONE = 1
+
+            # Include the full set of available RequestStats in the response,
+            # applicable to this read.
+            REQUEST_STATS_FULL = 2
+          end
         end
 
         # Response message for Bigtable.ReadRows.
@@ -61,6 +107,27 @@ module Google
         #     This is primarily useful for cases where the server has read a
         #     lot of data that was filtered out since the last committed row
         #     key, allowing the client to skip that work on a retry.
+        # @!attribute [rw] request_stats
+        #   @return [::Google::Cloud::Bigtable::V2::RequestStats]
+        #     If requested, provide enhanced query performance statistics. The semantics
+        #     dictate:
+        #       * request_stats is empty on every (streamed) response, except
+        #       * request_stats has non-empty information after all chunks have been
+        #         streamed, where the ReadRowsResponse message only contains
+        #         request_stats.
+        #           * For example, if a read request would have returned an empty
+        #             response instead a single ReadRowsResponse is streamed with empty
+        #             chunks and request_stats filled.
+        #
+        #     Visually, response messages will stream as follows:
+        #        ... -> \\{chunks: [...]} -> \\{chunks: [], request_stats: \\{...}}
+        #       \______________________/  \________________________________/
+        #           Primary response         Trailer of RequestStats info
+        #
+        #     Or if the read did not return any values:
+        #       \\{chunks: [], request_stats: \\{...}}
+        #       \________________________________/
+        #          Trailer of RequestStats info
         class ReadRowsResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -120,10 +187,14 @@ module Google
           #   @return [::Boolean]
           #     Indicates that the client should drop all previous chunks for
           #     `row_key`, as it will be re-read from the beginning.
+          #
+          #     Note: The following fields are mutually exclusive: `reset_row`, `commit_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] commit_row
           #   @return [::Boolean]
           #     Indicates that the client can safely process all previous chunks for
           #     `row_key`, as its data has been fully read.
+          #
+          #     Note: The following fields are mutually exclusive: `commit_row`, `reset_row`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class CellChunk
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -133,9 +204,23 @@ module Google
         # Request message for Bigtable.SampleRowKeys.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table from which to sample row keys.
+        #     Optional. The unique name of the table from which to sample row keys.
+        #
         #     Values are of the form
         #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView from which to sample row
+        #     keys.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
+        # @!attribute [rw] materialized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the MaterializedView from which to read.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/materializedViews/<materialized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
@@ -169,9 +254,18 @@ module Google
         # Request message for Bigtable.MutateRow.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table to which the mutation should be applied.
+        #     Optional. The unique name of the table to which the mutation should be
+        #     applied.
+        #
         #     Values are of the form
         #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView to which the mutation
+        #     should be applied.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
@@ -181,9 +275,9 @@ module Google
         #     Required. The key of the row to which the mutation should be applied.
         # @!attribute [rw] mutations
         #   @return [::Array<::Google::Cloud::Bigtable::V2::Mutation>]
-        #     Required. Changes to be atomically applied to the specified row. Entries are applied
-        #     in order, meaning that earlier mutations can be masked by later ones.
-        #     Must contain at least one entry and at most 100000.
+        #     Required. Changes to be atomically applied to the specified row. Entries
+        #     are applied in order, meaning that earlier mutations can be masked by later
+        #     ones. Must contain at least one entry and at most 100000.
         class MutateRowRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -198,7 +292,18 @@ module Google
         # Request message for BigtableService.MutateRows.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table to which the mutations should be applied.
+        #     Optional. The unique name of the table to which the mutations should be
+        #     applied.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView to which the mutations
+        #     should be applied.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
@@ -220,10 +325,9 @@ module Google
           #     The key of the row to which the `mutations` should be applied.
           # @!attribute [rw] mutations
           #   @return [::Array<::Google::Cloud::Bigtable::V2::Mutation>]
-          #     Required. Changes to be atomically applied to the specified row. Mutations are
-          #     applied in order, meaning that earlier mutations can be masked by
-          #     later ones.
-          #     You must specify at least one mutation.
+          #     Required. Changes to be atomically applied to the specified row.
+          #     Mutations are applied in order, meaning that earlier mutations can be
+          #     masked by later ones. You must specify at least one mutation.
           class Entry
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -234,6 +338,11 @@ module Google
         # @!attribute [rw] entries
         #   @return [::Array<::Google::Cloud::Bigtable::V2::MutateRowsResponse::Entry>]
         #     One or more results for Entries from the batch request.
+        # @!attribute [rw] rate_limit_info
+        #   @return [::Google::Cloud::Bigtable::V2::RateLimitInfo]
+        #     Information about how client should limit the rate (QPS). Primirily used by
+        #     supported official Cloud Bigtable clients. If unset, the rate limit info is
+        #     not provided by the server.
         class MutateRowsResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -255,20 +364,54 @@ module Google
           end
         end
 
+        # Information about how client should adjust the load to Bigtable.
+        # @!attribute [rw] period
+        #   @return [::Google::Protobuf::Duration]
+        #     Time that clients should wait before adjusting the target rate again.
+        #     If clients adjust rate too frequently, the impact of the previous
+        #     adjustment may not have been taken into account and may
+        #     over-throttle or under-throttle. If clients adjust rate too slowly, they
+        #     will not be responsive to load changes on server side, and may
+        #     over-throttle or under-throttle.
+        # @!attribute [rw] factor
+        #   @return [::Float]
+        #     If it has been at least one `period` since the last load adjustment, the
+        #     client should multiply the current load by this value to get the new target
+        #     load. For example, if the current load is 100 and `factor` is 0.8, the new
+        #     target load should be 80. After adjusting, the client should ignore
+        #     `factor` until another `period` has passed.
+        #
+        #     The client can measure its load using any unit that's comparable over time
+        #     For example, QPS can be used as long as each request involves a similar
+        #     amount of work.
+        class RateLimitInfo
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Request message for Bigtable.CheckAndMutateRow.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table to which the conditional mutation should be
-        #     applied.
+        #     Optional. The unique name of the table to which the conditional mutation
+        #     should be applied.
+        #
         #     Values are of the form
         #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView to which the conditional
+        #     mutation should be applied.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
         #     "default" application profile will be used.
         # @!attribute [rw] row_key
         #   @return [::String]
-        #     Required. The key of the row to which the conditional mutation should be applied.
+        #     Required. The key of the row to which the conditional mutation should be
+        #     applied.
         # @!attribute [rw] predicate_filter
         #   @return [::Google::Cloud::Bigtable::V2::RowFilter]
         #     The filter to be applied to the contents of the specified row. Depending
@@ -304,25 +447,55 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Request message for client connection keep-alive and warming.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The unique name of the instance to check permissions for as well
+        #     as respond. Values are of the form
+        #     `projects/<project>/instances/<instance>`.
+        # @!attribute [rw] app_profile_id
+        #   @return [::String]
+        #     This value specifies routing for replication. If not specified, the
+        #     "default" application profile will be used.
+        class PingAndWarmRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Response message for Bigtable.PingAndWarm connection keepalive and warming.
+        class PingAndWarmResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # Request message for Bigtable.ReadModifyWriteRow.
         # @!attribute [rw] table_name
         #   @return [::String]
-        #     Required. The unique name of the table to which the read/modify/write rules should be
-        #     applied.
+        #     Optional. The unique name of the table to which the read/modify/write rules
+        #     should be applied.
+        #
         #     Values are of the form
         #     `projects/<project>/instances/<instance>/tables/<table>`.
+        # @!attribute [rw] authorized_view_name
+        #   @return [::String]
+        #     Optional. The unique name of the AuthorizedView to which the
+        #     read/modify/write rules should be applied.
+        #
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>/authorizedViews/<authorized_view>`.
         # @!attribute [rw] app_profile_id
         #   @return [::String]
         #     This value specifies routing for replication. If not specified, the
         #     "default" application profile will be used.
         # @!attribute [rw] row_key
         #   @return [::String]
-        #     Required. The key of the row to which the read/modify/write rules should be applied.
+        #     Required. The key of the row to which the read/modify/write rules should be
+        #     applied.
         # @!attribute [rw] rules
         #   @return [::Array<::Google::Cloud::Bigtable::V2::ReadModifyWriteRule>]
-        #     Required. Rules specifying how the specified row's contents are to be transformed
-        #     into writes. Entries are applied in order, meaning that earlier rules will
-        #     affect the results of later ones.
+        #     Required. Rules specifying how the specified row's contents are to be
+        #     transformed into writes. Entries are applied in order, meaning that earlier
+        #     rules will affect the results of later ones.
         class ReadModifyWriteRowRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -333,6 +506,434 @@ module Google
         #   @return [::Google::Cloud::Bigtable::V2::Row]
         #     A Row containing the new contents of all cells modified by the request.
         class ReadModifyWriteRowResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # Request message for Bigtable.GenerateInitialChangeStreamPartitions.
+        # @!attribute [rw] table_name
+        #   @return [::String]
+        #     Required. The unique name of the table from which to get change stream
+        #     partitions. Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>`.
+        #     Change streaming must be enabled on the table.
+        # @!attribute [rw] app_profile_id
+        #   @return [::String]
+        #     This value specifies routing for replication. If not specified, the
+        #     "default" application profile will be used.
+        #     Single cluster routing must be configured on the profile.
+        class GenerateInitialChangeStreamPartitionsRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # Response message for Bigtable.GenerateInitialChangeStreamPartitions.
+        # @!attribute [rw] partition
+        #   @return [::Google::Cloud::Bigtable::V2::StreamPartition]
+        #     A partition of the change stream.
+        class GenerateInitialChangeStreamPartitionsResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # Request message for Bigtable.ReadChangeStream.
+        # @!attribute [rw] table_name
+        #   @return [::String]
+        #     Required. The unique name of the table from which to read a change stream.
+        #     Values are of the form
+        #     `projects/<project>/instances/<instance>/tables/<table>`.
+        #     Change streaming must be enabled on the table.
+        # @!attribute [rw] app_profile_id
+        #   @return [::String]
+        #     This value specifies routing for replication. If not specified, the
+        #     "default" application profile will be used.
+        #     Single cluster routing must be configured on the profile.
+        # @!attribute [rw] partition
+        #   @return [::Google::Cloud::Bigtable::V2::StreamPartition]
+        #     The partition to read changes from.
+        # @!attribute [rw] start_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Start reading the stream at the specified timestamp. This timestamp must
+        #     be within the change stream retention period, less than or equal to the
+        #     current time, and after change stream creation, whichever is greater.
+        #     This value is inclusive and will be truncated to microsecond granularity.
+        #
+        #     Note: The following fields are mutually exclusive: `start_time`, `continuation_tokens`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] continuation_tokens
+        #   @return [::Google::Cloud::Bigtable::V2::StreamContinuationTokens]
+        #     Tokens that describe how to resume reading a stream where reading
+        #     previously left off. If specified, changes will be read starting at the
+        #     the position. Tokens are delivered on the stream as part of `Heartbeat`
+        #     and `CloseStream` messages.
+        #
+        #     If a single token is provided, the token’s partition must exactly match
+        #     the request’s partition. If multiple tokens are provided, as in the case
+        #     of a partition merge, the union of the token partitions must exactly
+        #     cover the request’s partition. Otherwise, INVALID_ARGUMENT will be
+        #     returned.
+        #
+        #     Note: The following fields are mutually exclusive: `continuation_tokens`, `start_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] end_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     If specified, OK will be returned when the stream advances beyond
+        #     this time. Otherwise, changes will be continuously delivered on the stream.
+        #     This value is inclusive and will be truncated to microsecond granularity.
+        # @!attribute [rw] heartbeat_duration
+        #   @return [::Google::Protobuf::Duration]
+        #     If specified, the duration between `Heartbeat` messages on the stream.
+        #     Otherwise, defaults to 5 seconds.
+        class ReadChangeStreamRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+        # Response message for Bigtable.ReadChangeStream.
+        # @!attribute [rw] data_change
+        #   @return [::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::DataChange]
+        #     A mutation to the partition.
+        #
+        #     Note: The following fields are mutually exclusive: `data_change`, `heartbeat`, `close_stream`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] heartbeat
+        #   @return [::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::Heartbeat]
+        #     A periodic heartbeat message.
+        #
+        #     Note: The following fields are mutually exclusive: `heartbeat`, `data_change`, `close_stream`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] close_stream
+        #   @return [::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::CloseStream]
+        #     An indication that the stream should be closed.
+        #
+        #     Note: The following fields are mutually exclusive: `close_stream`, `data_change`, `heartbeat`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        class ReadChangeStreamResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # A partial or complete mutation.
+          # @!attribute [rw] chunk_info
+          #   @return [::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::MutationChunk::ChunkInfo]
+          #     If set, then the mutation is a `SetCell` with a chunked value across
+          #     multiple messages.
+          # @!attribute [rw] mutation
+          #   @return [::Google::Cloud::Bigtable::V2::Mutation]
+          #     If this is a continuation of a chunked message (`chunked_value_offset` >
+          #     0), ignore all fields except the `SetCell`'s value and merge it with
+          #     the previous message by concatenating the value fields.
+          class MutationChunk
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Information about the chunking of this mutation.
+            # Only `SetCell` mutations can be chunked, and all chunks for a `SetCell`
+            # will be delivered contiguously with no other mutation types interleaved.
+            # @!attribute [rw] chunked_value_size
+            #   @return [::Integer]
+            #     The total value size of all the chunks that make up the `SetCell`.
+            # @!attribute [rw] chunked_value_offset
+            #   @return [::Integer]
+            #     The byte offset of this chunk into the total value size of the
+            #     mutation.
+            # @!attribute [rw] last_chunk
+            #   @return [::Boolean]
+            #     When true, this is the last chunk of a chunked `SetCell`.
+            class ChunkInfo
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+
+          # A message corresponding to one or more mutations to the partition
+          # being streamed. A single logical `DataChange` message may also be split
+          # across a sequence of multiple individual messages. Messages other than
+          # the first in a sequence will only have the `type` and `chunks` fields
+          # populated, with the final message in the sequence also containing `done`
+          # set to true.
+          # @!attribute [rw] type
+          #   @return [::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::DataChange::Type]
+          #     The type of the mutation.
+          # @!attribute [rw] source_cluster_id
+          #   @return [::String]
+          #     The cluster where the mutation was applied.
+          #     Not set when `type` is `GARBAGE_COLLECTION`.
+          # @!attribute [rw] row_key
+          #   @return [::String]
+          #     The row key for all mutations that are part of this `DataChange`.
+          #     If the `DataChange` is chunked across multiple messages, then this field
+          #     will only be set for the first message.
+          # @!attribute [rw] commit_timestamp
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The timestamp at which the mutation was applied on the Bigtable server.
+          # @!attribute [rw] tiebreaker
+          #   @return [::Integer]
+          #     A value that lets stream consumers reconstruct Bigtable's
+          #     conflict resolution semantics.
+          #     https://cloud.google.com/bigtable/docs/writes#conflict-resolution
+          #     In the event that the same row key, column family, column qualifier,
+          #     timestamp are modified on different clusters at the same
+          #     `commit_timestamp`, the mutation with the larger `tiebreaker` will be the
+          #     one chosen for the eventually consistent state of the system.
+          # @!attribute [rw] chunks
+          #   @return [::Array<::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse::MutationChunk>]
+          #     The mutations associated with this change to the partition.
+          #     May contain complete mutations or chunks of a multi-message chunked
+          #     `DataChange` record.
+          # @!attribute [rw] done
+          #   @return [::Boolean]
+          #     When true, indicates that the entire `DataChange` has been read
+          #     and the client can safely process the message.
+          # @!attribute [rw] token
+          #   @return [::String]
+          #     An encoded position for this stream's partition to restart reading from.
+          #     This token is for the StreamPartition from the request.
+          # @!attribute [rw] estimated_low_watermark
+          #   @return [::Google::Protobuf::Timestamp]
+          #     An estimate of the commit timestamp that is usually lower than or equal
+          #     to any timestamp for a record that will be delivered in the future on the
+          #     stream. It is possible that, under particular circumstances that a future
+          #     record has a timestamp is is lower than a previously seen timestamp. For
+          #     an example usage see
+          #     https://beam.apache.org/documentation/basics/#watermarks
+          class DataChange
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # The type of mutation.
+            module Type
+              # The type is unspecified.
+              TYPE_UNSPECIFIED = 0
+
+              # A user-initiated mutation.
+              USER = 1
+
+              # A system-initiated mutation as part of garbage collection.
+              # https://cloud.google.com/bigtable/docs/garbage-collection
+              GARBAGE_COLLECTION = 2
+
+              # This is a continuation of a multi-message change.
+              CONTINUATION = 3
+            end
+          end
+
+          # A periodic message with information that can be used to checkpoint
+          # the state of a stream.
+          # @!attribute [rw] continuation_token
+          #   @return [::Google::Cloud::Bigtable::V2::StreamContinuationToken]
+          #     A token that can be provided to a subsequent `ReadChangeStream` call
+          #     to pick up reading at the current stream position.
+          # @!attribute [rw] estimated_low_watermark
+          #   @return [::Google::Protobuf::Timestamp]
+          #     An estimate of the commit timestamp that is usually lower than or equal
+          #     to any timestamp for a record that will be delivered in the future on the
+          #     stream. It is possible that, under particular circumstances that a future
+          #     record has a timestamp is is lower than a previously seen timestamp. For
+          #     an example usage see
+          #     https://beam.apache.org/documentation/basics/#watermarks
+          class Heartbeat
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A message indicating that the client should stop reading from the stream.
+          # If status is OK and `continuation_tokens` & `new_partitions` are empty, the
+          # stream has finished (for example if there was an `end_time` specified).
+          # If `continuation_tokens` & `new_partitions` are present, then a change in
+          # partitioning requires the client to open a new stream for each token to
+          # resume reading. Example:
+          #                                  [B,      D) ends
+          #                                       |
+          #                                       v
+          #               new_partitions:  [A,  C) [C,  E)
+          # continuation_tokens.partitions:  [B,C) [C,D)
+          #                                  ^---^ ^---^
+          #                                  ^     ^
+          #                                  |     |
+          #                                  |     StreamContinuationToken 2
+          #                                  |
+          #                                  StreamContinuationToken 1
+          # To read the new partition [A,C), supply the continuation tokens whose
+          # ranges cover the new partition, for example ContinuationToken[A,B) &
+          # ContinuationToken[B,C).
+          # @!attribute [rw] status
+          #   @return [::Google::Rpc::Status]
+          #     The status of the stream.
+          # @!attribute [rw] continuation_tokens
+          #   @return [::Array<::Google::Cloud::Bigtable::V2::StreamContinuationToken>]
+          #     If non-empty, contains the information needed to resume reading their
+          #     associated partitions.
+          # @!attribute [rw] new_partitions
+          #   @return [::Array<::Google::Cloud::Bigtable::V2::StreamPartition>]
+          #     If non-empty, contains the new partitions to start reading from, which
+          #     are related to but not necessarily identical to the partitions for the
+          #     above `continuation_tokens`.
+          class CloseStream
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # Request message for Bigtable.ExecuteQuery
+        # @!attribute [rw] instance_name
+        #   @return [::String]
+        #     Required. The unique name of the instance against which the query should be
+        #     executed.
+        #     Values are of the form `projects/<project>/instances/<instance>`
+        # @!attribute [rw] app_profile_id
+        #   @return [::String]
+        #     Optional. This value specifies routing for replication. If not specified,
+        #     the `default` application profile will be used.
+        # @!attribute [rw] query
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::String]
+        #     Required. The query string.
+        #
+        #     Exactly one of `query` and `prepared_query` is required. Setting both
+        #     or neither is an `INVALID_ARGUMENT`.
+        # @!attribute [rw] prepared_query
+        #   @return [::String]
+        #     A prepared query that was returned from `PrepareQueryResponse`.
+        #
+        #     Exactly one of `query` and `prepared_query` is required. Setting both
+        #     or neither is an `INVALID_ARGUMENT`.
+        #
+        #     Setting this field also places restrictions on several other fields:
+        #     - `data_format` must be empty.
+        #     - `validate_only` must be false.
+        #     - `params` must match the `param_types` set in the `PrepareQueryRequest`.
+        # @!attribute [rw] proto_format
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
+        #   @return [::Google::Cloud::Bigtable::V2::ProtoFormat]
+        #     Protocol buffer format as described by ProtoSchema and ProtoRows
+        #     messages.
+        # @!attribute [rw] resume_token
+        #   @return [::String]
+        #     Optional. If this request is resuming a previously interrupted query
+        #     execution, `resume_token` should be copied from the last
+        #     PartialResultSet yielded before the interruption. Doing this
+        #     enables the query execution to resume where the last one left
+        #     off.
+        #     The rest of the request parameters must exactly match the
+        #     request that yielded this token. Otherwise the request will fail.
+        # @!attribute [rw] params
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::V2::Value}]
+        #     Required. params contains string type keys and Bigtable type values that
+        #     bind to placeholders in the query string. In query string, a parameter
+        #     placeholder consists of the
+        #     `@` character followed by the parameter name (for example, `@firstName`) in
+        #     the query string.
+        #
+        #     For example, if
+        #     `params["firstName"] = bytes_value: "foo" type {bytes_type {}}`
+        #     then `@firstName` will be replaced with googlesql bytes value "foo" in the
+        #     query string during query evaluation.
+        #
+        #     If `Value.kind` is not set, the value is treated as a NULL value of the
+        #     given type. For example, if
+        #     `params["firstName"] = type {string_type {}}`
+        #     then `@firstName` will be replaced with googlesql null string.
+        #
+        #     If `query` is set, any empty `Value.type` in the map will be rejected with
+        #     `INVALID_ARGUMENT`.
+        #
+        #     If `prepared_query` is set, any empty `Value.type` in the map will be
+        #     inferred from the `param_types` in the `PrepareQueryRequest`. Any non-empty
+        #     `Value.type` must match the corresponding `param_types` entry, or be
+        #     rejected with `INVALID_ARGUMENT`.
+        class ExecuteQueryRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::Bigtable::V2::Value]
+          class ParamsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # Response message for Bigtable.ExecuteQuery
+        # @!attribute [rw] metadata
+        #   @return [::Google::Cloud::Bigtable::V2::ResultSetMetadata]
+        #     Structure of rows in this response stream. The first (and only the first)
+        #     response streamed from the server will be of this type.
+        #
+        #     Note: The following fields are mutually exclusive: `metadata`, `results`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] results
+        #   @return [::Google::Cloud::Bigtable::V2::PartialResultSet]
+        #     A partial result set with row data potentially including additional
+        #     instructions on how recent past and future partial responses should be
+        #     interpreted.
+        #
+        #     Note: The following fields are mutually exclusive: `results`, `metadata`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        class ExecuteQueryResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request message for Bigtable.PrepareQuery
+        # @!attribute [rw] instance_name
+        #   @return [::String]
+        #     Required. The unique name of the instance against which the query should be
+        #     executed.
+        #     Values are of the form `projects/<project>/instances/<instance>`
+        # @!attribute [rw] app_profile_id
+        #   @return [::String]
+        #     Optional. This value specifies routing for preparing the query. Note that
+        #     this `app_profile_id` is only used for preparing the query. The actual
+        #     query execution will use the app profile specified in the
+        #     `ExecuteQueryRequest`. If not specified, the `default` application profile
+        #     will be used.
+        # @!attribute [rw] query
+        #   @return [::String]
+        #     Required. The query string.
+        # @!attribute [rw] proto_format
+        #   @return [::Google::Cloud::Bigtable::V2::ProtoFormat]
+        #     Protocol buffer format as described by ProtoSchema and ProtoRows
+        #     messages.
+        # @!attribute [rw] param_types
+        #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::V2::Type}]
+        #     Required. `param_types` is a map of parameter identifier strings to their
+        #     `Type`s.
+        #
+        #     In query string, a parameter placeholder consists of the
+        #     `@` character followed by the parameter name (for example, `@firstName`) in
+        #     the query string.
+        #
+        #     For example, if param_types["firstName"] = Bytes then @firstName will be a
+        #     query parameter of type Bytes. The specific `Value` to be used for the
+        #     query execution must be sent in `ExecuteQueryRequest` in the `params` map.
+        class PrepareQueryRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::Google::Cloud::Bigtable::V2::Type]
+          class ParamTypesEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # Response message for Bigtable.PrepareQueryResponse
+        # @!attribute [rw] metadata
+        #   @return [::Google::Cloud::Bigtable::V2::ResultSetMetadata]
+        #     Structure of rows in the response stream of `ExecuteQueryResponse` for the
+        #     returned `prepared_query`.
+        # @!attribute [rw] prepared_query
+        #   @return [::String]
+        #     A serialized prepared query. Clients should treat this as an opaque
+        #     blob of bytes to send in `ExecuteQueryRequest`.
+        # @!attribute [rw] valid_until
+        #   @return [::Google::Protobuf::Timestamp]
+        #     The time at which the prepared query token becomes invalid.
+        #     A token may become invalid early due to changes in the data being read, but
+        #     it provides a guideline to refresh query plans asynchronously.
+        class PrepareQueryResponse
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

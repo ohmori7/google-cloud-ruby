@@ -19,15 +19,29 @@
 # [START privateca_v1_generated_CertificateAuthorityService_UpdateCertificate_sync]
 require "google/cloud/security/private_ca/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new
+##
+# Snippet for the update_certificate call in the CertificateAuthorityService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#update_certificate.
+#
+def update_certificate
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Security::PrivateCA::V1::UpdateCertificateRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Security::PrivateCA::V1::UpdateCertificateRequest.new
 
-# Call the update_certificate method.
-result = client.update_certificate request
+  # Call the update_certificate method.
+  result = client.update_certificate request
 
-# The returned object is of type Google::Cloud::Security::PrivateCA::V1::Certificate.
-p result
+  # The returned object is of type Google::Cloud::Security::PrivateCA::V1::Certificate.
+  p result
+end
 # [END privateca_v1_generated_CertificateAuthorityService_UpdateCertificate_sync]

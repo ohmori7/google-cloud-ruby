@@ -31,6 +31,14 @@ module Google
           #
           class Client
             # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "iap.$UNIVERSE_DOMAIN$"
+
+            include Paths
+
+            # @private
             attr_reader :identity_aware_proxy_admin_service_stub
 
             ##
@@ -91,6 +99,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @identity_aware_proxy_admin_service_stub.universe_domain
+            end
+
+            ##
             # Create a new IdentityAwareProxyAdminService client object.
             #
             # @example
@@ -123,8 +140,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -135,11 +153,34 @@ module Google
 
               @identity_aware_proxy_admin_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @identity_aware_proxy_admin_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @identity_aware_proxy_admin_service_stub.logger
             end
 
             # Service calls
@@ -160,7 +201,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_iam_policy(resource: nil, policy: nil)
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
             #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -173,6 +214,12 @@ module Google
             #     the policy is limited to a few 10s of KB. An empty policy is a
             #     valid policy but certain Cloud Platform services (such as Projects)
             #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -208,10 +255,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -232,7 +280,6 @@ module Google
 
               @identity_aware_proxy_admin_service_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -264,7 +311,7 @@ module Google
             #     See the operation documentation for the appropriate value for this field.
             #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
             #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
-            #     `GetIamPolicy`. This field is only used by Cloud IAM.
+            #     `GetIamPolicy`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -300,10 +347,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -324,7 +372,6 @@ module Google
 
               @identity_aware_proxy_admin_service_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -394,10 +441,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.test_iam_permissions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -418,7 +466,6 @@ module Google
 
               @identity_aware_proxy_admin_service_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -481,10 +528,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iap_settings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -505,7 +553,6 @@ module Google
 
               @identity_aware_proxy_admin_service_stub.call_rpc :get_iap_settings, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -536,8 +583,11 @@ module Google
             #     resource.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
             #     The field mask specifying which IAP settings should be updated.
-            #     If omitted, the all of the settings are updated. See
-            #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+            #     If omitted, then all of the settings are updated. See
+            #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask.
+            #
+            #     Note: All IAP reauth settings must always be set together, using the
+            #     field mask: `iapSettings.accessSettings.reauthSettings`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Iap::V1::IapSettings]
@@ -573,10 +623,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_iap_settings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -597,7 +648,561 @@ module Google
 
               @identity_aware_proxy_admin_service_stub.call_rpc :update_iap_settings, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Validates that a given CEL expression conforms to IAP restrictions.
+            #
+            # @overload validate_iap_attribute_expression(request, options = nil)
+            #   Pass arguments to `validate_iap_attribute_expression` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::ValidateIapAttributeExpressionRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::ValidateIapAttributeExpressionRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload validate_iap_attribute_expression(name: nil, expression: nil)
+            #   Pass arguments to `validate_iap_attribute_expression` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The resource name of the IAP protected resource.
+            #   @param expression [::String]
+            #     Required. User input string expression. Should be of the form
+            #     `attributes.saml_attributes.filter(attribute, attribute.name in
+            #     ['\\{attribute_name}', '\\{attribute_name}'])`
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Iap::V1::ValidateIapAttributeExpressionResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Iap::V1::ValidateIapAttributeExpressionResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::ValidateIapAttributeExpressionRequest.new
+            #
+            #   # Call the validate_iap_attribute_expression method.
+            #   result = client.validate_iap_attribute_expression request
+            #
+            #   # The returned object is of type Google::Cloud::Iap::V1::ValidateIapAttributeExpressionResponse.
+            #   p result
+            #
+            def validate_iap_attribute_expression request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::ValidateIapAttributeExpressionRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.validate_iap_attribute_expression.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.validate_iap_attribute_expression.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.validate_iap_attribute_expression.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :validate_iap_attribute_expression, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists the existing TunnelDestGroups. To group across all locations, use a
+            # `-` as the location ID. For example:
+            # `/v1/projects/123/iap_tunnel/locations/-/destGroups`
+            #
+            # @overload list_tunnel_dest_groups(request, options = nil)
+            #   Pass arguments to `list_tunnel_dest_groups` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::ListTunnelDestGroupsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::ListTunnelDestGroupsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_tunnel_dest_groups(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_tunnel_dest_groups` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. Google Cloud Project ID and location.
+            #     In the following format:
+            #     `projects/{project_number/id}/iap_tunnel/locations/{location}`.
+            #     A `-` can be used for the location to group across all locations.
+            #   @param page_size [::Integer]
+            #     The maximum number of groups to return. The service might return fewer than
+            #     this value.
+            #     If unspecified, at most 100 groups are returned.
+            #     The maximum value is 1000; values above 1000 are coerced to 1000.
+            #   @param page_token [::String]
+            #     A page token, received from a previous `ListTunnelDestGroups`
+            #     call. Provide this to retrieve the subsequent page.
+            #
+            #     When paginating, all other parameters provided to
+            #     `ListTunnelDestGroups` must match the call that provided the page
+            #     token.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Iap::V1::TunnelDestGroup>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Iap::V1::TunnelDestGroup>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::ListTunnelDestGroupsRequest.new
+            #
+            #   # Call the list_tunnel_dest_groups method.
+            #   result = client.list_tunnel_dest_groups request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Iap::V1::TunnelDestGroup.
+            #     p item
+            #   end
+            #
+            def list_tunnel_dest_groups request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::ListTunnelDestGroupsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_tunnel_dest_groups.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_tunnel_dest_groups.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_tunnel_dest_groups.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :list_tunnel_dest_groups, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @identity_aware_proxy_admin_service_stub, :list_tunnel_dest_groups, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Creates a new TunnelDestGroup.
+            #
+            # @overload create_tunnel_dest_group(request, options = nil)
+            #   Pass arguments to `create_tunnel_dest_group` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::CreateTunnelDestGroupRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::CreateTunnelDestGroupRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload create_tunnel_dest_group(parent: nil, tunnel_dest_group: nil, tunnel_dest_group_id: nil)
+            #   Pass arguments to `create_tunnel_dest_group` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. Google Cloud Project ID and location.
+            #     In the following format:
+            #     `projects/{project_number/id}/iap_tunnel/locations/{location}`.
+            #   @param tunnel_dest_group [::Google::Cloud::Iap::V1::TunnelDestGroup, ::Hash]
+            #     Required. The TunnelDestGroup to create.
+            #   @param tunnel_dest_group_id [::String]
+            #     Required. The ID to use for the TunnelDestGroup, which becomes the final
+            #     component of the resource name.
+            #
+            #     This value must be 4-63 characters, and valid characters
+            #     are `[a-z]-`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::CreateTunnelDestGroupRequest.new
+            #
+            #   # Call the create_tunnel_dest_group method.
+            #   result = client.create_tunnel_dest_group request
+            #
+            #   # The returned object is of type Google::Cloud::Iap::V1::TunnelDestGroup.
+            #   p result
+            #
+            def create_tunnel_dest_group request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::CreateTunnelDestGroupRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.create_tunnel_dest_group.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.create_tunnel_dest_group.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.create_tunnel_dest_group.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :create_tunnel_dest_group, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Retrieves an existing TunnelDestGroup.
+            #
+            # @overload get_tunnel_dest_group(request, options = nil)
+            #   Pass arguments to `get_tunnel_dest_group` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::GetTunnelDestGroupRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::GetTunnelDestGroupRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_tunnel_dest_group(name: nil)
+            #   Pass arguments to `get_tunnel_dest_group` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. Name of the TunnelDestGroup to be fetched.
+            #     In the following format:
+            #     `projects/{project_number/id}/iap_tunnel/locations/{location}/destGroups/{dest_group}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::GetTunnelDestGroupRequest.new
+            #
+            #   # Call the get_tunnel_dest_group method.
+            #   result = client.get_tunnel_dest_group request
+            #
+            #   # The returned object is of type Google::Cloud::Iap::V1::TunnelDestGroup.
+            #   p result
+            #
+            def get_tunnel_dest_group request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::GetTunnelDestGroupRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_tunnel_dest_group.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_tunnel_dest_group.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_tunnel_dest_group.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :get_tunnel_dest_group, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Deletes a TunnelDestGroup.
+            #
+            # @overload delete_tunnel_dest_group(request, options = nil)
+            #   Pass arguments to `delete_tunnel_dest_group` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::DeleteTunnelDestGroupRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::DeleteTunnelDestGroupRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload delete_tunnel_dest_group(name: nil)
+            #   Pass arguments to `delete_tunnel_dest_group` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. Name of the TunnelDestGroup to delete.
+            #     In the following format:
+            #     `projects/{project_number/id}/iap_tunnel/locations/{location}/destGroups/{dest_group}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Protobuf::Empty]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Protobuf::Empty]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::DeleteTunnelDestGroupRequest.new
+            #
+            #   # Call the delete_tunnel_dest_group method.
+            #   result = client.delete_tunnel_dest_group request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
+            def delete_tunnel_dest_group request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::DeleteTunnelDestGroupRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.delete_tunnel_dest_group.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.delete_tunnel_dest_group.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.delete_tunnel_dest_group.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :delete_tunnel_dest_group, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates a TunnelDestGroup.
+            #
+            # @overload update_tunnel_dest_group(request, options = nil)
+            #   Pass arguments to `update_tunnel_dest_group` via a request object, either of type
+            #   {::Google::Cloud::Iap::V1::UpdateTunnelDestGroupRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Iap::V1::UpdateTunnelDestGroupRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_tunnel_dest_group(tunnel_dest_group: nil, update_mask: nil)
+            #   Pass arguments to `update_tunnel_dest_group` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param tunnel_dest_group [::Google::Cloud::Iap::V1::TunnelDestGroup, ::Hash]
+            #     Required. The new values for the TunnelDestGroup.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     A field mask that specifies which IAP settings to update.
+            #     If omitted, then all of the settings are updated. See
+            #     https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::Iap::V1::TunnelDestGroup]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/iap/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Iap::V1::UpdateTunnelDestGroupRequest.new
+            #
+            #   # Call the update_tunnel_dest_group method.
+            #   result = client.update_tunnel_dest_group request
+            #
+            #   # The returned object is of type Google::Cloud::Iap::V1::TunnelDestGroup.
+            #   p result
+            #
+            def update_tunnel_dest_group request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Iap::V1::UpdateTunnelDestGroupRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_tunnel_dest_group.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Iap::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.tunnel_dest_group&.name
+                header_params["tunnel_dest_group.name"] = request.tunnel_dest_group.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_tunnel_dest_group.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_tunnel_dest_group.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @identity_aware_proxy_admin_service_stub.call_rpc :update_tunnel_dest_group, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -633,20 +1238,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"iap.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -681,11 +1293,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "iap.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "iap.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -700,6 +1326,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -718,6 +1346,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -763,6 +1399,36 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :update_iap_settings
+                ##
+                # RPC-specific configuration for `validate_iap_attribute_expression`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :validate_iap_attribute_expression
+                ##
+                # RPC-specific configuration for `list_tunnel_dest_groups`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_tunnel_dest_groups
+                ##
+                # RPC-specific configuration for `create_tunnel_dest_group`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :create_tunnel_dest_group
+                ##
+                # RPC-specific configuration for `get_tunnel_dest_group`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_tunnel_dest_group
+                ##
+                # RPC-specific configuration for `delete_tunnel_dest_group`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :delete_tunnel_dest_group
+                ##
+                # RPC-specific configuration for `update_tunnel_dest_group`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_tunnel_dest_group
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -776,6 +1442,18 @@ module Google
                   @get_iap_settings = ::Gapic::Config::Method.new get_iap_settings_config
                   update_iap_settings_config = parent_rpcs.update_iap_settings if parent_rpcs.respond_to? :update_iap_settings
                   @update_iap_settings = ::Gapic::Config::Method.new update_iap_settings_config
+                  validate_iap_attribute_expression_config = parent_rpcs.validate_iap_attribute_expression if parent_rpcs.respond_to? :validate_iap_attribute_expression
+                  @validate_iap_attribute_expression = ::Gapic::Config::Method.new validate_iap_attribute_expression_config
+                  list_tunnel_dest_groups_config = parent_rpcs.list_tunnel_dest_groups if parent_rpcs.respond_to? :list_tunnel_dest_groups
+                  @list_tunnel_dest_groups = ::Gapic::Config::Method.new list_tunnel_dest_groups_config
+                  create_tunnel_dest_group_config = parent_rpcs.create_tunnel_dest_group if parent_rpcs.respond_to? :create_tunnel_dest_group
+                  @create_tunnel_dest_group = ::Gapic::Config::Method.new create_tunnel_dest_group_config
+                  get_tunnel_dest_group_config = parent_rpcs.get_tunnel_dest_group if parent_rpcs.respond_to? :get_tunnel_dest_group
+                  @get_tunnel_dest_group = ::Gapic::Config::Method.new get_tunnel_dest_group_config
+                  delete_tunnel_dest_group_config = parent_rpcs.delete_tunnel_dest_group if parent_rpcs.respond_to? :delete_tunnel_dest_group
+                  @delete_tunnel_dest_group = ::Gapic::Config::Method.new delete_tunnel_dest_group_config
+                  update_tunnel_dest_group_config = parent_rpcs.update_tunnel_dest_group if parent_rpcs.respond_to? :update_tunnel_dest_group
+                  @update_tunnel_dest_group = ::Gapic::Config::Method.new update_tunnel_dest_group_config
 
                   yield self if block_given?
                 end

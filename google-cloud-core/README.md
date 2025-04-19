@@ -9,14 +9,14 @@ information about the individual google-cloud gems.
 
 ## Supported Ruby Versions
 
-This library is supported on Ruby 2.5+.
+This library is supported on Ruby 3.0+.
 
 Google provides official support for Ruby versions that are actively supported
-by Ruby Core—that is, Ruby versions that are either in normal maintenance or in
-security maintenance, and not end of life. Currently, this means Ruby 2.5 and
-later. Older versions of Ruby _may_ still work, but are unsupported and not
-recommended. See https://www.ruby-lang.org/en/downloads/branches/ for details
-about the Ruby support schedule.
+by Ruby Core—that is, Ruby versions that are either in normal maintenance or
+in security maintenance, and not end of life. Older versions of Ruby _may_
+still work, but are unsupported and not recommended. See
+https://www.ruby-lang.org/en/downloads/branches/ for details about the Ruby
+support schedule.
 
 ## Versioning
 
@@ -45,8 +45,6 @@ This library is licensed under Apache 2.0. Full license text is available in
 
 ## Support
 
-Please [report bugs at the project on
-Github](https://github.com/googleapis/google-cloud-ruby/issues). Don't
-hesitate to [ask
-questions](http://stackoverflow.com/questions/tagged/google-cloud-platform+ruby)
-about the client or APIs on [StackOverflow](http://stackoverflow.com).
+Please report bugs
+[on Github](https://github.com/googleapis/google-cloud-ruby/issues).
+You can also ask questions about the client or APIs on StackOverflow.

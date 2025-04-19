@@ -27,6 +27,9 @@ module Google
     # See {file:OVERVIEW.md Bigtable Overview}.
     #
     module Bigtable
+      # rubocop:disable Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/AbcSize
+
       ##
       # Service for managing Cloud Bigtable instances and tables and for reading from and
       # writing to Bigtable tables.
@@ -49,11 +52,12 @@ module Google
       #   should already be composed with a `GRPC::Core::CallCredentials` object.
       #   `Proc` will be used as an updater_proc for the gRPC channel. The proc transforms the
       #   metadata for requests, generally, to give OAuth credentials.
-      # @param [String] endpoint Override of the endpoint host name. Optional.
+      # @param universe_domain [String] Override of the universe domain. Optional.
+      # @param endpoint [String] Override of the endpoint host name. Optional.
       #   If the param is nil, uses the default endpoint.
-      # @param [String] endpoint_admin Override of the admin service endpoint host name. Optional.
+      # @param endpoint_admin [String] Override of the admin service endpoint host name. Optional.
       #   If the param is nil, uses the default admin endpoint.
-      # @param [String] emulator_host Bigtable emulator host. Optional.
+      # @param emulator_host [String] Bigtable emulator host. Optional.
       #   If the parameter is nil, uses the value of the `emulator_host` config.
       # @param scope [Array<String>]
       #   The OAuth 2.0 scopes controlling the set of resources and operations
@@ -63,6 +67,10 @@ module Google
       #   updater_proc is supplied.
       # @param timeout [Integer]
       #   The default timeout, in seconds, for calls made through this client. Optional.
+      # @param channel_selection [Symbol] The algorithm for selecting a channel from the
+      #   pool of available channels. This parameter can have the following symbols:
+      #   *  `:least_loaded` selects the channel having least number of concurrent streams.
+      # @param channel_count [Integer] The number of channels in the pool.
       # @return [Google::Cloud::Bigtable::Project]
       #
       # @example
@@ -72,17 +80,23 @@ module Google
       #
       def self.new project_id: nil,
                    credentials: nil,
+                   universe_domain: nil,
                    emulator_host: nil,
                    scope: nil,
                    endpoint: nil,
                    endpoint_admin: nil,
-                   timeout: nil
-        project_id    ||= default_project_id
-        scope         ||= configure.scope
-        timeout       ||= configure.timeout
+                   timeout: nil,
+                   channel_selection: nil,
+                   channel_count: nil
+        project_id ||= default_project_id
+        universe_domain ||= configure.universe_domain
+        scope ||= configure.scope
+        timeout ||= configure.timeout
         emulator_host ||= configure.emulator_host
-        endpoint      ||= configure.endpoint
+        endpoint ||= configure.endpoint
         endpoint_admin ||= configure.endpoint_admin
+        channel_selection ||= configure.channel_selection
+        channel_count ||= configure.channel_count
 
         return new_with_emulator project_id, emulator_host, timeout if emulator_host
 
@@ -90,10 +104,17 @@ module Google
         project_id = resolve_project_id project_id, credentials
         raise ArgumentError, "project_id is missing" if project_id.empty?
 
-        service = Bigtable::Service.new \
-          project_id, credentials, host: endpoint, host_admin: endpoint_admin, timeout: timeout
+        service = Bigtable::Service.new project_id, credentials,
+                                        universe_domain: universe_domain,
+                                        host: endpoint,
+                                        host_admin: endpoint_admin,
+                                        timeout: timeout,
+                                        channel_selection: channel_selection,
+                                        channel_count: channel_count
         Bigtable::Project.new service
       end
+      # rubocop:enable Metrics/CyclomaticComplexity
+      # rubocop:enable Metrics/AbcSize
 
       ##
       # Configure the Google Cloud Bigtable library.
@@ -116,6 +137,10 @@ module Google
       #   to use the default endpoint.
       # * `endpoint_admin` - (String) Override of the admin service endpoint
       #   host name, or `nil` to use the default admin endpoint.
+      # * `channel_selection` - (Symbol) The algorithm for selecting a channel from the
+      #   pool of available channels. This parameter can have the following symbols:
+      #     `:least_loaded` selects the channel having least number of concurrent streams.
+      # * `channel_count` - (Integer) The number of channels in the pool.
       #
       # @return [Google::Cloud::Config] The configuration object the
       #   Google::Cloud::Bigtable library uses.
@@ -144,6 +169,7 @@ module Google
       def self.resolve_credentials given_credentials, scope
         credentials = given_credentials || default_credentials(scope: scope)
         return credentials if credentials.is_a? Google::Auth::Credentials
+        return credentials if credentials.is_a? GRPC::Core::Channel
         Bigtable::Credentials.new credentials, scope: scope
       end
 

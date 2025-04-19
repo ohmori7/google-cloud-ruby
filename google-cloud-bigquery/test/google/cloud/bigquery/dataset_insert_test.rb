@@ -54,8 +54,31 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: [insert_rows.first], ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
+
+    result = nil
+    SecureRandom.stub :uuid, insert_id do
+      result = dataset.insert table_id, rows.first
+    end
+
+    mock.verify
+
+    _(result).must_be :success?
+    _(result.insert_count).must_equal 1
+    _(result.error_count).must_equal 0
+  end
+
+  it "can insert rows into another project" do
+    mock = Minitest::Mock.new
+    insert_req = {
+      rows: [insert_rows.first], ignoreUnknownValues: nil, skipInvalidRows: nil
+    }.to_json
+    another_project_id = "another-project"
+    mock.expect :insert_all_table_data, success_table_insert_gapi,
+                [another_project_id, dataset_id, table_id, insert_req], options: { skip_serialization: true }
+    dataset.service.mocked_service = mock
+    dataset.gapi.dataset_reference.project_id = another_project_id
 
     result = nil
     SecureRandom.stub :uuid, insert_id do
@@ -78,7 +101,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
         rows: [insert_rows.first], ignoreUnknownValues: nil, skipInvalidRows: nil
       }.to_json
       mock.expect :insert_all_table_data, success_table_insert_gapi,
-                  [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                  [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
       dataset.service.mocked_service = mock
 
       result = nil
@@ -100,7 +123,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: insert_rows, ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = nil
@@ -121,7 +144,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: insert_rows, ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, failure_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = nil
@@ -179,7 +202,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: insert_rows, ignoreUnknownValues: nil, skipInvalidRows: true
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = nil
@@ -200,7 +223,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: insert_rows, ignoreUnknownValues: true, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = nil
@@ -288,7 +311,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
       rows: [inserted_row_hash], ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = nil
@@ -309,7 +332,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
         rows: rows_with_user_insert_ids, ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = dataset.insert table_id, rows, insert_ids: insert_ids
@@ -333,7 +356,7 @@ describe Google::Cloud::Bigquery::Dataset, :insert, :mock_bigquery do
         rows: rows_without_insert_ids, ignoreUnknownValues: nil, skipInvalidRows: nil
     }.to_json
     mock.expect :insert_all_table_data, success_table_insert_gapi,
-                [project, dataset_id, table_id, insert_req, options: { skip_serialization: true }]
+                [project, dataset_id, table_id, insert_req], options: { skip_serialization: true }
     dataset.service.mocked_service = mock
 
     result = dataset.insert table_id, rows, insert_ids: :skip

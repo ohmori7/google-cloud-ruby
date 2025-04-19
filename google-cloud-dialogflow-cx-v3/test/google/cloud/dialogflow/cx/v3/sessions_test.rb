@@ -41,9 +41,26 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -111,6 +128,85 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
     end
   end
 
+  def test_server_streaming_detect_intent
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a server streaming method.
+    session = "hello world"
+    query_params = {}
+    query_input = {}
+    output_audio_config = {}
+
+    server_streaming_detect_intent_client_stub = ClientStub.new [grpc_response].to_enum, grpc_operation do |name, request, options:|
+      assert_equal :server_streaming_detect_intent, name
+      assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest, request
+      assert_equal "hello world", request["session"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::QueryParameters), request["query_params"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::QueryInput), request["query_input"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::OutputAudioConfig), request["output_audio_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, server_streaming_detect_intent_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::CX::V3::Sessions::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.server_streaming_detect_intent({ session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config }) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.server_streaming_detect_intent session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.server_streaming_detect_intent ::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest.new(session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.server_streaming_detect_intent({ session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config }, grpc_options) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.server_streaming_detect_intent(::Google::Cloud::Dialogflow::CX::V3::DetectIntentRequest.new(session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config), grpc_options) do |response, operation|
+        assert_kind_of Enumerable, response
+        response.to_a.each do |r|
+          assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::DetectIntentResponse, r
+        end
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, server_streaming_detect_intent_client_stub.call_rpc_count
+    end
+  end
+
   def test_streaming_detect_intent
     # Create GRPC objects.
     grpc_response = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentResponse.new
@@ -124,6 +220,7 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
     query_input = {}
     output_audio_config = {}
     enable_partial_response = true
+    enable_debugging_info = true
 
     streaming_detect_intent_client_stub = ClientStub.new [grpc_response].to_enum, grpc_operation do |name, request, options:|
       assert_equal :streaming_detect_intent, name
@@ -139,8 +236,8 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       end
 
       # Use enumerable object with hash and protobuf object.
-      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response }
-      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response
+      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info }
+      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info
       enum_input = [request_hash, request_proto].to_enum
       client.streaming_detect_intent enum_input do |response, operation|
         assert_kind_of Enumerable, response
@@ -151,8 +248,8 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       end
 
       # Use stream input object (from gapic-common).
-      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response }
-      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response
+      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info }
+      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info
       stream_input = Gapic::StreamInput.new
       client.streaming_detect_intent stream_input do |response, operation|
         assert_kind_of Enumerable, response
@@ -166,8 +263,8 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       stream_input.close
 
       # Use enumerable object with hash and protobuf object with options.
-      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response }
-      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response
+      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info }
+      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info
       enum_input = [request_hash, request_proto].to_enum
       client.streaming_detect_intent enum_input, grpc_options do |response, operation|
         assert_kind_of Enumerable, response
@@ -178,8 +275,8 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       end
 
       # Use stream input object (from gapic-common) with options.
-      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response }
-      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response
+      request_hash = { session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info }
+      request_proto = ::Google::Cloud::Dialogflow::CX::V3::StreamingDetectIntentRequest.new session: session, query_params: query_params, query_input: query_input, output_audio_config: output_audio_config, enable_partial_response: enable_partial_response, enable_debugging_info: enable_debugging_info
       stream_input = Gapic::StreamInput.new
       client.streaming_detect_intent stream_input, grpc_options do |response, operation|
         assert_kind_of Enumerable, response
@@ -202,6 +299,7 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
           assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::QueryInput), r["query_input"]
           assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::OutputAudioConfig), r["output_audio_config"]
           assert_equal true, r["enable_partial_response"]
+          assert_equal true, r["enable_debugging_info"]
         end
       end
     end
@@ -218,6 +316,7 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
     session = "hello world"
     query_params = {}
     query_input = {}
+    persist_parameter_changes = true
 
     match_intent_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :match_intent, name
@@ -225,6 +324,7 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       assert_equal "hello world", request["session"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::QueryParameters), request["query_params"]
       assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::QueryInput), request["query_input"]
+      assert_equal true, request["persist_parameter_changes"]
       refute_nil options
     end
 
@@ -235,31 +335,31 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
       end
 
       # Use hash object
-      client.match_intent({ session: session, query_params: query_params, query_input: query_input }) do |response, operation|
+      client.match_intent({ session: session, query_params: query_params, query_input: query_input, persist_parameter_changes: persist_parameter_changes }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.match_intent session: session, query_params: query_params, query_input: query_input do |response, operation|
+      client.match_intent session: session, query_params: query_params, query_input: query_input, persist_parameter_changes: persist_parameter_changes do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.match_intent ::Google::Cloud::Dialogflow::CX::V3::MatchIntentRequest.new(session: session, query_params: query_params, query_input: query_input) do |response, operation|
+      client.match_intent ::Google::Cloud::Dialogflow::CX::V3::MatchIntentRequest.new(session: session, query_params: query_params, query_input: query_input, persist_parameter_changes: persist_parameter_changes) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.match_intent({ session: session, query_params: query_params, query_input: query_input }, grpc_options) do |response, operation|
+      client.match_intent({ session: session, query_params: query_params, query_input: query_input, persist_parameter_changes: persist_parameter_changes }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.match_intent(::Google::Cloud::Dialogflow::CX::V3::MatchIntentRequest.new(session: session, query_params: query_params, query_input: query_input), grpc_options) do |response, operation|
+      client.match_intent(::Google::Cloud::Dialogflow::CX::V3::MatchIntentRequest.new(session: session, query_params: query_params, query_input: query_input, persist_parameter_changes: persist_parameter_changes), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -331,11 +431,76 @@ class ::Google::Cloud::Dialogflow::CX::V3::Sessions::ClientTest < Minitest::Test
     end
   end
 
+  def test_submit_answer_feedback
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    session = "hello world"
+    response_id = "hello world"
+    answer_feedback = {}
+    update_mask = {}
+
+    submit_answer_feedback_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :submit_answer_feedback, name
+      assert_kind_of ::Google::Cloud::Dialogflow::CX::V3::SubmitAnswerFeedbackRequest, request
+      assert_equal "hello world", request["session"]
+      assert_equal "hello world", request["response_id"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Dialogflow::CX::V3::AnswerFeedback), request["answer_feedback"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, submit_answer_feedback_client_stub do
+      # Create client
+      client = ::Google::Cloud::Dialogflow::CX::V3::Sessions::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.submit_answer_feedback({ session: session, response_id: response_id, answer_feedback: answer_feedback, update_mask: update_mask }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.submit_answer_feedback session: session, response_id: response_id, answer_feedback: answer_feedback, update_mask: update_mask do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.submit_answer_feedback ::Google::Cloud::Dialogflow::CX::V3::SubmitAnswerFeedbackRequest.new(session: session, response_id: response_id, answer_feedback: answer_feedback, update_mask: update_mask) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.submit_answer_feedback({ session: session, response_id: response_id, answer_feedback: answer_feedback, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.submit_answer_feedback(::Google::Cloud::Dialogflow::CX::V3::SubmitAnswerFeedbackRequest.new(session: session, response_id: response_id, answer_feedback: answer_feedback, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, submit_answer_feedback_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Dialogflow::CX::V3::Sessions::Client.new do |config|
         config.credentials = grpc_channel
       end

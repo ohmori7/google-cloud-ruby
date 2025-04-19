@@ -48,6 +48,10 @@ module Google
           #   @return [::Array<::Google::Cloud::Billing::Budgets::V1beta1::ThresholdRule>]
           #     Optional. Rules that trigger alerts (notifications of thresholds
           #     being crossed) when spend exceeds the specified percentages of the budget.
+          #
+          #     Optional for `pubsubTopic` notifications.
+          #
+          #     Required if using email notifications.
           # @!attribute [rw] all_updates_rule
           #   @return [::Google::Cloud::Billing::Budgets::V1beta1::AllUpdatesRule]
           #     Optional. Rules to apply to notifications sent based on budget spend and
@@ -70,6 +74,8 @@ module Google
           #     match the currency of the billing account. If specified when updating a
           #     budget, it must match the currency_code of the existing budget.
           #     The `currency_code` is provided on output.
+          #
+          #     Note: The following fields are mutually exclusive: `specified_amount`, `last_period_amount`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] last_period_amount
           #   @return [::Google::Cloud::Billing::Budgets::V1beta1::LastPeriodAmount]
           #     Use the last period's actual spend as the budget for the present period.
@@ -77,6 +83,8 @@ module Google
           #     {::Google::Cloud::Billing::Budgets::V1beta1::Filter#calendar_period Filter.calendar_period}.
           #     It cannot be set in combination with
           #     {::Google::Cloud::Billing::Budgets::V1beta1::Filter#custom_period Filter.custom_period}.
+          #
+          #     Note: The following fields are mutually exclusive: `last_period_amount`, `specified_amount`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class BudgetAmount
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -96,13 +104,28 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # ThresholdRule contains a definition of a threshold which triggers
-          # an alert (a notification of a threshold being crossed) to be sent when
-          # spend goes above the specified amount.
-          # Alerts are automatically e-mailed to users with the Billing Account
-          # Administrator role or the Billing Account User role.
-          # The thresholds here have no effect on notifications sent to anything
-          # configured under `Budget.all_updates_rule`.
+          # ThresholdRule contains the definition of a threshold. Threshold rules define
+          # the triggering events used to generate a budget notification email. When a
+          # threshold is crossed (spend exceeds the specified percentages of the
+          # budget), budget alert emails are sent to the email recipients you specify
+          # in the
+          # [NotificationsRule](#notificationsrule).
+          #
+          # Threshold rules also affect the fields included in the
+          # [JSON data
+          # object](https://cloud.google.com/billing/docs/how-to/budgets-programmatic-notifications#notification_format)
+          # sent to a Pub/Sub topic.
+          #
+          # Threshold rules are _required_ if using email notifications.
+          #
+          # Threshold rules are _optional_ if only setting a
+          # [`pubsubTopic` NotificationsRule](#NotificationsRule),
+          # unless you want your JSON data object to include data about the thresholds
+          # you set.
+          #
+          # For more information, see
+          # [set budget threshold rules and
+          # actions](https://cloud.google.com/billing/docs/how-to/budgets#budget-actions).
           # @!attribute [rw] threshold_percent
           #   @return [::Float]
           #     Required. Send an alert when this threshold is exceeded.
@@ -173,6 +196,15 @@ module Google
           #     threshold is exceeded. Default notifications are sent to those with Billing
           #     Account Administrator and Billing Account User IAM roles for the target
           #     account.
+          # @!attribute [rw] enable_project_level_recipients
+          #   @return [::Boolean]
+          #     Optional. When set to true, and when the budget has a single project
+          #     configured, notifications will be sent to project level recipients of that
+          #     project. This field will be ignored if the budget has multiple or no
+          #     project configured.
+          #
+          #     Currently, project level recipients are the users with `Owner` role on a
+          #     cloud project.
           class AllUpdatesRule
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -185,7 +217,15 @@ module Google
           #     specifying that usage from only this set of projects should be
           #     included in the budget. If omitted, the report will include all usage for
           #     the billing account, regardless of which project the usage occurred on.
-          #     Only zero or one project can be specified currently.
+          # @!attribute [rw] resource_ancestors
+          #   @return [::Array<::String>]
+          #     Optional. A set of folder and organization names of the form
+          #     `folders/{folderId}` or `organizations/{organizationId}`, specifying that
+          #     usage from only this set of folders and organizations should be included in
+          #     the budget. If omitted, the budget includes all usage that the billing
+          #     account pays for. If the folder or organization contains projects that are
+          #     paid for by a different Cloud Billing account, the budget *doesn't* apply
+          #     to those projects.
           # @!attribute [rw] credit_types
           #   @return [::Array<::String>]
           #     Optional. If
@@ -220,9 +260,14 @@ module Google
           # @!attribute [rw] labels
           #   @return [::Google::Protobuf::Map{::String => ::Google::Protobuf::ListValue}]
           #     Optional. A single label and value pair specifying that usage from only
-          #     this set of labeled resources should be included in the budget. Currently,
-          #     multiple entries or multiple values per entry are not allowed. If omitted,
+          #     this set of labeled resources should be included in the budget. If omitted,
           #     the report will include all labeled and unlabeled usage.
+          #
+          #     An object containing a single `"key": value` pair. Example: `{ "name":
+          #     "wrench" }`.
+          #
+          #      _Currently, multiple entries or multiple values per entry are not
+          #      allowed._
           # @!attribute [rw] calendar_period
           #   @return [::Google::Cloud::Billing::Budgets::V1beta1::CalendarPeriod]
           #     Optional. Specifies to track usage for recurring calendar period.
@@ -231,10 +276,14 @@ module Google
           #     April, May, June. After that, it will track usage from July 1 to
           #     September 30 when the current calendar month is July, August, September,
           #     so on.
+          #
+          #     Note: The following fields are mutually exclusive: `calendar_period`, `custom_period`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] custom_period
           #   @return [::Google::Cloud::Billing::Budgets::V1beta1::CustomPeriod]
           #     Optional. Specifies to track usage from any start date (required) to any
           #     end date (optional). This time period is static, it does not recur.
+          #
+          #     Note: The following fields are mutually exclusive: `custom_period`, `calendar_period`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class Filter
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -291,6 +340,8 @@ module Google
           # `CalendarPeriod`". All calendar times begin at 12 AM US and Canadian
           # Pacific Time (UTC-8).
           module CalendarPeriod
+            # Calendar period is unset. This is the default if the budget is for a
+            # custom time period (CustomPeriod).
             CALENDAR_PERIOD_UNSPECIFIED = 0
 
             # A month. Month starts on the first day of each month, such as January 1,

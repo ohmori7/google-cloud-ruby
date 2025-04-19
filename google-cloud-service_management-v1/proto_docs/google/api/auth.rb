@@ -63,7 +63,8 @@ module Google
     #   @return [::String]
     #     Selects the methods to which this rule applies.
     #
-    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax details.
+    #     Refer to {::Google::Api::DocumentationRule#selector selector} for syntax
+    #     details.
     # @!attribute [rw] oauth
     #   @return [::Google::Api::OAuthRequirements]
     #     The requirements for OAuth credentials.
@@ -83,9 +84,18 @@ module Google
     # @!attribute [rw] header
     #   @return [::String]
     #     Specifies HTTP header name to extract JWT token.
+    #
+    #     Note: The following fields are mutually exclusive: `header`, `query`, `cookie`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] query
     #   @return [::String]
     #     Specifies URL query parameter name to extract JWT token.
+    #
+    #     Note: The following fields are mutually exclusive: `query`, `header`, `cookie`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+    # @!attribute [rw] cookie
+    #   @return [::String]
+    #     Specifies cookie name to extract JWT token.
+    #
+    #     Note: The following fields are mutually exclusive: `cookie`, `header`, `query`. If a field in that set is populated, all other fields in the set will automatically be cleared.
     # @!attribute [rw] value_prefix
     #   @return [::String]
     #     The value prefix. The value format is "value_prefix\\{token}"
@@ -157,11 +167,12 @@ module Google
     #     Implement authorizationUrl of securityDefinitions in OpenAPI spec.
     # @!attribute [rw] jwt_locations
     #   @return [::Array<::Google::Api::JwtLocation>]
-    #     Defines the locations to extract the JWT.
+    #     Defines the locations to extract the JWT.  For now it is only used by the
+    #     Cloud Endpoints to store the OpenAPI extension [x-google-jwt-locations]
+    #     (https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#x-google-jwt-locations)
     #
-    #     JWT locations can be either from HTTP headers or URL query parameters.
-    #     The rule is that the first match wins. The checking order is: checking
-    #     all headers first, then URL query parameters.
+    #     JWT locations can be one of HTTP headers, URL query parameters or
+    #     cookies. The rule is that the first match wins.
     #
     #     If not specified,  default to use following 3 locations:
     #        1) Authorization: Bearer

@@ -22,10 +22,17 @@ require "google/cloud/location/version"
 module Google
   module Cloud
     ##
-    # To load this package, including all its services, and instantiate a client:
+    # API client module.
+    #
+    # @example Load this package, including all its services, and instantiate a gRPC client
     #
     #     require "google/cloud/location"
     #     client = ::Google::Cloud::Location::Locations::Client.new
+    #
+    # @example Load this package, including all its services, and instantiate a REST client
+    #
+    #     require "google/cloud/location"
+    #     client = ::Google::Cloud::Location::Locations::Rest::Client.new
     #
     module Location
     end

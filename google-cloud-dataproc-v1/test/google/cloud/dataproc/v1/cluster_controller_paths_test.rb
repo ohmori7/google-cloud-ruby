@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/dataproc/v1/cluster_controller"
 
 class ::Google::Cloud::Dataproc::V1::ClusterController::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_cluster_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dataproc::V1::ClusterController::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -35,9 +53,33 @@ class ::Google::Cloud::Dataproc::V1::ClusterController::ClientPathsTest < Minite
     end
   end
 
+  def test_crypto_key_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Dataproc::V1::ClusterController::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.crypto_key_path project: "value0", location: "value1", key_ring: "value2", crypto_key: "value3"
+      assert_equal "projects/value0/locations/value1/keyRings/value2/cryptoKeys/value3", path
+    end
+  end
+
+  def test_node_group_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Dataproc::V1::ClusterController::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.node_group_path project: "value0", region: "value1", cluster: "value2", node_group: "value3"
+      assert_equal "projects/value0/regions/value1/clusters/value2/nodeGroups/value3", path
+    end
+  end
+
   def test_service_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dataproc::V1::ClusterController::Client.new do |config|
         config.credentials = grpc_channel
       end

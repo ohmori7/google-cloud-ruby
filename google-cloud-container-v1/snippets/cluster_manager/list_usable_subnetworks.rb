@@ -19,21 +19,33 @@
 # [START container_v1_generated_ClusterManager_ListUsableSubnetworks_sync]
 require "google/cloud/container/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Container::V1::ClusterManager::Client.new
+##
+# Snippet for the list_usable_subnetworks call in the ClusterManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Container::V1::ClusterManager::Client#list_usable_subnetworks.
+#
+def list_usable_subnetworks
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Container::V1::ClusterManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Container::V1::ListUsableSubnetworksRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Container::V1::ListUsableSubnetworksRequest.new
 
-# Call the list_usable_subnetworks method.
-result = client.list_usable_subnetworks request
+  # Call the list_usable_subnetworks method.
+  result = client.list_usable_subnetworks request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Container::V1::UsableSubnetwork.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Container::V1::UsableSubnetwork.
+    p item
+  end
 end
 # [END container_v1_generated_ClusterManager_ListUsableSubnetworks_sync]

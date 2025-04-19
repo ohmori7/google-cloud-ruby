@@ -19,15 +19,29 @@
 # [START osconfig_v1_generated_OsConfigZonalService_GetOSPolicyAssignmentReport_sync]
 require "google/cloud/os_config/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OsConfig::V1::OsConfigZonalService::Client.new
+##
+# Snippet for the get_os_policy_assignment_report call in the OsConfigZonalService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OsConfig::V1::OsConfigZonalService::Client#get_os_policy_assignment_report.
+#
+def get_os_policy_assignment_report
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OsConfig::V1::OsConfigZonalService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OsConfig::V1::GetOSPolicyAssignmentReportRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OsConfig::V1::GetOSPolicyAssignmentReportRequest.new
 
-# Call the get_os_policy_assignment_report method.
-result = client.get_os_policy_assignment_report request
+  # Call the get_os_policy_assignment_report method.
+  result = client.get_os_policy_assignment_report request
 
-# The returned object is of type Google::Cloud::OsConfig::V1::OSPolicyAssignmentReport.
-p result
+  # The returned object is of type Google::Cloud::OsConfig::V1::OSPolicyAssignmentReport.
+  p result
+end
 # [END osconfig_v1_generated_OsConfigZonalService_GetOSPolicyAssignmentReport_sync]

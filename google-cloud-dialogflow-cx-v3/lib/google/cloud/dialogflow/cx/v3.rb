@@ -18,7 +18,6 @@
 
 require "google/cloud/dialogflow/cx/v3/pages"
 require "google/cloud/dialogflow/cx/v3/flows"
-require "google/cloud/dialogflow/cx/v3/security_settings_service"
 require "google/cloud/dialogflow/cx/v3/agents"
 require "google/cloud/dialogflow/cx/v3/changelogs"
 require "google/cloud/dialogflow/cx/v3/deployments"
@@ -31,6 +30,8 @@ require "google/cloud/dialogflow/cx/v3/test_cases"
 require "google/cloud/dialogflow/cx/v3/webhooks"
 require "google/cloud/dialogflow/cx/v3/environments"
 require "google/cloud/dialogflow/cx/v3/experiments"
+require "google/cloud/dialogflow/cx/v3/generators"
+require "google/cloud/dialogflow/cx/v3/security_settings_service"
 require "google/cloud/dialogflow/cx/v3/versions"
 require "google/cloud/dialogflow/cx/v3/version"
 
@@ -39,10 +40,17 @@ module Google
     module Dialogflow
       module CX
         ##
-        # To load this package, including all its services, and instantiate a client:
+        # API client module.
+        #
+        # @example Load this package, including all its services, and instantiate a gRPC client
         #
         #     require "google/cloud/dialogflow/cx/v3"
         #     client = ::Google::Cloud::Dialogflow::CX::V3::Pages::Client.new
+        #
+        # @example Load this package, including all its services, and instantiate a REST client
+        #
+        #     require "google/cloud/dialogflow/cx/v3"
+        #     client = ::Google::Cloud::Dialogflow::CX::V3::Pages::Rest::Client.new
         #
         module V3
         end

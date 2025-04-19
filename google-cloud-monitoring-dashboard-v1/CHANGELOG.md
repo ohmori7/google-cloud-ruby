@@ -1,5 +1,125 @@
 # Release History
 
+### 1.2.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.1.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.0.1 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.16.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24873](https://github.com/googleapis/google-cloud-ruby/issues/24873)) 
+
+### 0.15.0 (2024-02-10)
+
+#### Features
+
+* Add support for error reporting panels ([#24795](https://github.com/googleapis/google-cloud-ruby/issues/24795)) 
+* Add support for pie charts, incident lists, dropdown groups ([#24795](https://github.com/googleapis/google-cloud-ruby/issues/24795)) 
+* Add support for section headers, and styling options on text widgets ([#24795](https://github.com/googleapis/google-cloud-ruby/issues/24795)) 
+
+### 0.14.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.14.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.14.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23781](https://github.com/googleapis/google-cloud-ruby/issues/23781)) 
+
+### 0.13.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22921](https://github.com/googleapis/google-cloud-ruby/issues/22921)) 
+
+### 0.12.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.12.0 (2023-05-31)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21676](https://github.com/googleapis/google-cloud-ruby/issues/21676)) 
+
+### 0.11.0 (2023-03-08)
+
+#### Features
+
+* Support REST transport ([#20627](https://github.com/googleapis/google-cloud-ruby/issues/20627)) 
+
+### 0.10.0 (2023-01-12)
+
+#### Features
+
+* added support for horizontal bar rendering and column settings on time series tables ([#19993](https://github.com/googleapis/google-cloud-ruby/issues/19993)) 
+
+### 0.9.1 (2022-12-09)
+
+#### Documentation
+
+* Small fix to reference documentation formatting ([#19484](https://github.com/googleapis/google-cloud-ruby/issues/19484)) 
+
+### 0.9.0 (2022-11-01)
+
+#### Features
+
+* Added support for PromQL queries ([#19343](https://github.com/googleapis/google-cloud-ruby/issues/19343)) 
+
+### 0.8.0 (2022-07-05)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 0.7.0 (2022-04-14)
+
+#### Features
+
+* Support for dashboard filters
+* Support for dashboard labels
+* Support for time series table widgets
+* Support for collapsible group widgets
+* Support for logs panel widgets
+* Support for target axis when plotting a threshold
+* Support for a second Y axis when plotting data sets
+
 ### 0.6.6 / 2022-01-11
 
 #### Documentation

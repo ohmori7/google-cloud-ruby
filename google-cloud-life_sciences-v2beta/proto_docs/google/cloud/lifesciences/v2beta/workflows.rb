@@ -77,6 +77,15 @@ module Google
         #     The environment to pass into every action. Each action can also specify
         #     additional environment variables but cannot delete an entry from this map
         #     (though they can overwrite it with a different value).
+        # @!attribute [rw] encrypted_environment
+        #   @return [::Google::Cloud::LifeSciences::V2beta::Secret]
+        #     The encrypted environment to pass into every action. Each action can also
+        #     specify its own encrypted environment.
+        #
+        #     The secret must decrypt to a JSON-encoded dictionary where key-value pairs
+        #     serve as environment variable names and their values. The decoded
+        #     environment variables can overwrite the values specified by the
+        #     `environment` field.
         # @!attribute [rw] timeout
         #   @return [::Google::Protobuf::Duration]
         #     The maximum amount of time to give the pipeline to complete.  This includes
@@ -108,9 +117,9 @@ module Google
         #     and cannot start with a hyphen.
         # @!attribute [rw] image_uri
         #   @return [::String]
-        #     Required. The URI to pull the container image from. Note that all images referenced
-        #     by actions in the pipeline are pulled before the first action runs. If
-        #     multiple actions reference the same image, it is only pulled once,
+        #     Required. The URI to pull the container image from. Note that all images
+        #     referenced by actions in the pipeline are pulled before the first action
+        #     runs. If multiple actions reference the same image, it is only pulled once,
         #     ensuring that the same image is used for all actions in a single pipeline.
         #
         #     The image URI can be either a complete host and image specification (e.g.,
@@ -121,7 +130,8 @@ module Google
         #     If the specified image is not public, the service account specified for
         #     the Virtual Machine must have access to pull the images from GCR, or
         #     appropriate credentials must be specified in the
-        #     {::Google::Cloud::LifeSciences::V2beta::Action#credentials google.cloud.lifesciences.v2beta.Action.credentials} field.
+        #     {::Google::Cloud::LifeSciences::V2beta::Action#credentials google.cloud.lifesciences.v2beta.Action.credentials}
+        #     field.
         # @!attribute [rw] commands
         #   @return [::Array<::String>]
         #     If specified, overrides the `CMD` specified in the container. If the
@@ -134,7 +144,8 @@ module Google
         # @!attribute [rw] environment
         #   @return [::Google::Protobuf::Map{::String => ::String}]
         #     The environment to pass into the container. This environment is merged
-        #     with values specified in the {::Google::Cloud::LifeSciences::V2beta::Pipeline google.cloud.lifesciences.v2beta.Pipeline}
+        #     with values specified in the
+        #     {::Google::Cloud::LifeSciences::V2beta::Pipeline google.cloud.lifesciences.v2beta.Pipeline}
         #     message, overwriting any duplicate values.
         #
         #     In addition to the values passed here, a few other values are
@@ -149,6 +160,17 @@ module Google
         #     `GOOGLE_LAST_EXIT_STATUS` will be set to the exit status of the last
         #     non-background action that executed. This can be used by workflow engine
         #     authors to determine whether an individual action has succeeded or failed.
+        # @!attribute [rw] encrypted_environment
+        #   @return [::Google::Cloud::LifeSciences::V2beta::Secret]
+        #     The encrypted environment to pass into the container. This environment is
+        #     merged with values specified in the
+        #     {::Google::Cloud::LifeSciences::V2beta::Pipeline google.cloud.lifesciences.v2beta.Pipeline}
+        #     message, overwriting any duplicate values.
+        #
+        #     The secret must decrypt to a JSON-encoded dictionary where key-value pairs
+        #     serve as environment variable names and their values. The decoded
+        #     environment variables can overwrite the values specified by the
+        #     `environment` field.
         # @!attribute [rw] pid_namespace
         #   @return [::String]
         #     An optional identifier for a PID namespace to run the action inside.
@@ -333,11 +355,11 @@ module Google
         # Carries information about a Compute Engine VM resource.
         # @!attribute [rw] machine_type
         #   @return [::String]
-        #     Required. The machine type of the virtual machine to create. Must be the short name
-        #     of a standard machine type (such as "n1-standard-1") or a custom machine
-        #     type (such as "custom-1-4096", where "1" indicates the number of vCPUs and
-        #     "4096" indicates the memory in MB). See
-        #     [Creating an instance with a custom machine
+        #     Required. The machine type of the virtual machine to create. Must be the
+        #     short name of a standard machine type (such as "n1-standard-1") or a custom
+        #     machine type (such as "custom-1-4096", where "1" indicates the number of
+        #     vCPUs and "4096" indicates the memory in MB). See [Creating an instance
+        #     with a custom machine
         #     type](https://cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type#create)
         #     for more specifications on creating a custom machine type.
         # @!attribute [rw] preemptible
@@ -401,6 +423,7 @@ module Google
         #     To test a pipeline against the beta release of Container-Optimized OS,
         #     use the value `projects/cos-cloud/global/images/family/cos-beta`.
         # @!attribute [rw] nvidia_driver_version
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
         #     The NVIDIA driver version to use when attaching an NVIDIA GPU accelerator.
         #     The version specified here must be compatible with the GPU libraries
@@ -425,6 +448,10 @@ module Google
         #     The list of disks and other storage to create or attach to the VM.
         #
         #     Specify either the `volumes[]` field or the `disks[]` field, but not both.
+        # @!attribute [rw] reservation
+        #   @return [::String]
+        #     If specified, the VM will only be allocated inside the matching
+        #     reservation. It will fail if the VM parameters don't match the reservation.
         class VirtualMachine
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -456,7 +483,7 @@ module Google
         # Carries information about an accelerator that can be attached to a VM.
         # @!attribute [rw] type
         #   @return [::String]
-        #     The accelerator type string (for example, "nvidia-tesla-k80").
+        #     The accelerator type string (for example, "nvidia-tesla-t4").
         #
         #     Only NVIDIA GPU accelerators are currently supported. If an NVIDIA GPU is
         #     attached, the required runtime libraries will be made available to all
@@ -549,12 +576,18 @@ module Google
         # @!attribute [rw] persistent_disk
         #   @return [::Google::Cloud::LifeSciences::V2beta::PersistentDisk]
         #     Configuration for a persistent disk.
+        #
+        #     Note: The following fields are mutually exclusive: `persistent_disk`, `existing_disk`, `nfs_mount`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] existing_disk
         #   @return [::Google::Cloud::LifeSciences::V2beta::ExistingDisk]
         #     Configuration for a existing disk.
+        #
+        #     Note: The following fields are mutually exclusive: `existing_disk`, `persistent_disk`, `nfs_mount`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] nfs_mount
         #   @return [::Google::Cloud::LifeSciences::V2beta::NFSMount]
         #     Configuration for an NFS mount.
+        #
+        #     Note: The following fields are mutually exclusive: `nfs_mount`, `persistent_disk`, `existing_disk`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Volume
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -661,34 +694,64 @@ module Google
         #     information in the `details` field.
         # @!attribute [rw] delayed
         #   @return [::Google::Cloud::LifeSciences::V2beta::DelayedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::DelayedEvent google.cloud.lifesciences.v2beta.DelayedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::DelayedEvent google.cloud.lifesciences.v2beta.DelayedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] worker_assigned
         #   @return [::Google::Cloud::LifeSciences::V2beta::WorkerAssignedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::WorkerAssignedEvent google.cloud.lifesciences.v2beta.WorkerAssignedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::WorkerAssignedEvent google.cloud.lifesciences.v2beta.WorkerAssignedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `worker_assigned`, `delayed`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] worker_released
         #   @return [::Google::Cloud::LifeSciences::V2beta::WorkerReleasedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::WorkerReleasedEvent google.cloud.lifesciences.v2beta.WorkerReleasedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::WorkerReleasedEvent google.cloud.lifesciences.v2beta.WorkerReleasedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `worker_released`, `delayed`, `worker_assigned`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pull_started
         #   @return [::Google::Cloud::LifeSciences::V2beta::PullStartedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::PullStartedEvent google.cloud.lifesciences.v2beta.PullStartedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::PullStartedEvent google.cloud.lifesciences.v2beta.PullStartedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `pull_started`, `delayed`, `worker_assigned`, `worker_released`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pull_stopped
         #   @return [::Google::Cloud::LifeSciences::V2beta::PullStoppedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::PullStoppedEvent google.cloud.lifesciences.v2beta.PullStoppedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::PullStoppedEvent google.cloud.lifesciences.v2beta.PullStoppedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `pull_stopped`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] container_started
         #   @return [::Google::Cloud::LifeSciences::V2beta::ContainerStartedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::ContainerStartedEvent google.cloud.lifesciences.v2beta.ContainerStartedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::ContainerStartedEvent google.cloud.lifesciences.v2beta.ContainerStartedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `container_started`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_stopped`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] container_stopped
         #   @return [::Google::Cloud::LifeSciences::V2beta::ContainerStoppedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::ContainerStoppedEvent google.cloud.lifesciences.v2beta.ContainerStoppedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::ContainerStoppedEvent google.cloud.lifesciences.v2beta.ContainerStoppedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `container_stopped`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_killed`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] container_killed
         #   @return [::Google::Cloud::LifeSciences::V2beta::ContainerKilledEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::ContainerKilledEvent google.cloud.lifesciences.v2beta.ContainerKilledEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::ContainerKilledEvent google.cloud.lifesciences.v2beta.ContainerKilledEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `container_killed`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `unexpected_exit_status`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] unexpected_exit_status
         #   @return [::Google::Cloud::LifeSciences::V2beta::UnexpectedExitStatusEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::UnexpectedExitStatusEvent google.cloud.lifesciences.v2beta.UnexpectedExitStatusEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::UnexpectedExitStatusEvent google.cloud.lifesciences.v2beta.UnexpectedExitStatusEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `unexpected_exit_status`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `failed`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] failed
         #   @return [::Google::Cloud::LifeSciences::V2beta::FailedEvent]
-        #     See {::Google::Cloud::LifeSciences::V2beta::FailedEvent google.cloud.lifesciences.v2beta.FailedEvent}.
+        #     See
+        #     {::Google::Cloud::LifeSciences::V2beta::FailedEvent google.cloud.lifesciences.v2beta.FailedEvent}.
+        #
+        #     Note: The following fields are mutually exclusive: `failed`, `delayed`, `worker_assigned`, `worker_released`, `pull_started`, `pull_stopped`, `container_started`, `container_stopped`, `container_killed`, `unexpected_exit_status`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Event
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

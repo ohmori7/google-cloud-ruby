@@ -19,15 +19,29 @@
 # [START notebooks_v1beta1_generated_NotebookService_GetEnvironment_sync]
 require "google/cloud/notebooks/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Notebooks::V1beta1::NotebookService::Client.new
+##
+# Snippet for the get_environment call in the NotebookService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Notebooks::V1beta1::NotebookService::Client#get_environment.
+#
+def get_environment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Notebooks::V1beta1::NotebookService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Notebooks::V1beta1::GetEnvironmentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Notebooks::V1beta1::GetEnvironmentRequest.new
 
-# Call the get_environment method.
-result = client.get_environment request
+  # Call the get_environment method.
+  result = client.get_environment request
 
-# The returned object is of type Google::Cloud::Notebooks::V1beta1::Environment.
-p result
+  # The returned object is of type Google::Cloud::Notebooks::V1beta1::Environment.
+  p result
+end
 # [END notebooks_v1beta1_generated_NotebookService_GetEnvironment_sync]

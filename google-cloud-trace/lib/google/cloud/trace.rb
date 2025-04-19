@@ -93,11 +93,11 @@ module Google
                    endpoint: nil,
                    project: nil,
                    keyfile: nil
-        project_id    ||= (project || default_project_id)
+        project_id    ||= project || default_project_id
         scope         ||= configure.scope
         timeout       ||= configure.timeout
         endpoint      ||= configure.endpoint
-        credentials   ||= (keyfile || default_credentials(scope: scope))
+        credentials   ||= keyfile || default_credentials(scope: scope)
 
         credentials = resolve_credentials credentials, scope
         if credentials.respond_to? :project_id
@@ -204,7 +204,7 @@ module Google
       #   Google::Cloud::Trace.get.create_span "my_span"
       #
       def self.set trace
-        trace_context = trace ? trace.trace_context : nil
+        trace_context = trace&.trace_context
         Stackdriver::Core::TraceContext.set trace_context
         Thread.current[THREAD_KEY] = trace
       end

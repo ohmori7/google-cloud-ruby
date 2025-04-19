@@ -19,15 +19,29 @@
 # [START clouderrorreporting_v1beta1_generated_ErrorGroupService_GetGroup_sync]
 require "google/cloud/error_reporting/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ErrorReporting::V1beta1::ErrorGroupService::Client.new
+##
+# Snippet for the get_group call in the ErrorGroupService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ErrorReporting::V1beta1::ErrorGroupService::Client#get_group.
+#
+def get_group
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ErrorReporting::V1beta1::ErrorGroupService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ErrorReporting::V1beta1::GetGroupRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ErrorReporting::V1beta1::GetGroupRequest.new
 
-# Call the get_group method.
-result = client.get_group request
+  # Call the get_group method.
+  result = client.get_group request
 
-# The returned object is of type Google::Cloud::ErrorReporting::V1beta1::ErrorGroup.
-p result
+  # The returned object is of type Google::Cloud::ErrorReporting::V1beta1::ErrorGroup.
+  p result
+end
 # [END clouderrorreporting_v1beta1_generated_ErrorGroupService_GetGroup_sync]

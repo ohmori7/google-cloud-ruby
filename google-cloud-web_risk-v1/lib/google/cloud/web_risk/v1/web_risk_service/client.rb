@@ -31,6 +31,12 @@ module Google
           # website and in client applications.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "webrisk.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -80,7 +86,7 @@ module Google
                   initial_delay: 0.1, max_delay: 60.0, multiplier: 1.3, retry_codes: [4, 14]
                 }
 
-                default_config.rpcs.create_submission.timeout = 60.0
+                default_config.rpcs.create_submission.timeout = 600.0
 
                 default_config
               end
@@ -106,6 +112,15 @@ module Google
             def configure
               yield @config if block_given?
               @config
+            end
+
+            ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @web_risk_service_stub.universe_domain
             end
 
             ##
@@ -141,8 +156,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -151,13 +167,50 @@ module Google
               @quota_project_id = @config.quota_project
               @quota_project_id ||= credentials.quota_project_id if credentials.respond_to? :quota_project_id
 
+              @operations_client = Operations.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
+              end
+
               @web_risk_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::WebRisk::V1::WebRiskService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @web_risk_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # Get the associated client for long-running operations.
+            #
+            # @return [::Google::Cloud::WebRisk::V1::WebRiskService::Operations]
+            #
+            attr_reader :operations_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @web_risk_service_stub.logger
             end
 
             # Service calls
@@ -186,7 +239,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param threat_type [::Google::Cloud::WebRisk::V1::ThreatType]
-            #     Required. The threat list to update. Only a single ThreatType should be specified.
+            #     Required. The threat list to update. Only a single ThreatType should be
+            #     specified per request. If you want to handle multiple ThreatTypes, you must
+            #     make one request per ThreatType.
             #   @param version_token [::String]
             #     The current version token of the client for the requested list (the
             #     client version that was received from the last successful diff).
@@ -230,10 +285,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.compute_threat_list_diff.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::WebRisk::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.compute_threat_list_diff.timeout,
@@ -246,7 +302,6 @@ module Google
 
               @web_risk_service_stub.call_rpc :compute_threat_list_diff, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -277,7 +332,8 @@ module Google
             #   @param uri [::String]
             #     Required. The URI to be checked for matches.
             #   @param threat_types [::Array<::Google::Cloud::WebRisk::V1::ThreatType>]
-            #     Required. The ThreatLists to search in. Multiple ThreatLists may be specified.
+            #     Required. The ThreatLists to search in. Multiple ThreatLists may be
+            #     specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::WebRisk::V1::SearchUrisResponse]
@@ -313,10 +369,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_uris.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::WebRisk::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.search_uris.timeout,
@@ -329,7 +386,6 @@ module Google
 
               @web_risk_service_stub.call_rpc :search_uris, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -360,8 +416,11 @@ module Google
             #   @param hash_prefix [::String]
             #     A hash prefix, consisting of the most significant 4-32 bytes of a SHA256
             #     hash. For JSON requests, this field is base64-encoded.
+            #     Note that if this parameter is provided by a URI, it must be encoded using
+            #     the web safe base64 variant (RFC 4648).
             #   @param threat_types [::Array<::Google::Cloud::WebRisk::V1::ThreatType>]
-            #     Required. The ThreatLists to search in. Multiple ThreatLists may be specified.
+            #     Required. The ThreatLists to search in. Multiple ThreatLists may be
+            #     specified.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::WebRisk::V1::SearchHashesResponse]
@@ -397,10 +456,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_hashes.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::WebRisk::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.search_hashes.timeout,
@@ -413,7 +473,6 @@ module Google
 
               @web_risk_service_stub.call_rpc :search_hashes, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -425,7 +484,8 @@ module Google
             # content, the site will be added to the [Google's Social Engineering
             # lists](https://support.google.com/webmasters/answer/6350487/) in order to
             # protect users that could get exposed to this threat in the future. Only
-            # projects with CREATE_SUBMISSION_USERS visibility can use this method.
+            # allowlisted projects can use this method during Early Access. Please reach
+            # out to Sales or your customer engineer to obtain access.
             #
             # @overload create_submission(request, options = nil)
             #   Pass arguments to `create_submission` via a request object, either of type
@@ -443,8 +503,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The name of the project that is making the submission. This string is in
-            #     the format "projects/\\{project_number}".
+            #     Required. The name of the project that is making the submission. This
+            #     string is in the format "projects/\\{project_number}".
             #   @param submission [::Google::Cloud::WebRisk::V1::Submission, ::Hash]
             #     Required. The submission that contains the content of the phishing report.
             #
@@ -482,10 +542,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_submission.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::WebRisk::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -506,7 +567,116 @@ module Google
 
               @web_risk_service_stub.call_rpc :create_submission, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Submits a URI suspected of containing malicious content to be reviewed.
+            # Returns a google.longrunning.Operation which, once the review is complete,
+            # is updated with its result. You can use the [Pub/Sub API]
+            # (https://cloud.google.com/pubsub) to receive notifications for the returned
+            # Operation. If the result verifies the existence of malicious content, the
+            # site will be added to the [Google's Social Engineering lists]
+            # (https://support.google.com/webmasters/answer/6350487/) in order to
+            # protect users that could get exposed to this threat in the future. Only
+            # allowlisted projects can use this method during Early Access. Please reach
+            # out to Sales or your customer engineer to obtain access.
+            #
+            # @overload submit_uri(request, options = nil)
+            #   Pass arguments to `submit_uri` via a request object, either of type
+            #   {::Google::Cloud::WebRisk::V1::SubmitUriRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::WebRisk::V1::SubmitUriRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload submit_uri(parent: nil, submission: nil, threat_info: nil, threat_discovery: nil)
+            #   Pass arguments to `submit_uri` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project that is making the submission. This
+            #     string is in the format "projects/\\{project_number}".
+            #   @param submission [::Google::Cloud::WebRisk::V1::Submission, ::Hash]
+            #     Required. The submission that contains the URI to be scanned.
+            #   @param threat_info [::Google::Cloud::WebRisk::V1::ThreatInfo, ::Hash]
+            #     Provides additional information about the submission.
+            #   @param threat_discovery [::Google::Cloud::WebRisk::V1::ThreatDiscovery, ::Hash]
+            #     Provides additional information about how the submission was discovered.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::Operation]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::Operation]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/web_risk/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::WebRisk::V1::WebRiskService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::WebRisk::V1::SubmitUriRequest.new
+            #
+            #   # Call the submit_uri method.
+            #   result = client.submit_uri request
+            #
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
+            #   result.wait_until_done! timeout: 60
+            #   if result.response?
+            #     p result.response
+            #   else
+            #     puts "No response received."
+            #   end
+            #
+            def submit_uri request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::WebRisk::V1::SubmitUriRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.submit_uri.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::WebRisk::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.submit_uri.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.submit_uri.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @web_risk_service_stub.call_rpc :submit_uri, request, options: options do |response, operation|
+                response = ::Gapic::Operation.new response, @operations_client, options: options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -542,20 +712,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"webrisk.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -590,11 +767,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "webrisk.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "webrisk.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -609,6 +800,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -627,6 +820,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -667,6 +868,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :create_submission
+                ##
+                # RPC-specific configuration for `submit_uri`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :submit_uri
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -678,6 +884,8 @@ module Google
                   @search_hashes = ::Gapic::Config::Method.new search_hashes_config
                   create_submission_config = parent_rpcs.create_submission if parent_rpcs.respond_to? :create_submission
                   @create_submission = ::Gapic::Config::Method.new create_submission_config
+                  submit_uri_config = parent_rpcs.submit_uri if parent_rpcs.respond_to? :submit_uri
+                  @submit_uri = ::Gapic::Config::Method.new submit_uri_config
 
                   yield self if block_given?
                 end

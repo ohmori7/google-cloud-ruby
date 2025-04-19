@@ -360,7 +360,6 @@ module Google
         def async_writer max_batch_count: 10_000, max_batch_bytes: 10_000_000,
                          max_queue_size: 100, interval: 5, threads: 10,
                          partial_success: false
-
           AsyncWriter.new self, max_count: max_batch_count,
                                 max_bytes: max_batch_bytes,
                                 max_queue: max_queue_size,
@@ -398,7 +397,7 @@ module Google
 
         ##
         # Creates a logger instance that is API-compatible with Ruby's standard
-        # library [Logger](http://ruby-doc.org/stdlib/libdoc/logger/rdoc).
+        # library [Logger](https://ruby-doc.org/current/stdlibs/logger/).
         #
         # The logger will create a new AsyncWriter object to transmit log
         # entries on a background thread.

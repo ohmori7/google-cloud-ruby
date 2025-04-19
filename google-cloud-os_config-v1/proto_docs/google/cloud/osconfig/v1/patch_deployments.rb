@@ -49,9 +49,13 @@ module Google
         # @!attribute [rw] one_time_schedule
         #   @return [::Google::Cloud::OsConfig::V1::OneTimeSchedule]
         #     Required. Schedule a one-time execution.
+        #
+        #     Note: The following fields are mutually exclusive: `one_time_schedule`, `recurring_schedule`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] recurring_schedule
         #   @return [::Google::Cloud::OsConfig::V1::RecurringSchedule]
         #     Required. Schedule recurring executions.
+        #
+        #     Note: The following fields are mutually exclusive: `recurring_schedule`, `one_time_schedule`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] create_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. Time the patch deployment was created. Timestamp is in
@@ -68,9 +72,25 @@ module Google
         # @!attribute [rw] rollout
         #   @return [::Google::Cloud::OsConfig::V1::PatchRollout]
         #     Optional. Rollout strategy of the patch job.
+        # @!attribute [r] state
+        #   @return [::Google::Cloud::OsConfig::V1::PatchDeployment::State]
+        #     Output only. Current state of the patch deployment.
         class PatchDeployment
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Represents state of patch peployment.
+          module State
+            # The default value. This value is used if the state is omitted.
+            STATE_UNSPECIFIED = 0
+
+            # Active value means that patch deployment generates Patch Jobs.
+            ACTIVE = 1
+
+            # Paused value means that patch deployment does not generate
+            # Patch jobs. Requires user action to move in and out from this state.
+            PAUSED = 2
+          end
         end
 
         # Sets the time for a one time patch deployment. Timestamp is in
@@ -105,9 +125,13 @@ module Google
         # @!attribute [rw] weekly
         #   @return [::Google::Cloud::OsConfig::V1::WeeklySchedule]
         #     Required. Schedule with weekly executions.
+        #
+        #     Note: The following fields are mutually exclusive: `weekly`, `monthly`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] monthly
         #   @return [::Google::Cloud::OsConfig::V1::MonthlySchedule]
         #     Required. Schedule with monthly executions.
+        #
+        #     Note: The following fields are mutually exclusive: `monthly`, `weekly`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] last_execute_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. The time the last patch job ran successfully.
@@ -123,16 +147,16 @@ module Google
             # Invalid. A frequency must be specified.
             FREQUENCY_UNSPECIFIED = 0
 
-            # Indicates that the frequency should be expressed in terms of
-            # weeks.
+            # Indicates that the frequency of recurrence should be expressed in terms
+            # of weeks.
             WEEKLY = 1
 
-            # Indicates that the frequency should be expressed in terms of
-            # months.
+            # Indicates that the frequency of recurrence should be expressed in terms
+            # of months.
             MONTHLY = 2
 
-            # Indicates that the frequency should be expressed in terms of
-            # days.
+            # Indicates that the frequency of recurrence should be expressed in terms
+            # of days.
             DAILY = 3
           end
         end
@@ -151,12 +175,16 @@ module Google
         # @!attribute [rw] week_day_of_month
         #   @return [::Google::Cloud::OsConfig::V1::WeekDayOfMonth]
         #     Required. Week day in a month.
+        #
+        #     Note: The following fields are mutually exclusive: `week_day_of_month`, `month_day`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] month_day
         #   @return [::Integer]
         #     Required. One day of the month. 1-31 indicates the 1st to the 31st day.
         #     -1 indicates the last day of the month. Months without the target day
         #     will be skipped. For example, a schedule to run "every month on the 31st"
         #     will not run in February, April, June, etc.
+        #
+        #     Note: The following fields are mutually exclusive: `month_day`, `week_day_of_month`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class MonthlySchedule
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -170,6 +198,15 @@ module Google
         # @!attribute [rw] day_of_week
         #   @return [::Google::Type::DayOfWeek]
         #     Required. A day of the week.
+        # @!attribute [rw] day_offset
+        #   @return [::Integer]
+        #     Optional. Represents the number of days before or after the given week day
+        #     of month that the patch deployment is scheduled for. For example if
+        #     `week_ordinal` and `day_of_week` values point to the second day of the
+        #     month and this `day_offset` value is set to `3`, the patch deployment takes
+        #     place three days after the second Tuesday of the month. If this value is
+        #     negative, for example -5, the patches are deployed five days before before
+        #     the second Tuesday of the month. Allowed values are in range [-30, 30].
         class WeekDayOfMonth
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -244,6 +281,39 @@ module Google
         #     Required. The resource name of the patch deployment in the form
         #     `projects/*/patchDeployments/*`.
         class DeletePatchDeploymentRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A request message for updating a patch deployment.
+        # @!attribute [rw] patch_deployment
+        #   @return [::Google::Cloud::OsConfig::V1::PatchDeployment]
+        #     Required. The patch deployment to Update.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     Optional. Field mask that controls which fields of the patch deployment
+        #     should be updated.
+        class UpdatePatchDeploymentRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A request message for pausing a patch deployment.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The resource name of the patch deployment in the form
+        #     `projects/*/patchDeployments/*`.
+        class PausePatchDeploymentRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A request message for resuming a patch deployment.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The resource name of the patch deployment in the form
+        #     `projects/*/patchDeployments/*`.
+        class ResumePatchDeploymentRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

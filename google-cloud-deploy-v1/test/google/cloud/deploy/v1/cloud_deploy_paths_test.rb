@@ -23,9 +23,51 @@ require "gapic/grpc/service_stub"
 require "google/cloud/deploy/v1/cloud_deploy"
 
 class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_automation_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.automation_path project: "value0", location: "value1", delivery_pipeline: "value2", automation: "value3"
+      assert_equal "projects/value0/locations/value1/deliveryPipelines/value2/automations/value3", path
+    end
+  end
+
+  def test_automation_run_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.automation_run_path project: "value0", location: "value1", delivery_pipeline: "value2", automation_run: "value3"
+      assert_equal "projects/value0/locations/value1/deliveryPipelines/value2/automationRuns/value3", path
+    end
+  end
+
   def test_build_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +79,7 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
 
   def test_cluster_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +91,7 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
 
   def test_config_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -59,9 +101,21 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
     end
   end
 
+  def test_custom_target_type_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.custom_target_type_path project: "value0", location: "value1", custom_target_type: "value2"
+      assert_equal "projects/value0/locations/value1/customTargetTypes/value2", path
+    end
+  end
+
   def test_delivery_pipeline_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -71,9 +125,45 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
     end
   end
 
+  def test_deploy_policy_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.deploy_policy_path project: "value0", location: "value1", deploy_policy: "value2"
+      assert_equal "projects/value0/locations/value1/deployPolicies/value2", path
+    end
+  end
+
+  def test_job_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.job_path project: "value0", location: "value1", job: "value2"
+      assert_equal "projects/value0/locations/value1/jobs/value2", path
+    end
+  end
+
+  def test_job_run_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.job_run_path project: "value0", location: "value1", delivery_pipeline: "value2", release: "value3", rollout: "value4", job_run: "value5"
+      assert_equal "projects/value0/locations/value1/deliveryPipelines/value2/releases/value3/rollouts/value4/jobRuns/value5", path
+    end
+  end
+
   def test_location_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -83,9 +173,21 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
     end
   end
 
+  def test_membership_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.membership_path project: "value0", location: "value1", membership: "value2"
+      assert_equal "projects/value0/locations/value1/memberships/value2", path
+    end
+  end
+
   def test_release_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -95,9 +197,21 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
     end
   end
 
+  def test_repository_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.repository_path project: "value0", location: "value1", connection: "value2", repository: "value3"
+      assert_equal "projects/value0/locations/value1/connections/value2/repositories/value3", path
+    end
+  end
+
   def test_rollout_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -107,9 +221,21 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
     end
   end
 
+  def test_service_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.service_path project: "value0", location: "value1", service: "value2"
+      assert_equal "projects/value0/locations/value1/services/value2", path
+    end
+  end
+
   def test_target_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -121,7 +247,7 @@ class ::Google::Cloud::Deploy::V1::CloudDeploy::ClientPathsTest < Minitest::Test
 
   def test_worker_pool_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new do |config|
         config.credentials = grpc_channel
       end

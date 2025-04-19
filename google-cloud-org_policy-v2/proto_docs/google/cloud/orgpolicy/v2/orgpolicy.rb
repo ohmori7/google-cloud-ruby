@@ -21,38 +21,48 @@ module Google
   module Cloud
     module OrgPolicy
       module V2
-        # Defines a Cloud Organization `Policy` which is used to specify `Constraints`
-        # for configurations of Cloud Platform resources.
+        # Defines an organization policy which is used to specify constraints
+        # for configurations of Google Cloud resources.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Immutable. The resource name of the Policy. Must be one of the following
-        #     forms, where constraint_name is the name of the constraint which this
-        #     Policy configures:
+        #     Immutable. The resource name of the policy. Must be one of the following
+        #     forms, where `constraint_name` is the name of the constraint which this
+        #     policy configures:
+        #
         #     * `projects/{project_number}/policies/{constraint_name}`
         #     * `folders/{folder_id}/policies/{constraint_name}`
         #     * `organizations/{organization_id}/policies/{constraint_name}`
         #
-        #     For example, "projects/123/policies/compute.disableSerialPortAccess".
+        #     For example, `projects/123/policies/compute.disableSerialPortAccess`.
         #
         #     Note: `projects/{project_id}/policies/{constraint_name}` is also an
         #     acceptable name for API requests, but responses will return the name using
         #     the equivalent project number.
         # @!attribute [rw] spec
         #   @return [::Google::Cloud::OrgPolicy::V2::PolicySpec]
-        #     Basic information about the Organization Policy.
+        #     Basic information about the organization policy.
         # @!attribute [rw] alternate
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Cloud::OrgPolicy::V2::AlternatePolicySpec]
-        #     An alternate policy configuration that will be used instead of the baseline
-        #     policy configurations as determined by the launch.
-        #     Currently the only way the launch can trigger the alternate configuration
-        #     is via dry-run/darklaunch.
+        #     Deprecated.
+        # @!attribute [rw] dry_run_spec
+        #   @return [::Google::Cloud::OrgPolicy::V2::PolicySpec]
+        #     Dry-run policy.
+        #     Audit-only policy, can be used to monitor how the policy would have
+        #     impacted the existing and future resources if it's enforced.
+        # @!attribute [rw] etag
+        #   @return [::String]
+        #     Optional. An opaque tag indicating the current state of the policy, used
+        #     for concurrency control. This 'etag' is computed by the server based on the
+        #     value of other fields, and may be sent on update and delete requests to
+        #     ensure the client has an up-to-date value before proceeding.
         class Policy
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # Similar to PolicySpec but with an extra 'launch' field for launch reference.
-        # The PolicySpec here is specific for dry-run/darklaunch.
+        # The PolicySpec here is specific for dry-run.
         # @!attribute [rw] launch
         #   @return [::String]
         #     Reference to the launch that will be used while audit logging and to
@@ -60,55 +70,54 @@ module Google
         #     Should be set only in the alternate policy.
         # @!attribute [rw] spec
         #   @return [::Google::Cloud::OrgPolicy::V2::PolicySpec]
-        #     Specify `Constraint` for configurations of Cloud Platform resources.
+        #     Specify constraint for configurations of Google Cloud resources.
         class AlternatePolicySpec
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Defines a Cloud Organization `PolicySpec` which is used to specify
-        # `Constraints` for configurations of Cloud Platform resources.
+        # Defines a Google Cloud policy specification which is used to specify
+        # constraints for configurations of Google Cloud resources.
         # @!attribute [rw] etag
         #   @return [::String]
-        #     An opaque tag indicating the current version of the `Policy`, used for
+        #     An opaque tag indicating the current version of the policySpec, used for
         #     concurrency control.
         #
         #     This field is ignored if used in a `CreatePolicy` request.
         #
-        #     When the `Policy` is returned from either a `GetPolicy` or a
+        #     When the policy is returned from either a `GetPolicy` or a
         #     `ListPolicies` request, this `etag` indicates the version of the
-        #     current `Policy` to use when executing a read-modify-write loop.
+        #     current policySpec to use when executing a read-modify-write loop.
         #
-        #     When the `Policy` is returned from a `GetEffectivePolicy` request, the
+        #     When the policy is returned from a `GetEffectivePolicy` request, the
         #     `etag` will be unset.
         # @!attribute [r] update_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. The time stamp this was previously updated. This
         #     represents the last time a call to `CreatePolicy` or `UpdatePolicy` was
-        #     made for that `Policy`.
+        #     made for that policy.
         # @!attribute [rw] rules
         #   @return [::Array<::Google::Cloud::OrgPolicy::V2::PolicySpec::PolicyRule>]
-        #     Up to 10 PolicyRules are allowed.
+        #     In policies for boolean constraints, the following requirements apply:
         #
-        #     In Policies for boolean constraints, the following requirements apply:
-        #       - There must be one and only one PolicyRule where condition is unset.
-        #       - BooleanPolicyRules with conditions must set `enforced` to the opposite
-        #         of the PolicyRule without a condition.
-        #       - During policy evaluation, PolicyRules with conditions that are
+        #       - There must be one and only one policy rule where condition is unset.
+        #       - Boolean policy rules with conditions must set `enforced` to the
+        #         opposite of the policy rule without a condition.
+        #       - During policy evaluation, policy rules with conditions that are
         #         true for a target resource take precedence.
         # @!attribute [rw] inherit_from_parent
         #   @return [::Boolean]
-        #     Determines the inheritance behavior for this `Policy`.
+        #     Determines the inheritance behavior for this policy.
         #
-        #     If `inherit_from_parent` is true, PolicyRules set higher up in the
+        #     If `inherit_from_parent` is true, policy rules set higher up in the
         #     hierarchy (up to the closest root) are inherited and present in the
         #     effective policy. If it is false, then no rules are inherited, and this
-        #     Policy becomes the new root for evaluation.
-        #     This field can be set only for Policies which configure list constraints.
+        #     policy becomes the new root for evaluation.
+        #     This field can be set only for policies which configure list constraints.
         # @!attribute [rw] reset
         #   @return [::Boolean]
         #     Ignores policies set above this resource and restores the
-        #     `constraint_default` enforcement behavior of the specific `Constraint` at
+        #     `constraint_default` enforcement behavior of the specific constraint at
         #     this resource.
         #     This field can be set in policies for either list or boolean
         #     constraints. If set, `rules` must be empty and `inherit_from_parent`
@@ -120,38 +129,59 @@ module Google
           # A rule used to express this policy.
           # @!attribute [rw] values
           #   @return [::Google::Cloud::OrgPolicy::V2::PolicySpec::PolicyRule::StringValues]
-          #     List of values to be used for this PolicyRule. This field can be set
-          #     only in Policies for list constraints.
+          #     List of values to be used for this policy rule. This field can be set
+          #     only in policies for list constraints.
+          #
+          #     Note: The following fields are mutually exclusive: `values`, `allow_all`, `deny_all`, `enforce`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] allow_all
           #   @return [::Boolean]
           #     Setting this to true means that all values are allowed. This field can
-          #     be set only in Policies for list constraints.
+          #     be set only in policies for list constraints.
+          #
+          #     Note: The following fields are mutually exclusive: `allow_all`, `values`, `deny_all`, `enforce`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] deny_all
           #   @return [::Boolean]
           #     Setting this to true means that all values are denied. This field can
-          #     be set only in Policies for list constraints.
+          #     be set only in policies for list constraints.
+          #
+          #     Note: The following fields are mutually exclusive: `deny_all`, `values`, `allow_all`, `enforce`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] enforce
           #   @return [::Boolean]
-          #     If `true`, then the `Policy` is enforced. If `false`, then any
+          #     If `true`, then the policy is enforced. If `false`, then any
           #     configuration is acceptable.
-          #     This field can be set only in Policies for boolean constraints.
+          #     This field can be set only in policies for boolean constraints.
+          #
+          #     Note: The following fields are mutually exclusive: `enforce`, `values`, `allow_all`, `deny_all`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] condition
           #   @return [::Google::Type::Expr]
           #     A condition which determines whether this rule is used
           #     in the evaluation of the policy. When set, the `expression` field in
           #     the `Expr' must include from 1 to 10 subexpressions, joined by the "||"
           #     or "&&" operators. Each subexpression must be of the form
-          #     "resource.matchLabels(key_name, value_name)",
-          #     where key_name and value_name are the resource names for Label Keys
-          #     and Values. These names are available from the Label Manager Service. An
-          #     example expression is:
-          #     "resource.matchLabels('labelKeys/123, 'labelValues/456')".
+          #     "resource.matchTag('<ORG_ID>/tag_key_short_name,
+          #     'tag_value_short_name')". or "resource.matchTagId('tagKeys/key_id',
+          #     'tagValues/value_id')". where key_name and value_name are the resource
+          #     names for Label Keys and Values. These names are available from the Tag
+          #     Manager Service. An example expression is:
+          #     "resource.matchTag('123456789/environment,
+          #     'prod')". or "resource.matchTagId('tagKeys/123',
+          #     'tagValues/456')".
+          # @!attribute [rw] parameters
+          #   @return [::Google::Protobuf::Struct]
+          #     Optional. Required for managed constraints if parameters are defined.
+          #     Passes parameter values when policy enforcement is enabled. Ensure that
+          #     parameter value types match those defined in the constraint definition.
+          #     For example:
+          #     {
+          #       "allowedLocations" : ["us-east1", "us-west1"],
+          #       "allowAll" : true
+          #     }
           class PolicyRule
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
             # A message that holds specific allowed and denied values.
-            # This message can define specific values and subtrees of Cloud Resource
+            # This message can define specific values and subtrees of the Resource
             # Manager resource hierarchy (`Organizations`, `Folders`, `Projects`) that
             # are allowed or denied. This is achieved by using the `under:` and
             # optional `is:` prefixes.
@@ -160,9 +190,11 @@ module Google
             # if the value contains a ":". Values prefixed with "is:" are treated the
             # same as values with no prefix.
             # Ancestry subtrees must be in one of the following formats:
-            #     - "projects/<project-id>", e.g. "projects/tokyo-rain-123"
-            #     - "folders/<folder-id>", e.g. "folders/1234"
-            #     - "organizations/<organization-id>", e.g. "organizations/1234"
+            #
+            # - `projects/<project-id>` (for example, `projects/tokyo-rain-123`)
+            # - `folders/<folder-id>` (for example, `folders/1234`)
+            # - `organizations/<organization-id>` (for example, `organizations/1234`)
+            #
             # The `supports_under` field of the associated `Constraint`  defines
             # whether ancestry prefixes can be used.
             # @!attribute [rw] allowed_values
@@ -182,8 +214,9 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.ListConstraints] method.
         # @!attribute [rw] parent
         #   @return [::String]
-        #     Required. The Cloud resource that parents the constraint. Must be in one of the
-        #     following forms:
+        #     Required. The Google Cloud resource that parents the constraint. Must be in
+        #     one of the following forms:
+        #
         #     * `projects/{project_number}`
         #     * `projects/{project_id}`
         #     * `folders/{folder_id}`
@@ -219,9 +252,10 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.ListPolicies] method.
         # @!attribute [rw] parent
         #   @return [::String]
-        #     Required. The target Cloud resource that parents the set of constraints and policies
-        #     that will be returned from this call. Must be in one of the following
-        #     forms:
+        #     Required. The target Google Cloud resource that parents the set of
+        #     constraints and policies that will be returned from this call. Must be in
+        #     one of the following forms:
+        #
         #     * `projects/{project_number}`
         #     * `projects/{project_id}`
         #     * `folders/{folder_id}`
@@ -242,11 +276,11 @@ module Google
 
         # The response returned from the [ListPolicies]
         # [google.cloud.orgpolicy.v2.OrgPolicy.ListPolicies] method. It will be empty
-        # if no `Policies` are set on the resource.
+        # if no policies are set on the resource.
         # @!attribute [rw] policies
         #   @return [::Array<::Google::Cloud::OrgPolicy::V2::Policy>]
-        #     All `Policies` that exist on the resource. It will be empty if no
-        #     `Policies` are set.
+        #     All policies that exist on the resource. It will be empty if no
+        #     policies are set.
         # @!attribute [rw] next_page_token
         #   @return [::String]
         #     Page token used to retrieve the next page. This is currently not used, but
@@ -260,7 +294,8 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.GetPolicy] method.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. Resource name of the policy. See `Policy` for naming requirements.
+        #     Required. Resource name of the policy. See
+        #     {::Google::Cloud::OrgPolicy::V2::Policy Policy} for naming requirements.
         class GetPolicyRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -270,7 +305,8 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.GetEffectivePolicy] method.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The effective policy to compute. See `Policy` for naming rules.
+        #     Required. The effective policy to compute. See
+        #     {::Google::Cloud::OrgPolicy::V2::Policy Policy} for naming requirements.
         class GetEffectivePolicyRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -280,15 +316,16 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.CreatePolicy] method.
         # @!attribute [rw] parent
         #   @return [::String]
-        #     Required. The Cloud resource that will parent the new Policy. Must be in one of the
-        #     following forms:
+        #     Required. The Google Cloud resource that will parent the new policy. Must
+        #     be in one of the following forms:
+        #
         #     * `projects/{project_number}`
         #     * `projects/{project_id}`
         #     * `folders/{folder_id}`
         #     * `organizations/{organization_id}`
         # @!attribute [rw] policy
         #   @return [::Google::Cloud::OrgPolicy::V2::Policy]
-        #     Required. `Policy` to create.
+        #     Required. Policy to create.
         class CreatePolicyRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -298,7 +335,12 @@ module Google
         # [google.cloud.orgpolicy.v2.OrgPolicy.UpdatePolicy] method.
         # @!attribute [rw] policy
         #   @return [::Google::Cloud::OrgPolicy::V2::Policy]
-        #     Required. `Policy` to update.
+        #     Required. Policy to update.
+        # @!attribute [rw] update_mask
+        #   @return [::Google::Protobuf::FieldMask]
+        #     Field mask used to specify the fields to be overwritten in the policy
+        #     by the set. The fields specified in the update_mask are relative to the
+        #     policy, not the full request.
         class UpdatePolicyRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -309,8 +351,100 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. Name of the policy to delete.
-        #     See `Policy` for naming rules.
+        #     See the policy entry for naming rules.
+        # @!attribute [rw] etag
+        #   @return [::String]
+        #     Optional. The current etag of policy. If an etag is provided and does not
+        #     match the current etag of the policy, deletion will be blocked and an
+        #     ABORTED error will be returned.
         class DeletePolicyRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request sent to the [CreateCustomConstraintRequest]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.CreateCustomConstraint] method.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. Must be in the following form:
+        #
+        #     * `organizations/{organization_id}`
+        # @!attribute [rw] custom_constraint
+        #   @return [::Google::Cloud::OrgPolicy::V2::CustomConstraint]
+        #     Required. Custom constraint to create.
+        class CreateCustomConstraintRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request sent to the [GetCustomConstraint]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.GetCustomConstraint] method.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Resource name of the custom or managed constraint. See the custom
+        #     constraint entry for naming requirements.
+        class GetCustomConstraintRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request sent to the [ListCustomConstraints]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.ListCustomConstraints] method.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Required. The target Google Cloud resource that parents the set of custom
+        #     constraints that will be returned from this call. Must be in one of the
+        #     following forms:
+        #
+        #     * `organizations/{organization_id}`
+        # @!attribute [rw] page_size
+        #   @return [::Integer]
+        #     Size of the pages to be returned. This is currently unsupported and will
+        #     be ignored. The server may at any point start using this field to limit
+        #     page size.
+        # @!attribute [rw] page_token
+        #   @return [::String]
+        #     Page token used to retrieve the next page. This is currently unsupported
+        #     and will be ignored. The server may at any point start using this field.
+        class ListCustomConstraintsRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The response returned from the [ListCustomConstraints]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.ListCustomConstraints] method. It will
+        # be empty if no custom or managed constraints are set on the organization
+        # resource.
+        # @!attribute [rw] custom_constraints
+        #   @return [::Array<::Google::Cloud::OrgPolicy::V2::CustomConstraint>]
+        #     All custom and managed constraints that exist on the organization resource.
+        #     It will be empty if no custom constraints are set.
+        # @!attribute [rw] next_page_token
+        #   @return [::String]
+        #     Page token used to retrieve the next page. This is currently not used, but
+        #     the server may at any point start supplying a valid token.
+        class ListCustomConstraintsResponse
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request sent to the [UpdateCustomConstraintRequest]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.UpdateCustomConstraint] method.
+        # @!attribute [rw] custom_constraint
+        #   @return [::Google::Cloud::OrgPolicy::V2::CustomConstraint]
+        #     Required. `CustomConstraint` to update.
+        class UpdateCustomConstraintRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request sent to the [DeleteCustomConstraint]
+        # [google.cloud.orgpolicy.v2.OrgPolicy.DeleteCustomConstraint] method.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. Name of the custom constraint to delete.
+        #     See the custom constraint entry for naming rules.
+        class DeleteCustomConstraintRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

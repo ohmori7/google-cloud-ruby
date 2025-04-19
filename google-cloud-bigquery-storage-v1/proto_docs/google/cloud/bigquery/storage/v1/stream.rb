@@ -29,25 +29,32 @@ module Google
           #     `projects/{project_id}/locations/{location}/sessions/{session_id}`.
           # @!attribute [r] expire_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Output only. Time at which the session becomes invalid. After this time, subsequent
-          #     requests to read this Session will return errors. The expire_time is
-          #     automatically assigned and currently cannot be specified or updated.
+          #     Output only. Time at which the session becomes invalid. After this time,
+          #     subsequent requests to read this Session will return errors. The
+          #     expire_time is automatically assigned and currently cannot be specified or
+          #     updated.
           # @!attribute [rw] data_format
           #   @return [::Google::Cloud::Bigquery::Storage::V1::DataFormat]
-          #     Immutable. Data format of the output data.
+          #     Immutable. Data format of the output data. DATA_FORMAT_UNSPECIFIED not
+          #     supported.
           # @!attribute [r] avro_schema
           #   @return [::Google::Cloud::Bigquery::Storage::V1::AvroSchema]
           #     Output only. Avro schema.
+          #
+          #     Note: The following fields are mutually exclusive: `avro_schema`, `arrow_schema`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [r] arrow_schema
           #   @return [::Google::Cloud::Bigquery::Storage::V1::ArrowSchema]
           #     Output only. Arrow schema.
+          #
+          #     Note: The following fields are mutually exclusive: `arrow_schema`, `avro_schema`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] table
           #   @return [::String]
           #     Immutable. Table that this ReadSession is reading from, in the form
           #     `projects/{project_id}/datasets/{dataset_id}/tables/{table_id}`
           # @!attribute [rw] table_modifiers
           #   @return [::Google::Cloud::Bigquery::Storage::V1::ReadSession::TableModifiers]
-          #     Optional. Any modifiers which are applied when reading from the specified table.
+          #     Optional. Any modifiers which are applied when reading from the specified
+          #     table.
           # @!attribute [rw] read_options
           #   @return [::Google::Cloud::Bigquery::Storage::V1::ReadSession::TableReadOptions]
           #     Optional. Read options for this session (e.g. column selection, filters).
@@ -64,6 +71,26 @@ module Google
           #     Output only. An estimate on the number of bytes this session will scan when
           #     all streams are completely consumed. This estimate is based on
           #     metadata from the table which might be incomplete or stale.
+          # @!attribute [r] estimated_total_physical_file_size
+          #   @return [::Integer]
+          #     Output only. A pre-projected estimate of the total physical size of files
+          #     (in bytes) that this session will scan when all streams are consumed. This
+          #     estimate is independent of the selected columns and can be based on
+          #     incomplete or stale metadata from the table.  This field is only set for
+          #     BigLake tables.
+          # @!attribute [r] estimated_row_count
+          #   @return [::Integer]
+          #     Output only. An estimate on the number of rows present in this session's
+          #     streams. This estimate is based on metadata from the table which might be
+          #     incomplete or stale.
+          # @!attribute [rw] trace_id
+          #   @return [::String]
+          #     Optional. ID set by client to annotate a session identity.  This does not
+          #     need to be strictly unique, but instead the same ID should be used to group
+          #     logically connected sessions (e.g. All using the same ID for all sessions
+          #     needed to complete a Spark SQL query is reasonable).
+          #
+          #     Maximum length is 256 bytes.
           class ReadSession
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -80,10 +107,53 @@ module Google
             # Options dictating how we read a table.
             # @!attribute [rw] selected_fields
             #   @return [::Array<::String>]
-            #     Names of the fields in the table that should be read. If empty, all
-            #     fields will be read. If the specified field is a nested field, all
-            #     the sub-fields in the field will be selected. The output field order is
-            #     unrelated to the order of fields in selected_fields.
+            #     Optional. The names of the fields in the table to be returned. If no
+            #     field names are specified, then all fields in the table are returned.
+            #
+            #     Nested fields -- the child elements of a STRUCT field -- can be selected
+            #     individually using their fully-qualified names, and will be returned as
+            #     record fields containing only the selected nested fields. If a STRUCT
+            #     field is specified in the selected fields list, all of the child elements
+            #     will be returned.
+            #
+            #     As an example, consider a table with the following schema:
+            #
+            #       {
+            #           "name": "struct_field",
+            #           "type": "RECORD",
+            #           "mode": "NULLABLE",
+            #           "fields": [
+            #               {
+            #                   "name": "string_field1",
+            #                   "type": "STRING",
+            #     .              "mode": "NULLABLE"
+            #               },
+            #               {
+            #                   "name": "string_field2",
+            #                   "type": "STRING",
+            #                   "mode": "NULLABLE"
+            #               }
+            #           ]
+            #       }
+            #
+            #     Specifying "struct_field" in the selected fields list will result in a
+            #     read session schema with the following logical structure:
+            #
+            #       struct_field {
+            #           string_field1
+            #           string_field2
+            #       }
+            #
+            #     Specifying "struct_field.string_field1" in the selected fields list will
+            #     result in a read session schema with the following logical structure:
+            #
+            #       struct_field {
+            #           string_field1
+            #       }
+            #
+            #     The order of the fields in the read session schema is derived from the
+            #     table schema and does not correspond to the order in which the fields are
+            #     specified in this list.
             # @!attribute [rw] row_restriction
             #   @return [::String]
             #     SQL text filtering statement, similar to a WHERE clause in a query.
@@ -99,9 +169,43 @@ module Google
             # @!attribute [rw] arrow_serialization_options
             #   @return [::Google::Cloud::Bigquery::Storage::V1::ArrowSerializationOptions]
             #     Optional. Options specific to the Apache Arrow output format.
+            #
+            #     Note: The following fields are mutually exclusive: `arrow_serialization_options`, `avro_serialization_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] avro_serialization_options
+            #   @return [::Google::Cloud::Bigquery::Storage::V1::AvroSerializationOptions]
+            #     Optional. Options specific to the Apache Avro output format
+            #
+            #     Note: The following fields are mutually exclusive: `avro_serialization_options`, `arrow_serialization_options`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] sample_percentage
+            #   @return [::Float]
+            #     Optional. Specifies a table sampling percentage. Specifically, the query
+            #     planner will use TABLESAMPLE SYSTEM (sample_percentage PERCENT). The
+            #     sampling percentage is applied at the data block granularity. It will
+            #     randomly choose for each data block whether to read the rows in that data
+            #     block. For more details, see
+            #     https://cloud.google.com/bigquery/docs/table-sampling)
+            # @!attribute [rw] response_compression_codec
+            #   @return [::Google::Cloud::Bigquery::Storage::V1::ReadSession::TableReadOptions::ResponseCompressionCodec]
+            #     Optional. Set response_compression_codec when creating a read session to
+            #     enable application-level compression of ReadRows responses.
             class TableReadOptions
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Specifies which compression codec to attempt on the entire serialized
+              # response payload (either Arrow record batch or Avro rows). This is
+              # not to be confused with the Apache Arrow native compression codecs
+              # specified in ArrowSerializationOptions. For performance reasons, when
+              # creating a read session requesting Arrow responses, setting both native
+              # Arrow compression and application-level response compression will not be
+              # allowed - choose, at most, one kind of compression.
+              module ResponseCompressionCodec
+                # Default is no compression.
+                RESPONSE_COMPRESSION_CODEC_UNSPECIFIED = 0
+
+                # Use raw LZ4 compression.
+                RESPONSE_COMPRESSION_CODEC_LZ4 = 2
+              end
             end
           end
 
@@ -127,8 +231,8 @@ module Google
           #     Immutable. Type of the stream.
           # @!attribute [r] create_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Output only. Create time of the stream. For the _default stream, this is the
-          #     creation_time of the table.
+          #     Output only. Create time of the stream. For the _default stream, this is
+          #     the creation_time of the table.
           # @!attribute [r] commit_time
           #   @return [::Google::Protobuf::Timestamp]
           #     Output only. Commit time of the stream.
@@ -144,6 +248,11 @@ module Google
           # @!attribute [rw] write_mode
           #   @return [::Google::Cloud::Bigquery::Storage::V1::WriteStream::WriteMode]
           #     Immutable. Mode of the stream.
+          # @!attribute [rw] location
+          #   @return [::String]
+          #     Immutable. The geographic location where the stream's dataset resides. See
+          #     https://cloud.google.com/bigquery/docs/locations for supported
+          #     locations.
           class WriteStream
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -177,6 +286,7 @@ module Google
 
           # Data format for input or output data.
           module DataFormat
+            # Data format is unspecified.
             DATA_FORMAT_UNSPECIFIED = 0
 
             # Avro is a standard open source row based file format.
@@ -186,6 +296,23 @@ module Google
             # Arrow is a standard open source column-based message format.
             # See https://arrow.apache.org/ for more details.
             ARROW = 2
+          end
+
+          # WriteStreamView is a view enum that controls what details about a write
+          # stream should be returned.
+          module WriteStreamView
+            # The default / unset value.
+            WRITE_STREAM_VIEW_UNSPECIFIED = 0
+
+            # The BASIC projection returns basic metadata about a write stream.  The
+            # basic view does not include schema information.  This is the default view
+            # returned by GetWriteStream.
+            BASIC = 1
+
+            # The FULL projection returns all available write stream metadata, including
+            # the schema.  CreateWriteStream returns the full projection of write stream
+            # metadata.
+            FULL = 2
           end
         end
       end

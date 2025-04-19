@@ -19,15 +19,29 @@
 # [START dialogflow_v2_generated_Versions_CreateVersion_sync]
 require "google/cloud/dialogflow/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::V2::Versions::Client.new
+##
+# Snippet for the create_version call in the Versions service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::V2::Versions::Client#create_version.
+#
+def create_version
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::V2::Versions::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::V2::CreateVersionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::V2::CreateVersionRequest.new
 
-# Call the create_version method.
-result = client.create_version request
+  # Call the create_version method.
+  result = client.create_version request
 
-# The returned object is of type Google::Cloud::Dialogflow::V2::Version.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::V2::Version.
+  p result
+end
 # [END dialogflow_v2_generated_Versions_CreateVersion_sync]

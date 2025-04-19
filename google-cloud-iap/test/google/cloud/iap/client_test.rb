@@ -20,25 +20,66 @@ require "helper"
 require "google/cloud/iap"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Iap::ClientConstructionMinitest < Minitest::Test
-  def test_identity_aware_proxy_admin_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_identity_aware_proxy_admin_service_grpc
+    skip unless Google::Cloud::Iap.identity_aware_proxy_admin_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Iap.identity_aware_proxy_admin_service do |config|
+      client = Google::Cloud::Iap.identity_aware_proxy_admin_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Client, client
     end
   end
 
-  def test_identity_aware_proxy_o_auth_service
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_identity_aware_proxy_admin_service_rest
+    skip unless Google::Cloud::Iap.identity_aware_proxy_admin_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Iap.identity_aware_proxy_admin_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Iap::V1::IdentityAwareProxyAdminService::Rest::Client, client
+    end
+  end
+
+  def test_identity_aware_proxy_o_auth_service_grpc
+    skip unless Google::Cloud::Iap.identity_aware_proxy_o_auth_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Iap.identity_aware_proxy_o_auth_service do |config|
+      client = Google::Cloud::Iap.identity_aware_proxy_o_auth_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Iap::V1::IdentityAwareProxyOAuthService::Client, client
+    end
+  end
+
+  def test_identity_aware_proxy_o_auth_service_rest
+    skip unless Google::Cloud::Iap.identity_aware_proxy_o_auth_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Iap.identity_aware_proxy_o_auth_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Iap::V1::IdentityAwareProxyOAuthService::Rest::Client, client
     end
   end
 end

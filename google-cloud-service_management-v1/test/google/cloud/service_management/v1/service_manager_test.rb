@@ -41,9 +41,26 @@ class ::Google::Cloud::ServiceManagement::V1::ServiceManager::ClientTest < Minit
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -873,141 +890,12 @@ class ::Google::Cloud::ServiceManagement::V1::ServiceManager::ClientTest < Minit
     end
   end
 
-  def test_enable_service
-    # Create GRPC objects.
-    grpc_response = ::Google::Longrunning::Operation.new
-    grpc_operation = GRPC::ActiveCall::Operation.new nil
-    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    grpc_options = {}
-
-    # Create request parameters for a unary method.
-    service_name = "hello world"
-    consumer_id = "hello world"
-
-    enable_service_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
-      assert_equal :enable_service, name
-      assert_kind_of ::Google::Cloud::ServiceManagement::V1::EnableServiceRequest, request
-      assert_equal "hello world", request["service_name"]
-      assert_equal "hello world", request["consumer_id"]
-      refute_nil options
-    end
-
-    Gapic::ServiceStub.stub :new, enable_service_client_stub do
-      # Create client
-      client = ::Google::Cloud::ServiceManagement::V1::ServiceManager::Client.new do |config|
-        config.credentials = grpc_channel
-      end
-
-      # Use hash object
-      client.enable_service({ service_name: service_name, consumer_id: consumer_id }) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use named arguments
-      client.enable_service service_name: service_name, consumer_id: consumer_id do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use protobuf object
-      client.enable_service ::Google::Cloud::ServiceManagement::V1::EnableServiceRequest.new(service_name: service_name, consumer_id: consumer_id) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use hash object with options
-      client.enable_service({ service_name: service_name, consumer_id: consumer_id }, grpc_options) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use protobuf object with options
-      client.enable_service(::Google::Cloud::ServiceManagement::V1::EnableServiceRequest.new(service_name: service_name, consumer_id: consumer_id), grpc_options) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Verify method calls
-      assert_equal 5, enable_service_client_stub.call_rpc_count
-    end
-  end
-
-  def test_disable_service
-    # Create GRPC objects.
-    grpc_response = ::Google::Longrunning::Operation.new
-    grpc_operation = GRPC::ActiveCall::Operation.new nil
-    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    grpc_options = {}
-
-    # Create request parameters for a unary method.
-    service_name = "hello world"
-    consumer_id = "hello world"
-
-    disable_service_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
-      assert_equal :disable_service, name
-      assert_kind_of ::Google::Cloud::ServiceManagement::V1::DisableServiceRequest, request
-      assert_equal "hello world", request["service_name"]
-      assert_equal "hello world", request["consumer_id"]
-      refute_nil options
-    end
-
-    Gapic::ServiceStub.stub :new, disable_service_client_stub do
-      # Create client
-      client = ::Google::Cloud::ServiceManagement::V1::ServiceManager::Client.new do |config|
-        config.credentials = grpc_channel
-      end
-
-      # Use hash object
-      client.disable_service({ service_name: service_name, consumer_id: consumer_id }) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use named arguments
-      client.disable_service service_name: service_name, consumer_id: consumer_id do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use protobuf object
-      client.disable_service ::Google::Cloud::ServiceManagement::V1::DisableServiceRequest.new(service_name: service_name, consumer_id: consumer_id) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use hash object with options
-      client.disable_service({ service_name: service_name, consumer_id: consumer_id }, grpc_options) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Use protobuf object with options
-      client.disable_service(::Google::Cloud::ServiceManagement::V1::DisableServiceRequest.new(service_name: service_name, consumer_id: consumer_id), grpc_options) do |response, operation|
-        assert_kind_of Gapic::Operation, response
-        assert_equal grpc_response, response.grpc_op
-        assert_equal grpc_operation, operation
-      end
-
-      # Verify method calls
-      assert_equal 5, disable_service_client_stub.call_rpc_count
-    end
-  end
-
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::ServiceManagement::V1::ServiceManager::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -1025,7 +913,8 @@ class ::Google::Cloud::ServiceManagement::V1::ServiceManager::ClientTest < Minit
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::ServiceManagement::V1::ServiceManager::Client.new do |config|
         config.credentials = grpc_channel
       end

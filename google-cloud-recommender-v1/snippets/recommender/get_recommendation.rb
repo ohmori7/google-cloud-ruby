@@ -19,15 +19,29 @@
 # [START recommender_v1_generated_Recommender_GetRecommendation_sync]
 require "google/cloud/recommender/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Recommender::V1::Recommender::Client.new
+##
+# Snippet for the get_recommendation call in the Recommender service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Recommender::V1::Recommender::Client#get_recommendation.
+#
+def get_recommendation
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Recommender::V1::Recommender::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Recommender::V1::GetRecommendationRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Recommender::V1::GetRecommendationRequest.new
 
-# Call the get_recommendation method.
-result = client.get_recommendation request
+  # Call the get_recommendation method.
+  result = client.get_recommendation request
 
-# The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
-p result
+  # The returned object is of type Google::Cloud::Recommender::V1::Recommendation.
+  p result
+end
 # [END recommender_v1_generated_Recommender_GetRecommendation_sync]

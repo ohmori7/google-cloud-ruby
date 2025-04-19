@@ -26,7 +26,7 @@ module Google
           # of pages in the Stackdriver web application.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Immutable. The resource name of the dashboard.
+          #     Identifier. The resource name of the dashboard.
           # @!attribute [rw] display_name
           #   @return [::String]
           #     Required. The mutable, human-readable name.
@@ -43,21 +43,44 @@ module Google
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::GridLayout]
           #     Content is arranged with a basic layout that re-flows a simple list of
           #     informational elements like widgets or tiles.
+          #
+          #     Note: The following fields are mutually exclusive: `grid_layout`, `mosaic_layout`, `row_layout`, `column_layout`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] mosaic_layout
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::MosaicLayout]
           #     The content is arranged as a grid of tiles, with each content widget
           #     occupying one or more grid blocks.
+          #
+          #     Note: The following fields are mutually exclusive: `mosaic_layout`, `grid_layout`, `row_layout`, `column_layout`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] row_layout
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::RowLayout]
           #     The content is divided into equally spaced rows and the widgets are
           #     arranged horizontally.
+          #
+          #     Note: The following fields are mutually exclusive: `row_layout`, `grid_layout`, `mosaic_layout`, `column_layout`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] column_layout
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::ColumnLayout]
           #     The content is divided into equally spaced columns and the widgets are
           #     arranged vertically.
+          #
+          #     Note: The following fields are mutually exclusive: `column_layout`, `grid_layout`, `mosaic_layout`, `row_layout`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] dashboard_filters
+          #   @return [::Array<::Google::Cloud::Monitoring::Dashboard::V1::DashboardFilter>]
+          #     Filters to reduce the amount of data charted based on the filter criteria.
+          # @!attribute [rw] labels
+          #   @return [::Google::Protobuf::Map{::String => ::String}]
+          #     Labels applied to the dashboard
           class Dashboard
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::String]
+            class LabelsEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
         end
       end

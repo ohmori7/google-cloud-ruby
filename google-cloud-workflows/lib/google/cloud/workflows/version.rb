@@ -20,7 +20,7 @@
 module Google
   module Cloud
     module Workflows
-      VERSION = "2.1.1"
+      VERSION = "3.0.0"
     end
   end
 end

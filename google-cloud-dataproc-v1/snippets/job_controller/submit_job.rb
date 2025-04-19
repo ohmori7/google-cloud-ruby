@@ -19,15 +19,29 @@
 # [START dataproc_v1_generated_JobController_SubmitJob_sync]
 require "google/cloud/dataproc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataproc::V1::JobController::Client.new
+##
+# Snippet for the submit_job call in the JobController service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataproc::V1::JobController::Client#submit_job.
+#
+def submit_job
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataproc::V1::JobController::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataproc::V1::SubmitJobRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataproc::V1::SubmitJobRequest.new
 
-# Call the submit_job method.
-result = client.submit_job request
+  # Call the submit_job method.
+  result = client.submit_job request
 
-# The returned object is of type Google::Cloud::Dataproc::V1::Job.
-p result
+  # The returned object is of type Google::Cloud::Dataproc::V1::Job.
+  p result
+end
 # [END dataproc_v1_generated_JobController_SubmitJob_sync]

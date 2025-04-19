@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/security_center"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::SecurityCenter::ClientConstructionMinitest < Minitest::Test
-  def test_security_center
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_security_center_grpc
+    skip unless Google::Cloud::SecurityCenter.security_center_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::SecurityCenter.security_center do |config|
+      client = Google::Cloud::SecurityCenter.security_center transport: :grpc do |config|
         config.credentials = grpc_channel
       end
-      assert_kind_of Google::Cloud::SecurityCenter::V1::SecurityCenter::Client, client
+      assert_kind_of Google::Cloud::SecurityCenter::V2::SecurityCenter::Client, client
+    end
+  end
+
+  def test_security_center_rest
+    skip unless Google::Cloud::SecurityCenter.security_center_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::SecurityCenter.security_center transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::SecurityCenter::V2::SecurityCenter::Rest::Client, client
     end
   end
 end

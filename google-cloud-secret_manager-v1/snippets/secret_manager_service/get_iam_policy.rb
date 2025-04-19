@@ -19,15 +19,29 @@
 # [START secretmanager_v1_generated_SecretManagerService_GetIamPolicy_sync]
 require "google/cloud/secret_manager/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::SecretManager::V1::SecretManagerService::Client.new
+##
+# Snippet for the get_iam_policy call in the SecretManagerService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::SecretManager::V1::SecretManagerService::Client#get_iam_policy.
+#
+def get_iam_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::SecretManager::V1::SecretManagerService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Iam::V1::GetIamPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Iam::V1::GetIamPolicyRequest.new
 
-# Call the get_iam_policy method.
-result = client.get_iam_policy request
+  # Call the get_iam_policy method.
+  result = client.get_iam_policy request
 
-# The returned object is of type Google::Iam::V1::Policy.
-p result
+  # The returned object is of type Google::Iam::V1::Policy.
+  p result
+end
 # [END secretmanager_v1_generated_SecretManagerService_GetIamPolicy_sync]

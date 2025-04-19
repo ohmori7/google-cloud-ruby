@@ -19,21 +19,33 @@
 # [START datalabeling_v1beta1_generated_DataLabelingService_SearchExampleComparisons_sync]
 require "google/cloud/data_labeling/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
+##
+# Snippet for the search_example_comparisons call in the DataLabelingService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client#search_example_comparisons.
+#
+def search_example_comparisons
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataLabeling::V1beta1::DataLabelingService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataLabeling::V1beta1::SearchExampleComparisonsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataLabeling::V1beta1::SearchExampleComparisonsRequest.new
 
-# Call the search_example_comparisons method.
-result = client.search_example_comparisons request
+  # Call the search_example_comparisons method.
+  result = client.search_example_comparisons request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::DataLabeling::V1beta1::SearchExampleComparisonsResponse::ExampleComparison.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::DataLabeling::V1beta1::SearchExampleComparisonsResponse::ExampleComparison.
+    p item
+  end
 end
 # [END datalabeling_v1beta1_generated_DataLabelingService_SearchExampleComparisons_sync]

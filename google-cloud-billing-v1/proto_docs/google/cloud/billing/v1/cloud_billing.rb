@@ -21,59 +21,82 @@ module Google
   module Cloud
     module Billing
       module V1
-        # A billing account in [GCP Console](https://console.cloud.google.com/).
-        # You can assign a billing account to one or more projects.
-        # @!attribute [rw] name
+        # A billing account in the
+        # [Google Cloud Console](https://console.cloud.google.com/). You can assign a
+        # billing account to one or more projects.
+        # @!attribute [r] name
         #   @return [::String]
-        #     The resource name of the billing account. The resource name has the form
-        #     `billingAccounts/{billing_account_id}`. For example,
+        #     Output only. The resource name of the billing account. The resource name
+        #     has the form `billingAccounts/{billing_account_id}`. For example,
         #     `billingAccounts/012345-567890-ABCDEF` would be the resource name for
         #     billing account `012345-567890-ABCDEF`.
         # @!attribute [r] open
         #   @return [::Boolean]
-        #     Output only. True if the billing account is open, and will therefore be charged for any
-        #     usage on associated projects. False if the billing account is closed, and
-        #     therefore projects associated with it will be unable to use paid services.
+        #     Output only. True if the billing account is open, and will therefore be
+        #     charged for any usage on associated projects. False if the billing account
+        #     is closed, and therefore projects associated with it are unable to use paid
+        #     services.
         # @!attribute [rw] display_name
         #   @return [::String]
         #     The display name given to the billing account, such as `My Billing
-        #     Account`. This name is displayed in the GCP Console.
+        #     Account`. This name is displayed in the Google Cloud Console.
         # @!attribute [rw] master_billing_account
         #   @return [::String]
         #     If this account is a
         #     [subaccount](https://cloud.google.com/billing/docs/concepts), then this
-        #     will be the resource name of the master billing account that it is being
+        #     will be the resource name of the parent billing account that it is being
         #     resold through.
         #     Otherwise this will be empty.
+        # @!attribute [r] parent
+        #   @return [::String]
+        #     Output only. The billing account's parent resource identifier.
+        #     Use the `MoveBillingAccount` method to update the account's parent resource
+        #     if it is a organization.
+        #     Format:
+        #       - `organizations/{organization_id}`, for example,
+        #         `organizations/12345678`
+        #       - `billingAccounts/{billing_account_id}`, for example,
+        #         `billingAccounts/012345-567890-ABCDEF`
+        # @!attribute [rw] currency_code
+        #   @return [::String]
+        #     Optional. The currency in which the billing account is billed and charged,
+        #     represented as an ISO 4217 code such as `USD`.
+        #
+        #     Billing account currency is determined at the time of billing account
+        #     creation and cannot be updated subsequently, so this field should not be
+        #     set on update requests. In addition, a subaccount always matches the
+        #     currency of its parent billing account, so this field should not be set on
+        #     subaccount creation requests. Clients can read this field to determine the
+        #     currency of an existing billing account.
         class BillingAccount
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Encapsulation of billing information for a GCP Console project. A project
-        # has at most one associated billing account at a time (but a billing account
-        # can be assigned to multiple projects).
-        # @!attribute [rw] name
+        # Encapsulation of billing information for a Google Cloud Console project. A
+        # project has at most one associated billing account at a time (but a billing
+        # account can be assigned to multiple projects).
+        # @!attribute [r] name
         #   @return [::String]
-        #     The resource name for the `ProjectBillingInfo`; has the form
+        #     Output only. The resource name for the `ProjectBillingInfo`; has the form
         #     `projects/{project_id}/billingInfo`. For example, the resource name for the
         #     billing information for project `tokyo-rain-123` would be
-        #     `projects/tokyo-rain-123/billingInfo`. This field is read-only.
-        # @!attribute [rw] project_id
+        #     `projects/tokyo-rain-123/billingInfo`.
+        # @!attribute [r] project_id
         #   @return [::String]
-        #     The ID of the project that this `ProjectBillingInfo` represents, such as
-        #     `tokyo-rain-123`. This is a convenience field so that you don't need to
-        #     parse the `name` field to obtain a project ID. This field is read-only.
+        #     Output only. The ID of the project that this `ProjectBillingInfo`
+        #     represents, such as `tokyo-rain-123`. This is a convenience field so that
+        #     you don't need to parse the `name` field to obtain a project ID.
         # @!attribute [rw] billing_account_name
         #   @return [::String]
         #     The resource name of the billing account associated with the project, if
         #     any. For example, `billingAccounts/012345-567890-ABCDEF`.
-        # @!attribute [rw] billing_enabled
+        # @!attribute [r] billing_enabled
         #   @return [::Boolean]
-        #     True if the project is associated with an open billing account, to which
-        #     usage on the project is charged. False if the project is associated with a
-        #     closed billing account, or no billing account at all, and therefore cannot
-        #     use paid services. This field is read-only.
+        #     Output only. True if the project is associated with an open billing
+        #     account, to which usage on the project is charged. False if the project is
+        #     associated with a closed billing account, or no billing account at all, and
+        #     therefore cannot use paid services.
         class ProjectBillingInfo
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -82,8 +105,8 @@ module Google
         # Request message for `GetBillingAccount`.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The resource name of the billing account to retrieve. For example,
-        #     `billingAccounts/012345-567890-ABCDEF`.
+        #     Required. The resource name of the billing account to retrieve. For
+        #     example, `billingAccounts/012345-567890-ABCDEF`.
         class GetBillingAccountRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -102,11 +125,20 @@ module Google
         # @!attribute [rw] filter
         #   @return [::String]
         #     Options for how to filter the returned billing accounts.
-        #     Currently this only supports filtering for
+        #     This only supports filtering for
         #     [subaccounts](https://cloud.google.com/billing/docs/concepts) under a
-        #     single provided reseller billing account.
-        #     (e.g. "master_billing_account=billingAccounts/012345-678901-ABCDEF").
+        #     single provided parent billing account.
+        #     (for example,
+        #     `master_billing_account=billingAccounts/012345-678901-ABCDEF`).
         #     Boolean algebra and other fields are not currently supported.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Optional. The parent resource to list billing accounts from.
+        #     Format:
+        #       - `organizations/{organization_id}`, for example,
+        #         `organizations/12345678`
+        #       - `billingAccounts/{billing_account_id}`, for example,
+        #         `billingAccounts/012345-567890-ABCDEF`
         class ListBillingAccountsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -131,8 +163,14 @@ module Google
         #   @return [::Google::Cloud::Billing::V1::BillingAccount]
         #     Required. The billing account resource to create.
         #     Currently CreateBillingAccount only supports subaccount creation, so
-        #     any created billing accounts must be under a provided master billing
+        #     any created billing accounts must be under a provided parent billing
         #     account.
+        # @!attribute [rw] parent
+        #   @return [::String]
+        #     Optional. The parent to create a billing account from.
+        #     Format:
+        #       - `billingAccounts/{billing_account_id}`, for example,
+        #          `billingAccounts/012345-567890-ABCDEF`
         class CreateBillingAccountRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -144,7 +182,8 @@ module Google
         #     Required. The name of the billing account resource to be updated.
         # @!attribute [rw] account
         #   @return [::Google::Cloud::Billing::V1::BillingAccount]
-        #     Required. The billing account resource to replace the resource on the server.
+        #     Required. The billing account resource to replace the resource on the
+        #     server.
         # @!attribute [rw] update_mask
         #   @return [::Google::Protobuf::FieldMask]
         #     The update mask applied to the resource.
@@ -157,8 +196,9 @@ module Google
         # Request message for `ListProjectBillingInfo`.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The resource name of the billing account associated with the projects that
-        #     you want to list. For example, `billingAccounts/012345-567890-ABCDEF`.
+        #     Required. The resource name of the billing account associated with the
+        #     projects that you want to list. For example,
+        #     `billingAccounts/012345-567890-ABCDEF`.
         # @!attribute [rw] page_size
         #   @return [::Integer]
         #     Requested page size. The maximum page size is 100; this is also the
@@ -201,13 +241,32 @@ module Google
         # Request message for `UpdateProjectBillingInfo`.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The resource name of the project associated with the billing information
-        #     that you want to update. For example, `projects/tokyo-rain-123`.
+        #     Required. The resource name of the project associated with the billing
+        #     information that you want to update. For example,
+        #     `projects/tokyo-rain-123`.
         # @!attribute [rw] project_billing_info
         #   @return [::Google::Cloud::Billing::V1::ProjectBillingInfo]
-        #     The new billing information for the project. Read-only fields are ignored;
-        #     thus, you can leave empty all fields except `billing_account_name`.
+        #     The new billing information for the project. Output-only fields are
+        #     ignored; thus, you can leave empty all fields except
+        #     `billing_account_name`.
         class UpdateProjectBillingInfoRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Request message for `MoveBillingAccount` RPC.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Required. The resource name of the billing account to move.
+        #     Must be of the form `billingAccounts/{billing_account_id}`.
+        #     The specified billing account cannot be a subaccount, since a subaccount
+        #     always belongs to the same organization as its parent account.
+        # @!attribute [rw] destination_parent
+        #   @return [::String]
+        #     Required. The resource name of the Organization to move
+        #     the billing account under.
+        #     Must be of the form `organizations/{organization_id}`.
+        class MoveBillingAccountRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end

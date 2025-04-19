@@ -1,5 +1,148 @@
 # Release History
 
+### 0.17.2 (2025-04-18)
+
+#### Documentation
+
+* marked fields as output only ([#29475](https://github.com/googleapis/google-cloud-ruby/issues/29475)) 
+
+### 0.17.1 (2025-03-18)
+
+#### Documentation
+
+* Minor typo fix in reference documentation ([#29379](https://github.com/googleapis/google-cloud-ruby/issues/29379)) 
+
+### 0.17.0 (2025-01-29)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Include note about validating externally-provided credentials 
+
+### 0.16.1 (2025-01-15)
+
+#### Documentation
+
+* Minor update to FraudPrevention enumeration documentation ([#28212](https://github.com/googleapis/google-cloud-ruby/issues/28212)) 
+
+### 0.16.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 0.15.2 (2024-10-15)
+
+#### Documentation
+
+* Minor wording and branding adjustments ([#27423](https://github.com/googleapis/google-cloud-ruby/issues/27423)) 
+
+### 0.15.1 (2024-09-11)
+
+#### Documentation
+
+* Minor documentation updates ([#27302](https://github.com/googleapis/google-cloud-ruby/issues/27302)) 
+
+### 0.15.0 (2024-08-30)
+
+#### Features
+
+* add AssessmentEnvironment for CreateAssessement to explicitly describe the environment of the assessment 
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+* Add field `experimental_features` to message `PythonSettings` ([#27011](https://github.com/googleapis/google-cloud-ruby/issues/27011)) 
+* minor doc fixes 
+
+### 0.14.0 (2024-04-25)
+
+#### Features
+
+* Support for fraud prevention settings ([#25762](https://github.com/googleapis/google-cloud-ruby/issues/25762)) 
+
+### 0.13.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24875](https://github.com/googleapis/google-cloud-ruby/issues/24875)) 
+
+### 0.12.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.12.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.12.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23784](https://github.com/googleapis/google-cloud-ruby/issues/23784)) 
+
+### 0.11.0 (2024-01-09)
+
+#### Features
+
+* Added behavioral trust verdict to FraudPreventionAssessment ([#23423](https://github.com/googleapis/google-cloud-ruby/issues/23423)) 
+
+### 0.10.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22923](https://github.com/googleapis/google-cloud-ruby/issues/22923)) 
+
+### 0.9.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.9.0 (2023-06-01)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21677](https://github.com/googleapis/google-cloud-ruby/issues/21677)) 
+
+### 0.8.0 (2023-03-23)
+
+#### Features
+
+* Add support for reCAPTCHA Enterprise FraudPrevention API 
+* Add support for reCAPTCHA Enterprise TransactionData API 
+* Add support for TransactionEvent ([#20923](https://github.com/googleapis/google-cloud-ruby/issues/20923)) 
+
+### 0.7.0 (2023-03-08)
+
+#### Features
+
+* Support REST transport ([#20628](https://github.com/googleapis/google-cloud-ruby/issues/20628)) 
+
+### 0.6.0 (2022-07-07)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 0.5.0 (2022-05-03)
+
+#### Features
+
+* Support Account Defender assessments
+* Support password leak verification
+* Support providing a hashed account ID with an assessment annotation
+* Support providing a reason for an assessment annotation
+
+#### Bug Fixes
+
+* BREAKING CHANGE: Removed unsupported key management API
+
 ### 0.4.5 / 2022-01-11
 
 #### Documentation

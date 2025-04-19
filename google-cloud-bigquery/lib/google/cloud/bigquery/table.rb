@@ -109,6 +109,10 @@ module Google
         attr_reader :reference
 
         ##
+        # @private The metadata view type string.
+        attr_accessor :metadata_view
+
+        ##
         # @private Create an empty Table object.
         def initialize
           @service = nil
@@ -152,6 +156,45 @@ module Google
         def project_id
           return reference.project_id if reference?
           @gapi.table_reference.project_id
+        end
+
+        ##
+        # The type of the table like if its a TABLE, VIEW or SNAPSHOT etc.,
+        #
+        # @return [String, nil] Type of the table, or
+        #   `nil` if the object is a reference (see {#reference?}).
+        #
+        # @!group Attributes
+        #
+        def type
+          return nil if reference?
+          @gapi.type
+        end
+
+        ##
+        # The Information about base table and snapshot time of the table.
+        #
+        # @return [Google::Apis::BigqueryV2::SnapshotDefinition, nil] Snapshot definition of table snapshot, or
+        #   `nil` if not snapshot or the object is a reference (see {#reference?}).
+        #
+        # @!group Attributes
+        #
+        def snapshot_definition
+          return nil if reference?
+          @gapi.snapshot_definition
+        end
+
+        ##
+        # The Information about base table and clone time of the table.
+        #
+        # @return [Google::Apis::BigqueryV2::CloneDefinition, nil] Clone definition of table clone, or
+        #   `nil` if not clone or the object is a reference (see {#reference?}).
+        #
+        # @!group Attributes
+        #
+        def clone_definition
+          return nil if reference?
+          @gapi.clone_definition
         end
 
         ##
@@ -818,6 +861,40 @@ module Google
         def view?
           return nil if reference?
           @gapi.type == "VIEW"
+        end
+
+        ##
+        # Checks if the table's type is `SNAPSHOT`, indicating that the table
+        # represents a BigQuery table snapshot.
+        #
+        # @see https://cloud.google.com/bigquery/docs/table-snapshots-intro
+        #
+        # @return [Boolean, nil] `true` when the type is `SNAPSHOT`, `false`
+        #   otherwise, if the object is a resource (see {#resource?}); `nil` if
+        #   the object is a reference (see {#reference?}).
+        #
+        # @!group Attributes
+        #
+        def snapshot?
+          return nil if reference?
+          @gapi.type == "SNAPSHOT"
+        end
+
+        ##
+        # Checks if the table's type is `CLONE`, indicating that the table
+        # represents a BigQuery table clone.
+        #
+        # @see https://cloud.google.com/bigquery/docs/table-clones-intro
+        #
+        # @return [Boolean, nil] `true` when the type is `CLONE`, `false`
+        #   otherwise, if the object is a resource (see {#resource?}); `nil` if
+        #   the object is a reference (see {#reference?}).
+        #
+        # @!group Attributes
+        #
+        def clone?
+          return nil if reference?
+          !@gapi.clone_definition.nil?
         end
 
         ##
@@ -1697,9 +1774,16 @@ module Google
         #
         # @!group Data
         #
-        def copy_job destination_table, create: nil, write: nil, job_id: nil, prefix: nil, labels: nil, dryrun: nil
+        def copy_job destination_table, create: nil, write: nil, job_id: nil, prefix: nil, labels: nil, dryrun: nil,
+                     operation_type: nil
           ensure_service!
-          options = { create: create, write: write, dryrun: dryrun, labels: labels, job_id: job_id, prefix: prefix }
+          options = { create: create,
+                      write: write,
+                      dryrun: dryrun,
+                      labels: labels,
+                      job_id: job_id,
+                      prefix: prefix,
+                      operation_type: operation_type }
           updater = CopyJob::Updater.from_options(
             service,
             table_ref,
@@ -1780,10 +1864,195 @@ module Google
         # @!group Data
         #
         def copy destination_table, create: nil, write: nil, &block
-          job = copy_job destination_table, create: create, write: write, &block
-          job.wait_until_done!
-          ensure_job_succeeded! job
-          true
+          copy_job_with_operation_type destination_table,
+                                       create: create,
+                                       write: write,
+                                       operation_type: OperationType::COPY,
+                                       &block
+        end
+
+        ##
+        # Clones the data from the table to another table using a synchronous
+        # method that blocks for a response.
+        # The source and destination table have the same table type, but only bill for
+        # unique data.
+        # Timeouts and transient errors are generally handled as needed to complete the job.
+        # See also {#copy_job}.
+        #
+        # The geographic location for the job ("US", "EU", etc.) can be set via
+        # {CopyJob::Updater#location=} in a block passed to this method. If the
+        # table is a full resource representation (see {#resource_full?}), the
+        # location of the job will be automatically set to the location of the
+        # table.
+        #
+        # @param [Table, String] destination_table The destination for the
+        #   copied data. This can also be a string identifier as specified by
+        #   the [Standard SQL Query
+        #   Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#from-clause)
+        #   (`project-name.dataset_id.table_id`) or the [Legacy SQL Query
+        #   Reference](https://cloud.google.com/bigquery/query-reference#from)
+        #   (`project-name:dataset_id.table_id`). This is useful for referencing
+        #   tables in other projects and datasets.
+        #
+        # @yield [job] a job configuration object
+        # @yieldparam [Google::Cloud::Bigquery::CopyJob::Updater] job a job
+        #   configuration object for setting additional options.
+        #
+        # @return [Boolean] Returns `true` if the copy operation succeeded.
+        #
+        # @example
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #   destination_table = dataset.table "my_destination_table"
+        #
+        #   table.clone destination_table
+        #
+        # @example Passing a string identifier for the destination table:
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #
+        #   table.clone "other-project:other_dataset.other_table"
+        #
+        # @!group Data
+        #
+        def clone destination_table, &block
+          copy_job_with_operation_type destination_table,
+                                       operation_type: OperationType::CLONE,
+                                       &block
+        end
+
+        ##
+        # Takes snapshot of the data from the table to another table using a synchronous
+        # method that blocks for a response.
+        # The source table type is TABLE and the destination table type is SNAPSHOT.
+        # Timeouts and transient errors are generally handled as needed to complete the job.
+        # See also {#copy_job}.
+        #
+        # The geographic location for the job ("US", "EU", etc.) can be set via
+        # {CopyJob::Updater#location=} in a block passed to this method. If the
+        # table is a full resource representation (see {#resource_full?}), the
+        # location of the job will be automatically set to the location of the
+        # table.
+        #
+        # @param [Table, String] destination_table The destination for the
+        #   copied data. This can also be a string identifier as specified by
+        #   the [Standard SQL Query
+        #   Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#from-clause)
+        #   (`project-name.dataset_id.table_id`) or the [Legacy SQL Query
+        #   Reference](https://cloud.google.com/bigquery/query-reference#from)
+        #   (`project-name:dataset_id.table_id`). This is useful for referencing
+        #   tables in other projects and datasets.
+        #
+        # @yield [job] a job configuration object
+        # @yieldparam [Google::Cloud::Bigquery::CopyJob::Updater] job a job
+        #   configuration object for setting additional options.
+        #
+        # @return [Boolean] Returns `true` if the copy operation succeeded.
+        #
+        # @example
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #   destination_table = dataset.table "my_destination_table"
+        #
+        #   table.snapshot destination_table
+        #
+        # @example Passing a string identifier for the destination table:
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #
+        #   table.snapshot "other-project:other_dataset.other_table"
+        #
+        # @!group Data
+        #
+        def snapshot destination_table, &block
+          copy_job_with_operation_type destination_table,
+                                       operation_type: OperationType::SNAPSHOT,
+                                       &block
+        end
+
+        ##
+        # Restore the data from the table to another table using a synchronous
+        # method that blocks for a response.
+        # The source table type is SNAPSHOT and the destination table type is TABLE.
+        # Timeouts and transient errors are generally handled as needed to complete the job.
+        # See also {#copy_job}.
+        #
+        # The geographic location for the job ("US", "EU", etc.) can be set via
+        # {CopyJob::Updater#location=} in a block passed to this method. If the
+        # table is a full resource representation (see {#resource_full?}), the
+        # location of the job will be automatically set to the location of the
+        # table.
+        #
+        # @param [Table, String] destination_table The destination for the
+        #   copied data. This can also be a string identifier as specified by
+        #   the [Standard SQL Query
+        #   Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#from-clause)
+        #   (`project-name.dataset_id.table_id`) or the [Legacy SQL Query
+        #   Reference](https://cloud.google.com/bigquery/query-reference#from)
+        #   (`project-name:dataset_id.table_id`). This is useful for referencing
+        #   tables in other projects and datasets.
+        # @param [String] create Specifies whether the job is allowed to create
+        #   new tables. The default value is `needed`.
+        #
+        #   The following values are supported:
+        #
+        #   * `needed` - Create the table if it does not exist.
+        #   * `never` - The table must already exist. A 'notFound' error is
+        #     raised if the table does not exist.
+        # @param [String] write Specifies how to handle data already present in
+        #   the destination table. The default value is `empty`.
+        #
+        #   The following values are supported:
+        #
+        #   * `truncate` - BigQuery overwrites the table data.
+        #   * `append` - BigQuery appends the data to the table.
+        #   * `empty` - An error will be returned if the destination table
+        #     already contains data.
+        # @yield [job] a job configuration object
+        # @yieldparam [Google::Cloud::Bigquery::CopyJob::Updater] job a job
+        #   configuration object for setting additional options.
+        #
+        # @return [Boolean] Returns `true` if the copy operation succeeded.
+        #
+        # @example
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #   destination_table = dataset.table "my_destination_table"
+        #
+        #   table.restore destination_table
+        #
+        # @example Passing a string identifier for the destination table:
+        #   require "google/cloud/bigquery"
+        #
+        #   bigquery = Google::Cloud::Bigquery.new
+        #   dataset = bigquery.dataset "my_dataset"
+        #   table = dataset.table "my_table"
+        #
+        #   table.restore "other-project:other_dataset.other_table"
+        #
+        # @!group Data
+        #
+        def restore destination_table, create: nil, write: nil, &block
+          copy_job_with_operation_type destination_table,
+                                       create: create,
+                                       write: write,
+                                       operation_type: OperationType::RESTORE,
+                                       &block
         end
 
         ##
@@ -1812,7 +2081,7 @@ module Google
         #   The following values are supported:
         #
         #   * `csv` - CSV
-        #   * `json` - [Newline-delimited JSON](http://jsonlines.org/)
+        #   * `json` - [Newline-delimited JSON](https://jsonlines.org/)
         #   * `avro` - [Avro](http://avro.apache.org/)
         # @param [String] compression The compression type to use for exported
         #   files. Possible values include `GZIP` and `NONE`. The default value
@@ -1915,7 +2184,7 @@ module Google
         #   The following values are supported:
         #
         #   * `csv` - CSV
-        #   * `json` - [Newline-delimited JSON](http://jsonlines.org/)
+        #   * `json` - [Newline-delimited JSON](https://jsonlines.org/)
         #   * `avro` - [Avro](http://avro.apache.org/)
         # @param [String] compression The compression type to use for exported
         #   files. Possible values include `GZIP` and `NONE`. The default value
@@ -1986,7 +2255,7 @@ module Google
         #   The following values are supported:
         #
         #   * `csv` - CSV
-        #   * `json` - [Newline-delimited JSON](http://jsonlines.org/)
+        #   * `json` - [Newline-delimited JSON](https://jsonlines.org/)
         #   * `avro` - [Avro](http://avro.apache.org/)
         #   * `orc` - [ORC](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-orc)
         #   * `parquet` - [Parquet](https://parquet.apache.org/)
@@ -2103,6 +2372,11 @@ module Google
         # @param [Boolean] dryrun  If set, don't actually run this job. Behavior
         #   is undefined however for non-query jobs and may result in an error.
         #   Deprecated.
+        # @param [Boolean] create_session If set to true a new session will be created
+        #   and the load job will happen in the table created within that session.
+        #   Note: This will work only for tables in _SESSION dataset
+        #         else the property will be ignored by the backend.
+        # @param [string] session_id Session ID in which the load job must run.
         #
         # @yield [load_job] a block for setting the load job
         # @yieldparam [LoadJob] load_job the load job object to be updated
@@ -2159,7 +2433,7 @@ module Google
         def load_job files, format: nil, create: nil, write: nil, projection_fields: nil, jagged_rows: nil,
                      quoted_newlines: nil, encoding: nil, delimiter: nil, ignore_unknown: nil, max_bad_records: nil,
                      quote: nil, skip_leading: nil, job_id: nil, prefix: nil, labels: nil, autodetect: nil,
-                     null_marker: nil, dryrun: nil
+                     null_marker: nil, dryrun: nil, create_session: nil, session_id: nil, schema: self.schema
           ensure_service!
 
           updater = load_job_updater format: format, create: create, write: write, projection_fields: projection_fields,
@@ -2167,7 +2441,9 @@ module Google
                                      delimiter: delimiter, ignore_unknown: ignore_unknown,
                                      max_bad_records: max_bad_records, quote: quote, skip_leading: skip_leading,
                                      dryrun: dryrun, job_id: job_id, prefix: prefix, schema: schema, labels: labels,
-                                     autodetect: autodetect, null_marker: null_marker
+                                     autodetect: autodetect, null_marker: null_marker, create_session: create_session,
+                                     session_id: session_id
+
 
           yield updater if block_given?
 
@@ -2199,7 +2475,7 @@ module Google
         #   The following values are supported:
         #
         #   * `csv` - CSV
-        #   * `json` - [Newline-delimited JSON](http://jsonlines.org/)
+        #   * `json` - [Newline-delimited JSON](https://jsonlines.org/)
         #   * `avro` - [Avro](http://avro.apache.org/)
         #   * `orc` - [ORC](https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-orc)
         #   * `parquet` - [Parquet](https://parquet.apache.org/)
@@ -2282,6 +2558,7 @@ module Google
         #   file that BigQuery will skip when loading the data. The default
         #   value is `0`. This property is useful if you have header rows in the
         #   file that should be skipped.
+        # @param [string] session_id Session ID in which the load job must run.
         #
         # @yield [updater] A block for setting the schema of the destination
         #   table and other options for the load job. The schema can be omitted
@@ -2343,12 +2620,13 @@ module Google
         #
         def load files, format: nil, create: nil, write: nil, projection_fields: nil, jagged_rows: nil,
                  quoted_newlines: nil, encoding: nil, delimiter: nil, ignore_unknown: nil, max_bad_records: nil,
-                 quote: nil, skip_leading: nil, autodetect: nil, null_marker: nil, &block
+                 quote: nil, skip_leading: nil, autodetect: nil, null_marker: nil, session_id: nil,
+                 schema: self.schema, &block
           job = load_job files, format: format, create: create, write: write, projection_fields: projection_fields,
                                 jagged_rows: jagged_rows, quoted_newlines: quoted_newlines, encoding: encoding,
                                 delimiter: delimiter, ignore_unknown: ignore_unknown, max_bad_records: max_bad_records,
                                 quote: quote, skip_leading: skip_leading, autodetect: autodetect,
-                                null_marker: null_marker, &block
+                                null_marker: null_marker, session_id: session_id, schema: schema, &block
 
           job.wait_until_done!
           ensure_job_succeeded! job
@@ -2370,6 +2648,7 @@ module Google
         # | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.             |
         # | `DATE`       | `Date`                               |                                                    |
         # | `GEOGRAPHY`  | `String`                             | Well-known text (WKT) or GeoJSON.                  |
+        # | `JSON`       | `String` (Stringified JSON)          | String, as JSON does not have a schema to verify.  |
         # | `TIMESTAMP`  | `Time`                               |                                                    |
         # | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                    |
         # | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                    |
@@ -2468,7 +2747,8 @@ module Google
                                           rows,
                                           skip_invalid: skip_invalid,
                                           ignore_unknown: ignore_unknown,
-                                          insert_ids: insert_ids
+                                          insert_ids: insert_ids,
+                                          project_id: project_id
           InsertResponse.from_gapi rows, gapi
         end
 
@@ -2571,7 +2851,7 @@ module Google
         #
         def reload!
           ensure_service!
-          @gapi = service.get_table dataset_id, table_id
+          @gapi = service.get_table dataset_id, table_id, metadata_view: metadata_view
           @reference = nil
           @exists = nil
           self
@@ -2705,10 +2985,11 @@ module Google
 
         ##
         # @private New Table from a Google API Client object.
-        def self.from_gapi gapi, service
+        def self.from_gapi gapi, service, metadata_view: nil
           new.tap do |f|
             f.gapi = gapi
             f.service = service
+            f.metadata_view = metadata_view
           end
         end
 
@@ -2739,6 +3020,17 @@ module Google
 
         protected
 
+        def copy_job_with_operation_type destination_table, create: nil, write: nil, operation_type: nil, &block
+          job = copy_job destination_table,
+                         create: create,
+                         write: write,
+                         operation_type: operation_type,
+                         &block
+          job.wait_until_done!
+          ensure_job_succeeded! job
+          true
+        end
+
         ##
         # Raise an error unless an active service is available.
         def ensure_service!
@@ -2766,14 +3058,10 @@ module Google
         def patch_gapi! *attributes
           return if attributes.empty?
           ensure_service!
-          patch_args = Hash[attributes.map { |attr| [attr, @gapi.send(attr)] }]
+          patch_args = attributes.to_h { |attr| [attr, @gapi.send(attr)] }
           patch_gapi = Google::Apis::BigqueryV2::Table.new(**patch_args)
           patch_gapi.etag = etag if etag
           @gapi = service.patch_table dataset_id, table_id, patch_gapi
-
-          # TODO: restore original impl after acceptance test indicates that
-          # service etag bug is fixed
-          reload!
         end
 
         def ensure_job_succeeded! job
@@ -2794,7 +3082,7 @@ module Google
             configuration: Google::Apis::BigqueryV2::JobConfiguration.new(
               load:    Google::Apis::BigqueryV2::JobConfigurationLoad.new(
                 destination_table: Google::Apis::BigqueryV2::TableReference.new(
-                  project_id: @service.project,
+                  project_id: project_id,
                   dataset_id: dataset_id,
                   table_id:   table_id
                 )
@@ -2833,7 +3121,8 @@ module Google
         def load_job_updater format: nil, create: nil, write: nil, projection_fields: nil, jagged_rows: nil,
                              quoted_newlines: nil, encoding: nil, delimiter: nil, ignore_unknown: nil,
                              max_bad_records: nil, quote: nil, skip_leading: nil, dryrun: nil, schema: nil, job_id: nil,
-                             prefix: nil, labels: nil, autodetect: nil, null_marker: nil
+                             prefix: nil, labels: nil, autodetect: nil, null_marker: nil,
+                             create_session: nil, session_id: nil
           new_job = load_job_gapi table_id, dryrun, job_id: job_id, prefix: prefix
           LoadJob::Updater.new(new_job).tap do |job|
             job.location = location if location # may be table reference
@@ -2842,6 +3131,8 @@ module Google
             job.schema = schema unless schema.nil?
             job.autodetect = autodetect unless autodetect.nil?
             job.labels = labels unless labels.nil?
+            job.create_session = create_session unless create_session.nil?
+            job.session_id = session_id unless session_id.nil?
             load_job_file_options! job, format:            format,
                                         projection_fields: projection_fields,
                                         jagged_rows:       jagged_rows,
@@ -3247,6 +3538,22 @@ module Google
           #   At most 1 policy tag is currently allowed.
           # @param [Integer] max_length The maximum UTF-8 length of strings
           #   allowed in the field.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3257,9 +3564,20 @@ module Google
           #     schema.string "first_name", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.string "first_name", default_value_expression: "'name'"
+          #   end
+          #
           # @!group Schema
-          def string name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil
-            schema.string name, description: description, mode: mode, policy_tags: policy_tags, max_length: max_length
+          def string name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil,
+                     default_value_expression: nil
+            schema.string name, description: description, mode: mode, policy_tags: policy_tags, max_length: max_length,
+                          default_value_expression: default_value_expression
           end
 
           ##
@@ -3279,6 +3597,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3289,9 +3623,20 @@ module Google
           #     schema.integer "age", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.integer "age", default_value_expression: "1"
+          #   end
+          #
           # @!group Schema
-          def integer name, description: nil, mode: :nullable, policy_tags: nil
-            schema.integer name, description: description, mode: mode, policy_tags: policy_tags
+          def integer name, description: nil, mode: :nullable, policy_tags: nil,
+                      default_value_expression: nil
+            schema.integer name, description: description, mode: mode, policy_tags: policy_tags,
+                           default_value_expression: default_value_expression
           end
 
           ##
@@ -3311,6 +3656,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3321,9 +3682,20 @@ module Google
           #     schema.float "price", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.float "price", default_value_expression: "1.0"
+          #   end
+          #
           # @!group Schema
-          def float name, description: nil, mode: :nullable, policy_tags: nil
-            schema.float name, description: description, mode: mode, policy_tags: policy_tags
+          def float name, description: nil, mode: :nullable, policy_tags: nil,
+                    default_value_expression: nil
+            schema.float name, description: description, mode: mode, policy_tags: policy_tags,
+                         default_value_expression: default_value_expression
           end
 
           ##
@@ -3364,6 +3736,22 @@ module Google
           #   must be: `1 ≤ (precision - scale) ≤ 29`. Values for scale must
           #   be: `0 ≤ scale ≤ 9`. If the scale value is set, the precision
           #   value must be set as well.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3374,14 +3762,25 @@ module Google
           #     schema.numeric "total_cost", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.numeric "total_cost", default_value_expression: "1.0e4"
+          #   end
+          #
           # @!group Schema
-          def numeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil
+          def numeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil,
+                      default_value_expression: nil
             schema.numeric name,
                            description: description,
                            mode: mode,
                            policy_tags: policy_tags,
                            precision: precision,
-                           scale: scale
+                           scale: scale,
+                           default_value_expression: default_value_expression
           end
 
           ##
@@ -3422,6 +3821,22 @@ module Google
           #   must be: `1 ≤ (precision - scale) ≤ 38`. Values for scale must
           #   be: `0 ≤ scale ≤ 38`. If the scale value is set, the precision
           #   value must be set as well.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3432,14 +3847,25 @@ module Google
           #     schema.bignumeric "total_cost", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.bignumeric "total_cost", default_value_expression: "1.0e4"
+          #   end
+          #
           # @!group Schema
-          def bignumeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil
+          def bignumeric name, description: nil, mode: :nullable, policy_tags: nil, precision: nil, scale: nil,
+                         default_value_expression: nil
             schema.bignumeric name,
                               description: description,
                               mode: mode,
                               policy_tags: policy_tags,
                               precision: precision,
-                              scale: scale
+                              scale: scale,
+                              default_value_expression: default_value_expression
           end
 
           ##
@@ -3459,6 +3885,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3469,9 +3911,20 @@ module Google
           #     schema.boolean "active", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.boolean "active", default_value_expression: "true"
+          #   end
+          #
           # @!group Schema
-          def boolean name, description: nil, mode: :nullable, policy_tags: nil
-            schema.boolean name, description: description, mode: mode, policy_tags: policy_tags
+          def boolean name, description: nil, mode: :nullable, policy_tags: nil,
+                      default_value_expression: nil
+            schema.boolean name, description: description, mode: mode, policy_tags: policy_tags,
+                           default_value_expression: default_value_expression
           end
 
           ##
@@ -3493,6 +3946,22 @@ module Google
           #   At most 1 policy tag is currently allowed.
           # @param [Integer] max_length The maximum the maximum number of
           #   bytes in the field.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3503,9 +3972,20 @@ module Google
           #     schema.bytes "avatar", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.bytes "avatar", default_value_expression: "b'101'"
+          #   end
+          #
           # @!group Schema
-          def bytes name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil
-            schema.bytes name, description: description, mode: mode, policy_tags: policy_tags, max_length: max_length
+          def bytes name, description: nil, mode: :nullable, policy_tags: nil, max_length: nil,
+                    default_value_expression: nil
+            schema.bytes name, description: description, mode: mode, policy_tags: policy_tags, max_length: max_length,
+                         default_value_expression: default_value_expression
           end
 
           ##
@@ -3525,6 +4005,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3535,9 +4031,20 @@ module Google
           #     schema.timestamp "creation_date", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.timestamp "creation_date", default_value_expression: "CURRENT_TIMESTAMP"
+          #   end
+          #
           # @!group Schema
-          def timestamp name, description: nil, mode: :nullable, policy_tags: nil
-            schema.timestamp name, description: description, mode: mode, policy_tags: policy_tags
+          def timestamp name, description: nil, mode: :nullable, policy_tags: nil,
+                        default_value_expression: nil
+            schema.timestamp name, description: description, mode: mode, policy_tags: policy_tags,
+                             default_value_expression: default_value_expression
           end
 
           ##
@@ -3557,6 +4064,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3567,9 +4090,20 @@ module Google
           #     schema.time "duration", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.time "duration", default_value_expression: "CURRENT_TIME"
+          #   end
+          #
           # @!group Schema
-          def time name, description: nil, mode: :nullable, policy_tags: nil
-            schema.time name, description: description, mode: mode, policy_tags: policy_tags
+          def time name, description: nil, mode: :nullable, policy_tags: nil,
+                   default_value_expression: nil
+            schema.time name, description: description, mode: mode, policy_tags: policy_tags,
+                        default_value_expression: default_value_expression
           end
 
           ##
@@ -3589,6 +4123,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3599,9 +4149,20 @@ module Google
           #     schema.datetime "target_end", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.datetime "target_end", default_value_expression: "CURRENT_DATETIME"
+          #   end
+          #
           # @!group Schema
-          def datetime name, description: nil, mode: :nullable, policy_tags: nil
-            schema.datetime name, description: description, mode: mode, policy_tags: policy_tags
+          def datetime name, description: nil, mode: :nullable, policy_tags: nil,
+                       default_value_expression: nil
+            schema.datetime name, description: description, mode: mode, policy_tags: policy_tags,
+                            default_value_expression: default_value_expression
           end
 
           ##
@@ -3621,6 +4182,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3631,9 +4208,20 @@ module Google
           #     schema.date "birthday", mode: :required
           #   end
           #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #      schema.date "birthday", default_value_expression: "CURRENT_DATE"
+          #   end
+          #
           # @!group Schema
-          def date name, description: nil, mode: :nullable, policy_tags: nil
-            schema.date name, description: description, mode: mode, policy_tags: policy_tags
+          def date name, description: nil, mode: :nullable, policy_tags: nil,
+                   default_value_expression: nil
+            schema.date name, description: description, mode: mode, policy_tags: policy_tags,
+                        default_value_expression: default_value_expression
           end
 
           ##
@@ -3653,6 +4241,22 @@ module Google
           #   single policy tag for the field. Policy tag identifiers are of
           #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
           #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
           #
           # @example
           #   require "google/cloud/bigquery"
@@ -3663,8 +4267,79 @@ module Google
           #     schema.geography "home", mode: :required
           #   end
           #
-          def geography name, description: nil, mode: :nullable, policy_tags: nil
-            schema.geography name, description: description, mode: mode, policy_tags: policy_tags
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.geography "home", default_value_expression: "ST_GEOGPOINT(-122.084801, 37.422131)"
+          #   end
+          #
+          def geography name, description: nil, mode: :nullable, policy_tags: nil,
+                        default_value_expression: nil
+            schema.geography name, description: description, mode: mode, policy_tags: policy_tags,
+                             default_value_expression: default_value_expression
+          end
+
+          ##
+          # Adds an json field to the schema.
+          #
+          # See {Schema#json}.
+          # https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#json_type
+          #
+          # @param [String] name The field name. The name must contain only
+          #   letters (`[A-Za-z]`), numbers (`[0-9]`), or underscores (`_`), and must
+          #   start with a letter or underscore. The maximum length is 128
+          #   characters.
+          # @param [String] description A description of the field.
+          # @param [Symbol] mode The field's mode. The possible values are
+          #   `:nullable`, `:required`, and `:repeated`. The default value is
+          #   `:nullable`.
+          # @param [Array<String>, String] policy_tags The policy tag list or
+          #   single policy tag for the field. Policy tag identifiers are of
+          #   the form `projects/*/locations/*/taxonomies/*/policyTags/*`.
+          #   At most 1 policy tag is currently allowed.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
+          #
+          # @example
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.json "person", mode: :required
+          #   end
+          #
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
+          #
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.json "person", default_value_expression: "JSON '{"name": "Alice", "age": 30}'"
+          #   end
+          #
+          # @!group Schema
+          def json name, description: nil, mode: :nullable, policy_tags: nil,
+                   default_value_expression: nil
+            schema.json name, description: description, mode: mode, policy_tags: policy_tags,
+                        default_value_expression: default_value_expression
           end
 
           ##
@@ -3684,6 +4359,23 @@ module Google
           # @param [Symbol] mode The field's mode. The possible values are
           #   `:nullable`, `:required`, and `:repeated`. The default value is
           #   `:nullable`.
+          # @param default_value_expression [String] The default value of a field
+          #   using a SQL expression. It can only be set for top level fields (columns).
+          #   Use a struct or array expression to specify default value for the entire struct or
+          #   array. The valid SQL expressions are:
+          #     - Literals for all data types, including STRUCT and ARRAY.
+          #     - The following functions:
+          #         `CURRENT_TIMESTAMP`
+          #         `CURRENT_TIME`
+          #         `CURRENT_DATE`
+          #         `CURRENT_DATETIME`
+          #         `GENERATE_UUID`
+          #         `RAND`
+          #         `SESSION_USER`
+          #         `ST_GEOPOINT`
+          #     - Struct or array composed with the above allowed functions, for example:
+          #         "[CURRENT_DATE(), DATE '2020-01-01'"]
+          #
           # @yield [nested_schema] a block for setting the nested schema
           # @yieldparam [Schema] nested_schema the object accepting the
           #   nested schema
@@ -3700,13 +4392,23 @@ module Google
           #     end
           #   end
           #
-          # @!group Schema
+          # @example Add field with default value.
+          #   require "google/cloud/bigquery"
           #
-          def record name, description: nil, mode: nil, &block
-            schema.record name, description: description, mode: mode, &block
+          #   bigquery = Google::Cloud::Bigquery.new
+          #   dataset = bigquery.dataset "my_dataset"
+          #   table = dataset.create_table "my_table" do |schema|
+          #     schema.record "cities_lived", mode: :repeated, "[STRUCT('place',10)]" do |cities_lived|
+          #       cities_lived.string "place", mode: :required
+          #       cities_lived.integer "number_of_years", mode: :required
+          #     end
+          #   end
+          #
+          # @!group Schema
+          def record name, description: nil, mode: nil, default_value_expression: nil, &block
+            schema.record name, description: description, mode: mode,
+                          default_value_expression: default_value_expression, &block
           end
-
-          # rubocop:disable Style/MethodDefParentheses
 
           ##
           # @raise [RuntimeError] not implemented
@@ -3792,8 +4494,6 @@ module Google
             raise "not implemented in #{self.class}"
           end
           alias refresh! reload!
-
-          # rubocop:enable Style/MethodDefParentheses
 
           ##
           # @private Make sure any access changes are saved

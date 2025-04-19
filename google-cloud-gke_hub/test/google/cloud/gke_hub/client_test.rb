@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/gke_hub"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::GkeHub::ClientConstructionMinitest < Minitest::Test
-  def test_gke_hub
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_gke_hub_grpc
+    skip unless Google::Cloud::GkeHub.gke_hub_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::GkeHub.gke_hub do |config|
+      client = Google::Cloud::GkeHub.gke_hub transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::GkeHub::V1::GkeHub::Client, client
+    end
+  end
+
+  def test_gke_hub_rest
+    skip unless Google::Cloud::GkeHub.gke_hub_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::GkeHub.gke_hub transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::GkeHub::V1::GkeHub::Rest::Client, client
     end
   end
 end

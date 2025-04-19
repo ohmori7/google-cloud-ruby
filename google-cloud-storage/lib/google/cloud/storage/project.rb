@@ -63,6 +63,15 @@ module Google
         end
 
         ##
+        # The universe domain the client is connected to
+        #
+        # @return [String]
+        #
+        def universe_domain
+          service.universe_domain
+        end
+
+        ##
         # The Storage project connected to.
         #
         # @return [String]
@@ -90,8 +99,42 @@ module Google
         # @return [String] The service account email address.
         #
         def service_account_email
-          @service_account_email ||= \
-            service.project_service_account.email_address
+          @service_account_email ||= service.project_service_account.email_address
+        end
+
+        ##
+        # Add custom Google extension headers to the requests that use the signed URLs.
+        #
+        # @param [Hash] headers Google extension headers (custom HTTP headers that
+        #   begin with `x-goog-`) to be included in requests that use the signed URLs.
+        #   Provide headers as a key/value array, where the key is
+        #   the header name, and the value is an array of header values.
+        #   For headers with multiple values, provide values as a simple
+        #   array, or a comma-separated string. For a reference of allowed
+        #   headers, see [Reference Headers](https://cloud.google.com/storage/docs/xml-api/reference-headers).
+        #
+        # @return [Google::Cloud::Storage::Project] Returns the Project for method chaining
+        #
+        def add_custom_headers headers
+          @service.add_custom_headers headers
+          self
+        end
+
+        ##
+        # Add custom Google extension header to the requests that use the signed URLs.
+        #
+        # @param [String] header_name Name of Google extension header (custom HTTP header that
+        #   begin with `x-goog-`) to be included in requests that use the signed URLs.
+        #   For a reference of allowed headers, see
+        #   [Reference Headers](https://cloud.google.com/storage/docs/xml-api/reference-headers).
+        # @param [Object] header_value Valid value of the Google extension header being added.
+        #   For headers with multiple values, provide values as a simple array, or a comma-separated string.
+        #
+        # @return [Google::Cloud::Storage::Project] Returns the Project for method chaining
+        #
+        def add_custom_header header_name, header_value
+          @service.add_custom_header header_name, header_value
+          self
         end
 
         ##
@@ -149,11 +192,20 @@ module Google
         #     puts bucket.name
         #   end
         #
-        def buckets prefix: nil, token: nil, max: nil, user_project: nil
+        # @example Retrieve soft deleted buckets
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   soft_deleted_buckets = storage.buckets soft_deleted: true
+        #   soft_deleted_buckets.each do |bucket|
+        #     puts bucket.name
+        #   end
+        def buckets prefix: nil, token: nil, max: nil, user_project: nil, soft_deleted: nil
           gapi = service.list_buckets \
-            prefix: prefix, token: token, max: max, user_project: user_project
+            prefix: prefix, token: token, max: max, user_project: user_project, soft_deleted: soft_deleted
           Bucket::List.from_gapi \
-            gapi, service, prefix, max, user_project: user_project
+            gapi, service, prefix, max, user_project: user_project, soft_deleted: soft_deleted
         end
         alias find_buckets buckets
 
@@ -179,6 +231,10 @@ module Google
         #   account, transit costs will be billed to the given project. This
         #   parameter is required with requester pays-enabled buckets. The
         #   default is `nil`.
+        # @param [Integer] generation generation no of bucket
+        #   on whether the bucket's current metageneration matches the given value.
+        # @param [Boolean] soft_deleted If true, returns the soft-deleted bucket.
+        #   This parameter is required if generation is specified.
         #
         #   The value provided will be applied to all operations on the returned
         #   bucket instance and its files.
@@ -212,9 +268,20 @@ module Google
         #   bucket = storage.bucket "other-project-bucket",
         #                           user_project: "my-other-project"
         #   files = bucket.files # Billed to "my-other-project"
+        # @example With `soft_deleted` set to true and generation specified:
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.bucket "my-bucket",
+        #                           soft_deleted: true,
+        #                           generation: 1234567889
+        #   puts bucket.name
         #
         def bucket bucket_name,
                    skip_lookup: false,
+                   generation: nil,
+                   soft_deleted: nil,
                    if_metageneration_match: nil,
                    if_metageneration_not_match: nil,
                    user_project: nil
@@ -225,7 +292,10 @@ module Google
           gapi = service.get_bucket bucket_name,
                                     if_metageneration_match: if_metageneration_match,
                                     if_metageneration_not_match: if_metageneration_not_match,
-                                    user_project: user_project
+                                    user_project: user_project,
+                                    soft_deleted: soft_deleted,
+                                    generation: generation
+
           Bucket.from_gapi gapi, service, user_project: user_project
         rescue Google::Cloud::NotFoundError
           nil
@@ -288,12 +358,11 @@ module Google
         #     roles.
         #   * `public`, `public_read`, `publicRead` - File owner gets OWNER
         #     access, and allUsers get READER access.
-        # @param [String] location The location of the bucket. Object data for
-        #   objects in the bucket resides in physical storage within this
-        #   region. Possible values include `ASIA`, `EU`, and `US`. (See the
-        #   [developer's
-        #   guide](https://cloud.google.com/storage/docs/bucket-locations) for
-        #   the authoritative list. The default value is `US`.
+        # @param [String] location The location of the bucket. Optional.
+        #   If not passed, the default location, 'US', will be used.
+        #   If specifying a dual-region location, the `customPlacementConfig`
+        #   property should be set in conjunction. See:
+        #   [Storage Locations](https://cloud.google.com/storage/docs/locations).
         # @param [String] logging_bucket The destination bucket for the bucket's
         #   logs. For more information, see [Access
         #   Logs](https://cloud.google.com/storage/docs/access-logs).
@@ -328,11 +397,18 @@ module Google
         #   other than the current project, and that project is authorized for
         #   the currently authenticated service account, transit costs will be
         #   billed to the given project. The default is `nil`.
+        # @param [Boolean] autoclass_enabled The bucket's autoclass configuration.
+        #   Buckets can have either StorageClass OLM rules or Autoclass, but
+        #   not both. When Autoclass is enabled on a bucket, adding StorageClass
+        #   OLM rules will result in failure. For more information, see
+        #   [Autoclass](https://cloud.google.com/storage/docs/autoclass).
         #
         #   The value provided will be applied to all operations on the returned
         #   bucket instance and its files.
         #
         #   See also {Bucket#requester_pays=} and {Bucket#requester_pays}.
+        # @param [Boolean] enable_object_retention
+        #   When set to true, object retention is enabled for this bucket.
         #
         # @yield [bucket] a block for configuring the bucket before it is
         #   created
@@ -346,6 +422,13 @@ module Google
         #   storage = Google::Cloud::Storage.new
         #
         #   bucket = storage.create_bucket "my-bucket"
+        #
+        # @example
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #
+        #   bucket = storage.create_bucket "my-bucket", enable_object_retention: true
         #
         # @example Configure the bucket in a block:
         #   require "google/cloud/storage"
@@ -364,10 +447,12 @@ module Google
         #     b.lifecycle.add_set_storage_class_rule "COLDLINE", age: 10
         #   end
         #
+        # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
         def create_bucket bucket_name,
                           acl: nil,
                           default_acl: nil,
                           location: nil,
+                          custom_placement_config: nil,
                           storage_class: nil,
                           logging_bucket: nil,
                           logging_prefix: nil,
@@ -375,21 +460,28 @@ module Google
                           website_404: nil,
                           versioning: nil,
                           requester_pays: nil,
-                          user_project: nil
+                          user_project: nil,
+                          autoclass_enabled: false,
+                          enable_object_retention: nil,
+                          hierarchical_namespace: nil
           params = {
             name: bucket_name,
-            location: location
+            location: location,
+            custom_placement_config: custom_placement_config,
+            hierarchical_namespace: hierarchical_namespace
           }.delete_if { |_, v| v.nil? }
           new_bucket = Google::Apis::StorageV1::Bucket.new(**params)
           storage_class = storage_class_for storage_class
           updater = Bucket::Updater.new(new_bucket).tap do |b|
             b.logging_bucket = logging_bucket unless logging_bucket.nil?
             b.logging_prefix = logging_prefix unless logging_prefix.nil?
+            b.autoclass_enabled = autoclass_enabled
             b.storage_class = storage_class unless storage_class.nil?
             b.website_main = website_main unless website_main.nil?
             b.website_404 = website_404 unless website_404.nil?
             b.versioning = versioning unless versioning.nil?
             b.requester_pays = requester_pays unless requester_pays.nil?
+            b.hierarchical_namespace = hierarchical_namespace unless hierarchical_namespace.nil?
           end
           yield updater if block_given?
           updater.check_for_changed_labels!
@@ -397,9 +489,11 @@ module Google
           updater.check_for_mutable_lifecycle!
           gapi = service.insert_bucket \
             new_bucket, acl: acl_rule(acl), default_acl: acl_rule(default_acl),
-                        user_project: user_project
+                        user_project: user_project,
+                        enable_object_retention: enable_object_retention
           Bucket.from_gapi gapi, service, user_project: user_project
         end
+        # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
         ##
         # Creates a new HMAC key.
@@ -484,6 +578,32 @@ module Google
             gapi, service,
             service_account_email: nil, show_deleted_keys: nil,
             max: max, user_project: user_project
+        end
+
+        ##
+        # Restores a soft deleted bucket with bucket name and generation.
+        #
+        # @param [String] bucket_name Name of the bucket.
+        # @param [Fixnum] generation Generation of the bucket.
+        #
+        # @return [Google::Cloud::Storage::Bucket, nil] Returns nil if bucket
+        #   does not exist
+        #
+        # @example
+        #   require "google/cloud/storage"
+        #
+        #   storage = Google::Cloud::Storage.new
+        #   generation= 123
+        #
+        #   bucket = storage.restore_bucket "my-bucket", generation
+        #   puts bucket.name
+        #
+        def restore_bucket bucket_name,
+                           generation,
+                           options: {}
+          gapi = service.restore_bucket bucket_name, generation,
+                                        options: options
+          Bucket.from_gapi gapi, service
         end
 
         ##

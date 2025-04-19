@@ -28,34 +28,46 @@ module Google
         #     Required. The {::Google::Cloud::Spanner::V1::TypeCode TypeCode} for this type.
         # @!attribute [rw] array_element_type
         #   @return [::Google::Cloud::Spanner::V1::Type]
-        #     If {::Google::Cloud::Spanner::V1::Type#code code} == {::Google::Cloud::Spanner::V1::TypeCode::ARRAY ARRAY}, then `array_element_type`
-        #     is the type of the array elements.
+        #     If {::Google::Cloud::Spanner::V1::Type#code code} ==
+        #     {::Google::Cloud::Spanner::V1::TypeCode::ARRAY ARRAY}, then `array_element_type` is the
+        #     type of the array elements.
         # @!attribute [rw] struct_type
         #   @return [::Google::Cloud::Spanner::V1::StructType]
-        #     If {::Google::Cloud::Spanner::V1::Type#code code} == {::Google::Cloud::Spanner::V1::TypeCode::STRUCT STRUCT}, then `struct_type`
-        #     provides type information for the struct's fields.
+        #     If {::Google::Cloud::Spanner::V1::Type#code code} ==
+        #     {::Google::Cloud::Spanner::V1::TypeCode::STRUCT STRUCT}, then `struct_type` provides
+        #     type information for the struct's fields.
         # @!attribute [rw] type_annotation
         #   @return [::Google::Cloud::Spanner::V1::TypeAnnotationCode]
-        #     The {::Google::Cloud::Spanner::V1::TypeAnnotationCode TypeAnnotationCode} that disambiguates SQL type that Spanner will
-        #     use to represent values of this type during query processing. This is
-        #     necessary for some type codes because a single {::Google::Cloud::Spanner::V1::TypeCode TypeCode} can be mapped
-        #     to different SQL types depending on the SQL dialect. {::Google::Cloud::Spanner::V1::Type#type_annotation type_annotation}
-        #     typically is not needed to process the content of a value (it doesn't
-        #     affect serialization) and clients can ignore it on the read path.
+        #     The {::Google::Cloud::Spanner::V1::TypeAnnotationCode TypeAnnotationCode} that
+        #     disambiguates SQL type that Spanner will use to represent values of this
+        #     type during query processing. This is necessary for some type codes because
+        #     a single {::Google::Cloud::Spanner::V1::TypeCode TypeCode} can be mapped to different
+        #     SQL types depending on the SQL dialect.
+        #     {::Google::Cloud::Spanner::V1::Type#type_annotation type_annotation} typically is not
+        #     needed to process the content of a value (it doesn't affect serialization)
+        #     and clients can ignore it on the read path.
+        # @!attribute [rw] proto_type_fqn
+        #   @return [::String]
+        #     If {::Google::Cloud::Spanner::V1::Type#code code} ==
+        #     {::Google::Cloud::Spanner::V1::TypeCode::PROTO PROTO} or
+        #     {::Google::Cloud::Spanner::V1::Type#code code} ==
+        #     {::Google::Cloud::Spanner::V1::TypeCode::ENUM ENUM}, then `proto_type_fqn` is the fully
+        #     qualified name of the proto type representing the proto/enum definition.
         class Type
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # `StructType` defines the fields of a {::Google::Cloud::Spanner::V1::TypeCode::STRUCT STRUCT} type.
+        # `StructType` defines the fields of a
+        # {::Google::Cloud::Spanner::V1::TypeCode::STRUCT STRUCT} type.
         # @!attribute [rw] fields
         #   @return [::Array<::Google::Cloud::Spanner::V1::StructType::Field>]
         #     The list of fields that make up this struct. Order is
         #     significant, because values of this struct type are represented as
         #     lists, where the order of field values matches the order of
-        #     fields in the {::Google::Cloud::Spanner::V1::StructType StructType}. In turn, the order of fields
-        #     matches the order of columns in a read request, or the order of
-        #     fields in the `SELECT` clause of a query.
+        #     fields in the {::Google::Cloud::Spanner::V1::StructType StructType}. In turn, the
+        #     order of fields matches the order of columns in a read request, or the
+        #     order of fields in the `SELECT` clause of a query.
         class StructType
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -100,6 +112,10 @@ module Google
           # `"-Infinity"`.
           FLOAT64 = 3
 
+          # Encoded as `number`, or the strings `"NaN"`, `"Infinity"`, or
+          # `"-Infinity"`.
+          FLOAT32 = 15
+
           # Encoded as `string` in RFC 3339 timestamp format. The time zone
           # must be present, and must be `"Z"`.
           #
@@ -130,14 +146,14 @@ module Google
           STRUCT = 9
 
           # Encoded as `string`, in decimal format or scientific notation format.
-          # <br>Decimal format:
-          # <br>`[+-]Digits[.[Digits]]` or
-          # <br>`[+-][Digits].Digits`
+          # Decimal format:
+          # `[+-]Digits[.[Digits]]` or
+          # `[+-][Digits].Digits`
           #
           # Scientific notation:
-          # <br>`[+-]Digits[.[Digits]][ExponentIndicator[+-]Digits]` or
-          # <br>`[+-][Digits].Digits[ExponentIndicator[+-]Digits]`
-          # <br>(ExponentIndicator is `"e"` or `"E"`)
+          # `[+-]Digits[.[Digits]][ExponentIndicator[+-]Digits]` or
+          # `[+-][Digits].Digits[ExponentIndicator[+-]Digits]`
+          # (ExponentIndicator is `"e"` or `"E"`)
           NUMERIC = 10
 
           # Encoded as a JSON-formatted `string` as described in RFC 7159. The
@@ -149,6 +165,24 @@ module Google
           #   preserved.
           # - JSON array elements will have their order preserved.
           JSON = 11
+
+          # Encoded as a base64-encoded `string`, as described in RFC 4648,
+          # section 4.
+          PROTO = 13
+
+          # Encoded as `string`, in decimal format.
+          ENUM = 14
+
+          # Encoded as `string`, in `ISO8601` duration format -
+          # `P[n]Y[n]M[n]DT[n]H[n]M[n[.fraction]]S`
+          # where `n` is an integer.
+          # For example, `P1Y2M3DT4H5M6.5S` represents time duration of 1 year, 2
+          # months, 3 days, 4 hours, 5 minutes, and 6.5 seconds.
+          INTERVAL = 16
+
+          # Encoded as `string`, in lower-case hexa-decimal format, as described
+          # in RFC 9562, section 4.
+          UUID = 17
         end
 
         # `TypeAnnotationCode` is used as a part of {::Google::Cloud::Spanner::V1::Type Type} to
@@ -161,12 +195,26 @@ module Google
           TYPE_ANNOTATION_CODE_UNSPECIFIED = 0
 
           # PostgreSQL compatible NUMERIC type. This annotation needs to be applied to
-          # {::Google::Cloud::Spanner::V1::Type Type} instances having {::Google::Cloud::Spanner::V1::TypeCode::NUMERIC NUMERIC}
-          # type code to specify that values of this type should be treated as
-          # PostgreSQL NUMERIC values. Currently this annotation is always needed for
-          # {::Google::Cloud::Spanner::V1::TypeCode::NUMERIC NUMERIC} when a client interacts with PostgreSQL-enabled
-          # Spanner databases.
+          # {::Google::Cloud::Spanner::V1::Type Type} instances having
+          # {::Google::Cloud::Spanner::V1::TypeCode::NUMERIC NUMERIC} type code to specify that
+          # values of this type should be treated as PostgreSQL NUMERIC values.
+          # Currently this annotation is always needed for
+          # {::Google::Cloud::Spanner::V1::TypeCode::NUMERIC NUMERIC} when a client interacts with
+          # PostgreSQL-enabled Spanner databases.
           PG_NUMERIC = 2
+
+          # PostgreSQL compatible JSONB type. This annotation needs to be applied to
+          # {::Google::Cloud::Spanner::V1::Type Type} instances having
+          # {::Google::Cloud::Spanner::V1::TypeCode::JSON JSON} type code to specify that values of
+          # this type should be treated as PostgreSQL JSONB values. Currently this
+          # annotation is always needed for {::Google::Cloud::Spanner::V1::TypeCode::JSON JSON}
+          # when a client interacts with PostgreSQL-enabled Spanner databases.
+          PG_JSONB = 3
+
+          # PostgreSQL compatible OID type. This annotation can be used by a client
+          # interacting with PostgreSQL-enabled Spanner database to specify that a
+          # value should be treated using the semantics of the OID type.
+          PG_OID = 4
         end
       end
     end

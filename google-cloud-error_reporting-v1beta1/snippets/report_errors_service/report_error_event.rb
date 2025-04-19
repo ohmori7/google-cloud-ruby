@@ -19,15 +19,29 @@
 # [START clouderrorreporting_v1beta1_generated_ReportErrorsService_ReportErrorEvent_sync]
 require "google/cloud/error_reporting/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ErrorReporting::V1beta1::ReportErrorsService::Client.new
+##
+# Snippet for the report_error_event call in the ReportErrorsService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ErrorReporting::V1beta1::ReportErrorsService::Client#report_error_event.
+#
+def report_error_event
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ErrorReporting::V1beta1::ReportErrorsService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ErrorReporting::V1beta1::ReportErrorEventRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ErrorReporting::V1beta1::ReportErrorEventRequest.new
 
-# Call the report_error_event method.
-result = client.report_error_event request
+  # Call the report_error_event method.
+  result = client.report_error_event request
 
-# The returned object is of type Google::Cloud::ErrorReporting::V1beta1::ReportErrorEventResponse.
-p result
+  # The returned object is of type Google::Cloud::ErrorReporting::V1beta1::ReportErrorEventResponse.
+  p result
+end
 # [END clouderrorreporting_v1beta1_generated_ReportErrorsService_ReportErrorEvent_sync]

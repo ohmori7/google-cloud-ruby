@@ -17,7 +17,7 @@ class QueryParamsSmokeTest < Minitest::Test
     @zonal_ops_client = ::Google::Cloud::Compute::V1::ZoneOperations::Rest::Client.new
     @global_ops_client = ::Google::Cloud::Compute::V1::GlobalOperations::Rest::Client.new
 
-    @image_name =  "projects/debian-cloud/global/images/family/debian-10"
+    @image_name =  "projects/debian-cloud/global/images/family/debian-11"
     skip "COMPUTE_TEST_PROJECT must be set before running this test" if @default_project.nil?
   end
 
@@ -90,22 +90,12 @@ class QueryParamsSmokeTest < Minitest::Test
 
 
   def wait_for_global_op operation, op_type
-    operation = operation.operation
     $stdout.puts "Waiting for global #{op_type} operation #{operation.name}."
-    starttime = Time.now
-    while (operation.status != :DONE) && (Time.now < starttime + 100)
-      operation = @global_ops_client.get operation: operation.name, project: @default_project
-      sleep 3
-    end
+    operation.wait_until_done!
   end
 
   def wait_for_zonal_op operation, op_type
-    operation = operation.operation
     $stdout.puts "Waiting for zonal #{op_type} operation #{operation.name}."
-    starttime = Time.now
-    while (operation.status != :DONE) && (Time.now < starttime + 200)
-      operation = @zonal_ops_client.get operation: operation.name, project: @default_project, zone: @default_zone
-      sleep 3
-    end
+    operation.wait_until_done!
   end
 end

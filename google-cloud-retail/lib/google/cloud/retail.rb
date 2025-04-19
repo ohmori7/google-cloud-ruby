@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :retail do |config|
-  config.add_field! :endpoint,      "retail.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,21 +39,100 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
   module Cloud
     module Retail
       ##
+      # Create a new client object for AnalyticsService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Retail::V2::AnalyticsService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-AnalyticsService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the AnalyticsService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the AnalyticsService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.analytics_service_available?}.
+      #
+      # ## About AnalyticsService
+      #
+      # Service for managing & accessing retail search business metric.
+      # Retail recommendation business metric is currently not available.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.analytics_service version: :v2, transport: :grpc, &block
+        require "google/cloud/retail/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:AnalyticsService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AnalyticsService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.analytics_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AnalyticsService service,
+      # or if the versioned client gem needs an update to support the AnalyticsService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.analytics_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :AnalyticsService
+        service_module = service_module.const_get :AnalyticsService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
       # Create a new client object for CatalogService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::CatalogService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/CatalogService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::CatalogService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-CatalogService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the CatalogService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the CatalogService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.catalog_service_available?}.
       #
       # ## About CatalogService
       #
@@ -61,63 +140,363 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [CatalogService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.catalog_service version: :v2, &block
+      def self.catalog_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:CatalogService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:CatalogService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the CatalogService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.catalog_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the CatalogService service,
+      # or if the versioned client gem needs an update to support the CatalogService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.catalog_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :CatalogService
+        service_module = service_module.const_get :CatalogService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for CompletionService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::CompletionService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/CompletionService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::CompletionService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-CompletionService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the CompletionService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the CompletionService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.completion_service_available?}.
       #
       # ## About CompletionService
       #
-      # Auto-completion service for retail.
+      # Autocomplete service for retail.
       #
       # This feature is only available for users who have Retail Search enabled.
-      # Please submit a form [here](https://cloud.google.com/contact) to contact
-      # cloud sales if you are interested in using Retail Search.
+      # Enable Retail Search on Cloud Console before using this feature.
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [CompletionService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.completion_service version: :v2, &block
+      def self.completion_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:CompletionService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:CompletionService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the CompletionService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.completion_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the CompletionService service,
+      # or if the versioned client gem needs an update to support the CompletionService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.completion_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :CompletionService
+        service_module = service_module.const_get :CompletionService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for ControlService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Retail::V2::ControlService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-ControlService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the ControlService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ControlService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.control_service_available?}.
+      #
+      # ## About ControlService
+      #
+      # Service for modifying Control.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.control_service version: :v2, transport: :grpc, &block
+        require "google/cloud/retail/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:ControlService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ControlService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.control_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ControlService service,
+      # or if the versioned client gem needs an update to support the ControlService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.control_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :ControlService
+        service_module = service_module.const_get :ControlService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for GenerativeQuestionService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Retail::V2::GenerativeQuestionService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-GenerativeQuestionService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the GenerativeQuestionService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the GenerativeQuestionService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.generative_question_service_available?}.
+      #
+      # ## About GenerativeQuestionService
+      #
+      # Service for managing LLM generated questions in search serving.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.generative_question_service version: :v2, transport: :grpc, &block
+        require "google/cloud/retail/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:GenerativeQuestionService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the GenerativeQuestionService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.generative_question_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the GenerativeQuestionService service,
+      # or if the versioned client gem needs an update to support the GenerativeQuestionService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.generative_question_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :GenerativeQuestionService
+        service_module = service_module.const_get :GenerativeQuestionService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for ModelService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Retail::V2::ModelService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-ModelService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the ModelService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ModelService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.model_service_available?}.
+      #
+      # ## About ModelService
+      #
+      # Service for performing CRUD operations on models.
+      # Recommendation models contain all the metadata necessary to generate a set of
+      # models for the `Predict()` API. A model is queried
+      # indirectly via a ServingConfig, which associates a model with a
+      # given Placement (e.g. Frequently Bought Together on Home Page).
+      #
+      # This service allows you to do the following:
+      #
+      # * Initiate training of a model.
+      # * Pause training of an existing model.
+      # * List all the available models along with their metadata.
+      # * Control their tuning schedule.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.model_service version: :v2, transport: :grpc, &block
+        require "google/cloud/retail/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:ModelService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ModelService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.model_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ModelService service,
+      # or if the versioned client gem needs an update to support the ModelService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.model_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :ModelService
+        service_module = service_module.const_get :ModelService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for PredictionService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::PredictionService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/PredictionService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::PredictionService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-PredictionService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the PredictionService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the PredictionService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.prediction_service_available?}.
       #
       # ## About PredictionService
       #
@@ -125,29 +504,69 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [PredictionService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.prediction_service version: :v2, &block
+      def self.prediction_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:PredictionService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:PredictionService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the PredictionService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.prediction_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the PredictionService service,
+      # or if the versioned client gem needs an update to support the PredictionService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.prediction_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :PredictionService
+        service_module = service_module.const_get :PredictionService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for ProductService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::ProductService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/ProductService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::ProductService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-ProductService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the ProductService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ProductService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.product_service_available?}.
       #
       # ## About ProductService
       #
@@ -156,63 +575,212 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [ProductService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.product_service version: :v2, &block
+      def self.product_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:ProductService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:ProductService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ProductService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.product_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ProductService service,
+      # or if the versioned client gem needs an update to support the ProductService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.product_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :ProductService
+        service_module = service_module.const_get :ProductService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for SearchService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::SearchService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/SearchService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::SearchService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-SearchService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the SearchService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the SearchService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.search_service_available?}.
       #
       # ## About SearchService
       #
       # Service for search.
       #
       # This feature is only available for users who have Retail Search enabled.
-      # Please submit a form [here](https://cloud.google.com/contact) to contact
-      # cloud sales if you are interested in using Retail Search.
+      # Enable Retail Search on Cloud Console before using this feature.
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [SearchService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.search_service version: :v2, &block
+      def self.search_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:SearchService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:SearchService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the SearchService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.search_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the SearchService service,
+      # or if the versioned client gem needs an update to support the SearchService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.search_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :SearchService
+        service_module = service_module.const_get :SearchService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
+      end
+
+      ##
+      # Create a new client object for ServingConfigService.
+      #
+      # By default, this returns an instance of
+      # [Google::Cloud::Retail::V2::ServingConfigService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-ServingConfigService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
+      # `version` parameter. If the ServingConfigService service is
+      # supported by that API version, and the corresponding gem is available, the
+      # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the ServingConfigService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.serving_config_service_available?}.
+      #
+      # ## About ServingConfigService
+      #
+      # Service for modifying ServingConfig.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
+      #
+      def self.serving_config_service version: :v2, transport: :grpc, &block
+        require "google/cloud/retail/#{version.to_s.downcase}"
+
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:ServingConfigService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the ServingConfigService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.serving_config_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the ServingConfigService service,
+      # or if the versioned client gem needs an update to support the ServingConfigService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.serving_config_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :ServingConfigService
+        service_module = service_module.const_get :ServingConfigService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
       # Create a new client object for UserEventService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::Retail::V2::UserEventService::Client](https://googleapis.dev/ruby/google-cloud-retail-v2/latest/Google/Cloud/Retail/V2/UserEventService/Client.html)
-      # for version V2 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::Retail::V2::UserEventService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-retail-v2/latest/Google-Cloud-Retail-V2-UserEventService-Client)
+      # for a gRPC client for version V2 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the UserEventService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the UserEventService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::Retail.user_event_service_available?}.
       #
       # ## About UserEventService
       #
@@ -220,17 +788,50 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v2`.
-      # @return [UserEventService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.user_event_service version: :v2, &block
+      def self.user_event_service version: :v2, transport: :grpc, &block
         require "google/cloud/retail/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::Retail
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::Retail.const_get package_name
-        package_module.const_get(:UserEventService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::Retail.const_get(package_name).const_get(:UserEventService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the UserEventService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::Retail.user_event_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the UserEventService service,
+      # or if the versioned client gem needs an update to support the UserEventService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v2`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.user_event_service_available? version: :v2, transport: :grpc
+        require "google/cloud/retail/#{version.to_s.downcase}"
+        package_name = Google::Cloud::Retail
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::Retail.const_get package_name
+        return false unless service_module.const_defined? :UserEventService
+        service_module = service_module.const_get :UserEventService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -250,7 +851,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

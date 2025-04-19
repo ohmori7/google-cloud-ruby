@@ -19,15 +19,29 @@
 # [START container_v1beta1_generated_ClusterManager_CancelOperation_sync]
 require "google/cloud/container/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Container::V1beta1::ClusterManager::Client.new
+##
+# Snippet for the cancel_operation call in the ClusterManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Container::V1beta1::ClusterManager::Client#cancel_operation.
+#
+def cancel_operation
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Container::V1beta1::ClusterManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Container::V1beta1::CancelOperationRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Container::V1beta1::CancelOperationRequest.new
 
-# Call the cancel_operation method.
-result = client.cancel_operation request
+  # Call the cancel_operation method.
+  result = client.cancel_operation request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END container_v1beta1_generated_ClusterManager_CancelOperation_sync]

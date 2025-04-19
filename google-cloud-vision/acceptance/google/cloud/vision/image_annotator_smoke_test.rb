@@ -12,15 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "simplecov"
 require "minitest/autorun"
 require "minitest/spec"
 
 require "google/cloud/vision"
 
 class ImageAnnotatorHelpersSmokeTest < Minitest::Test
-  def test_batch_annotate_images
-    client = Google::Cloud::Vision.image_annotator
+  def test_batch_annotate_images_grpc
+    client = Google::Cloud::Vision.image_annotator transport: :grpc
+    verify_batch_annotate_images client
+  end
+
+  def test_batch_annotate_images_rest
+    client = Google::Cloud::Vision.image_annotator transport: :rest
+    verify_batch_annotate_images client
+  end
+
+  def verify_batch_annotate_images client
     request = {
       image: {
         source: {

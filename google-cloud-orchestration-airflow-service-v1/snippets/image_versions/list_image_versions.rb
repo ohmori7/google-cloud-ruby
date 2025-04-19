@@ -19,21 +19,33 @@
 # [START composer_v1_generated_ImageVersions_ListImageVersions_sync]
 require "google/cloud/orchestration/airflow/service/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Orchestration::Airflow::Service::V1::ImageVersions::Client.new
+##
+# Snippet for the list_image_versions call in the ImageVersions service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Orchestration::Airflow::Service::V1::ImageVersions::Client#list_image_versions.
+#
+def list_image_versions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Orchestration::Airflow::Service::V1::ImageVersions::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Orchestration::Airflow::Service::V1::ListImageVersionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Orchestration::Airflow::Service::V1::ListImageVersionsRequest.new
 
-# Call the list_image_versions method.
-result = client.list_image_versions request
+  # Call the list_image_versions method.
+  result = client.list_image_versions request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Orchestration::Airflow::Service::V1::ImageVersion.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Orchestration::Airflow::Service::V1::ImageVersion.
+    p item
+  end
 end
 # [END composer_v1_generated_ImageVersions_ListImageVersions_sync]

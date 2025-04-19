@@ -3,6 +3,7 @@
     ".gitignore",
     ".repo-metadata.json",
     ".rubocop.yml",
+    ".toys.rb",
     ".yardopts",
     "AUTHENTICATION.md",
     "CHANGELOG.md",
@@ -14,17 +15,24 @@
     "google-cloud-scheduler-v1beta1.gemspec",
     "lib/google-cloud-scheduler-v1beta1.rb",
     "lib/google/cloud/scheduler/v1beta1.rb",
+    "lib/google/cloud/scheduler/v1beta1/bindings_override.rb",
     "lib/google/cloud/scheduler/v1beta1/cloud_scheduler.rb",
     "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/client.rb",
     "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/credentials.rb",
     "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/paths.rb",
+    "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/rest.rb",
+    "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/rest/client.rb",
+    "lib/google/cloud/scheduler/v1beta1/cloud_scheduler/rest/service_stub.rb",
     "lib/google/cloud/scheduler/v1beta1/cloudscheduler_pb.rb",
     "lib/google/cloud/scheduler/v1beta1/cloudscheduler_services_pb.rb",
     "lib/google/cloud/scheduler/v1beta1/job_pb.rb",
+    "lib/google/cloud/scheduler/v1beta1/rest.rb",
     "lib/google/cloud/scheduler/v1beta1/target_pb.rb",
     "lib/google/cloud/scheduler/v1beta1/version.rb",
     "proto_docs/README.md",
+    "proto_docs/google/api/client.rb",
     "proto_docs/google/api/field_behavior.rb",
+    "proto_docs/google/api/launch_stage.rb",
     "proto_docs/google/api/resource.rb",
     "proto_docs/google/cloud/scheduler/v1beta1/cloudscheduler.rb",
     "proto_docs/google/cloud/scheduler/v1beta1/job.rb",
@@ -44,11 +52,14 @@
     "snippets/cloud_scheduler/resume_job.rb",
     "snippets/cloud_scheduler/run_job.rb",
     "snippets/cloud_scheduler/update_job.rb",
+    "snippets/snippet_metadata_google.cloud.scheduler.v1beta1.json",
     "test/google/cloud/scheduler/v1beta1/cloud_scheduler_paths_test.rb",
+    "test/google/cloud/scheduler/v1beta1/cloud_scheduler_rest_test.rb",
     "test/google/cloud/scheduler/v1beta1/cloud_scheduler_test.rb",
     "test/helper.rb"
   ],
   "static": [
-    ".OwlBot.yaml"
+    ".OwlBot.yaml",
+    ".owlbot.rb"
   ]
 }

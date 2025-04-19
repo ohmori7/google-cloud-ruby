@@ -19,15 +19,29 @@
 # [START dlp_v2_generated_DlpService_ListInfoTypes_sync]
 require "google/cloud/dlp/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dlp::V2::DlpService::Client.new
+##
+# Snippet for the list_info_types call in the DlpService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dlp::V2::DlpService::Client#list_info_types.
+#
+def list_info_types
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dlp::V2::DlpService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dlp::V2::ListInfoTypesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dlp::V2::ListInfoTypesRequest.new
 
-# Call the list_info_types method.
-result = client.list_info_types request
+  # Call the list_info_types method.
+  result = client.list_info_types request
 
-# The returned object is of type Google::Cloud::Dlp::V2::ListInfoTypesResponse.
-p result
+  # The returned object is of type Google::Cloud::Dlp::V2::ListInfoTypesResponse.
+  p result
+end
 # [END dlp_v2_generated_DlpService_ListInfoTypes_sync]

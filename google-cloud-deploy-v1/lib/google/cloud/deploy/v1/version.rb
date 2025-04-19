@@ -21,7 +21,7 @@ module Google
   module Cloud
     module Deploy
       module V1
-        VERSION = "0.1.3"
+        VERSION = "2.0.2"
       end
     end
   end

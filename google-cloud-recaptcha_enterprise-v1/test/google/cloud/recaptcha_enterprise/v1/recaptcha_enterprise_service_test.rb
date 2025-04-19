@@ -41,9 +41,26 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -118,7 +135,9 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
     name = "hello world"
     annotation = :ANNOTATION_UNSPECIFIED
     reasons = [:REASON_UNSPECIFIED]
+    account_id = "hello world"
     hashed_account_id = "hello world"
+    transaction_event = {}
 
     annotate_assessment_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :annotate_assessment, name
@@ -126,7 +145,9 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
       assert_equal "hello world", request["name"]
       assert_equal :ANNOTATION_UNSPECIFIED, request["annotation"]
       assert_equal [:REASON_UNSPECIFIED], request["reasons"]
+      assert_equal "hello world", request["account_id"]
       assert_equal "hello world", request["hashed_account_id"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::RecaptchaEnterprise::V1::TransactionEvent), request["transaction_event"]
       refute_nil options
     end
 
@@ -137,31 +158,31 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
       end
 
       # Use hash object
-      client.annotate_assessment({ name: name, annotation: annotation, reasons: reasons, hashed_account_id: hashed_account_id }) do |response, operation|
+      client.annotate_assessment({ name: name, annotation: annotation, reasons: reasons, account_id: account_id, hashed_account_id: hashed_account_id, transaction_event: transaction_event }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.annotate_assessment name: name, annotation: annotation, reasons: reasons, hashed_account_id: hashed_account_id do |response, operation|
+      client.annotate_assessment name: name, annotation: annotation, reasons: reasons, account_id: account_id, hashed_account_id: hashed_account_id, transaction_event: transaction_event do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.annotate_assessment ::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest.new(name: name, annotation: annotation, reasons: reasons, hashed_account_id: hashed_account_id) do |response, operation|
+      client.annotate_assessment ::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest.new(name: name, annotation: annotation, reasons: reasons, account_id: account_id, hashed_account_id: hashed_account_id, transaction_event: transaction_event) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.annotate_assessment({ name: name, annotation: annotation, reasons: reasons, hashed_account_id: hashed_account_id }, grpc_options) do |response, operation|
+      client.annotate_assessment({ name: name, annotation: annotation, reasons: reasons, account_id: account_id, hashed_account_id: hashed_account_id, transaction_event: transaction_event }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.annotate_assessment(::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest.new(name: name, annotation: annotation, reasons: reasons, hashed_account_id: hashed_account_id), grpc_options) do |response, operation|
+      client.annotate_assessment(::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest.new(name: name, annotation: annotation, reasons: reasons, account_id: account_id, hashed_account_id: hashed_account_id, transaction_event: transaction_event), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -295,6 +316,64 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
 
       # Verify method calls
       assert_equal 5, list_keys_client_stub.call_rpc_count
+    end
+  end
+
+  def test_retrieve_legacy_secret_key
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    key = "hello world"
+
+    retrieve_legacy_secret_key_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :retrieve_legacy_secret_key, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest, request
+      assert_equal "hello world", request["key"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, retrieve_legacy_secret_key_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.retrieve_legacy_secret_key({ key: key }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.retrieve_legacy_secret_key key: key do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.retrieve_legacy_secret_key ::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest.new(key: key) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.retrieve_legacy_secret_key({ key: key }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.retrieve_legacy_secret_key(::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest.new(key: key), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, retrieve_legacy_secret_key_client_stub.call_rpc_count
     end
   end
 
@@ -483,11 +562,13 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
 
     # Create request parameters for a unary method.
     name = "hello world"
+    skip_billing_check = true
 
     migrate_key_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :migrate_key, name
       assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest, request
       assert_equal "hello world", request["name"]
+      assert_equal true, request["skip_billing_check"]
       refute_nil options
     end
 
@@ -498,37 +579,224 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
       end
 
       # Use hash object
-      client.migrate_key({ name: name }) do |response, operation|
+      client.migrate_key({ name: name, skip_billing_check: skip_billing_check }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.migrate_key name: name do |response, operation|
+      client.migrate_key name: name, skip_billing_check: skip_billing_check do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.migrate_key ::Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest.new(name: name) do |response, operation|
+      client.migrate_key ::Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest.new(name: name, skip_billing_check: skip_billing_check) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.migrate_key({ name: name }, grpc_options) do |response, operation|
+      client.migrate_key({ name: name, skip_billing_check: skip_billing_check }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.migrate_key(::Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest.new(name: name), grpc_options) do |response, operation|
+      client.migrate_key(::Google::Cloud::RecaptchaEnterprise::V1::MigrateKeyRequest.new(name: name, skip_billing_check: skip_billing_check), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Verify method calls
       assert_equal 5, migrate_key_client_stub.call_rpc_count
+    end
+  end
+
+  def test_add_ip_override
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    ip_override_data = {}
+
+    add_ip_override_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :add_ip_override, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData), request["ip_override_data"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, add_ip_override_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.add_ip_override({ name: name, ip_override_data: ip_override_data }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.add_ip_override name: name, ip_override_data: ip_override_data do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.add_ip_override ::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest.new(name: name, ip_override_data: ip_override_data) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.add_ip_override({ name: name, ip_override_data: ip_override_data }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.add_ip_override(::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest.new(name: name, ip_override_data: ip_override_data), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, add_ip_override_client_stub.call_rpc_count
+    end
+  end
+
+  def test_remove_ip_override
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    ip_override_data = {}
+
+    remove_ip_override_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :remove_ip_override, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData), request["ip_override_data"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, remove_ip_override_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.remove_ip_override({ name: name, ip_override_data: ip_override_data }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.remove_ip_override name: name, ip_override_data: ip_override_data do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.remove_ip_override ::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest.new(name: name, ip_override_data: ip_override_data) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.remove_ip_override({ name: name, ip_override_data: ip_override_data }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.remove_ip_override(::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest.new(name: name, ip_override_data: ip_override_data), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, remove_ip_override_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_ip_overrides
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_ip_overrides_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_ip_overrides, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_ip_overrides_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_ip_overrides({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_ip_overrides parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_ip_overrides ::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_ip_overrides({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_ip_overrides(::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_ip_overrides_client_stub.call_rpc_count
     end
   end
 
@@ -587,6 +855,369 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
 
       # Verify method calls
       assert_equal 5, get_metrics_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_firewall_policy
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    firewall_policy = {}
+
+    create_firewall_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_firewall_policy, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy), request["firewall_policy"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_firewall_policy_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_firewall_policy({ parent: parent, firewall_policy: firewall_policy }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_firewall_policy parent: parent, firewall_policy: firewall_policy do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_firewall_policy ::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest.new(parent: parent, firewall_policy: firewall_policy) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_firewall_policy({ parent: parent, firewall_policy: firewall_policy }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_firewall_policy(::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest.new(parent: parent, firewall_policy: firewall_policy), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_firewall_policy_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_firewall_policies
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    page_size = 42
+    page_token = "hello world"
+
+    list_firewall_policies_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_firewall_policies, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal 42, request["page_size"]
+      assert_equal "hello world", request["page_token"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_firewall_policies_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_firewall_policies({ parent: parent, page_size: page_size, page_token: page_token }) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_firewall_policies parent: parent, page_size: page_size, page_token: page_token do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_firewall_policies ::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest.new(parent: parent, page_size: page_size, page_token: page_token) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_firewall_policies({ parent: parent, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_firewall_policies(::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest.new(parent: parent, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+        assert_kind_of Gapic::PagedEnumerable, response
+        assert_equal grpc_response, response.response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_firewall_policies_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_firewall_policy
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_firewall_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_firewall_policy, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_firewall_policy_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_firewall_policy({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_firewall_policy name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_firewall_policy ::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_firewall_policy({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_firewall_policy(::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_firewall_policy_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_firewall_policy
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    firewall_policy = {}
+    update_mask = {}
+
+    update_firewall_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_firewall_policy, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy), request["firewall_policy"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_firewall_policy_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_firewall_policy({ firewall_policy: firewall_policy, update_mask: update_mask }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_firewall_policy firewall_policy: firewall_policy, update_mask: update_mask do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_firewall_policy ::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest.new(firewall_policy: firewall_policy, update_mask: update_mask) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_firewall_policy({ firewall_policy: firewall_policy, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_firewall_policy(::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest.new(firewall_policy: firewall_policy, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_firewall_policy_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_firewall_policy
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_firewall_policy_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_firewall_policy, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_firewall_policy_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_firewall_policy({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_firewall_policy name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_firewall_policy ::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_firewall_policy({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_firewall_policy(::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_firewall_policy_client_stub.call_rpc_count
+    end
+  end
+
+  def test_reorder_firewall_policies
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    names = ["hello world"]
+
+    reorder_firewall_policies_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :reorder_firewall_policies, name
+      assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal ["hello world"], request["names"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, reorder_firewall_policies_client_stub do
+      # Create client
+      client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.reorder_firewall_policies({ parent: parent, names: names }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.reorder_firewall_policies parent: parent, names: names do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.reorder_firewall_policies ::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest.new(parent: parent, names: names) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.reorder_firewall_policies({ parent: parent, names: names }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.reorder_firewall_policies(::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest.new(parent: parent, names: names), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, reorder_firewall_policies_client_stub.call_rpc_count
     end
   end
 
@@ -732,7 +1363,8 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
     grpc_options = {}
 
     # Create request parameters for a unary method.
-    parent = "hello world"
+    project = "hello world"
+    account_id = "hello world"
     hashed_account_id = "hello world"
     page_size = 42
     page_token = "hello world"
@@ -740,7 +1372,8 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
     search_related_account_group_memberships_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :search_related_account_group_memberships, name
       assert_kind_of ::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest, request
-      assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["project"]
+      assert_equal "hello world", request["account_id"]
       assert_equal "hello world", request["hashed_account_id"]
       assert_equal 42, request["page_size"]
       assert_equal "hello world", request["page_token"]
@@ -754,35 +1387,35 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
       end
 
       # Use hash object
-      client.search_related_account_group_memberships({ parent: parent, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token }) do |response, operation|
+      client.search_related_account_group_memberships({ project: project, account_id: account_id, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token }) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.search_related_account_group_memberships parent: parent, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token do |response, operation|
+      client.search_related_account_group_memberships project: project, account_id: account_id, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.search_related_account_group_memberships ::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest.new(parent: parent, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token) do |response, operation|
+      client.search_related_account_group_memberships ::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest.new(project: project, account_id: account_id, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.search_related_account_group_memberships({ parent: parent, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
+      client.search_related_account_group_memberships({ project: project, account_id: account_id, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token }, grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.search_related_account_group_memberships(::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest.new(parent: parent, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
+      client.search_related_account_group_memberships(::Google::Cloud::RecaptchaEnterprise::V1::SearchRelatedAccountGroupMembershipsRequest.new(project: project, account_id: account_id, hashed_account_id: hashed_account_id, page_size: page_size, page_token: page_token), grpc_options) do |response, operation|
         assert_kind_of Gapic::PagedEnumerable, response
         assert_equal grpc_response, response.response
         assert_equal grpc_operation, operation
@@ -797,7 +1430,8 @@ class ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Clie
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new do |config|
         config.credentials = grpc_channel
       end

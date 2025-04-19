@@ -25,14 +25,14 @@ module Google
       module V3
         module AlertPolicyService
           # The AlertPolicyService API is used to manage (list, create, delete,
-          # edit) alert policies in Stackdriver Monitoring. An alerting policy is
+          # edit) alert policies in Cloud Monitoring. An alerting policy is
           # a description of the conditions under which some aspect of your
           # system is considered to be "unhealthy" and the ways to notify
           # people or services about this state. In addition to using this API, alert
           # policies can also be managed through
-          # [Stackdriver Monitoring](https://cloud.google.com/monitoring/docs/),
+          # [Cloud Monitoring](https://cloud.google.com/monitoring/docs/),
           # which can be reached by clicking the "Monitoring" tab in
-          # [Cloud Console](https://console.cloud.google.com/).
+          # [Cloud console](https://console.cloud.google.com/).
           class Service
 
             include ::GRPC::GenericService
@@ -46,13 +46,25 @@ module Google
             # Gets a single alerting policy.
             rpc :GetAlertPolicy, ::Google::Cloud::Monitoring::V3::GetAlertPolicyRequest, ::Google::Cloud::Monitoring::V3::AlertPolicy
             # Creates a new alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             rpc :CreateAlertPolicy, ::Google::Cloud::Monitoring::V3::CreateAlertPolicyRequest, ::Google::Cloud::Monitoring::V3::AlertPolicy
             # Deletes an alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             rpc :DeleteAlertPolicy, ::Google::Cloud::Monitoring::V3::DeleteAlertPolicyRequest, ::Google::Protobuf::Empty
             # Updates an alerting policy. You can either replace the entire policy with
             # a new one or replace only certain fields in the current alerting policy by
             # specifying the fields to be updated via `updateMask`. Returns the
             # updated alerting policy.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # alerting policies in a single project. This includes calls to
+            # CreateAlertPolicy, DeleteAlertPolicy and UpdateAlertPolicy.
             rpc :UpdateAlertPolicy, ::Google::Cloud::Monitoring::V3::UpdateAlertPolicyRequest, ::Google::Cloud::Monitoring::V3::AlertPolicy
           end
 

@@ -50,6 +50,11 @@
                 "resume_queue"
               ]
             },
+            "UploadQueueYaml": {
+              "methods": [
+                "upload_queue_yaml"
+              ]
+            },
             "GetIamPolicy": {
               "methods": [
                 "get_iam_policy"

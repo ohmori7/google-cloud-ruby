@@ -20,25 +20,66 @@ require "helper"
 require "google/cloud/service_control"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::ServiceControl::ClientConstructionMinitest < Minitest::Test
-  def test_quota_controller
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_quota_controller_grpc
+    skip unless Google::Cloud::ServiceControl.quota_controller_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::ServiceControl.quota_controller do |config|
+      client = Google::Cloud::ServiceControl.quota_controller transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::ServiceControl::V1::QuotaController::Client, client
     end
   end
 
-  def test_service_controller
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_quota_controller_rest
+    skip unless Google::Cloud::ServiceControl.quota_controller_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::ServiceControl.quota_controller transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::ServiceControl::V1::QuotaController::Rest::Client, client
+    end
+  end
+
+  def test_service_controller_grpc
+    skip unless Google::Cloud::ServiceControl.service_controller_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::ServiceControl.service_controller do |config|
+      client = Google::Cloud::ServiceControl.service_controller transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::ServiceControl::V1::ServiceController::Client, client
+    end
+  end
+
+  def test_service_controller_rest
+    skip unless Google::Cloud::ServiceControl.service_controller_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::ServiceControl.service_controller transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::ServiceControl::V1::ServiceController::Rest::Client, client
     end
   end
 end

@@ -1,0 +1,36 @@
+name: Bump-Version
+on:
+  workflow_dispatch:
+    inputs:
+      gems:
+        description: "Gems to bump (required)"
+        required: true
+      version:
+        description: "Version to bump to (required)"
+        required: true
+      args:
+        description: "Extra command line arguments"
+        required: false
+
+jobs:
+  bump-version:
+    if: ${{ github.repository == 'googleapis/google-cloud-ruby' }}
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.YOSHI_CODE_BOT_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install Ruby 3.3
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Install tools
+        run: |
+          gem install --no-document toys
+      - name: execute
+        run: |
+          toys bump-version -v --fork \
+            --version "${{ github.event.inputs.version }}" \
+            ${{ github.event.inputs.args }} -- \
+            ${{ github.event.inputs.gems }}

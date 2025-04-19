@@ -245,7 +245,7 @@ module Google
           labels ||= {}
           @grpc.labels = Google::Protobuf::Map.new(
             :string, :string,
-            Hash[labels.map { |k, v| [String(k), String(v)] }]
+            labels.to_h { |k, v| [String(k), String(v)] }
           )
         end
 
@@ -429,7 +429,7 @@ module Google
             serve_nodes:          nodes,
             default_storage_type: storage_type,
             location:             location
-          }.delete_if { |_, v| v.nil? }
+          }.compact
 
           cluster = Google::Cloud::Bigtable::Admin::V2::Cluster.new attrs
           grpc = service.create_cluster instance_id, cluster_id, cluster
@@ -521,15 +521,12 @@ module Google
           ensure_service!
 
           view ||= :SCHEMA_VIEW
-          table = if perform_lookup
-                    grpc = service.get_table instance_id, table_id, view: view
-                    Table.from_grpc grpc, service, view: view
-                  else
-                    Table.from_path service.table_path(instance_id, table_id), service
-                  end
-
-          table.app_profile_id = app_profile_id
-          table
+          if perform_lookup
+            grpc = service.get_table instance_id, table_id, view: view
+            Table.from_grpc grpc, service, view: view, app_profile_id: app_profile_id
+          else
+            Table.from_path service.table_path(instance_id, table_id), service, app_profile_id: app_profile_id
+          end
         rescue Google::Cloud::NotFoundError
           nil
         end
@@ -721,7 +718,7 @@ module Google
             single_cluster_routing:        single_cluster_routing,
             description:                   description,
             etag:                          etag
-          }.delete_if { |_, v| v.nil? }
+          }.compact
 
           grpc = service.create_app_profile(
             instance_id,

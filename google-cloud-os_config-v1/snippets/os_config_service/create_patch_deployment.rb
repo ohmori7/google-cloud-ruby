@@ -19,15 +19,29 @@
 # [START osconfig_v1_generated_OsConfigService_CreatePatchDeployment_sync]
 require "google/cloud/os_config/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::OsConfig::V1::OsConfigService::Client.new
+##
+# Snippet for the create_patch_deployment call in the OsConfigService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::OsConfig::V1::OsConfigService::Client#create_patch_deployment.
+#
+def create_patch_deployment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::OsConfig::V1::OsConfigService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::OsConfig::V1::CreatePatchDeploymentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::OsConfig::V1::CreatePatchDeploymentRequest.new
 
-# Call the create_patch_deployment method.
-result = client.create_patch_deployment request
+  # Call the create_patch_deployment method.
+  result = client.create_patch_deployment request
 
-# The returned object is of type Google::Cloud::OsConfig::V1::PatchDeployment.
-p result
+  # The returned object is of type Google::Cloud::OsConfig::V1::PatchDeployment.
+  p result
+end
 # [END osconfig_v1_generated_OsConfigService_CreatePatchDeployment_sync]

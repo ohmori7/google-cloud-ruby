@@ -98,40 +98,6 @@
         }
       }
     },
-    "SecuritySettingsService": {
-      "clients": {
-        "grpc": {
-          "libraryClient": "::Google::Cloud::Dialogflow::CX::V3::SecuritySettingsService::Client",
-          "rpcs": {
-            "CreateSecuritySettings": {
-              "methods": [
-                "create_security_settings"
-              ]
-            },
-            "GetSecuritySettings": {
-              "methods": [
-                "get_security_settings"
-              ]
-            },
-            "UpdateSecuritySettings": {
-              "methods": [
-                "update_security_settings"
-              ]
-            },
-            "ListSecuritySettings": {
-              "methods": [
-                "list_security_settings"
-              ]
-            },
-            "DeleteSecuritySettings": {
-              "methods": [
-                "delete_security_settings"
-              ]
-            }
-          }
-        }
-      }
-    },
     "Agents": {
       "clients": {
         "grpc": {
@@ -181,6 +147,16 @@
               "methods": [
                 "get_agent_validation_result"
               ]
+            },
+            "GetGenerativeSettings": {
+              "methods": [
+                "get_generative_settings"
+              ]
+            },
+            "UpdateGenerativeSettings": {
+              "methods": [
+                "update_generative_settings"
+              ]
             }
           }
         }
@@ -229,11 +205,6 @@
         "grpc": {
           "libraryClient": "::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client",
           "rpcs": {
-            "ListEntityTypes": {
-              "methods": [
-                "list_entity_types"
-              ]
-            },
             "GetEntityType": {
               "methods": [
                 "get_entity_type"
@@ -252,6 +223,21 @@
             "DeleteEntityType": {
               "methods": [
                 "delete_entity_type"
+              ]
+            },
+            "ListEntityTypes": {
+              "methods": [
+                "list_entity_types"
+              ]
+            },
+            "ExportEntityTypes": {
+              "methods": [
+                "export_entity_types"
+              ]
+            },
+            "ImportEntityTypes": {
+              "methods": [
+                "import_entity_types"
               ]
             }
           }
@@ -286,6 +272,16 @@
             "DeleteIntent": {
               "methods": [
                 "delete_intent"
+              ]
+            },
+            "ImportIntents": {
+              "methods": [
+                "import_intents"
+              ]
+            },
+            "ExportIntents": {
+              "methods": [
+                "export_intents"
               ]
             }
           }
@@ -336,6 +332,11 @@
                 "detect_intent"
               ]
             },
+            "ServerStreamingDetectIntent": {
+              "methods": [
+                "server_streaming_detect_intent"
+              ]
+            },
             "StreamingDetectIntent": {
               "methods": [
                 "streaming_detect_intent"
@@ -349,6 +350,11 @@
             "FulfillIntent": {
               "methods": [
                 "fulfill_intent"
+              ]
+            },
+            "SubmitAnswerFeedback": {
+              "methods": [
+                "submit_answer_feedback"
               ]
             }
           }
@@ -584,6 +590,74 @@
             "StopExperiment": {
               "methods": [
                 "stop_experiment"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Generators": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::CX::V3::Generators::Client",
+          "rpcs": {
+            "ListGenerators": {
+              "methods": [
+                "list_generators"
+              ]
+            },
+            "GetGenerator": {
+              "methods": [
+                "get_generator"
+              ]
+            },
+            "CreateGenerator": {
+              "methods": [
+                "create_generator"
+              ]
+            },
+            "UpdateGenerator": {
+              "methods": [
+                "update_generator"
+              ]
+            },
+            "DeleteGenerator": {
+              "methods": [
+                "delete_generator"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "SecuritySettingsService": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "::Google::Cloud::Dialogflow::CX::V3::SecuritySettingsService::Client",
+          "rpcs": {
+            "CreateSecuritySettings": {
+              "methods": [
+                "create_security_settings"
+              ]
+            },
+            "GetSecuritySettings": {
+              "methods": [
+                "get_security_settings"
+              ]
+            },
+            "UpdateSecuritySettings": {
+              "methods": [
+                "update_security_settings"
+              ]
+            },
+            "ListSecuritySettings": {
+              "methods": [
+                "list_security_settings"
+              ]
+            },
+            "DeleteSecuritySettings": {
+              "methods": [
+                "delete_security_settings"
               ]
             }
           }

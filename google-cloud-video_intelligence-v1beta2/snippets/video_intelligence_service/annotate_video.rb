@@ -19,22 +19,36 @@
 # [START videointelligence_v1beta2_generated_VideoIntelligenceService_AnnotateVideo_sync]
 require "google/cloud/video_intelligence/v1beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::VideoIntelligence::V1beta2::VideoIntelligenceService::Client.new
+##
+# Snippet for the annotate_video call in the VideoIntelligenceService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::VideoIntelligence::V1beta2::VideoIntelligenceService::Client#annotate_video.
+#
+def annotate_video
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::VideoIntelligence::V1beta2::VideoIntelligenceService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::VideoIntelligence::V1beta2::AnnotateVideoRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::VideoIntelligence::V1beta2::AnnotateVideoRequest.new
 
-# Call the annotate_video method.
-result = client.annotate_video request
+  # Call the annotate_video method.
+  result = client.annotate_video request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END videointelligence_v1beta2_generated_VideoIntelligenceService_AnnotateVideo_sync]

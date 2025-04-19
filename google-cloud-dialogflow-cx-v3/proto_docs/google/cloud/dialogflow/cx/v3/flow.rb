@@ -33,7 +33,8 @@ module Google
           #     classification threshold. If the returned score value is less than the
           #     threshold value, then a no-match event will be triggered. The score values
           #     range from 0.0 (completely uncertain) to 1.0 (completely certain). If set
-          #     to 0.0, the default of 0.3 is used.
+          #     to 0.0, the default of 0.3 is used. You can set a separate classification
+          #     threshold for the flow in each language enabled for the agent.
           # @!attribute [rw] model_training_mode
           #   @return [::Google::Cloud::Dialogflow::CX::V3::NluSettings::ModelTrainingMode]
           #     Indicates NLU model training mode.
@@ -85,8 +86,8 @@ module Google
           # @!attribute [rw] name
           #   @return [::String]
           #     The unique identifier of the flow.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           # @!attribute [rw] display_name
           #   @return [::String]
           #     Required. The human-readable name of the flow.
@@ -106,9 +107,9 @@ module Google
           #     way regardless of the current page. Transition routes defined in the page
           #     have higher priority than those defined in the flow.
           #
-          #     TransitionRoutes are evalauted in the following order:
+          #     TransitionRoutes are evaluated in the following order:
           #
-          #     *   TransitionRoutes with intent specified..
+          #     *   TransitionRoutes with intent specified.
           #     *   TransitionRoutes with only condition specified.
           #
           #     TransitionRoutes with intent specified are inherited by pages in the flow.
@@ -123,9 +124,10 @@ module Google
           #     regardless of the current page. Event handlers defined in the page
           #     have higher priority than those defined in the flow.
           #
-          #     Unlike {::Google::Cloud::Dialogflow::CX::V3::Flow#transition_routes transition_routes}, these handlers are
-          #     evaluated on a first-match basis. The first one that matches the event
-          #     get executed, with the rest being ignored.
+          #     Unlike
+          #     {::Google::Cloud::Dialogflow::CX::V3::Flow#transition_routes transition_routes},
+          #     these handlers are evaluated on a first-match basis. The first one that
+          #     matches the event get executed, with the rest being ignored.
           # @!attribute [rw] transition_route_groups
           #   @return [::Array<::String>]
           #     A flow's transition route group serve two purposes:
@@ -136,21 +138,60 @@ module Google
           #     route groups][Page.transition_route_groups]. Transition route groups
           #     defined in the page have higher priority than those defined in the flow.
           #
-          #     Format:`projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>/transitionRouteGroups/<TransitionRouteGroup ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/transitionRouteGroups/<TransitionRouteGroupID>`
+          #     or
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/transitionRouteGroups/<TransitionRouteGroupID>`
+          #     for agent-level groups.
           # @!attribute [rw] nlu_settings
           #   @return [::Google::Cloud::Dialogflow::CX::V3::NluSettings]
           #     NLU related settings of the flow.
+          # @!attribute [rw] advanced_settings
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::AdvancedSettings]
+          #     Hierarchical advanced settings for this flow. The settings exposed at the
+          #     lower level overrides the settings exposed at the higher level.
+          # @!attribute [rw] knowledge_connector_settings
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::KnowledgeConnectorSettings]
+          #     Optional. Knowledge connector configuration.
+          # @!attribute [rw] multi_language_settings
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::Flow::MultiLanguageSettings]
+          #     Optional. Multi-lingual agent settings for this flow.
+          # @!attribute [rw] locked
+          #   @return [::Boolean]
+          #     Indicates whether the flow is locked for changes. If the flow is locked,
+          #     modifications to the flow will be rejected.
           class Flow
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Settings for multi-lingual agents.
+            # @!attribute [rw] enable_multi_language_detection
+            #   @return [::Boolean]
+            #     Optional. Enable multi-language detection for this flow. This can be set
+            #     only if [agent level multi language
+            #     setting][Agent.enable_multi_language_training] is enabled.
+            # @!attribute [rw] supported_response_language_codes
+            #   @return [::Array<::String>]
+            #     Optional. Agent will respond in the detected language if the detected
+            #     language code is in the supported resolved languages for this flow. This
+            #     will be used only if multi-language training is enabled in the
+            #     {::Google::Cloud::Dialogflow::CX::V3::Agent#enable_multi_language_training agent}
+            #     and multi-language detection is enabled in the
+            #     {::Google::Cloud::Dialogflow::CX::V3::Flow::MultiLanguageSettings#enable_multi_language_detection flow}.
+            #     The supported languages must be a subset of the languages supported by
+            #     the agent.
+            class MultiLanguageSettings
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#create_flow Flows.CreateFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#create_flow Flows.CreateFlow}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent to create a flow for.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] flow
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Flow]
           #     Required. The flow to create.
@@ -173,12 +214,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#delete_flow Flows.DeleteFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#delete_flow Flows.DeleteFlow}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the flow to delete.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           # @!attribute [rw] force
           #   @return [::Boolean]
           #     This field has no effect for flows with no incoming transitions.
@@ -196,11 +238,12 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#list_flows Flows.ListFlows}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#list_flows Flows.ListFlows}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent containing the flows.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] page_size
           #   @return [::Integer]
           #     The maximum number of items to return in a single page. By default 100 and
@@ -228,7 +271,8 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#list_flows Flows.ListFlows}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#list_flows Flows.ListFlows}.
           # @!attribute [rw] flows
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::Flow>]
           #     The list of flows. There will be a maximum number of items returned based
@@ -242,12 +286,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow Flows.GetFlow}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow Flows.GetFlow}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the flow to get.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     The language to retrieve the flow for. The following fields are language
@@ -268,7 +313,8 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#update_flow Flows.UpdateFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#update_flow Flows.UpdateFlow}.
           # @!attribute [rw] flow
           #   @return [::Google::Cloud::Dialogflow::CX::V3::Flow]
           #     Required. The flow to update.
@@ -295,23 +341,25 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#train_flow Flows.TrainFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#train_flow Flows.TrainFlow}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The flow to train.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           class TrainFlowRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#validate_flow Flows.ValidateFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#validate_flow Flows.ValidateFlow}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The flow to validate.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     If not specified, the agent's default language is used.
@@ -320,12 +368,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow_validation_result Flows.GetFlowValidationResult}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow_validation_result Flows.GetFlowValidationResult}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The flow name.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>/validationResult`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/validationResult`.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     If not specified, the agent's default language is used.
@@ -334,12 +383,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow_validation_result Flows.GetFlowValidationResult}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#get_flow_validation_result Flows.GetFlowValidationResult}.
           # @!attribute [rw] name
           #   @return [::String]
           #     The unique identifier of the flow validation result.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>/validationResult`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>/validationResult`.
           # @!attribute [rw] validation_messages
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::ValidationMessage>]
           #     Contains all validation messages.
@@ -351,22 +401,37 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#import_flow Flows.ImportFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#import_flow Flows.ImportFlow}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent to import the flow into.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] flow_uri
           #   @return [::String]
           #     The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI
           #     to import flow from. The format of this URI must be
           #     `gs://<bucket-name>/<object-name>`.
+          #
+          #     Dialogflow performs a read operation for the Cloud Storage object
+          #     on the caller's behalf, so your request authentication must
+          #     have read permissions for the object. For more information, see
+          #     [Dialogflow access
+          #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+          #
+          #     Note: The following fields are mutually exclusive: `flow_uri`, `flow_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] flow_content
           #   @return [::String]
           #     Uncompressed raw byte content for flow.
+          #
+          #     Note: The following fields are mutually exclusive: `flow_content`, `flow_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] import_option
           #   @return [::Google::Cloud::Dialogflow::CX::V3::ImportFlowRequest::ImportOption]
           #     Flow import mode. If not specified, `KEEP` is assumed.
+          # @!attribute [rw] flow_import_strategy
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::FlowImportStrategy]
+          #     Optional. Specifies the import strategy used when resolving resource
+          #     conflicts.
           class ImportFlowRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -388,29 +453,50 @@ module Google
             end
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#import_flow Flows.ImportFlow}.
+          # The flow import strategy used for resource conflict resolution associated
+          # with an {::Google::Cloud::Dialogflow::CX::V3::ImportFlowRequest ImportFlowRequest}.
+          # @!attribute [rw] global_import_strategy
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::ImportStrategy]
+          #     Optional. Import strategy for resource conflict resolution, applied
+          #     globally throughout the flow. It will be applied for all display name
+          #     conflicts in the imported content. If not specified, 'CREATE_NEW' is
+          #     assumed.
+          class FlowImportStrategy
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#import_flow Flows.ImportFlow}.
           # @!attribute [rw] flow
           #   @return [::String]
           #     The unique identifier of the new flow.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           class ImportFlowResponse
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#export_flow Flows.ExportFlow}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#export_flow Flows.ExportFlow}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the flow to export.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/flows/<Flow ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/flows/<FlowID>`.
           # @!attribute [rw] flow_uri
           #   @return [::String]
-          #     Optional. The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI to
-          #     export the flow to. The format of this URI must be
-          #     `gs://<bucket-name>/<object-name>`.
-          #     If left unspecified, the serialized flow is returned inline.
+          #     Optional. The [Google Cloud
+          #     Storage](https://cloud.google.com/storage/docs/) URI to export the flow to.
+          #     The format of this URI must be `gs://<bucket-name>/<object-name>`. If left
+          #     unspecified, the serialized flow is returned inline.
+          #
+          #     Dialogflow performs a write operation for the Cloud Storage object
+          #     on the caller's behalf, so your request authentication must
+          #     have write permissions for the object. For more information, see
+          #     [Dialogflow access
+          #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
           # @!attribute [rw] include_referenced_flows
           #   @return [::Boolean]
           #     Optional. Whether to export flows referenced by the specified flow.
@@ -419,14 +505,20 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#export_flow Flows.ExportFlow}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::Flows::Client#export_flow Flows.ExportFlow}.
           # @!attribute [rw] flow_uri
           #   @return [::String]
           #     The URI to a file containing the exported flow. This field is populated
-          #     only if `flow_uri` is specified in {::Google::Cloud::Dialogflow::CX::V3::ExportFlowRequest ExportFlowRequest}.
+          #     only if `flow_uri` is specified in
+          #     {::Google::Cloud::Dialogflow::CX::V3::ExportFlowRequest ExportFlowRequest}.
+          #
+          #     Note: The following fields are mutually exclusive: `flow_uri`, `flow_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] flow_content
           #   @return [::String]
           #     Uncompressed raw byte content for flow.
+          #
+          #     Note: The following fields are mutually exclusive: `flow_content`, `flow_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class ExportFlowResponse
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods

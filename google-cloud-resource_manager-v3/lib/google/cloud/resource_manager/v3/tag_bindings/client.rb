@@ -28,9 +28,15 @@ module Google
           # Client for the TagBindings service.
           #
           # Allow users to create and manage TagBindings between TagValues and
-          # different cloud resources throughout the GCP resource hierarchy.
+          # different Google Cloud resources throughout the GCP resource hierarchy.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "cloudresourcemanager.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -101,6 +107,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @tag_bindings_stub.universe_domain
+            end
+
+            ##
             # Create a new TagBindings client object.
             #
             # @example
@@ -133,8 +148,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -147,15 +163,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @tag_bindings_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::ResourceManager::V3::TagBindings::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @tag_bindings_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -165,11 +196,20 @@ module Google
             #
             attr_reader :operations_client
 
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @tag_bindings_stub.logger
+            end
+
             # Service calls
 
             ##
-            # Lists the TagBindings for the given cloud resource, as specified with
-            # `parent`.
+            # Lists the TagBindings for the given Google Cloud resource, as specified
+            # with `parent`.
             #
             # NOTE: The `parent` field is expected to be a full resource name:
             # https://cloud.google.com/apis/design/resource_names#full_resource_name
@@ -190,16 +230,16 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The full resource name of a resource for which you want to list existing
-            #     TagBindings.
-            #     E.g. "//cloudresourcemanager.googleapis.com/projects/123"
+            #     Required. The full resource name of a resource for which you want to list
+            #     existing TagBindings. E.g.
+            #     "//cloudresourcemanager.googleapis.com/projects/123"
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of TagBindings to return in the response. The server
-            #     allows a maximum of 300 TagBindings to return. If unspecified, the server
-            #     will use 100 as the default.
+            #     Optional. The maximum number of TagBindings to return in the response. The
+            #     server allows a maximum of 300 TagBindings to return. If unspecified, the
+            #     server will use 100 as the default.
             #   @param page_token [::String]
-            #     Optional. A pagination token returned from a previous call to `ListTagBindings`
-            #     that indicates where this listing should continue from.
+            #     Optional. A pagination token returned from a previous call to
+            #     `ListTagBindings` that indicates where this listing should continue from.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::ResourceManager::V3::TagBinding>]
@@ -221,13 +261,11 @@ module Google
             #   # Call the list_tag_bindings method.
             #   result = client.list_tag_bindings request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ResourceManager::V3::TagBinding.
-            #     p response
+            #     p item
             #   end
             #
             def list_tag_bindings request, options = nil
@@ -241,10 +279,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_tag_bindings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.list_tag_bindings.timeout,
@@ -258,15 +297,14 @@ module Google
               @tag_bindings_stub.call_rpc :list_tag_bindings, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @tag_bindings_stub, :list_tag_bindings, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Creates a TagBinding between a TagValue and a cloud resource
-            # (currently project, folder, or organization).
+            # Creates a TagBinding between a TagValue and a Google Cloud resource.
             #
             # @overload create_tag_binding(request, options = nil)
             #   Pass arguments to `create_tag_binding` via a request object, either of type
@@ -286,8 +324,8 @@ module Google
             #   @param tag_binding [::Google::Cloud::ResourceManager::V3::TagBinding, ::Hash]
             #     Required. The TagBinding to be created.
             #   @param validate_only [::Boolean]
-            #     Optional. Set to true to perform the validations necessary for creating the resource,
-            #     but not actually perform the action.
+            #     Optional. Set to true to perform the validations necessary for creating the
+            #     resource, but not actually perform the action.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -309,14 +347,14 @@ module Google
             #   # Call the create_tag_binding method.
             #   result = client.create_tag_binding request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_tag_binding request, options = nil
@@ -330,10 +368,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_tag_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.create_tag_binding.timeout,
@@ -347,7 +386,7 @@ module Google
               @tag_bindings_stub.call_rpc :create_tag_binding, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -396,14 +435,14 @@ module Google
             #   # Call the delete_tag_binding method.
             #   result = client.delete_tag_binding request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_tag_binding request, options = nil
@@ -417,10 +456,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_tag_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -442,7 +482,100 @@ module Google
               @tag_bindings_stub.call_rpc :delete_tag_binding, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Return a list of effective tags for the given Google Cloud resource, as
+            # specified in `parent`.
+            #
+            # @overload list_effective_tags(request, options = nil)
+            #   Pass arguments to `list_effective_tags` via a request object, either of type
+            #   {::Google::Cloud::ResourceManager::V3::ListEffectiveTagsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::ResourceManager::V3::ListEffectiveTagsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_effective_tags(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_effective_tags` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The full resource name of a resource for which you want to list
+            #     the effective tags. E.g.
+            #     "//cloudresourcemanager.googleapis.com/projects/123"
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of effective tags to return in the response.
+            #     The server allows a maximum of 300 effective tags to return in a single
+            #     page. If unspecified, the server will use 100 as the default.
+            #   @param page_token [::String]
+            #     Optional. A pagination token returned from a previous call to
+            #     `ListEffectiveTags` that indicates from where this listing should continue.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::ResourceManager::V3::EffectiveTag>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::ResourceManager::V3::EffectiveTag>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/resource_manager/v3"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::ResourceManager::V3::TagBindings::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::ResourceManager::V3::ListEffectiveTagsRequest.new
+            #
+            #   # Call the list_effective_tags method.
+            #   result = client.list_effective_tags request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::ResourceManager::V3::EffectiveTag.
+            #     p item
+            #   end
+            #
+            def list_effective_tags request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::ResourceManager::V3::ListEffectiveTagsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_effective_tags.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::ResourceManager::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              options.apply_defaults timeout:      @config.rpcs.list_effective_tags.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_effective_tags.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @tag_bindings_stub.call_rpc :list_effective_tags, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @tag_bindings_stub, :list_effective_tags, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -478,20 +611,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"cloudresourcemanager.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -526,11 +666,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "cloudresourcemanager.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "cloudresourcemanager.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -545,6 +699,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -563,6 +719,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -598,6 +762,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :delete_tag_binding
+                ##
+                # RPC-specific configuration for `list_effective_tags`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_effective_tags
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -607,6 +776,8 @@ module Google
                   @create_tag_binding = ::Gapic::Config::Method.new create_tag_binding_config
                   delete_tag_binding_config = parent_rpcs.delete_tag_binding if parent_rpcs.respond_to? :delete_tag_binding
                   @delete_tag_binding = ::Gapic::Config::Method.new delete_tag_binding_config
+                  list_effective_tags_config = parent_rpcs.list_effective_tags if parent_rpcs.respond_to? :list_effective_tags
+                  @list_effective_tags = ::Gapic::Config::Method.new list_effective_tags_config
 
                   yield self if block_given?
                 end

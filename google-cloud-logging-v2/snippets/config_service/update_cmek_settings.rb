@@ -19,15 +19,29 @@
 # [START logging_v2_generated_ConfigService_UpdateCmekSettings_sync]
 require "google/cloud/logging/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Logging::V2::ConfigService::Client.new
+##
+# Snippet for the update_cmek_settings call in the ConfigService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Logging::V2::ConfigService::Client#update_cmek_settings.
+#
+def update_cmek_settings
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Logging::V2::ConfigService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Logging::V2::UpdateCmekSettingsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Logging::V2::UpdateCmekSettingsRequest.new
 
-# Call the update_cmek_settings method.
-result = client.update_cmek_settings request
+  # Call the update_cmek_settings method.
+  result = client.update_cmek_settings request
 
-# The returned object is of type Google::Cloud::Logging::V2::CmekSettings.
-p result
+  # The returned object is of type Google::Cloud::Logging::V2::CmekSettings.
+  p result
+end
 # [END logging_v2_generated_ConfigService_UpdateCmekSettings_sync]

@@ -30,6 +30,12 @@ module Google
           # Service to determine the likelihood an event is legitimate.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "recaptchaenterprise.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -105,6 +111,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @recaptcha_enterprise_service_stub.universe_domain
+            end
+
+            ##
             # Create a new RecaptchaEnterpriseService client object.
             #
             # @example
@@ -137,8 +152,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -149,11 +165,34 @@ module Google
 
               @recaptcha_enterprise_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @recaptcha_enterprise_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @recaptcha_enterprise_service_stub.logger
             end
 
             # Service calls
@@ -177,8 +216,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The name of the project in which the assessment will be created,
-            #     in the format "projects/\\{project}".
+            #     Required. The name of the project in which the assessment is created,
+            #     in the format `projects/{project}`.
             #   @param assessment [::Google::Cloud::RecaptchaEnterprise::V1::Assessment, ::Hash]
             #     Required. The assessment details.
             #
@@ -216,10 +255,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_assessment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -240,7 +280,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :create_assessment, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -260,26 +299,32 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload annotate_assessment(name: nil, annotation: nil, reasons: nil, hashed_account_id: nil)
+            # @overload annotate_assessment(name: nil, annotation: nil, reasons: nil, account_id: nil, hashed_account_id: nil, transaction_event: nil)
             #   Pass arguments to `annotate_assessment` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
             #     Required. The resource name of the Assessment, in the format
-            #     "projects/\\{project}/assessments/\\{assessment}".
+            #     `projects/{project}/assessments/{assessment}`.
             #   @param annotation [::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest::Annotation]
-            #     Optional. The annotation that will be assigned to the Event. This field can be left
-            #     empty to provide reasons that apply to an event without concluding whether
-            #     the event is legitimate or fraudulent.
+            #     Optional. The annotation that is assigned to the Event. This field can be
+            #     left empty to provide reasons that apply to an event without concluding
+            #     whether the event is legitimate or fraudulent.
             #   @param reasons [::Array<::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentRequest::Reason>]
-            #     Optional. Optional reasons for the annotation that will be assigned to the Event.
+            #     Optional. Reasons for the annotation that are assigned to the event.
+            #   @param account_id [::String]
+            #     Optional. A stable account identifier to apply to the assessment. This is
+            #     an alternative to setting `account_id` in `CreateAssessment`, for example
+            #     when a stable account identifier is not yet known in the initial request.
             #   @param hashed_account_id [::String]
-            #     Optional. Optional unique stable hashed user identifier to apply to the assessment.
-            #     This is an alternative to setting the hashed_account_id in
-            #     CreateAssessment, for example when the account identifier is not yet known
-            #     in the initial request. It is recommended that the identifier is hashed
-            #     using hmac-sha256 with stable secret.
+            #     Optional. A stable hashed account identifier to apply to the assessment.
+            #     This is an alternative to setting `hashed_account_id` in
+            #     `CreateAssessment`, for example when a stable account identifier is not yet
+            #     known in the initial request.
+            #   @param transaction_event [::Google::Cloud::RecaptchaEnterprise::V1::TransactionEvent, ::Hash]
+            #     Optional. If the assessment is part of a payment transaction, provide
+            #     details on payment lifecycle events that occur in the transaction.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::AnnotateAssessmentResponse]
@@ -315,10 +360,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.annotate_assessment.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -339,7 +385,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :annotate_assessment, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -364,8 +409,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The name of the project in which the key will be created, in the
-            #     format "projects/\\{project}".
+            #     Required. The name of the project in which the key is created, in the
+            #     format `projects/{project}`.
             #   @param key [::Google::Cloud::RecaptchaEnterprise::V1::Key, ::Hash]
             #     Required. Information to create a reCAPTCHA Enterprise key.
             #
@@ -403,10 +448,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -427,7 +473,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :create_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -452,8 +497,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The name of the project that contains the keys that will be
-            #     listed, in the format "projects/\\{project}".
+            #     Required. The name of the project that contains the keys that is
+            #     listed, in the format `projects/{project}`.
             #   @param page_size [::Integer]
             #     Optional. The maximum number of keys to return. Default is 10. Max limit is
             #     1000.
@@ -481,13 +526,11 @@ module Google
             #   # Call the list_keys method.
             #   result = client.list_keys request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::Key.
-            #     p response
+            #     p item
             #   end
             #
             def list_keys request, options = nil
@@ -501,10 +544,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_keys.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -526,7 +570,95 @@ module Google
               @recaptcha_enterprise_service_stub.call_rpc :list_keys, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_keys, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Returns the secret key related to the specified public key.
+            # You must use the legacy secret key only in a 3rd party integration with
+            # legacy reCAPTCHA.
+            #
+            # @overload retrieve_legacy_secret_key(request, options = nil)
+            #   Pass arguments to `retrieve_legacy_secret_key` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload retrieve_legacy_secret_key(key: nil)
+            #   Pass arguments to `retrieve_legacy_secret_key` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param key [::String]
+            #     Required. The public key name linked to the requested secret key in the
+            #     format `projects/{project}/keys/{key}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest.new
+            #
+            #   # Call the retrieve_legacy_secret_key method.
+            #   result = client.retrieve_legacy_secret_key request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyResponse.
+            #   p result
+            #
+            def retrieve_legacy_secret_key request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::RetrieveLegacySecretKeyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.retrieve_legacy_secret_key.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.key
+                header_params["key"] = request.key
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.retrieve_legacy_secret_key.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.retrieve_legacy_secret_key.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :retrieve_legacy_secret_key, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -552,7 +684,7 @@ module Google
             #
             #   @param name [::String]
             #     Required. The name of the requested key, in the format
-            #     "projects/\\{project}/keys/\\{key}".
+            #     `projects/{project}/keys/{key}`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::Key]
@@ -588,10 +720,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -612,7 +745,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :get_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -639,8 +771,8 @@ module Google
             #   @param key [::Google::Cloud::RecaptchaEnterprise::V1::Key, ::Hash]
             #     Required. The key to update.
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
-            #     Optional. The mask to control which fields of the key get updated. If the mask is not
-            #     present, all fields will be updated.
+            #     Optional. The mask to control which fields of the key get updated. If the
+            #     mask is not present, all fields are updated.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::Key]
@@ -676,10 +808,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -700,7 +833,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :update_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -726,7 +858,7 @@ module Google
             #
             #   @param name [::String]
             #     Required. The name of the key to be deleted, in the format
-            #     "projects/\\{project}/keys/\\{key}".
+            #     `projects/{project}/keys/{key}`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Protobuf::Empty]
@@ -762,10 +894,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -786,7 +919,6 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :delete_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -796,7 +928,7 @@ module Google
             # Migrates an existing key from reCAPTCHA to reCAPTCHA Enterprise.
             # Once a key is migrated, it can be used from either product. SiteVerify
             # requests are billed as CreateAssessment calls. You must be
-            # authenticated as one of the current owners of the reCAPTCHA Site Key, and
+            # authenticated as one of the current owners of the reCAPTCHA Key, and
             # your user must have the reCAPTCHA Enterprise Admin IAM role in the
             # destination project.
             #
@@ -810,14 +942,23 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload migrate_key(name: nil)
+            # @overload migrate_key(name: nil, skip_billing_check: nil)
             #   Pass arguments to `migrate_key` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
             #     Required. The name of the key to be migrated, in the format
-            #     "projects/\\{project}/keys/\\{key}".
+            #     `projects/{project}/keys/{key}`.
+            #   @param skip_billing_check [::Boolean]
+            #     Optional. If true, skips the billing check.
+            #     A reCAPTCHA Enterprise key or migrated key behaves differently than a
+            #     reCAPTCHA (non-Enterprise version) key when you reach a quota limit (see
+            #     https://cloud.google.com/recaptcha/quotas#quota_limit). To avoid
+            #     any disruption of your usage, we check that a billing account is present.
+            #     If your usage of reCAPTCHA is under the free quota, you can safely skip the
+            #     billing check and proceed with the migration. See
+            #     https://cloud.google.com/recaptcha/docs/billing-information.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::Key]
@@ -853,10 +994,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.migrate_key.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -877,7 +1019,289 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :migrate_key, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Adds an IP override to a key. The following restrictions hold:
+            # * The maximum number of IP overrides per key is 100.
+            # * For any conflict (such as IP already exists or IP part of an existing
+            #   IP range), an error is returned.
+            #
+            # @overload add_ip_override(request, options = nil)
+            #   Pass arguments to `add_ip_override` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload add_ip_override(name: nil, ip_override_data: nil)
+            #   Pass arguments to `add_ip_override` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the key to which the IP override is added, in the
+            #     format `projects/{project}/keys/{key}`.
+            #   @param ip_override_data [::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData, ::Hash]
+            #     Required. IP override added to the key.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest.new
+            #
+            #   # Call the add_ip_override method.
+            #   result = client.add_ip_override request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideResponse.
+            #   p result
+            #
+            def add_ip_override request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::AddIpOverrideRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.add_ip_override.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.add_ip_override.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.add_ip_override.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :add_ip_override, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Removes an IP override from a key. The following restrictions hold:
+            # * If the IP isn't found in an existing IP override, a `NOT_FOUND` error
+            # is returned.
+            # * If the IP is found in an existing IP override, but the
+            # override type does not match, a `NOT_FOUND` error is returned.
+            #
+            # @overload remove_ip_override(request, options = nil)
+            #   Pass arguments to `remove_ip_override` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload remove_ip_override(name: nil, ip_override_data: nil)
+            #   Pass arguments to `remove_ip_override` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the key from which the IP override is removed, in the
+            #     format `projects/{project}/keys/{key}`.
+            #   @param ip_override_data [::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData, ::Hash]
+            #     Required. IP override to be removed from the key.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest.new
+            #
+            #   # Call the remove_ip_override method.
+            #   result = client.remove_ip_override request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideResponse.
+            #   p result
+            #
+            def remove_ip_override request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::RemoveIpOverrideRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.remove_ip_override.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.remove_ip_override.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.remove_ip_override.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :remove_ip_override, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists all IP overrides for a key.
+            #
+            # @overload list_ip_overrides(request, options = nil)
+            #   Pass arguments to `list_ip_overrides` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_ip_overrides(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_ip_overrides` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The parent key for which the IP overrides are listed, in the
+            #     format `projects/{project}/keys/{key}`.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of overrides to return. Default is 10. Max
+            #     limit is 100. If the number of overrides is less than the page_size, all
+            #     overrides are returned. If the page size is more than 100, it is coerced to
+            #     100.
+            #   @param page_token [::String]
+            #     Optional. The next_page_token value returned from a previous
+            #     ListIpOverridesRequest, if any.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest.new
+            #
+            #   # Call the list_ip_overrides method.
+            #   result = client.list_ip_overrides request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::IpOverrideData.
+            #     p item
+            #   end
+            #
+            def list_ip_overrides request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::ListIpOverridesRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_ip_overrides.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_ip_overrides.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_ip_overrides.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :list_ip_overrides, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_ip_overrides, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -904,7 +1328,7 @@ module Google
             #
             #   @param name [::String]
             #     Required. The name of the requested metrics, in the format
-            #     "projects/\\{project}/keys/\\{key}/metrics".
+            #     `projects/{project}/keys/{key}/metrics`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::Metrics]
@@ -940,10 +1364,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_metrics.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -964,7 +1389,543 @@ module Google
 
               @recaptcha_enterprise_service_stub.call_rpc :get_metrics, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Creates a new FirewallPolicy, specifying conditions at which reCAPTCHA
+            # Enterprise actions can be executed.
+            # A project may have a maximum of 1000 policies.
+            #
+            # @overload create_firewall_policy(request, options = nil)
+            #   Pass arguments to `create_firewall_policy` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload create_firewall_policy(parent: nil, firewall_policy: nil)
+            #   Pass arguments to `create_firewall_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project this policy applies to, in the format
+            #     `projects/{project}`.
+            #   @param firewall_policy [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy, ::Hash]
+            #     Required. Information to create the policy.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest.new
+            #
+            #   # Call the create_firewall_policy method.
+            #   result = client.create_firewall_policy request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.
+            #   p result
+            #
+            def create_firewall_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::CreateFirewallPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.create_firewall_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.create_firewall_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.create_firewall_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :create_firewall_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Returns the list of all firewall policies that belong to a project.
+            #
+            # @overload list_firewall_policies(request, options = nil)
+            #   Pass arguments to `list_firewall_policies` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_firewall_policies(parent: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_firewall_policies` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project to list the policies for, in the format
+            #     `projects/{project}`.
+            #   @param page_size [::Integer]
+            #     Optional. The maximum number of policies to return. Default is 10. Max
+            #     limit is 1000.
+            #   @param page_token [::String]
+            #     Optional. The next_page_token value returned from a previous.
+            #     ListFirewallPoliciesRequest, if any.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest.new
+            #
+            #   # Call the list_firewall_policies method.
+            #   result = client.list_firewall_policies request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.
+            #     p item
+            #   end
+            #
+            def list_firewall_policies request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::ListFirewallPoliciesRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_firewall_policies.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_firewall_policies.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_firewall_policies.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :list_firewall_policies, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_firewall_policies, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Returns the specified firewall policy.
+            #
+            # @overload get_firewall_policy(request, options = nil)
+            #   Pass arguments to `get_firewall_policy` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_firewall_policy(name: nil)
+            #   Pass arguments to `get_firewall_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the requested policy, in the format
+            #     `projects/{project}/firewallpolicies/{firewallpolicy}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest.new
+            #
+            #   # Call the get_firewall_policy method.
+            #   result = client.get_firewall_policy request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.
+            #   p result
+            #
+            def get_firewall_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::GetFirewallPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_firewall_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_firewall_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_firewall_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :get_firewall_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Updates the specified firewall policy.
+            #
+            # @overload update_firewall_policy(request, options = nil)
+            #   Pass arguments to `update_firewall_policy` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload update_firewall_policy(firewall_policy: nil, update_mask: nil)
+            #   Pass arguments to `update_firewall_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param firewall_policy [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy, ::Hash]
+            #     Required. The policy to update.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     Optional. The mask to control which fields of the policy get updated. If
+            #     the mask is not present, all fields are updated.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest.new
+            #
+            #   # Call the update_firewall_policy method.
+            #   result = client.update_firewall_policy request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::FirewallPolicy.
+            #   p result
+            #
+            def update_firewall_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::UpdateFirewallPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.update_firewall_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.firewall_policy&.name
+                header_params["firewall_policy.name"] = request.firewall_policy.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.update_firewall_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.update_firewall_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :update_firewall_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Deletes the specified firewall policy.
+            #
+            # @overload delete_firewall_policy(request, options = nil)
+            #   Pass arguments to `delete_firewall_policy` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload delete_firewall_policy(name: nil)
+            #   Pass arguments to `delete_firewall_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. The name of the policy to be deleted, in the format
+            #     `projects/{project}/firewallpolicies/{firewallpolicy}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Protobuf::Empty]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Protobuf::Empty]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest.new
+            #
+            #   # Call the delete_firewall_policy method.
+            #   result = client.delete_firewall_policy request
+            #
+            #   # The returned object is of type Google::Protobuf::Empty.
+            #   p result
+            #
+            def delete_firewall_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::DeleteFirewallPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.delete_firewall_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.delete_firewall_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.delete_firewall_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :delete_firewall_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Reorders all firewall policies.
+            #
+            # @overload reorder_firewall_policies(request, options = nil)
+            #   Pass arguments to `reorder_firewall_policies` via a request object, either of type
+            #   {::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload reorder_firewall_policies(parent: nil, names: nil)
+            #   Pass arguments to `reorder_firewall_policies` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param parent [::String]
+            #     Required. The name of the project to list the policies for, in the format
+            #     `projects/{project}`.
+            #   @param names [::Array<::String>]
+            #     Required. A list containing all policy names, in the new order. Each name
+            #     is in the format `projects/{project}/firewallpolicies/{firewallpolicy}`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/recaptcha_enterprise/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::RecaptchaEnterprise::V1::RecaptchaEnterpriseService::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest.new
+            #
+            #   # Call the reorder_firewall_policies method.
+            #   result = client.reorder_firewall_policies request
+            #
+            #   # The returned object is of type Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesResponse.
+            #   p result
+            #
+            def reorder_firewall_policies request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::RecaptchaEnterprise::V1::ReorderFirewallPoliciesRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.reorder_firewall_policies.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.parent
+                header_params["parent"] = request.parent
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.reorder_firewall_policies.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.reorder_firewall_policies.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @recaptcha_enterprise_service_stub.call_rpc :reorder_firewall_policies, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -989,16 +1950,15 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The name of the project to list related account groups from, in the format
-            #     "projects/\\{project}".
+            #     Required. The name of the project to list related account groups from, in
+            #     the format `projects/{project}`.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of groups to return. The service may return fewer than
-            #     this value.
-            #     If unspecified, at most 50 groups will be returned.
-            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #     Optional. The maximum number of groups to return. The service might return
+            #     fewer than this value. If unspecified, at most 50 groups are returned. The
+            #     maximum value is 1000; values above 1000 are coerced to 1000.
             #   @param page_token [::String]
-            #     Optional. A page token, received from a previous `ListRelatedAccountGroups` call.
-            #     Provide this to retrieve the subsequent page.
+            #     Optional. A page token, received from a previous `ListRelatedAccountGroups`
+            #     call. Provide this to retrieve the subsequent page.
             #
             #     When paginating, all other parameters provided to
             #     `ListRelatedAccountGroups` must match the call that provided the page
@@ -1024,13 +1984,11 @@ module Google
             #   # Call the list_related_account_groups method.
             #   result = client.list_related_account_groups request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroup.
-            #     p response
+            #     p item
             #   end
             #
             def list_related_account_groups request, options = nil
@@ -1044,10 +2002,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_related_account_groups.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1069,14 +2028,14 @@ module Google
               @recaptcha_enterprise_service_stub.call_rpc :list_related_account_groups, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_related_account_groups, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Get the memberships in a group of related accounts.
+            # Get memberships in a group of related accounts.
             #
             # @overload list_related_account_group_memberships(request, options = nil)
             #   Pass arguments to `list_related_account_group_memberships` via a request object, either of type
@@ -1097,13 +2056,12 @@ module Google
             #     Required. The resource name for the related account group in the format
             #     `projects/{project}/relatedaccountgroups/{relatedaccountgroup}`.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of accounts to return. The service may return fewer than
-            #     this value.
-            #     If unspecified, at most 50 accounts will be returned.
-            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #     Optional. The maximum number of accounts to return. The service might
+            #     return fewer than this value. If unspecified, at most 50 accounts are
+            #     returned. The maximum value is 1000; values above 1000 are coerced to 1000.
             #   @param page_token [::String]
-            #     Optional. A page token, received from a previous `ListRelatedAccountGroupMemberships`
-            #     call.
+            #     Optional. A page token, received from a previous
+            #     `ListRelatedAccountGroupMemberships` call.
             #
             #     When paginating, all other parameters provided to
             #     `ListRelatedAccountGroupMemberships` must match the call that provided the
@@ -1129,13 +2087,11 @@ module Google
             #   # Call the list_related_account_group_memberships method.
             #   result = client.list_related_account_group_memberships request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership.
-            #     p response
+            #     p item
             #   end
             #
             def list_related_account_group_memberships request, options = nil
@@ -1149,10 +2105,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_related_account_group_memberships.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1174,7 +2131,7 @@ module Google
               @recaptcha_enterprise_service_stub.call_rpc :list_related_account_group_memberships, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :list_related_account_group_memberships, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1193,23 +2150,30 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload search_related_account_group_memberships(parent: nil, hashed_account_id: nil, page_size: nil, page_token: nil)
+            # @overload search_related_account_group_memberships(project: nil, account_id: nil, hashed_account_id: nil, page_size: nil, page_token: nil)
             #   Pass arguments to `search_related_account_group_memberships` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
-            #   @param parent [::String]
-            #     Required. The name of the project to search related account group memberships from,
-            #     in the format "projects/\\{project}".
+            #   @param project [::String]
+            #     Required. The name of the project to search related account group
+            #     memberships from. Specify the project name in the following format:
+            #     `projects/{project}`.
+            #   @param account_id [::String]
+            #     Optional. The unique stable account identifier used to search connections.
+            #     The identifier should correspond to an `account_id` provided in a previous
+            #     `CreateAssessment` or `AnnotateAssessment` call. Either hashed_account_id
+            #     or account_id must be set, but not both.
             #   @param hashed_account_id [::String]
-            #     Optional. The unique stable hashed user identifier we should search connections to.
-            #     The identifier should correspond to a `hashed_account_id` provided in a
-            #     previous CreateAssessment or AnnotateAssessment call.
+            #     Optional. Deprecated: use `account_id` instead.
+            #     The unique stable hashed account identifier used to search connections. The
+            #     identifier should correspond to a `hashed_account_id` provided in a
+            #     previous `CreateAssessment` or `AnnotateAssessment` call. Either
+            #     hashed_account_id or account_id must be set, but not both.
             #   @param page_size [::Integer]
-            #     Optional. The maximum number of groups to return. The service may return fewer than
-            #     this value.
-            #     If unspecified, at most 50 groups will be returned.
-            #     The maximum value is 1000; values above 1000 will be coerced to 1000.
+            #     Optional. The maximum number of groups to return. The service might return
+            #     fewer than this value. If unspecified, at most 50 groups are returned. The
+            #     maximum value is 1000; values above 1000 are coerced to 1000.
             #   @param page_token [::String]
             #     Optional. A page token, received from a previous
             #     `SearchRelatedAccountGroupMemberships` call. Provide this to retrieve the
@@ -1239,13 +2203,11 @@ module Google
             #   # Call the search_related_account_group_memberships method.
             #   result = client.search_related_account_group_memberships request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::RecaptchaEnterprise::V1::RelatedAccountGroupMembership.
-            #     p response
+            #     p item
             #   end
             #
             def search_related_account_group_memberships request, options = nil
@@ -1259,15 +2221,16 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.search_related_account_group_memberships.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::RecaptchaEnterprise::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
-              if request.parent
-                header_params["parent"] = request.parent
+              if request.project
+                header_params["project"] = request.project
               end
 
               request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
@@ -1284,7 +2247,7 @@ module Google
               @recaptcha_enterprise_service_stub.call_rpc :search_related_account_group_memberships, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @recaptcha_enterprise_service_stub, :search_related_account_group_memberships, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1320,20 +2283,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"recaptchaenterprise.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1368,11 +2338,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "recaptchaenterprise.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "recaptchaenterprise.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1387,6 +2371,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1405,6 +2391,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -1446,6 +2440,11 @@ module Google
                 #
                 attr_reader :list_keys
                 ##
+                # RPC-specific configuration for `retrieve_legacy_secret_key`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :retrieve_legacy_secret_key
+                ##
                 # RPC-specific configuration for `get_key`
                 # @return [::Gapic::Config::Method]
                 #
@@ -1466,10 +2465,55 @@ module Google
                 #
                 attr_reader :migrate_key
                 ##
+                # RPC-specific configuration for `add_ip_override`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :add_ip_override
+                ##
+                # RPC-specific configuration for `remove_ip_override`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :remove_ip_override
+                ##
+                # RPC-specific configuration for `list_ip_overrides`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_ip_overrides
+                ##
                 # RPC-specific configuration for `get_metrics`
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :get_metrics
+                ##
+                # RPC-specific configuration for `create_firewall_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :create_firewall_policy
+                ##
+                # RPC-specific configuration for `list_firewall_policies`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_firewall_policies
+                ##
+                # RPC-specific configuration for `get_firewall_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_firewall_policy
+                ##
+                # RPC-specific configuration for `update_firewall_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :update_firewall_policy
+                ##
+                # RPC-specific configuration for `delete_firewall_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :delete_firewall_policy
+                ##
+                # RPC-specific configuration for `reorder_firewall_policies`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :reorder_firewall_policies
                 ##
                 # RPC-specific configuration for `list_related_account_groups`
                 # @return [::Gapic::Config::Method]
@@ -1496,6 +2540,8 @@ module Google
                   @create_key = ::Gapic::Config::Method.new create_key_config
                   list_keys_config = parent_rpcs.list_keys if parent_rpcs.respond_to? :list_keys
                   @list_keys = ::Gapic::Config::Method.new list_keys_config
+                  retrieve_legacy_secret_key_config = parent_rpcs.retrieve_legacy_secret_key if parent_rpcs.respond_to? :retrieve_legacy_secret_key
+                  @retrieve_legacy_secret_key = ::Gapic::Config::Method.new retrieve_legacy_secret_key_config
                   get_key_config = parent_rpcs.get_key if parent_rpcs.respond_to? :get_key
                   @get_key = ::Gapic::Config::Method.new get_key_config
                   update_key_config = parent_rpcs.update_key if parent_rpcs.respond_to? :update_key
@@ -1504,8 +2550,26 @@ module Google
                   @delete_key = ::Gapic::Config::Method.new delete_key_config
                   migrate_key_config = parent_rpcs.migrate_key if parent_rpcs.respond_to? :migrate_key
                   @migrate_key = ::Gapic::Config::Method.new migrate_key_config
+                  add_ip_override_config = parent_rpcs.add_ip_override if parent_rpcs.respond_to? :add_ip_override
+                  @add_ip_override = ::Gapic::Config::Method.new add_ip_override_config
+                  remove_ip_override_config = parent_rpcs.remove_ip_override if parent_rpcs.respond_to? :remove_ip_override
+                  @remove_ip_override = ::Gapic::Config::Method.new remove_ip_override_config
+                  list_ip_overrides_config = parent_rpcs.list_ip_overrides if parent_rpcs.respond_to? :list_ip_overrides
+                  @list_ip_overrides = ::Gapic::Config::Method.new list_ip_overrides_config
                   get_metrics_config = parent_rpcs.get_metrics if parent_rpcs.respond_to? :get_metrics
                   @get_metrics = ::Gapic::Config::Method.new get_metrics_config
+                  create_firewall_policy_config = parent_rpcs.create_firewall_policy if parent_rpcs.respond_to? :create_firewall_policy
+                  @create_firewall_policy = ::Gapic::Config::Method.new create_firewall_policy_config
+                  list_firewall_policies_config = parent_rpcs.list_firewall_policies if parent_rpcs.respond_to? :list_firewall_policies
+                  @list_firewall_policies = ::Gapic::Config::Method.new list_firewall_policies_config
+                  get_firewall_policy_config = parent_rpcs.get_firewall_policy if parent_rpcs.respond_to? :get_firewall_policy
+                  @get_firewall_policy = ::Gapic::Config::Method.new get_firewall_policy_config
+                  update_firewall_policy_config = parent_rpcs.update_firewall_policy if parent_rpcs.respond_to? :update_firewall_policy
+                  @update_firewall_policy = ::Gapic::Config::Method.new update_firewall_policy_config
+                  delete_firewall_policy_config = parent_rpcs.delete_firewall_policy if parent_rpcs.respond_to? :delete_firewall_policy
+                  @delete_firewall_policy = ::Gapic::Config::Method.new delete_firewall_policy_config
+                  reorder_firewall_policies_config = parent_rpcs.reorder_firewall_policies if parent_rpcs.respond_to? :reorder_firewall_policies
+                  @reorder_firewall_policies = ::Gapic::Config::Method.new reorder_firewall_policies_config
                   list_related_account_groups_config = parent_rpcs.list_related_account_groups if parent_rpcs.respond_to? :list_related_account_groups
                   @list_related_account_groups = ::Gapic::Config::Method.new list_related_account_groups_config
                   list_related_account_group_memberships_config = parent_rpcs.list_related_account_group_memberships if parent_rpcs.respond_to? :list_related_account_group_memberships

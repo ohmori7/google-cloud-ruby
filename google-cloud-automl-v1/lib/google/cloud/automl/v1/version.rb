@@ -21,7 +21,7 @@ module Google
   module Cloud
     module AutoML
       module V1
-        VERSION = "0.4.7"
+        VERSION = "1.2.0"
       end
     end
   end

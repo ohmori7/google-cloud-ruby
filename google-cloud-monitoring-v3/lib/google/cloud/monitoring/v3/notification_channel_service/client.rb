@@ -31,6 +31,12 @@ module Google
           # controls how messages related to incidents are sent.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "monitoring.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -133,6 +139,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @notification_channel_service_stub.universe_domain
+            end
+
+            ##
             # Create a new NotificationChannelService client object.
             #
             # @example
@@ -165,8 +180,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -177,11 +193,34 @@ module Google
 
               @notification_channel_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Monitoring::V3::NotificationChannelService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @notification_channel_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @notification_channel_service_stub.logger
             end
 
             # Service calls
@@ -246,13 +285,11 @@ module Google
             #   # Call the list_notification_channel_descriptors method.
             #   result = client.list_notification_channel_descriptors request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Monitoring::V3::NotificationChannelDescriptor.
-            #     p response
+            #     p item
             #   end
             #
             def list_notification_channel_descriptors request, options = nil
@@ -266,10 +303,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_notification_channel_descriptors.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -291,7 +329,7 @@ module Google
               @notification_channel_service_stub.call_rpc :list_notification_channel_descriptors, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @notification_channel_service_stub, :list_notification_channel_descriptors, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -355,10 +393,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_notification_channel_descriptor.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -379,7 +418,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :get_notification_channel_descriptor, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -387,6 +425,8 @@ module Google
 
             ##
             # Lists the notification channels that have been created for the project.
+            # To list the types of notification channels that are supported, use
+            # the `ListNotificationChannelDescriptors` method.
             #
             # @overload list_notification_channels(request, options = nil)
             #   Pass arguments to `list_notification_channels` via a request object, either of type
@@ -404,8 +444,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-            #     which to execute the request. The format is:
+            #     Required. The
+            #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+            #     to execute the request. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
@@ -416,24 +457,24 @@ module Google
             #     {::Google::Cloud::Monitoring::V3::NotificationChannelService::Client#get_notification_channel `GetNotificationChannel`}
             #     operation.
             #   @param filter [::String]
-            #     If provided, this field specifies the criteria that must be met by
-            #     notification channels to be included in the response.
+            #     Optional. If provided, this field specifies the criteria that must be met
+            #     by notification channels to be included in the response.
             #
             #     For more details, see [sorting and
             #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
             #   @param order_by [::String]
-            #     A comma-separated list of fields by which to sort the result. Supports
-            #     the same set of fields as in `filter`. Entries can be prefixed with
-            #     a minus sign to sort in descending rather than ascending order.
+            #     Optional. A comma-separated list of fields by which to sort the result.
+            #     Supports the same set of fields as in `filter`. Entries can be prefixed
+            #     with a minus sign to sort in descending rather than ascending order.
             #
             #     For more details, see [sorting and
             #     filtering](https://cloud.google.com/monitoring/api/v3/sorting-and-filtering).
             #   @param page_size [::Integer]
-            #     The maximum number of results to return in a single response. If
+            #     Optional. The maximum number of results to return in a single response. If
             #     not set to a positive number, a reasonable value will be chosen by the
             #     service.
             #   @param page_token [::String]
-            #     If non-empty, `page_token` must contain a value returned as the
+            #     Optional. If non-empty, `page_token` must contain a value returned as the
             #     `next_page_token` in a previous response to request the next set
             #     of results.
             #
@@ -457,13 +498,11 @@ module Google
             #   # Call the list_notification_channels method.
             #   result = client.list_notification_channels request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Monitoring::V3::NotificationChannel.
-            #     p response
+            #     p item
             #   end
             #
             def list_notification_channels request, options = nil
@@ -477,10 +516,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_notification_channels.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -502,7 +542,7 @@ module Google
               @notification_channel_service_stub.call_rpc :list_notification_channels, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @notification_channel_service_stub, :list_notification_channels, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -569,10 +609,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_notification_channel.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -593,7 +634,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :get_notification_channel, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -602,6 +642,11 @@ module Google
             ##
             # Creates a new notification channel, representing a single notification
             # endpoint such as an email address, SMS number, or PagerDuty service.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # notification channels in a single project. This includes calls to
+            # CreateNotificationChannel, DeleteNotificationChannel and
+            # UpdateNotificationChannel.
             #
             # @overload create_notification_channel(request, options = nil)
             #   Pass arguments to `create_notification_channel` via a request object, either of type
@@ -619,8 +664,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-            #     which to execute the request. The format is:
+            #     Required. The
+            #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+            #     to execute the request. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #
@@ -665,10 +711,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_notification_channel.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -689,7 +736,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :create_notification_channel, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -698,6 +744,11 @@ module Google
             ##
             # Updates a notification channel. Fields not specified in the field mask
             # remain unchanged.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # notification channels in a single project. This includes calls to
+            # CreateNotificationChannel, DeleteNotificationChannel and
+            # UpdateNotificationChannel.
             #
             # @overload update_notification_channel(request, options = nil)
             #   Pass arguments to `update_notification_channel` via a request object, either of type
@@ -715,7 +766,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
-            #     The fields to update.
+            #     Optional. The fields to update.
             #   @param notification_channel [::Google::Cloud::Monitoring::V3::NotificationChannel, ::Hash]
             #     Required. A description of the changes to be applied to the specified
             #     notification channel. The description must provide a definition for
@@ -756,10 +807,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_notification_channel.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -780,7 +832,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :update_notification_channel, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -788,6 +839,11 @@ module Google
 
             ##
             # Deletes a notification channel.
+            #
+            # Design your application to single-thread API calls that modify the state of
+            # notification channels in a single project. This includes calls to
+            # CreateNotificationChannel, DeleteNotificationChannel and
+            # UpdateNotificationChannel.
             #
             # @overload delete_notification_channel(request, options = nil)
             #   Pass arguments to `delete_notification_channel` via a request object, either of type
@@ -811,8 +867,8 @@ module Google
             #   @param force [::Boolean]
             #     If true, the notification channel will be deleted regardless of its
             #     use in alert policies (the policies will be updated to remove the
-            #     channel). If false, channels that are still referenced by an existing
-            #     alerting policy will fail to be deleted in a delete operation.
+            #     channel). If false, this operation will fail if the notification channel
+            #     is referenced by existing alerting policies.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Protobuf::Empty]
@@ -848,10 +904,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_notification_channel.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -872,7 +929,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :delete_notification_channel, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -934,10 +990,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.send_notification_channel_verification_code.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -958,7 +1015,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :send_notification_channel_verification_code, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1003,9 +1059,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. The notification channel for which a verification code is to be generated
-            #     and retrieved. This must name a channel that is already verified; if
-            #     the specified channel is not verified, the request will fail.
+            #     Required. The notification channel for which a verification code is to be
+            #     generated and retrieved. This must name a channel that is already verified;
+            #     if the specified channel is not verified, the request will fail.
             #   @param expire_time [::Google::Protobuf::Timestamp, ::Hash]
             #     The desired expiration time. If specified, the API will guarantee that
             #     the returned code will not be valid after the specified timestamp;
@@ -1051,10 +1107,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_notification_channel_verification_code.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1075,7 +1132,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :get_notification_channel_verification_code, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1146,10 +1202,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.verify_notification_channel.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1170,7 +1227,6 @@ module Google
 
               @notification_channel_service_stub.call_rpc :verify_notification_channel, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1206,20 +1262,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"monitoring.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1254,11 +1317,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "monitoring.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "monitoring.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1273,6 +1350,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1291,6 +1370,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

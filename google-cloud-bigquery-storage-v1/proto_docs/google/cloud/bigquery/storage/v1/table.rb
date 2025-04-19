@@ -22,7 +22,9 @@ module Google
     module Bigquery
       module Storage
         module V1
-          # Schema of a table.
+          # Schema of a table. This schema is a subset of
+          # google.cloud.bigquery.v2.TableSchema containing information necessary to
+          # generate valid message to write to BigQuery.
           # @!attribute [rw] fields
           #   @return [::Array<::Google::Cloud::Bigquery::Storage::V1::TableFieldSchema>]
           #     Describes the fields in a table.
@@ -45,7 +47,8 @@ module Google
           #     Optional. The field mode. The default value is NULLABLE.
           # @!attribute [rw] fields
           #   @return [::Array<::Google::Cloud::Bigquery::Storage::V1::TableFieldSchema>]
-          #     Optional. Describes the nested schema fields if the type property is set to STRUCT.
+          #     Optional. Describes the nested schema fields if the type property is set to
+          #     STRUCT.
           # @!attribute [rw] description
           #   @return [::String]
           #     Optional. The field description. The maximum length is 1,024 characters.
@@ -100,9 +103,30 @@ module Google
           # @!attribute [rw] scale
           #   @return [::Integer]
           #     Optional. See documentation for precision.
+          # @!attribute [rw] default_value_expression
+          #   @return [::String]
+          #     Optional. A SQL expression to specify the [default value]
+          #     (https://cloud.google.com/bigquery/docs/default-values) for this field.
+          # @!attribute [rw] range_element_type
+          #   @return [::Google::Cloud::Bigquery::Storage::V1::TableFieldSchema::FieldElementType]
+          #     Optional. The subtype of the RANGE, if the type of this field is RANGE. If
+          #     the type is RANGE, this field is required. Possible values for the field
+          #     element type of a RANGE include:
+          #     * DATE
+          #     * DATETIME
+          #     * TIMESTAMP
           class TableFieldSchema
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Represents the type of a field element.
+            # @!attribute [rw] type
+            #   @return [::Google::Cloud::Bigquery::Storage::V1::TableFieldSchema::Type]
+            #     Required. The type of a field element.
+            class FieldElementType
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
 
             module Type
               # Illegal value
@@ -152,6 +176,9 @@ module Google
 
               # JSON, String
               JSON = 15
+
+              # RANGE
+              RANGE = 16
             end
 
             module Mode

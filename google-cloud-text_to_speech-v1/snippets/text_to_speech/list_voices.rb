@@ -19,15 +19,29 @@
 # [START texttospeech_v1_generated_TextToSpeech_ListVoices_sync]
 require "google/cloud/text_to_speech/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::TextToSpeech::V1::TextToSpeech::Client.new
+##
+# Snippet for the list_voices call in the TextToSpeech service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::TextToSpeech::V1::TextToSpeech::Client#list_voices.
+#
+def list_voices
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::TextToSpeech::V1::TextToSpeech::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::TextToSpeech::V1::ListVoicesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::TextToSpeech::V1::ListVoicesRequest.new
 
-# Call the list_voices method.
-result = client.list_voices request
+  # Call the list_voices method.
+  result = client.list_voices request
 
-# The returned object is of type Google::Cloud::TextToSpeech::V1::ListVoicesResponse.
-p result
+  # The returned object is of type Google::Cloud::TextToSpeech::V1::ListVoicesResponse.
+  p result
+end
 # [END texttospeech_v1_generated_TextToSpeech_ListVoices_sync]

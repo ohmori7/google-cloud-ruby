@@ -19,15 +19,29 @@
 # [START binaryauthorization_v1beta1_generated_BinauthzManagementService_DeleteAttestor_sync]
 require "google/cloud/binary_authorization/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::BinaryAuthorization::V1beta1::BinauthzManagementService::Client.new
+##
+# Snippet for the delete_attestor call in the BinauthzManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::BinaryAuthorization::V1beta1::BinauthzManagementService::Client#delete_attestor.
+#
+def delete_attestor
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::BinaryAuthorization::V1beta1::BinauthzManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::BinaryAuthorization::V1beta1::DeleteAttestorRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::BinaryAuthorization::V1beta1::DeleteAttestorRequest.new
 
-# Call the delete_attestor method.
-result = client.delete_attestor request
+  # Call the delete_attestor method.
+  result = client.delete_attestor request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END binaryauthorization_v1beta1_generated_BinauthzManagementService_DeleteAttestor_sync]

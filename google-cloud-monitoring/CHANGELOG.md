@@ -1,5 +1,72 @@
 # Release History
 
+### 1.9.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28530](https://github.com/googleapis/google-cloud-ruby/issues/28530)) 
+* Update Ruby version requirement to 3.0 
+
+### 1.8.3 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26673](https://github.com/googleapis/google-cloud-ruby/issues/26673)) 
+
+### 1.8.2 (2024-06-12)
+
+#### Bug Fixes
+
+* Restored gem dependencies on the dashboard and metrics_scope versioned clients ([#26099](https://github.com/googleapis/google-cloud-ruby/issues/26099)) 
+
+### 1.8.1 (2024-04-25)
+
+#### Documentation
+
+* Minor branding fix ([#25677](https://github.com/googleapis/google-cloud-ruby/issues/25677)) 
+
+### 1.8.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24873](https://github.com/googleapis/google-cloud-ruby/issues/24873)) 
+
+### 1.7.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24263](https://github.com/googleapis/google-cloud-ruby/issues/24263)) 
+
+### 1.6.1 (2023-05-04)
+
+#### Documentation
+
+* Updated some product names ([#21541](https://github.com/googleapis/google-cloud-ruby/issues/21541)) 
+
+### 1.6.0 (2023-03-09)
+
+#### Features
+
+* Support REST transport ([#20767](https://github.com/googleapis/google-cloud-ruby/issues/20767)) 
+
+### 1.5.0 (2023-01-12)
+
+#### Features
+
+* Added support for the Snooze Service ([#19975](https://github.com/googleapis/google-cloud-ruby/issues/19975)) 
+
+### 1.4.1 (2022-08-09)
+
+#### Documentation
+
+* Minor branding updates ([#18989](https://github.com/googleapis/google-cloud-ruby/issues/18989)) 
+
+### 1.4.0 (2022-07-05)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
 ### 1.3.1 / 2022-01-11
 
 #### Documentation

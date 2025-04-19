@@ -19,15 +19,29 @@
 # [START iam_v1beta_generated_WorkloadIdentityPools_GetWorkloadIdentityPool_sync]
 require "google/iam/v1beta"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Iam::V1beta::WorkloadIdentityPools::Client.new
+##
+# Snippet for the get_workload_identity_pool call in the WorkloadIdentityPools service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Iam::V1beta::WorkloadIdentityPools::Client#get_workload_identity_pool.
+#
+def get_workload_identity_pool
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Iam::V1beta::WorkloadIdentityPools::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Iam::V1beta::GetWorkloadIdentityPoolRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Iam::V1beta::GetWorkloadIdentityPoolRequest.new
 
-# Call the get_workload_identity_pool method.
-result = client.get_workload_identity_pool request
+  # Call the get_workload_identity_pool method.
+  result = client.get_workload_identity_pool request
 
-# The returned object is of type Google::Iam::V1beta::WorkloadIdentityPool.
-p result
+  # The returned object is of type Google::Iam::V1beta::WorkloadIdentityPool.
+  p result
+end
 # [END iam_v1beta_generated_WorkloadIdentityPools_GetWorkloadIdentityPool_sync]

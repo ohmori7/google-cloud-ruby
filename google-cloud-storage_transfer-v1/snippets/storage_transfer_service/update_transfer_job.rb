@@ -19,15 +19,29 @@
 # [START storagetransfer_v1_generated_StorageTransferService_UpdateTransferJob_sync]
 require "google/cloud/storage_transfer/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::StorageTransfer::V1::StorageTransferService::Client.new
+##
+# Snippet for the update_transfer_job call in the StorageTransferService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::StorageTransfer::V1::StorageTransferService::Client#update_transfer_job.
+#
+def update_transfer_job
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::StorageTransfer::V1::StorageTransferService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::StorageTransfer::V1::UpdateTransferJobRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::StorageTransfer::V1::UpdateTransferJobRequest.new
 
-# Call the update_transfer_job method.
-result = client.update_transfer_job request
+  # Call the update_transfer_job method.
+  result = client.update_transfer_job request
 
-# The returned object is of type Google::Cloud::StorageTransfer::V1::TransferJob.
-p result
+  # The returned object is of type Google::Cloud::StorageTransfer::V1::TransferJob.
+  p result
+end
 # [END storagetransfer_v1_generated_StorageTransferService_UpdateTransferJob_sync]

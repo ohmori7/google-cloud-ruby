@@ -25,6 +25,7 @@ require "google/cloud/org_policy/v2/version"
 require "google/cloud/org_policy/v2/org_policy/credentials"
 require "google/cloud/org_policy/v2/org_policy/paths"
 require "google/cloud/org_policy/v2/org_policy/client"
+require "google/cloud/org_policy/v2/org_policy/rest"
 
 module Google
   module Cloud
@@ -33,29 +34,34 @@ module Google
         ##
         # An interface for managing organization policies.
         #
-        # The Cloud Org Policy service provides a simple mechanism for organizations to
-        # restrict the allowed configurations across their entire Cloud Resource
-        # hierarchy.
+        # The Organization Policy Service provides a simple mechanism for
+        # organizations to restrict the allowed configurations across their entire
+        # resource hierarchy.
         #
-        # You can use a `policy` to configure restrictions in Cloud resources. For
-        # example, you can enforce a `policy` that restricts which Google
-        # Cloud Platform APIs can be activated in a certain part of your resource
-        # hierarchy, or prevents serial port access to VM instances in a particular
-        # folder.
+        # You can use a policy to configure restrictions on resources. For
+        # example, you can enforce a policy that restricts which Google
+        # Cloud APIs can be activated in a certain part of your resource
+        # hierarchy, or prevents serial port access to VM instances in a
+        # particular folder.
         #
-        # `Policies` are inherited down through the resource hierarchy. A `policy`
+        # Policies are inherited down through the resource hierarchy. A policy
         # applied to a parent resource automatically applies to all its child resources
-        # unless overridden with a `policy` lower in the hierarchy.
+        # unless overridden with a policy lower in the hierarchy.
         #
-        # A `constraint` defines an aspect of a resource's configuration that can be
-        # controlled by an organization's policy administrator. `Policies` are a
-        # collection of `constraints` that defines their allowable configuration on a
+        # A constraint defines an aspect of a resource's configuration that can be
+        # controlled by an organization's policy administrator. Policies are a
+        # collection of constraints that defines their allowable configuration on a
         # particular resource and its child resources.
         #
-        # To load this service and instantiate a client:
+        # @example Load this service and instantiate a gRPC client
         #
         #     require "google/cloud/org_policy/v2/org_policy"
         #     client = ::Google::Cloud::OrgPolicy::V2::OrgPolicy::Client.new
+        #
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/org_policy/v2/org_policy/rest"
+        #     client = ::Google::Cloud::OrgPolicy::V2::OrgPolicy::Rest::Client.new
         #
         module OrgPolicy
         end

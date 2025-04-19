@@ -19,6 +19,9 @@ require_relative "../storage_change_default_storage_class"
 require_relative "../storage_cors_configuration"
 require_relative "../storage_create_bucket"
 require_relative "../storage_create_bucket_class_location"
+require_relative "../storage_create_bucket_dual_region"
+require_relative "../storage_create_bucket_hierarchical_namespace"
+require_relative "../storage_create_bucket_with_object_retention"
 require_relative "../storage_define_bucket_website_configuration"
 require_relative "../storage_delete_bucket"
 require_relative "../storage_disable_bucket_lifecycle_management"
@@ -31,9 +34,11 @@ require_relative "../storage_enable_default_event_based_hold"
 require_relative "../storage_enable_requester_pays"
 require_relative "../storage_enable_uniform_bucket_level_access"
 require_relative "../storage_enable_versioning"
+require_relative "../storage_get_bucket_class_and_location"
 require_relative "../storage_get_bucket_metadata"
 require_relative "../storage_get_default_event_based_hold"
 require_relative "../storage_get_public_access_prevention"
+require_relative "../storage_get_requester_pays_status"
 require_relative "../storage_get_retention_policy"
 require_relative "../storage_get_uniform_bucket_level_access"
 require_relative "../storage_list_buckets"
@@ -42,9 +47,13 @@ require_relative "../storage_remove_bucket_label"
 require_relative "../storage_remove_cors_configuration"
 require_relative "../storage_remove_retention_policy"
 require_relative "../storage_set_bucket_default_kms_key"
+require_relative "../storage_set_object_retention_policy"
 require_relative "../storage_set_public_access_prevention_enforced"
 require_relative "../storage_set_public_access_prevention_inherited"
 require_relative "../storage_set_retention_policy"
+require_relative "../storage_get_autoclass"
+require_relative "../storage_set_autoclass"
+require_relative "../storage_move_object"
 
 describe "Buckets Snippets" do
   let(:storage_client)   { Google::Cloud::Storage.new }
@@ -103,11 +112,123 @@ describe "Buckets Snippets" do
         delete_bucket bucket_name: bucket_name
       end
 
-      refute storage_client.bucket bucket_name
 
+      refute storage_client.bucket bucket_name
 
       delete_bucket_helper bucket_name
       delete_bucket_helper secondary_bucket_name
+    end
+  end
+
+  describe "storage_create_bucket_dual_region" do
+    it "creates dual region bucket" do
+      location = "US"
+      region_1 = "US-EAST1"
+      region_2 = "US-WEST1"
+      location_type = "dual-region"
+      bucket_name = random_bucket_name
+      refute storage_client.bucket bucket_name
+
+      expected = "Bucket #{bucket_name} created:\n"
+      expected += "- location: #{location}\n"
+      expected += "- location_type: #{location_type}\n"
+      expected += "- custom_placement_config:\n"
+      expected += "  - data_locations: #{[region_1, region_2]}\n"
+
+      retry_resource_exhaustion do
+        assert_output expected do
+          StorageCreateBucketDualRegion.new.storage_create_bucket_dual_region bucket_name: bucket_name,
+                                                                              region_1: region_1,
+                                                                              region_2: region_2
+        end
+      end
+
+      refute_nil storage_client.bucket bucket_name
+
+      delete_bucket_helper bucket_name
+    end
+  end
+
+  describe "storage_create_bucket_hierarchical_namespace" do
+    it "creates hierarchical namespace enabled bucket" do
+      bucket_name = random_bucket_name
+      refute storage_client.bucket bucket_name
+
+      expected = "Created bucket #{bucket_name} with Hierarchical Namespace enabled.\n"
+
+      retry_resource_exhaustion do
+        assert_output expected do
+          create_bucket_hierarchical_namespace bucket_name: bucket_name
+        end
+      end
+
+      refute_nil storage_client.bucket bucket_name
+
+      delete_bucket_helper bucket_name
+    end
+  end
+
+  describe "storage_create_bucket_with_object_retention" do
+    it "creates a bucket with object retention enabled." do
+      bucket_name = random_bucket_name
+      refute storage_client.bucket bucket_name
+
+      expected = "Created bucket #{bucket_name} with object retention setting: Enabled\n"
+
+      retry_resource_exhaustion do
+        assert_output expected do
+          create_bucket_with_object_retention bucket_name: bucket_name
+        end
+      end
+
+      refute_nil storage_client.bucket bucket_name
+
+      file_name = "test_object_retention"
+
+      bucket = storage_client.bucket bucket_name
+
+      out, _err = capture_io do
+        set_object_retention_policy bucket_name: bucket.name,
+                                    content: "hello world",
+                                    destination_file_name: file_name
+      end
+
+      assert_includes out, "Retention policy for file #{file_name}"
+
+      file = bucket.file file_name
+      file.retention = {
+        mode: nil,
+        retain_until_time: nil,
+        override_unlocked_retention: true
+      }
+      delete_bucket_helper bucket_name
+    end
+  end
+
+  describe "autoclass" do
+    it "get_autoclass, set_autoclass" do
+      bucket_name = random_bucket_name
+      refute storage_client.bucket bucket_name
+
+      storage_client.create_bucket bucket_name, autoclass_enabled: true
+
+      assert_output(/autoclass config set to true./) do
+        get_autoclass bucket_name: bucket_name
+      end
+
+      assert_output(/autoclass terminal storage class set to NEARLINE./) do
+        get_autoclass bucket_name: bucket_name
+      end
+
+      assert_output(/autoclass terminal storage class set to ARCHIVE./) do
+        set_autoclass bucket_name: bucket_name, toggle: true, terminal_storage_class: "ARCHIVE"
+      end
+
+      assert_output(/autoclass config set to false./) do
+        set_autoclass bucket_name: bucket_name, toggle: false
+      end
+
+      delete_bucket_helper bucket_name
     end
   end
 
@@ -139,7 +260,7 @@ describe "Buckets Snippets" do
   end
 
   describe "requester_pays" do
-    it "enable_requester_pays, disable_requester_pays" do
+    it "enable_requester_pays, disable_requester_pays, get_requester_pays_status" do
       # enable_requester_pays
       bucket.requester_pays = false
 
@@ -149,11 +270,23 @@ describe "Buckets Snippets" do
       bucket.refresh!
       assert bucket.requester_pays?
 
+      # get_requester_pays_status
+      assert_output "Requester pays status is enabled for #{bucket.name}\n" do
+        get_requester_pays_status bucket_name: bucket.name
+      end
+      assert bucket.requester_pays?
+
       # disable_requester_pays
       assert_output "Requester pays has been disabled for #{bucket.name}\n" do
         disable_requester_pays bucket_name: bucket.name
       end
       bucket.refresh!
+      refute bucket.requester_pays?
+
+      # get_requester_pays_status
+      assert_output "Requester pays status is disabled for #{bucket.name}\n" do
+        get_requester_pays_status bucket_name: bucket.name
+      end
       refute bucket.requester_pays?
     end
   end
@@ -171,7 +304,7 @@ describe "Buckets Snippets" do
       assert bucket.uniform_bucket_level_access?
 
       # get_uniform_bucket_level_access
-      assert_output "Uniform bucket-level access is enabled for #{bucket.name}.\nBucket "\
+      assert_output "Uniform bucket-level access is enabled for #{bucket.name}.\nBucket " \
                     "will be locked on #{bucket.uniform_bucket_level_access_locked_at}.\n" do
         get_uniform_bucket_level_access bucket_name: bucket.name
       end
@@ -218,6 +351,23 @@ describe "Buckets Snippets" do
     end
   end
 
+  describe "get bucket class and location data" do
+    bucket_name = random_bucket_name
+    location = "US"
+    storage_class = "COLDLINE"
+
+    it "get_bucket_class_and_location" do
+      storage_client.create_bucket bucket_name,
+                                   location: location,
+                                   storage_class: storage_class
+      expected_output = "Bucket #{bucket_name} storage class is " \
+                        "#{storage_class}, and the location is #{location}\n"
+      assert_output expected_output do
+        get_bucket_class_and_location bucket_name: bucket_name
+      end
+    end
+  end
+
   describe "labels" do
     it "add_bucket_label, remove_bucket_label" do
       # add_bucket_label
@@ -240,7 +390,7 @@ describe "Buckets Snippets" do
       end
 
       bucket.refresh!
-      assert bucket.labels.empty?
+      assert bucket.labels[label_key].empty?
     end
   end
 
@@ -430,6 +580,40 @@ describe "Buckets Snippets" do
       bucket.refresh!
       _(bucket.public_access_prevention).must_equal "inherited"
       bucket.public_access_prevention = :inherited
+    end
+  end
+
+  describe "storage move file" do
+    let(:source_file) { "file_1_name_#{SecureRandom.hex}.txt" }
+    let(:destination_file) { "file_2_name_#{SecureRandom.hex}.txt" }
+    let :hns_bucket do
+      hierarchical_namespace = Google::Apis::StorageV1::Bucket::HierarchicalNamespace.new enabled: true
+      storage_client.create_bucket random_bucket_name do |b|
+        b.uniform_bucket_level_access = true
+        b.hierarchical_namespace = hierarchical_namespace
+      end
+    end
+    let :create_source_file do
+      file_content = "A" * (3 * 1024 * 1024) # 3 MB of 'A' characters
+      file = StringIO.new file_content
+      hns_bucket.create_file file, source_file
+    end
+    it "file is moved and old file is deleted" do
+      create_source_file
+      out, _err = capture_io do
+        move_object bucket_name: hns_bucket.name, source_file_name: source_file, destination_file_name: destination_file
+      end
+      assert_includes out, "New File #{destination_file} created\n"
+      refute_nil(hns_bucket.file(destination_file))
+      assert_nil(hns_bucket.file(source_file))
+    end
+
+    it "raises error if source and destination are having same filename" do
+      create_source_file
+      exception = assert_raises Google::Cloud::InvalidArgumentError do
+        move_object bucket_name: hns_bucket.name, source_file_name: source_file, destination_file_name: source_file
+      end
+      assert_equal "invalid: Source and destination object names must be different.", exception.message
     end
   end
 end

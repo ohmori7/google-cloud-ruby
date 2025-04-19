@@ -20,6 +20,9 @@ require "google/cloud/dataproc/v1/autoscaling_policy_service"
 require "google/cloud/dataproc/v1/batch_controller"
 require "google/cloud/dataproc/v1/cluster_controller"
 require "google/cloud/dataproc/v1/job_controller"
+require "google/cloud/dataproc/v1/node_group_controller"
+require "google/cloud/dataproc/v1/session_controller"
+require "google/cloud/dataproc/v1/session_template_controller"
 require "google/cloud/dataproc/v1/workflow_template_service"
 require "google/cloud/dataproc/v1/version"
 
@@ -27,10 +30,17 @@ module Google
   module Cloud
     module Dataproc
       ##
-      # To load this package, including all its services, and instantiate a client:
+      # API client module.
+      #
+      # @example Load this package, including all its services, and instantiate a gRPC client
       #
       #     require "google/cloud/dataproc/v1"
       #     client = ::Google::Cloud::Dataproc::V1::AutoscalingPolicyService::Client.new
+      #
+      # @example Load this package, including all its services, and instantiate a REST client
+      #
+      #     require "google/cloud/dataproc/v1"
+      #     client = ::Google::Cloud::Dataproc::V1::AutoscalingPolicyService::Rest::Client.new
       #
       module V1
       end

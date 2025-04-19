@@ -1,5 +1,160 @@
 # Release History
 
+### 1.3.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.2.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.1.0 (2024-10-15)
+
+#### Features
+
+* Added updated schedule options and error details to TransferConfig ([#27387](https://github.com/googleapis/google-cloud-ruby/issues/27387)) 
+
+### 1.0.3 (2024-09-11)
+
+#### Documentation
+
+* Clarify documentation for transfer configuration updates 
+
+### 1.0.2 (2024-08-30)
+
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+
+### 1.0.1 (2024-08-22)
+
+#### Documentation
+
+* deprecate `authorization_code` ([#26974](https://github.com/googleapis/google-cloud-ruby/issues/26974)) 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.14.2 (2024-05-29)
+
+#### Documentation
+
+* update OAuth links in `CreateTransferConfigRequest` and `UpdateTransferConfigRequest` ([#25968](https://github.com/googleapis/google-cloud-ruby/issues/25968)) 
+
+### 0.14.1 (2024-04-25)
+
+#### Documentation
+
+* Identify certain fields as required ([#25679](https://github.com/googleapis/google-cloud-ruby/issues/25679)) 
+
+### 0.14.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24864](https://github.com/googleapis/google-cloud-ruby/issues/24864)) 
+
+### 0.13.1 (2024-02-22)
+
+#### Documentation
+
+* update unenrollDataSources API documentation ([#24840](https://github.com/googleapis/google-cloud-ruby/issues/24840)) 
+
+### 0.13.0 (2024-02-16)
+
+#### Features
+
+* Add UnenrollDataSources API which gives users a programmatic way to unenroll data sources ([#24810](https://github.com/googleapis/google-cloud-ruby/issues/24810)) 
+
+### 0.12.2 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.12.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.12.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23774](https://github.com/googleapis/google-cloud-ruby/issues/23774)) 
+
+### 0.11.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22917](https://github.com/googleapis/google-cloud-ruby/issues/22917)) 
+#### Documentation
+
+* Minor updates to reference documentation ([#23298](https://github.com/googleapis/google-cloud-ruby/issues/23298)) 
+
+### 0.10.0 (2023-08-03)
+
+#### Features
+
+* Provide more enum options for Parameter type ([#22670](https://github.com/googleapis/google-cloud-ruby/issues/22670)) 
+* Support Encryption configuration in Transfer Config ([#22670](https://github.com/googleapis/google-cloud-ruby/issues/22670)) 
+
+### 0.9.0 (2023-06-06)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21672](https://github.com/googleapis/google-cloud-ruby/issues/21672)) 
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.8.0 (2023-03-08)
+
+#### Features
+
+* Support REST transport ([#20625](https://github.com/googleapis/google-cloud-ruby/issues/20625)) 
+
+### 0.7.1 (2023-02-28)
+
+#### Documentation
+
+* Clarify service account name description ([#20536](https://github.com/googleapis/google-cloud-ruby/issues/20536)) 
+
+### 0.7.0 (2023-01-05)
+
+#### Features
+
+* Added support for location ([#19935](https://github.com/googleapis/google-cloud-ruby/issues/19935)) 
+
+### 0.6.1 (2022-11-17)
+
+#### Documentation
+
+* Format and clean up docs 
+
+### 0.6.0 (2022-07-01)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 0.5.1 / 2022-04-01
+
+#### Bug Fixes
+
+* Remove an unused require
+
 ### 0.5.0 / 2022-01-20
 
 #### Features

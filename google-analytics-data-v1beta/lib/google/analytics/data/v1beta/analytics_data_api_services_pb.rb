@@ -40,6 +40,10 @@ module Google
             # measurements of user activity on your property, such as active users or
             # event count. Dimensions break down metrics across some common criteria,
             # such as country or event name.
+            #
+            # For a guide to constructing requests & understanding responses, see
+            # [Creating a
+            # Report](https://developers.google.com/analytics/devguides/reporting/data/v1/basics).
             rpc :RunReport, ::Google::Analytics::Data::V1beta::RunReportRequest, ::Google::Analytics::Data::V1beta::RunReportResponse
             # Returns a customized pivot report of your Google Analytics event data.
             # Pivot reports are more advanced and expressive formats than regular
@@ -48,14 +52,14 @@ module Google
             # your data.
             rpc :RunPivotReport, ::Google::Analytics::Data::V1beta::RunPivotReportRequest, ::Google::Analytics::Data::V1beta::RunPivotReportResponse
             # Returns multiple reports in a batch. All reports must be for the same
-            # GA4 Property.
+            # Google Analytics property.
             rpc :BatchRunReports, ::Google::Analytics::Data::V1beta::BatchRunReportsRequest, ::Google::Analytics::Data::V1beta::BatchRunReportsResponse
             # Returns multiple pivot reports in a batch. All reports must be for the same
-            # GA4 Property.
+            # Google Analytics property.
             rpc :BatchRunPivotReports, ::Google::Analytics::Data::V1beta::BatchRunPivotReportsRequest, ::Google::Analytics::Data::V1beta::BatchRunPivotReportsResponse
             # Returns metadata for dimensions and metrics available in reporting methods.
             # Used to explore the dimensions and metrics. In this method, a Google
-            # Analytics GA4 Property Identifier is specified in the request, and
+            # Analytics property identifier is specified in the request, and
             # the metadata response includes Custom dimensions and metrics as well as
             # Universal metadata.
             #
@@ -64,9 +68,15 @@ module Google
             # `customEvent:levels_unlocked`. Universal metadata are dimensions and
             # metrics applicable to any property such as `country` and `totalUsers`.
             rpc :GetMetadata, ::Google::Analytics::Data::V1beta::GetMetadataRequest, ::Google::Analytics::Data::V1beta::Metadata
-            # The Google Analytics Realtime API returns a customized report of realtime
-            # event data for your property. These reports show events and usage from the
-            # last 30 minutes.
+            # Returns a customized report of realtime event data for your property.
+            # Events appear in realtime reports seconds after they have been sent to
+            # the Google Analytics. Realtime reports show events and usage data for the
+            # periods of time ranging from the present moment to 30 minutes ago (up to
+            # 60 minutes for Google Analytics 360 properties).
+            #
+            # For a guide to constructing realtime requests & understanding responses,
+            # see [Creating a Realtime
+            # Report](https://developers.google.com/analytics/devguides/reporting/data/v1/realtime-basics).
             rpc :RunRealtimeReport, ::Google::Analytics::Data::V1beta::RunRealtimeReportRequest, ::Google::Analytics::Data::V1beta::RunRealtimeReportResponse
             # This compatibility method lists dimensions and metrics that can be added to
             # a report request and maintain compatibility. This method fails if the
@@ -79,6 +89,81 @@ module Google
             # The Realtime and Core reports have different compatibility rules. This
             # method checks compatibility for Core reports.
             rpc :CheckCompatibility, ::Google::Analytics::Data::V1beta::CheckCompatibilityRequest, ::Google::Analytics::Data::V1beta::CheckCompatibilityResponse
+            # Creates an audience export for later retrieval. This method quickly returns
+            # the audience export's resource name and initiates a long running
+            # asynchronous request to form an audience export. To export the users in an
+            # audience export, first create the audience export through this method and
+            # then send the audience resource name to the `QueryAudienceExport` method.
+            #
+            # See [Creating an Audience
+            # Export](https://developers.google.com/analytics/devguides/reporting/data/v1/audience-list-basics)
+            # for an introduction to Audience Exports with examples.
+            #
+            # An audience export is a snapshot of the users currently in the audience at
+            # the time of audience export creation. Creating audience exports for one
+            # audience on different days will return different results as users enter and
+            # exit the audience.
+            #
+            # Audiences in Google Analytics 4 allow you to segment your users in the ways
+            # that are important to your business. To learn more, see
+            # https://support.google.com/analytics/answer/9267572. Audience exports
+            # contain the users in each audience.
+            #
+            # Audience Export APIs have some methods at alpha and other methods at beta
+            # stability. The intention is to advance methods to beta stability after some
+            # feedback and adoption. To give your feedback on this API, complete the
+            # [Google Analytics Audience Export API
+            # Feedback](https://forms.gle/EeA5u5LW6PEggtCEA) form.
+            rpc :CreateAudienceExport, ::Google::Analytics::Data::V1beta::CreateAudienceExportRequest, ::Google::Longrunning::Operation
+            # Retrieves an audience export of users. After creating an audience, the
+            # users are not immediately available for exporting. First, a request to
+            # `CreateAudienceExport` is necessary to create an audience export of users,
+            # and then second, this method is used to retrieve the users in the audience
+            # export.
+            #
+            # See [Creating an Audience
+            # Export](https://developers.google.com/analytics/devguides/reporting/data/v1/audience-list-basics)
+            # for an introduction to Audience Exports with examples.
+            #
+            # Audiences in Google Analytics 4 allow you to segment your users in the ways
+            # that are important to your business. To learn more, see
+            # https://support.google.com/analytics/answer/9267572.
+            #
+            # Audience Export APIs have some methods at alpha and other methods at beta
+            # stability. The intention is to advance methods to beta stability after some
+            # feedback and adoption. To give your feedback on this API, complete the
+            # [Google Analytics Audience Export API
+            # Feedback](https://forms.gle/EeA5u5LW6PEggtCEA) form.
+            rpc :QueryAudienceExport, ::Google::Analytics::Data::V1beta::QueryAudienceExportRequest, ::Google::Analytics::Data::V1beta::QueryAudienceExportResponse
+            # Gets configuration metadata about a specific audience export. This method
+            # can be used to understand an audience export after it has been created.
+            #
+            # See [Creating an Audience
+            # Export](https://developers.google.com/analytics/devguides/reporting/data/v1/audience-list-basics)
+            # for an introduction to Audience Exports with examples.
+            #
+            # Audience Export APIs have some methods at alpha and other methods at beta
+            # stability. The intention is to advance methods to beta stability after some
+            # feedback and adoption. To give your feedback on this API, complete the
+            # [Google Analytics Audience Export API
+            # Feedback](https://forms.gle/EeA5u5LW6PEggtCEA) form.
+            rpc :GetAudienceExport, ::Google::Analytics::Data::V1beta::GetAudienceExportRequest, ::Google::Analytics::Data::V1beta::AudienceExport
+            # Lists all audience exports for a property. This method can be used for you
+            # to find and reuse existing audience exports rather than creating
+            # unnecessary new audience exports. The same audience can have multiple
+            # audience exports that represent the export of users that were in an
+            # audience on different days.
+            #
+            # See [Creating an Audience
+            # Export](https://developers.google.com/analytics/devguides/reporting/data/v1/audience-list-basics)
+            # for an introduction to Audience Exports with examples.
+            #
+            # Audience Export APIs have some methods at alpha and other methods at beta
+            # stability. The intention is to advance methods to beta stability after some
+            # feedback and adoption. To give your feedback on this API, complete the
+            # [Google Analytics Audience Export API
+            # Feedback](https://forms.gle/EeA5u5LW6PEggtCEA) form.
+            rpc :ListAudienceExports, ::Google::Analytics::Data::V1beta::ListAudienceExportsRequest, ::Google::Analytics::Data::V1beta::ListAudienceExportsResponse
           end
 
           Stub = Service.rpc_stub_class

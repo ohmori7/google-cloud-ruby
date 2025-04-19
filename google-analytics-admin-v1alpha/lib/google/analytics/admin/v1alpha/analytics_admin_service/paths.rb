@@ -25,6 +25,45 @@ module Google
           # Path helper methods for the AnalyticsAdminService API.
           module Paths
             ##
+            # Create a fully-qualified AccessBinding resource string.
+            #
+            # @overload access_binding_path(account:, access_binding:)
+            #   The resource will be in the following format:
+            #
+            #   `accounts/{account}/accessBindings/{access_binding}`
+            #
+            #   @param account [String]
+            #   @param access_binding [String]
+            #
+            # @overload access_binding_path(property:, access_binding:)
+            #   The resource will be in the following format:
+            #
+            #   `properties/{property}/accessBindings/{access_binding}`
+            #
+            #   @param property [String]
+            #   @param access_binding [String]
+            #
+            # @return [::String]
+            def access_binding_path **args
+              resources = {
+                "access_binding:account" => (proc do |account:, access_binding:|
+                  raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
+
+                  "accounts/#{account}/accessBindings/#{access_binding}"
+                end),
+                "access_binding:property" => (proc do |property:, access_binding:|
+                  raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+                  "properties/#{property}/accessBindings/#{access_binding}"
+                end)
+              }
+
+              resource = resources[args.keys.sort.join(":")]
+              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
+              resource.call(**args)
+            end
+
+            ##
             # Create a fully-qualified Account resource string.
             #
             # The resource will be in the following format:
@@ -39,20 +78,102 @@ module Google
             end
 
             ##
-            # Create a fully-qualified AndroidAppDataStream resource string.
+            # Create a fully-qualified AdSenseLink resource string.
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/androidAppDataStreams/{android_app_data_stream}`
+            # `properties/{property}/adSenseLinks/{adsense_link}`
             #
             # @param property [String]
-            # @param android_app_data_stream [String]
+            # @param adsense_link [String]
             #
             # @return [::String]
-            def android_app_data_stream_path property:, android_app_data_stream:
+            def ad_sense_link_path property:, adsense_link:
               raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
 
-              "properties/#{property}/androidAppDataStreams/#{android_app_data_stream}"
+              "properties/#{property}/adSenseLinks/#{adsense_link}"
+            end
+
+            ##
+            # Create a fully-qualified AttributionSettings resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/attributionSettings`
+            #
+            # @param property [String]
+            #
+            # @return [::String]
+            def attribution_settings_path property:
+              "properties/#{property}/attributionSettings"
+            end
+
+            ##
+            # Create a fully-qualified Audience resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/audiences/{audience}`
+            #
+            # @param property [String]
+            # @param audience [String]
+            #
+            # @return [::String]
+            def audience_path property:, audience:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/audiences/#{audience}"
+            end
+
+            ##
+            # Create a fully-qualified BigQueryLink resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/bigQueryLinks/{bigquery_link}`
+            #
+            # @param property [String]
+            # @param bigquery_link [String]
+            #
+            # @return [::String]
+            def big_query_link_path property:, bigquery_link:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/bigQueryLinks/#{bigquery_link}"
+            end
+
+            ##
+            # Create a fully-qualified CalculatedMetric resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/calculatedMetrics/{calculated_metric}`
+            #
+            # @param property [String]
+            # @param calculated_metric [String]
+            #
+            # @return [::String]
+            def calculated_metric_path property:, calculated_metric:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/calculatedMetrics/#{calculated_metric}"
+            end
+
+            ##
+            # Create a fully-qualified ChannelGroup resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/channelGroups/{channel_group}`
+            #
+            # @param property [String]
+            # @param channel_group [String]
+            #
+            # @return [::String]
+            def channel_group_path property:, channel_group:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/channelGroups/#{channel_group}"
             end
 
             ##
@@ -77,13 +198,16 @@ module Google
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/customDimensions`
+            # `properties/{property}/customDimensions/{custom_dimension}`
             #
             # @param property [String]
+            # @param custom_dimension [String]
             #
             # @return [::String]
-            def custom_dimension_path property:
-              "properties/#{property}/customDimensions"
+            def custom_dimension_path property:, custom_dimension:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/customDimensions/#{custom_dimension}"
             end
 
             ##
@@ -91,13 +215,33 @@ module Google
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/customMetrics`
+            # `properties/{property}/customMetrics/{custom_metric}`
             #
             # @param property [String]
+            # @param custom_metric [String]
             #
             # @return [::String]
-            def custom_metric_path property:
-              "properties/#{property}/customMetrics"
+            def custom_metric_path property:, custom_metric:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/customMetrics/#{custom_metric}"
+            end
+
+            ##
+            # Create a fully-qualified DataRedactionSettings resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/dataStreams/{data_stream}/dataRedactionSettings`
+            #
+            # @param property [String]
+            # @param data_stream [String]
+            #
+            # @return [::String]
+            def data_redaction_settings_path property:, data_stream:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/dataRedactionSettings"
             end
 
             ##
@@ -180,6 +324,78 @@ module Google
             end
 
             ##
+            # Create a fully-qualified EnhancedMeasurementSettings resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/dataStreams/{data_stream}/enhancedMeasurementSettings`
+            #
+            # @param property [String]
+            # @param data_stream [String]
+            #
+            # @return [::String]
+            def enhanced_measurement_settings_path property:, data_stream:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/enhancedMeasurementSettings"
+            end
+
+            ##
+            # Create a fully-qualified EventCreateRule resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/dataStreams/{data_stream}/eventCreateRules/{event_create_rule}`
+            #
+            # @param property [String]
+            # @param data_stream [String]
+            # @param event_create_rule [String]
+            #
+            # @return [::String]
+            def event_create_rule_path property:, data_stream:, event_create_rule:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+              raise ::ArgumentError, "data_stream cannot contain /" if data_stream.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/eventCreateRules/#{event_create_rule}"
+            end
+
+            ##
+            # Create a fully-qualified EventEditRule resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/dataStreams/{data_stream}/eventEditRules/{event_edit_rule}`
+            #
+            # @param property [String]
+            # @param data_stream [String]
+            # @param event_edit_rule [String]
+            #
+            # @return [::String]
+            def event_edit_rule_path property:, data_stream:, event_edit_rule:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+              raise ::ArgumentError, "data_stream cannot contain /" if data_stream.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/eventEditRules/#{event_edit_rule}"
+            end
+
+            ##
+            # Create a fully-qualified ExpandedDataSet resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/expandedDataSets/{expanded_data_set}`
+            #
+            # @param property [String]
+            # @param expanded_data_set [String]
+            #
+            # @return [::String]
+            def expanded_data_set_path property:, expanded_data_set:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/expandedDataSets/#{expanded_data_set}"
+            end
+
+            ##
             # Create a fully-qualified FirebaseLink resource string.
             #
             # The resource will be in the following format:
@@ -201,13 +417,16 @@ module Google
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/globalSiteTag`
+            # `properties/{property}/dataStreams/{data_stream}/globalSiteTag`
             #
             # @param property [String]
+            # @param data_stream [String]
             #
             # @return [::String]
-            def global_site_tag_path property:
-              "properties/#{property}/globalSiteTag"
+            def global_site_tag_path property:, data_stream:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/globalSiteTag"
             end
 
             ##
@@ -242,20 +461,20 @@ module Google
             end
 
             ##
-            # Create a fully-qualified IosAppDataStream resource string.
+            # Create a fully-qualified KeyEvent resource string.
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/iosAppDataStreams/{ios_app_data_stream}`
+            # `properties/{property}/keyEvents/{key_event}`
             #
             # @param property [String]
-            # @param ios_app_data_stream [String]
+            # @param key_event [String]
             #
             # @return [::String]
-            def ios_app_data_stream_path property:, ios_app_data_stream:
+            def key_event_path property:, key_event:
               raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
 
-              "properties/#{property}/iosAppDataStreams/#{ios_app_data_stream}"
+              "properties/#{property}/keyEvents/#{key_event}"
             end
 
             ##
@@ -263,18 +482,32 @@ module Google
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/webDataStreams/{web_data_stream}/measurementProtocolSecrets/{measurement_protocol_secret}`
+            # `properties/{property}/dataStreams/{data_stream}/measurementProtocolSecrets/{measurement_protocol_secret}`
             #
             # @param property [String]
-            # @param web_data_stream [String]
+            # @param data_stream [String]
             # @param measurement_protocol_secret [String]
             #
             # @return [::String]
-            def measurement_protocol_secret_path property:, web_data_stream:, measurement_protocol_secret:
+            def measurement_protocol_secret_path property:, data_stream:, measurement_protocol_secret:
               raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
-              raise ::ArgumentError, "web_data_stream cannot contain /" if web_data_stream.to_s.include? "/"
+              raise ::ArgumentError, "data_stream cannot contain /" if data_stream.to_s.include? "/"
 
-              "properties/#{property}/webDataStreams/#{web_data_stream}/measurementProtocolSecrets/#{measurement_protocol_secret}"
+              "properties/#{property}/dataStreams/#{data_stream}/measurementProtocolSecrets/#{measurement_protocol_secret}"
+            end
+
+            ##
+            # Create a fully-qualified Organization resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `organizations/{organization}`
+            #
+            # @param organization [String]
+            #
+            # @return [::String]
+            def organization_path organization:
+              "organizations/#{organization}"
             end
 
             ##
@@ -292,59 +525,73 @@ module Google
             end
 
             ##
-            # Create a fully-qualified UserLink resource string.
-            #
-            # @overload user_link_path(account:, user_link:)
-            #   The resource will be in the following format:
-            #
-            #   `accounts/{account}/userLinks/{user_link}`
-            #
-            #   @param account [String]
-            #   @param user_link [String]
-            #
-            # @overload user_link_path(property:, user_link:)
-            #   The resource will be in the following format:
-            #
-            #   `properties/{property}/userLinks/{user_link}`
-            #
-            #   @param property [String]
-            #   @param user_link [String]
-            #
-            # @return [::String]
-            def user_link_path **args
-              resources = {
-                "account:user_link" => (proc do |account:, user_link:|
-                  raise ::ArgumentError, "account cannot contain /" if account.to_s.include? "/"
-
-                  "accounts/#{account}/userLinks/#{user_link}"
-                end),
-                "property:user_link" => (proc do |property:, user_link:|
-                  raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
-
-                  "properties/#{property}/userLinks/#{user_link}"
-                end)
-              }
-
-              resource = resources[args.keys.sort.join(":")]
-              raise ::ArgumentError, "no resource found for values #{args.keys}" if resource.nil?
-              resource.call(**args)
-            end
-
-            ##
-            # Create a fully-qualified WebDataStream resource string.
+            # Create a fully-qualified RollupPropertySourceLink resource string.
             #
             # The resource will be in the following format:
             #
-            # `properties/{property}/webDataStreams/{web_data_stream}`
+            # `properties/{property}/rollupPropertySourceLinks/{rollup_property_source_link}`
             #
             # @param property [String]
-            # @param web_data_stream [String]
+            # @param rollup_property_source_link [String]
             #
             # @return [::String]
-            def web_data_stream_path property:, web_data_stream:
+            def rollup_property_source_link_path property:, rollup_property_source_link:
               raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
 
-              "properties/#{property}/webDataStreams/#{web_data_stream}"
+              "properties/#{property}/rollupPropertySourceLinks/#{rollup_property_source_link}"
+            end
+
+            ##
+            # Create a fully-qualified SKAdNetworkConversionValueSchema resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/dataStreams/{data_stream}/sKAdNetworkConversionValueSchema/{skadnetwork_conversion_value_schema}`
+            #
+            # @param property [String]
+            # @param data_stream [String]
+            # @param skadnetwork_conversion_value_schema [String]
+            #
+            # @return [::String]
+            def sk_ad_network_conversion_value_schema_path property:, data_stream:, skadnetwork_conversion_value_schema:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+              raise ::ArgumentError, "data_stream cannot contain /" if data_stream.to_s.include? "/"
+
+              "properties/#{property}/dataStreams/#{data_stream}/sKAdNetworkConversionValueSchema/#{skadnetwork_conversion_value_schema}"
+            end
+
+            ##
+            # Create a fully-qualified SearchAds360Link resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/searchAds360Links/{search_ads_360_link}`
+            #
+            # @param property [String]
+            # @param search_ads_360_link [String]
+            #
+            # @return [::String]
+            def search_ads360_link_path property:, search_ads_360_link:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/searchAds360Links/#{search_ads_360_link}"
+            end
+
+            ##
+            # Create a fully-qualified SubpropertyEventFilter resource string.
+            #
+            # The resource will be in the following format:
+            #
+            # `properties/{property}/subpropertyEventFilters/{sub_property_event_filter}`
+            #
+            # @param property [String]
+            # @param sub_property_event_filter [String]
+            #
+            # @return [::String]
+            def subproperty_event_filter_path property:, sub_property_event_filter:
+              raise ::ArgumentError, "property cannot contain /" if property.to_s.include? "/"
+
+              "properties/#{property}/subpropertyEventFilters/#{sub_property_event_filter}"
             end
 
             extend self

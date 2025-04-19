@@ -24,8 +24,9 @@ module Google
         # The `ListMonitoredResourceDescriptors` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         # @!attribute [rw] filter
@@ -81,13 +82,14 @@ module Google
         # The `ListMetricDescriptors` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         # @!attribute [rw] filter
         #   @return [::String]
-        #     If this field is empty, all custom and
+        #     Optional. If this field is empty, all custom and
         #     system-defined metric descriptors are returned.
         #     Otherwise, the [filter](https://cloud.google.com/monitoring/api/v3/filters)
         #     specifies which metric descriptors are to be
@@ -97,12 +99,27 @@ module Google
         #         metric.type = starts_with("custom.googleapis.com/")
         # @!attribute [rw] page_size
         #   @return [::Integer]
-        #     A positive number that is the maximum number of results to return.
+        #     Optional. A positive number that is the maximum number of results to
+        #     return. The default and maximum value is 10,000. If a page_size <= 0 or >
+        #     10,000 is submitted, will instead return a maximum of 10,000 results.
         # @!attribute [rw] page_token
         #   @return [::String]
-        #     If this field is not empty then it must contain the `nextPageToken` value
-        #     returned by a previous call to this method.  Using this field causes the
-        #     method to return additional results from the previous method call.
+        #     Optional. If this field is not empty then it must contain the
+        #     `nextPageToken` value returned by a previous call to this method.  Using
+        #     this field causes the method to return additional results from the previous
+        #     method call.
+        # @!attribute [rw] active_only
+        #   @return [::Boolean]
+        #     Optional. If true, only metrics and monitored resource types that have
+        #     recent data (within roughly 25 hours) will be included in the response.
+        #      - If a metric descriptor enumerates monitored resource types, only the
+        #        monitored resource types for which the metric type has recent data will
+        #        be included in the returned metric descriptor, and if none of them have
+        #        recent data, the metric descriptor will not be returned.
+        #      - If a metric descriptor does not enumerate the compatible monitored
+        #        resource types, it will be returned only if the metric type has recent
+        #        data for some monitored resource type. The returned descriptor will not
+        #        enumerate any monitored resource types.
         class ListMetricDescriptorsRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -126,7 +143,8 @@ module Google
         # The `GetMetricDescriptor` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The metric descriptor on which to execute the request. The format is:
+        #     Required. The metric descriptor on which to execute the request. The format
+        #     is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/metricDescriptors/[METRIC_ID]
         #
@@ -140,14 +158,15 @@ module Google
         # The `CreateMetricDescriptor` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #     4
         #         projects/[PROJECT_ID_OR_NUMBER]
         # @!attribute [rw] metric_descriptor
         #   @return [::Google::Api::MetricDescriptor]
-        #     Required. The new [custom metric](https://cloud.google.com/monitoring/custom-metrics)
-        #     descriptor.
+        #     Required. The new [custom
+        #     metric](https://cloud.google.com/monitoring/custom-metrics) descriptor.
         class CreateMetricDescriptorRequest
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -156,7 +175,8 @@ module Google
         # The `DeleteMetricDescriptor` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The metric descriptor on which to execute the request. The format is:
+        #     Required. The metric descriptor on which to execute the request. The format
+        #     is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/metricDescriptors/[METRIC_ID]
         #
@@ -170,7 +190,8 @@ module Google
         # The `ListTimeSeries` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name),
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name),
         #     organization or folder on which to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
@@ -178,18 +199,19 @@ module Google
         #         folders/[FOLDER_ID]
         # @!attribute [rw] filter
         #   @return [::String]
-        #     Required. A [monitoring filter](https://cloud.google.com/monitoring/api/v3/filters)
-        #     that specifies which time series should be returned.  The filter must
-        #     specify a single metric type, and can additionally specify metric labels
-        #     and other information. For example:
+        #     Required. A [monitoring
+        #     filter](https://cloud.google.com/monitoring/api/v3/filters) that specifies
+        #     which time series should be returned.  The filter must specify a single
+        #     metric type, and can additionally specify metric labels and other
+        #     information. For example:
         #
         #         metric.type = "compute.googleapis.com/instance/cpu/usage_time" AND
         #             metric.labels.instance_name = "my-instance-name"
         # @!attribute [rw] interval
         #   @return [::Google::Cloud::Monitoring::V3::TimeInterval]
-        #     Required. The time interval for which results should be returned. Only time series
-        #     that contain data points in the specified interval are included
-        #     in the response.
+        #     Required. The time interval for which results should be returned. Only time
+        #     series that contain data points in the specified interval are included in
+        #     the response.
         # @!attribute [rw] aggregation
         #   @return [::Google::Cloud::Monitoring::V3::Aggregation]
         #     Specifies the alignment of data points in individual time series as
@@ -224,7 +246,7 @@ module Google
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # Controls which fields are returned by `ListTimeSeries`.
+          # Controls which fields are returned by `ListTimeSeries*`.
           module TimeSeriesView
             # Returns the identity of the metric(s), the time series,
             # and the time series data.
@@ -265,8 +287,9 @@ module Google
         # The `CreateTimeSeries` request.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         # @!attribute [rw] time_series
@@ -285,9 +308,11 @@ module Google
 
         # DEPRECATED. Used to hold per-time-series error status.
         # @!attribute [rw] time_series
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Cloud::Monitoring::V3::TimeSeries]
         #     DEPRECATED. Time series ID that resulted in the `status` error.
         # @!attribute [rw] status
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Rpc::Status]
         #     DEPRECATED. The status of the requested write operation for `time_series`.
         class CreateTimeSeriesError
@@ -322,11 +347,15 @@ module Google
           end
         end
 
-        # The `QueryTimeSeries` request.
+        # The `QueryTimeSeries` request. For information about the status of
+        # Monitoring Query Language (MQL), see the [MQL deprecation
+        # notice](https://cloud.google.com/stackdriver/docs/deprecations/mql).
+        # @deprecated This message is deprecated and may be removed in the next major version update.
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required. The [project](https://cloud.google.com/monitoring/api/v3#project_name) on
-        #     which to execute the request. The format is:
+        #     Required. The
+        #     [project](https://cloud.google.com/monitoring/api/v3#project_name) on which
+        #     to execute the request. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]
         # @!attribute [rw] query
@@ -347,7 +376,10 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The `QueryTimeSeries` response.
+        # The `QueryTimeSeries` response. For information about the status of
+        # Monitoring Query Language (MQL), see the [MQL deprecation
+        # notice](https://cloud.google.com/stackdriver/docs/deprecations/mql).
+        # @deprecated This message is deprecated and may be removed in the next major version update.
         # @!attribute [rw] time_series_descriptor
         #   @return [::Google::Cloud::Monitoring::V3::TimeSeriesDescriptor]
         #     The descriptor for the time series data.

@@ -19,15 +19,29 @@
 # [START servicedirectory_v1_generated_RegistrationService_DeleteNamespace_sync]
 require "google/cloud/service_directory/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
+##
+# Snippet for the delete_namespace call in the RegistrationService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ServiceDirectory::V1::RegistrationService::Client#delete_namespace.
+#
+def delete_namespace
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ServiceDirectory::V1::RegistrationService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ServiceDirectory::V1::DeleteNamespaceRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ServiceDirectory::V1::DeleteNamespaceRequest.new
 
-# Call the delete_namespace method.
-result = client.delete_namespace request
+  # Call the delete_namespace method.
+  result = client.delete_namespace request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END servicedirectory_v1_generated_RegistrationService_DeleteNamespace_sync]

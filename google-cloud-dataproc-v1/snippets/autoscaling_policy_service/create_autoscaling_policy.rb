@@ -19,15 +19,29 @@
 # [START dataproc_v1_generated_AutoscalingPolicyService_CreateAutoscalingPolicy_sync]
 require "google/cloud/dataproc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataproc::V1::AutoscalingPolicyService::Client.new
+##
+# Snippet for the create_autoscaling_policy call in the AutoscalingPolicyService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataproc::V1::AutoscalingPolicyService::Client#create_autoscaling_policy.
+#
+def create_autoscaling_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataproc::V1::AutoscalingPolicyService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataproc::V1::CreateAutoscalingPolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataproc::V1::CreateAutoscalingPolicyRequest.new
 
-# Call the create_autoscaling_policy method.
-result = client.create_autoscaling_policy request
+  # Call the create_autoscaling_policy method.
+  result = client.create_autoscaling_policy request
 
-# The returned object is of type Google::Cloud::Dataproc::V1::AutoscalingPolicy.
-p result
+  # The returned object is of type Google::Cloud::Dataproc::V1::AutoscalingPolicy.
+  p result
+end
 # [END dataproc_v1_generated_AutoscalingPolicyService_CreateAutoscalingPolicy_sync]

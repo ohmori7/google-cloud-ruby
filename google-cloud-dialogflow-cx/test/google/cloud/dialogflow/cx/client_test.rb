@@ -20,165 +20,381 @@ require "helper"
 require "google/cloud/dialogflow/cx"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Dialogflow::CX::ClientConstructionMinitest < Minitest::Test
-  def test_pages
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_pages_grpc
+    skip unless Google::Cloud::Dialogflow::CX.pages_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.pages do |config|
+      client = Google::Cloud::Dialogflow::CX.pages transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Pages::Client, client
     end
   end
 
-  def test_flows
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_pages_rest
+    skip unless Google::Cloud::Dialogflow::CX.pages_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.pages transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Pages::Rest::Client, client
+    end
+  end
+
+  def test_flows_grpc
+    skip unless Google::Cloud::Dialogflow::CX.flows_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.flows do |config|
+      client = Google::Cloud::Dialogflow::CX.flows transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Flows::Client, client
     end
   end
 
-  def test_security_settings_service
-    Gapic::ServiceStub.stub :new, :stub do
-      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.security_settings_service do |config|
-        config.credentials = grpc_channel
+  def test_flows_rest
+    skip unless Google::Cloud::Dialogflow::CX.flows_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.flows transport: :rest do |config|
+        config.credentials = :dummy_credentials
       end
-      assert_kind_of Google::Cloud::Dialogflow::CX::V3::SecuritySettingsService::Client, client
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Flows::Rest::Client, client
     end
   end
 
-  def test_agents
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_agents_grpc
+    skip unless Google::Cloud::Dialogflow::CX.agents_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.agents do |config|
+      client = Google::Cloud::Dialogflow::CX.agents transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Agents::Client, client
     end
   end
 
-  def test_changelogs
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_agents_rest
+    skip unless Google::Cloud::Dialogflow::CX.agents_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.agents transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Agents::Rest::Client, client
+    end
+  end
+
+  def test_changelogs_grpc
+    skip unless Google::Cloud::Dialogflow::CX.changelogs_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.changelogs do |config|
+      client = Google::Cloud::Dialogflow::CX.changelogs transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Changelogs::Client, client
     end
   end
 
-  def test_deployments
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_changelogs_rest
+    skip unless Google::Cloud::Dialogflow::CX.changelogs_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.changelogs transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Changelogs::Rest::Client, client
+    end
+  end
+
+  def test_deployments_grpc
+    skip unless Google::Cloud::Dialogflow::CX.deployments_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.deployments do |config|
+      client = Google::Cloud::Dialogflow::CX.deployments transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Deployments::Client, client
     end
   end
 
-  def test_entity_types
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_deployments_rest
+    skip unless Google::Cloud::Dialogflow::CX.deployments_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.deployments transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Deployments::Rest::Client, client
+    end
+  end
+
+  def test_entity_types_grpc
+    skip unless Google::Cloud::Dialogflow::CX.entity_types_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.entity_types do |config|
+      client = Google::Cloud::Dialogflow::CX.entity_types transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client, client
     end
   end
 
-  def test_intents
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_entity_types_rest
+    skip unless Google::Cloud::Dialogflow::CX.entity_types_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.entity_types transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::EntityTypes::Rest::Client, client
+    end
+  end
+
+  def test_intents_grpc
+    skip unless Google::Cloud::Dialogflow::CX.intents_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.intents do |config|
+      client = Google::Cloud::Dialogflow::CX.intents transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Intents::Client, client
     end
   end
 
-  def test_session_entity_types
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_intents_rest
+    skip unless Google::Cloud::Dialogflow::CX.intents_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.intents transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Intents::Rest::Client, client
+    end
+  end
+
+  def test_session_entity_types_grpc
+    skip unless Google::Cloud::Dialogflow::CX.session_entity_types_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.session_entity_types do |config|
+      client = Google::Cloud::Dialogflow::CX.session_entity_types transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::SessionEntityTypes::Client, client
     end
   end
 
-  def test_sessions
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_session_entity_types_rest
+    skip unless Google::Cloud::Dialogflow::CX.session_entity_types_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.session_entity_types transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::SessionEntityTypes::Rest::Client, client
+    end
+  end
+
+  def test_sessions_grpc
+    skip unless Google::Cloud::Dialogflow::CX.sessions_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.sessions do |config|
+      client = Google::Cloud::Dialogflow::CX.sessions transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Sessions::Client, client
     end
   end
 
-  def test_transition_route_groups
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_sessions_rest
+    skip unless Google::Cloud::Dialogflow::CX.sessions_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.sessions transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Sessions::Rest::Client, client
+    end
+  end
+
+  def test_transition_route_groups_grpc
+    skip unless Google::Cloud::Dialogflow::CX.transition_route_groups_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.transition_route_groups do |config|
+      client = Google::Cloud::Dialogflow::CX.transition_route_groups transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::TransitionRouteGroups::Client, client
     end
   end
 
-  def test_test_cases
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_transition_route_groups_rest
+    skip unless Google::Cloud::Dialogflow::CX.transition_route_groups_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.transition_route_groups transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::TransitionRouteGroups::Rest::Client, client
+    end
+  end
+
+  def test_test_cases_grpc
+    skip unless Google::Cloud::Dialogflow::CX.test_cases_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.test_cases do |config|
+      client = Google::Cloud::Dialogflow::CX.test_cases transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::TestCases::Client, client
     end
   end
 
-  def test_webhooks
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_test_cases_rest
+    skip unless Google::Cloud::Dialogflow::CX.test_cases_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.test_cases transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::TestCases::Rest::Client, client
+    end
+  end
+
+  def test_webhooks_grpc
+    skip unless Google::Cloud::Dialogflow::CX.webhooks_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.webhooks do |config|
+      client = Google::Cloud::Dialogflow::CX.webhooks transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Webhooks::Client, client
     end
   end
 
-  def test_environments
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_webhooks_rest
+    skip unless Google::Cloud::Dialogflow::CX.webhooks_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.webhooks transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Webhooks::Rest::Client, client
+    end
+  end
+
+  def test_environments_grpc
+    skip unless Google::Cloud::Dialogflow::CX.environments_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.environments do |config|
+      client = Google::Cloud::Dialogflow::CX.environments transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Environments::Client, client
     end
   end
 
-  def test_experiments
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_environments_rest
+    skip unless Google::Cloud::Dialogflow::CX.environments_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.environments transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Environments::Rest::Client, client
+    end
+  end
+
+  def test_experiments_grpc
+    skip unless Google::Cloud::Dialogflow::CX.experiments_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.experiments do |config|
+      client = Google::Cloud::Dialogflow::CX.experiments transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Experiments::Client, client
     end
   end
 
-  def test_versions
-    Gapic::ServiceStub.stub :new, :stub do
+  def test_experiments_rest
+    skip unless Google::Cloud::Dialogflow::CX.experiments_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.experiments transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Experiments::Rest::Client, client
+    end
+  end
+
+  def test_generators_grpc
+    skip unless Google::Cloud::Dialogflow::CX.generators_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Dialogflow::CX.versions do |config|
+      client = Google::Cloud::Dialogflow::CX.generators transport: :grpc do |config|
+        config.credentials = grpc_channel
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Generators::Client, client
+    end
+  end
+
+  def test_generators_rest
+    skip unless Google::Cloud::Dialogflow::CX.generators_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.generators transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Generators::Rest::Client, client
+    end
+  end
+
+  def test_security_settings_service_grpc
+    skip unless Google::Cloud::Dialogflow::CX.security_settings_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
+      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+      client = Google::Cloud::Dialogflow::CX.security_settings_service transport: :grpc do |config|
+        config.credentials = grpc_channel
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::SecuritySettingsService::Client, client
+    end
+  end
+
+  def test_security_settings_service_rest
+    skip unless Google::Cloud::Dialogflow::CX.security_settings_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.security_settings_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::SecuritySettingsService::Rest::Client, client
+    end
+  end
+
+  def test_versions_grpc
+    skip unless Google::Cloud::Dialogflow::CX.versions_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
+      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+      client = Google::Cloud::Dialogflow::CX.versions transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Dialogflow::CX::V3::Versions::Client, client
+    end
+  end
+
+  def test_versions_rest
+    skip unless Google::Cloud::Dialogflow::CX.versions_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Dialogflow::CX.versions transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Dialogflow::CX::V3::Versions::Rest::Client, client
     end
   end
 end

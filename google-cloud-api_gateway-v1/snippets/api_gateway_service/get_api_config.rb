@@ -19,15 +19,29 @@
 # [START apigateway_v1_generated_ApiGatewayService_GetApiConfig_sync]
 require "google/cloud/api_gateway/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ApiGateway::V1::ApiGatewayService::Client.new
+##
+# Snippet for the get_api_config call in the ApiGatewayService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ApiGateway::V1::ApiGatewayService::Client#get_api_config.
+#
+def get_api_config
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ApiGateway::V1::ApiGatewayService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ApiGateway::V1::GetApiConfigRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ApiGateway::V1::GetApiConfigRequest.new
 
-# Call the get_api_config method.
-result = client.get_api_config request
+  # Call the get_api_config method.
+  result = client.get_api_config request
 
-# The returned object is of type Google::Cloud::ApiGateway::V1::ApiConfig.
-p result
+  # The returned object is of type Google::Cloud::ApiGateway::V1::ApiConfig.
+  p result
+end
 # [END apigateway_v1_generated_ApiGatewayService_GetApiConfig_sync]

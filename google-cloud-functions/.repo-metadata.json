@@ -3,6 +3,7 @@
     "api_shortname": "cloudfunctions",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-functions/latest",
     "distribution_name": "google-cloud-functions",
+    "is_cloud": true,
     "language": "ruby",
     "name": "cloudfunctions",
     "name_pretty": "Cloud Functions API",
@@ -13,5 +14,5 @@
     "ruby-cloud-description": "The Cloud Functions API manages lightweight user-provided functions executed in response to events.",
     "ruby-cloud-env-prefix": "FUNCTIONS",
     "ruby-cloud-product-url": "https://cloud.google.com/functions",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

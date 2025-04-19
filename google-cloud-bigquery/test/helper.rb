@@ -88,7 +88,17 @@ class MockBigquery < Minitest::Spec
       "creationTime" => time_millis,
       "lastModifiedTime" => time_millis,
       "location" => location,
-      "labels" => { "foo" => "bar" }
+      "labels" => { "foo" => "bar" },
+      "tags" => [
+        {
+          "tagKey" => "2424242256/environment",
+          "tagValue" => "production"
+        },
+        {
+          "tagKey" => "2424242256/cost_center",
+          "tagValue" => "sales"
+        }
+      ]
     }
   end
 
@@ -103,7 +113,8 @@ class MockBigquery < Minitest::Spec
         "datasetId" => id,
         "projectId" => project
       },
-      "friendlyName" => name
+      "friendlyName" => name,
+      "location": "US"
     }
   end
 
@@ -176,6 +187,11 @@ class MockBigquery < Minitest::Spec
           "name" => "home",
           "type" => "GEOGRAPHY",
           "mode" => "NULLABLE"
+        },
+        {
+          "name" => "address",
+          "type" => "JSON",
+          "mode" => "NULLABLE"
         }
       ]
     }
@@ -196,7 +212,8 @@ class MockBigquery < Minitest::Spec
           { "v" => "04:00:00" },
           { "v" => "2017-01-01 00:00:00" },
           { "v" => "1968-10-20" },
-          { "v" => "POINT(-122.335503 47.625536)" }
+          { "v" => "POINT(-122.335503 47.625536)" },
+          { "v" => { "name" => "Alice", "age" => 30 }.to_json }
         ]
       },
       {
@@ -212,12 +229,14 @@ class MockBigquery < Minitest::Spec
           { "v" => "04:32:10.555555" },
           { "v" => nil },
           { "v" => nil },
+          { "v" => nil },
           { "v" => nil }
         ]
       },
       {
         "f" => [
           { "v" => "Sally" },
+          { "v" => nil },
           { "v" => nil },
           { "v" => nil },
           { "v" => nil },
@@ -318,6 +337,34 @@ class MockBigquery < Minitest::Spec
     hash.to_json
   end
 
+  def source_table_partial_gapi
+    Google::Apis::BigqueryV2::Table.from_json source_table_partial_json
+  end
+
+  def source_table_partial_json
+    hash = random_table_partial_hash "getting_replaced_dataset_id"
+    hash["tableReference"] = {
+      "projectId" => "source_project_id",
+      "datasetId" => "source_dataset_id",
+      "tableId"   => "source_table_id"
+    }
+    hash.to_json
+  end
+
+  def destination_table_partial_gapi
+    Google::Apis::BigqueryV2::Table.from_json destination_table_partial_json
+  end
+
+  def destination_table_partial_json
+    hash = random_table_partial_hash "getting_replaced_dataset_id"
+    hash["tableReference"] = {
+      "projectId" => "target_project_id",
+      "datasetId" => "target_dataset_id",
+      "tableId"   => "target_table_id"
+    }
+    hash.to_json
+  end
+
   def copy_job_gapi source, target, job_id: "job_9876543210", location: "US"
     Google::Apis::BigqueryV2::Job.from_json copy_job_json(source, target, job_id, location: location)
   end
@@ -341,13 +388,66 @@ class MockBigquery < Minitest::Spec
             "tableId" => target.table_id
           },
           "createDisposition" => nil,
-          "writeDisposition" => nil
+          "writeDisposition" => nil,
+          "operationType" => nil
         },
         "dryRun" => nil
       }
     }
     hash["jobReference"]["location"] = location if location
     hash.to_json
+  end
+
+  def random_snapshot_gapi dataset, id = nil, name = nil, description = nil
+    json = random_snapshot_hash(dataset, id, name, description).to_json
+    Google::Apis::BigqueryV2::Table.from_json json
+  end
+
+  def random_snapshot_hash dataset, id = nil, name = nil, description = nil
+    id ||= "my_snapshot"
+    name ||= "Snapshot Name"
+
+    base = random_table_partial_hash dataset, id, name, type: "SNAPSHOT"
+    base.merge({
+      "etag" => "etag123456789",
+      "selfLink" => "http://googleapi/bigquery/v2/projects/#{project}/datasets/#{dataset}/tables/#{id}",
+      "description" => description,
+      "schema" => random_schema_hash,
+      "creationTime" => time_millis,
+      "expirationTime" => time_millis,
+      "lastModifiedTime" => time_millis,
+      "snapshotDefinition" => {
+        "snapshotTime" => DateTime.now,
+        "baseTableReference" => Google::Apis::BigqueryV2::TableReference.new
+      },
+      "location" => "US"
+    })
+  end
+
+  def random_clone_gapi dataset, id = nil, name = nil, description = nil
+    json = random_clone_hash(dataset, id, name, description).to_json
+    Google::Apis::BigqueryV2::Table.from_json json
+  end
+
+  def random_clone_hash dataset, id = nil, name = nil, description = nil
+    id ||= "my_clone"
+    name ||= "Clone Name"
+
+    base = random_table_partial_hash dataset, id, name, type: "TABLE"
+    base.merge({
+      "etag" => "etag123456789",
+      "selfLink" => "http://googleapi/bigquery/v2/projects/#{project}/datasets/#{dataset}/tables/#{id}",
+      "description" => description,
+      "schema" => random_schema_hash,
+      "creationTime" => time_millis,
+      "expirationTime" => time_millis,
+      "lastModifiedTime" => time_millis,
+      "cloneDefinition" => {
+        "cloneTime" => DateTime.now,
+        "baseTableReference" => Google::Apis::BigqueryV2::TableReference.new
+      },
+      "location" => "US"
+    })
   end
 
   def random_view_gapi dataset, id = nil, name = nil, description = nil
@@ -979,8 +1079,10 @@ class MockBigquery < Minitest::Spec
   def load_job_gapi table_reference,
                     source_format = "NEWLINE_DELIMITED_JSON",
                     job_id: "job_9876543210",
-                    location: "US"
-    Google::Apis::BigqueryV2::Job.new(
+                    location: "US",
+                    create_session: nil,
+                    session_id: nil
+    job = Google::Apis::BigqueryV2::Job.new(
       job_reference: job_reference_gapi(project, job_id, location: location),
       configuration: Google::Apis::BigqueryV2::JobConfiguration.new(
         load: Google::Apis::BigqueryV2::JobConfigurationLoad.new(
@@ -990,6 +1092,12 @@ class MockBigquery < Minitest::Spec
         dry_run: nil
       )
     )
+    unless session_id.nil?
+      prop = Google::Apis::BigqueryV2::ConnectionProperty.new key: "session_id", value: session_id
+      job.configuration.load.connection_properties = [prop] 
+    end
+    job.configuration.load.create_session = create_session unless create_session.nil?
+    job
   end
 
   def load_job_csv_options_gapi table_reference, job_id: "job_9876543210"
@@ -1043,7 +1151,8 @@ class MockBigquery < Minitest::Spec
                          labels: nil,
                          source_format: nil,
                          hive_partitioning_options: nil,
-                         parquet_options: nil
+                         parquet_options: nil,
+                         session_id: nil
     hash = random_job_hash job_id, location: location
     hash["configuration"]["load"] = {
       "sourceFormat" => source_format,
@@ -1052,8 +1161,9 @@ class MockBigquery < Minitest::Spec
         "projectId" => table.project_id,
         "datasetId" => table.dataset_id,
         "tableId" => table.table_id
-      }
+      },
     }
+    hash["statistics"]["sessionInfo"] = { "sessionId": session_id } if session_id
     resp = Google::Apis::BigqueryV2::Job.from_json hash.to_json
     resp.status = status "done"
     resp.configuration.labels = labels if labels
@@ -1095,5 +1205,37 @@ class MockBigquery < Minitest::Spec
 
   def formatted_table_path dataset_id, table_id
     "projects/#{project}/datasets/#{dataset_id}/tables/#{table_id}"
+  end
+
+  def table_metadata_view_type_for str
+    return nil if str.nil?
+    { "unspecified" => "TABLE_METADATA_VIEW_UNSPECIFIED",
+      "basic" => "BASIC",
+      "storage" => "STORAGE_STATS",
+      "full" => "FULL"
+    }[str.to_s.downcase]
+  end
+
+  def verify_table_metadata table, view
+    if view == "basic"
+      assert_nil(table.bytes_count)
+      assert_nil(table.rows_count)
+      assert_nil(table.modified_at)
+    else
+      refute_nil table.bytes_count, "Transient stats should not be nil"
+      refute_nil table.rows_count, "Transient stats should not be nil"
+      refute_nil table.modified_at, "Transient stats should not be nil"
+    end
+  end
+
+  def patch_table_args selected_fields: nil,
+                       view: nil,
+                       fields: nil,
+                       quota_user: nil,
+                       user_ip: nil,
+                       options: nil
+    {
+      view: table_metadata_view_type_for(view)
+    }
   end
 end

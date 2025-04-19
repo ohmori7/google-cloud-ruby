@@ -26,7 +26,7 @@ module Google
           # the resources that serve them.
           # All tables in an instance are served from all
           # {::Google::Cloud::Bigtable::Admin::V2::Cluster Clusters} in the instance.
-          # @!attribute [r] name
+          # @!attribute [rw] name
           #   @return [::String]
           #     The unique name of the instance. Values are of the form
           #     `projects/{project}/instances/[a-z][a-z0-9\\-]+[a-z0-9]`.
@@ -35,10 +35,9 @@ module Google
           #     Required. The descriptive name for this instance as it appears in UIs.
           #     Can be changed at any time, but should be kept globally unique
           #     to avoid confusion.
-          # @!attribute [rw] state
+          # @!attribute [r] state
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Instance::State]
-          #     (`OutputOnly`)
-          #     The current state of the instance.
+          #     Output only. The current state of the instance.
           # @!attribute [rw] type
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Instance::Type]
           #     The type of the instance. Defaults to `PRODUCTION`.
@@ -57,9 +56,15 @@ module Google
           #     * Keys and values must both be under 128 bytes.
           # @!attribute [r] create_time
           #   @return [::Google::Protobuf::Timestamp]
-          #     Output only. A server-assigned timestamp representing when this Instance was created.
-          #     For instances created before this field was added (August 2021), this value
-          #     is `seconds: 0, nanos: 1`.
+          #     Output only. A commit timestamp representing when this Instance was
+          #     created. For instances created before this field was added (August 2021),
+          #     this value is `seconds: 0, nanos: 1`.
+          # @!attribute [r] satisfies_pzs
+          #   @return [::Boolean]
+          #     Output only. Reserved for future use.
+          # @!attribute [r] satisfies_pzi
+          #   @return [::Boolean]
+          #     Output only. Reserved for future use.
           class Instance
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -98,13 +103,8 @@ module Google
               # on the cluster.
               PRODUCTION = 1
 
-              # The instance is meant for development and testing purposes only; it has
-              # no performance or uptime guarantees and is not covered by SLA.
-              # After a development instance is created, it can be upgraded by
-              # updating the instance to type `PRODUCTION`. An instance created
-              # as a production instance cannot be changed to a development instance.
-              # When creating a development instance, `serve_nodes` on the cluster must
-              # not be set.
+              # DEPRECATED: Prefer PRODUCTION for all use cases, as it no longer enforces
+              # a higher minimum node count than DEVELOPMENT.
               DEVELOPMENT = 2
             end
           end
@@ -114,7 +114,16 @@ module Google
           #   @return [::Integer]
           #     The cpu utilization that the Autoscaler should be trying to achieve.
           #     This number is on a scale from 0 (no utilization) to
-          #     100 (total utilization).
+          #     100 (total utilization), and is limited between 10 and 80, otherwise it
+          #     will return INVALID_ARGUMENT error.
+          # @!attribute [rw] storage_utilization_gib_per_node
+          #   @return [::Integer]
+          #     The storage utilization that the Autoscaler should be trying to achieve.
+          #     This number is limited between 2560 (2.5TiB) and 5120 (5TiB) for a SSD
+          #     cluster and between 8192 (8TiB) and 16384 (16TiB) for an HDD cluster,
+          #     otherwise it will return INVALID_ARGUMENT error. If this value is set to 0,
+          #     it will be treated as if it were set to the default value: 2560 for SSD,
+          #     8192 for HDD.
           class AutoscalingTargets
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -135,31 +144,33 @@ module Google
           # A resizable group of nodes in a particular cloud location, capable
           # of serving all {::Google::Cloud::Bigtable::Admin::V2::Table Tables} in the parent
           # {::Google::Cloud::Bigtable::Admin::V2::Instance Instance}.
-          # @!attribute [r] name
+          # @!attribute [rw] name
           #   @return [::String]
           #     The unique name of the cluster. Values are of the form
           #     `projects/{project}/instances/{instance}/clusters/[a-z][-a-z0-9]*`.
           # @!attribute [rw] location
           #   @return [::String]
-          #     (`CreationOnly`)
-          #     The location where this cluster's nodes and storage reside. For best
-          #     performance, clients should be located as close as possible to this
+          #     Immutable. The location where this cluster's nodes and storage reside. For
+          #     best performance, clients should be located as close as possible to this
           #     cluster. Currently only zones are supported, so values should be of the
           #     form `projects/{project}/locations/{zone}`.
           # @!attribute [r] state
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster::State]
-          #     The current state of the cluster.
+          #     Output only. The current state of the cluster.
           # @!attribute [rw] serve_nodes
           #   @return [::Integer]
-          #     The number of nodes allocated to this cluster. More nodes enable higher
-          #     throughput and more consistent performance.
+          #     The number of nodes in the cluster. If no value is set,
+          #     Cloud Bigtable automatically allocates nodes based on your data footprint
+          #     and optimized for 50% storage utilization.
+          # @!attribute [rw] node_scaling_factor
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster::NodeScalingFactor]
+          #     Immutable. The node scaling factor of this cluster.
           # @!attribute [rw] cluster_config
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster::ClusterConfig]
           #     Configuration for this cluster.
           # @!attribute [rw] default_storage_type
           #   @return [::Google::Cloud::Bigtable::Admin::V2::StorageType]
-          #     (`CreationOnly`)
-          #     The type of storage used by this cluster to serve its
+          #     Immutable. The type of storage used by this cluster to serve its
           #     parent instance's tables, unless explicitly overridden.
           # @!attribute [rw] encryption_config
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster::EncryptionConfig]
@@ -200,7 +211,8 @@ module Google
             #      `cloudkms.cryptoKeyEncrypterDecrypter` role on the CMEK key.
             #      2) Only regional keys can be used and the region of the CMEK key must
             #      match the region of the cluster.
-            #     3) All clusters within an instance must use the same CMEK key.
+            #     Values are of the form
+            #     `projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}`
             class EncryptionConfig
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -230,13 +242,27 @@ module Google
               # exist, but no operations can be performed on the cluster.
               DISABLED = 4
             end
+
+            # Possible node scaling factors of the clusters. Node scaling delivers better
+            # latency and more throughput by removing node boundaries.
+            module NodeScalingFactor
+              # No node scaling specified. Defaults to NODE_SCALING_FACTOR_1X.
+              NODE_SCALING_FACTOR_UNSPECIFIED = 0
+
+              # The cluster is running with a scaling factor of 1.
+              NODE_SCALING_FACTOR_1X = 1
+
+              # The cluster is running with a scaling factor of 2.
+              # All node count values must be in increments of 2 with this scaling factor
+              # enabled, otherwise an INVALID_ARGUMENT error will be returned.
+              NODE_SCALING_FACTOR_2X = 2
+            end
           end
 
           # A configuration object describing how Cloud Bigtable should treat traffic
           # from a particular end user application.
           # @!attribute [rw] name
           #   @return [::String]
-          #     (`OutputOnly`)
           #     The unique name of the app profile. Values are of the form
           #     `projects/{project}/instances/{instance}/appProfiles/[_a-zA-Z0-9][-_.a-zA-Z0-9]*`.
           # @!attribute [rw] etag
@@ -251,13 +277,38 @@ module Google
           #     details.
           # @!attribute [rw] description
           #   @return [::String]
-          #     Optional long form description of the use case for this AppProfile.
+          #     Long form description of the use case for this AppProfile.
           # @!attribute [rw] multi_cluster_routing_use_any
           #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::MultiClusterRoutingUseAny]
           #     Use a multi-cluster routing policy.
+          #
+          #     Note: The following fields are mutually exclusive: `multi_cluster_routing_use_any`, `single_cluster_routing`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] single_cluster_routing
           #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::SingleClusterRouting]
           #     Use a single-cluster routing policy.
+          #
+          #     Note: The following fields are mutually exclusive: `single_cluster_routing`, `multi_cluster_routing_use_any`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] priority
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::Priority]
+          #     This field has been deprecated in favor of `standard_isolation.priority`.
+          #     If you set this field, `standard_isolation.priority` will be set instead.
+          #
+          #     The priority of requests sent using this app profile.
+          #
+          #     Note: The following fields are mutually exclusive: `priority`, `standard_isolation`, `data_boost_isolation_read_only`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] standard_isolation
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::StandardIsolation]
+          #     The standard options used for isolating this app profile's traffic from
+          #     other use cases.
+          #
+          #     Note: The following fields are mutually exclusive: `standard_isolation`, `priority`, `data_boost_isolation_read_only`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] data_boost_isolation_read_only
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::DataBoostIsolationReadOnly]
+          #     Specifies that this app profile is intended for read-only usage via the
+          #     Data Boost feature.
+          #
+          #     Note: The following fields are mutually exclusive: `data_boost_isolation_read_only`, `priority`, `standard_isolation`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class AppProfile
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -271,9 +322,27 @@ module Google
             #   @return [::Array<::String>]
             #     The set of clusters to route to. The order is ignored; clusters will be
             #     tried in order of distance. If left empty, all clusters are eligible.
+            # @!attribute [rw] row_affinity
+            #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::MultiClusterRoutingUseAny::RowAffinity]
+            #     Row affinity sticky routing based on the row key of the request.
+            #     Requests that span multiple rows are routed non-deterministically.
             class MultiClusterRoutingUseAny
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # If enabled, Bigtable will route the request based on the row key of the
+              # request, rather than randomly. Instead, each row key will be assigned
+              # to a cluster, and will stick to that cluster. If clusters are added or
+              # removed, then this may affect which row keys stick to which clusters.
+              # To avoid this, users can use a cluster group to specify which clusters
+              # are to be used. In this case, new clusters that are not a part of the
+              # cluster group will not be routed to, and routing will be unaffected by
+              # the new cluster. Moreover, clusters specified in the cluster group cannot
+              # be deleted unless removed from the cluster group.
+              class RowAffinity
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
             end
 
             # Unconditionally routes all read/write requests to a specific cluster.
@@ -291,6 +360,134 @@ module Google
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
+
+            # Standard options for isolating this app profile's traffic from other use
+            # cases.
+            # @!attribute [rw] priority
+            #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::Priority]
+            #     The priority of requests sent using this app profile.
+            class StandardIsolation
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Data Boost is a serverless compute capability that lets you run
+            # high-throughput read jobs and queries on your Bigtable data, without
+            # impacting the performance of the clusters that handle your application
+            # traffic. Data Boost supports read-only use cases with single-cluster
+            # routing.
+            # @!attribute [rw] compute_billing_owner
+            #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile::DataBoostIsolationReadOnly::ComputeBillingOwner]
+            #     The Compute Billing Owner for this Data Boost App Profile.
+            class DataBoostIsolationReadOnly
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Compute Billing Owner specifies how usage should be accounted when using
+              # Data Boost. Compute Billing Owner also configures which Cloud Project is
+              # charged for relevant quota.
+              module ComputeBillingOwner
+                # Unspecified value.
+                COMPUTE_BILLING_OWNER_UNSPECIFIED = 0
+
+                # The host Cloud Project containing the targeted Bigtable Instance /
+                # Table pays for compute.
+                HOST_PAYS = 1
+              end
+            end
+
+            # Possible priorities for an app profile. Note that higher priority writes
+            # can sometimes queue behind lower priority writes to the same tablet, as
+            # writes must be strictly sequenced in the durability log.
+            module Priority
+              # Default value. Mapped to PRIORITY_HIGH (the legacy behavior) on creation.
+              PRIORITY_UNSPECIFIED = 0
+
+              PRIORITY_LOW = 1
+
+              PRIORITY_MEDIUM = 2
+
+              PRIORITY_HIGH = 3
+            end
+          end
+
+          # A tablet is a defined by a start and end key and is explained in
+          # https://cloud.google.com/bigtable/docs/overview#architecture and
+          # https://cloud.google.com/bigtable/docs/performance#optimization.
+          # A Hot tablet is a tablet that exhibits high average cpu usage during the time
+          # interval from start time to end time.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     The unique name of the hot tablet. Values are of the form
+          #     `projects/{project}/instances/{instance}/clusters/{cluster}/hotTablets/[a-zA-Z0-9_-]*`.
+          # @!attribute [rw] table_name
+          #   @return [::String]
+          #     Name of the table that contains the tablet. Values are of the form
+          #     `projects/{project}/instances/{instance}/tables/[_a-zA-Z0-9][-_.a-zA-Z0-9]*`.
+          # @!attribute [r] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Output only. The start time of the hot tablet.
+          # @!attribute [r] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     Output only. The end time of the hot tablet.
+          # @!attribute [rw] start_key
+          #   @return [::String]
+          #     Tablet Start Key (inclusive).
+          # @!attribute [rw] end_key
+          #   @return [::String]
+          #     Tablet End Key (inclusive).
+          # @!attribute [r] node_cpu_usage_percent
+          #   @return [::Float]
+          #     Output only. The average CPU usage spent by a node on this tablet over the
+          #     start_time to end_time time range. The percentage is the amount of CPU used
+          #     by the node to serve the tablet, from 0% (tablet was not interacted with)
+          #     to 100% (the node spent all cycles serving the hot tablet).
+          class HotTablet
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A SQL logical view object that can be referenced in SQL queries.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Identifier. The unique name of the logical view.
+          #     Format:
+          #     `projects/{project}/instances/{instance}/logicalViews/{logical_view}`
+          # @!attribute [rw] query
+          #   @return [::String]
+          #     Required. The logical view's select query.
+          # @!attribute [rw] etag
+          #   @return [::String]
+          #     Optional. The etag for this logical view.
+          #     This may be sent on update requests to ensure that the client has an
+          #     up-to-date value before proceeding. The server returns an ABORTED error on
+          #     a mismatched etag.
+          class LogicalView
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A materialized view object that can be referenced in SQL queries.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Identifier. The unique name of the materialized view.
+          #     Format:
+          #     `projects/{project}/instances/{instance}/materializedViews/{materialized_view}`
+          # @!attribute [rw] query
+          #   @return [::String]
+          #     Required. Immutable. The materialized view's select query.
+          # @!attribute [rw] etag
+          #   @return [::String]
+          #     Optional. The etag for this materialized view.
+          #     This may be sent on update requests to ensure that the client has an
+          #     up-to-date value before proceeding. The server returns an ABORTED error on
+          #     a mismatched etag.
+          # @!attribute [rw] deletion_protection
+          #   @return [::Boolean]
+          #     Set to true to make the MaterializedView protected against deletion.
+          class MaterializedView
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
           end
         end
       end

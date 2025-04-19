@@ -24,7 +24,7 @@ module Google
       # Google::Cloud::ErrorReporting::Railtie automatically add the
       # {Google::Cloud::ErrorReporting::Middleware} to Rack in a Rails
       # environment. It will automatically capture Exceptions from the Rails app
-      # and report them to the Stackdriver Error Reporting service.
+      # and report them to the Error Reporting service.
       #
       # The Middleware is only added when certain conditions are met. See
       # `Google::Cloud.configure.use_error_reporting` for detail.
@@ -152,13 +152,13 @@ module Google
             end
           rescue StandardError => e
             $stdout.puts "Note: Google::Cloud::ErrorReporting is disabled " \
-              "because it failed to authorize with the service. (#{e.message})"
+                         "because it failed to authorize with the service. (#{e.message})"
             return false
           end
 
           if project_id.to_s.empty?
             $stdout.puts "Note: Google::Cloud::ErrorReporting is disabled " \
-              "because the project ID could not be determined."
+                         "because the project ID could not be determined."
             return false
           end
 

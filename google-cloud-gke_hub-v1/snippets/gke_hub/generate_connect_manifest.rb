@@ -19,15 +19,29 @@
 # [START gkehub_v1_generated_GkeHub_GenerateConnectManifest_sync]
 require "google/cloud/gke_hub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
+##
+# Snippet for the generate_connect_manifest call in the GkeHub service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::GkeHub::V1::GkeHub::Client#generate_connect_manifest.
+#
+def generate_connect_manifest
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::GkeHub::V1::GkeHub::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::GkeHub::V1::GenerateConnectManifestRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::GkeHub::V1::GenerateConnectManifestRequest.new
 
-# Call the generate_connect_manifest method.
-result = client.generate_connect_manifest request
+  # Call the generate_connect_manifest method.
+  result = client.generate_connect_manifest request
 
-# The returned object is of type Google::Cloud::GkeHub::V1::GenerateConnectManifestResponse.
-p result
+  # The returned object is of type Google::Cloud::GkeHub::V1::GenerateConnectManifestResponse.
+  p result
+end
 # [END gkehub_v1_generated_GkeHub_GenerateConnectManifest_sync]

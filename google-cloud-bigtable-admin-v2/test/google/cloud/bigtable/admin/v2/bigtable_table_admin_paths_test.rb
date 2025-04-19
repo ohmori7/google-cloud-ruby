@@ -23,9 +23,39 @@ require "gapic/grpc/service_stub"
 require "google/cloud/bigtable/admin/v2/bigtable_table_admin"
 
 class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_authorized_view_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.authorized_view_path project: "value0", instance: "value1", table: "value2", authorized_view: "value3"
+      assert_equal "projects/value0/instances/value1/tables/value2/authorizedViews/value3", path
+    end
+  end
+
   def test_backup_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +67,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest 
 
   def test_cluster_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +79,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest 
 
   def test_crypto_key_version_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +91,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest 
 
   def test_instance_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,7 +103,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest 
 
   def test_snapshot_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -85,7 +115,7 @@ class ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::ClientPathsTest 
 
   def test_table_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end

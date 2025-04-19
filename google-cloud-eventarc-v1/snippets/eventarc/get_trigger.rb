@@ -19,15 +19,29 @@
 # [START eventarc_v1_generated_Eventarc_GetTrigger_sync]
 require "google/cloud/eventarc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Eventarc::V1::Eventarc::Client.new
+##
+# Snippet for the get_trigger call in the Eventarc service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Eventarc::V1::Eventarc::Client#get_trigger.
+#
+def get_trigger
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Eventarc::V1::Eventarc::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Eventarc::V1::GetTriggerRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Eventarc::V1::GetTriggerRequest.new
 
-# Call the get_trigger method.
-result = client.get_trigger request
+  # Call the get_trigger method.
+  result = client.get_trigger request
 
-# The returned object is of type Google::Cloud::Eventarc::V1::Trigger.
-p result
+  # The returned object is of type Google::Cloud::Eventarc::V1::Trigger.
+  p result
+end
 # [END eventarc_v1_generated_Eventarc_GetTrigger_sync]

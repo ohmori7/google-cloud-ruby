@@ -21,8 +21,8 @@ module Google
   module Analytics
     module Data
       module V1beta
-        # A contiguous set of days: startDate, startDate + 1, ..., endDate. Requests
-        # are allowed up to 4 date ranges.
+        # A contiguous set of days: `startDate`, `startDate + 1`, ..., `endDate`.
+        # Requests are allowed up to 4 date ranges.
         # @!attribute [rw] start_date
         #   @return [::String]
         #     The inclusive start date for the query in the format `YYYY-MM-DD`. Cannot
@@ -46,8 +46,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # A contiguous set of minutes: startMinutesAgo, startMinutesAgo + 1, ...,
-        # endMinutesAgo. Requests are allowed up to 2 minute ranges.
+        # A contiguous set of minutes: `startMinutesAgo`, `startMinutesAgo + 1`, ...,
+        # `endMinutesAgo`. Requests are allowed up to 2 minute ranges.
         # @!attribute [rw] start_minutes_ago
         #   @return [::Integer]
         #     The inclusive start minute for the query as a number of minutes before now.
@@ -82,13 +82,22 @@ module Google
 
         # Dimensions are attributes of your data. For example, the dimension city
         # indicates the city from which an event originates. Dimension values in report
-        # responses are strings; for example, city could be "Paris" or "New York".
+        # responses are strings; for example, the city could be "Paris" or "New York".
         # Requests are allowed up to 9 dimensions.
         # @!attribute [rw] name
         #   @return [::String]
         #     The name of the dimension. See the [API
         #     Dimensions](https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#dimensions)
-        #     for the list of dimension names.
+        #     for the list of dimension names supported by core reporting methods such
+        #     as `runReport` and `batchRunReports`. See
+        #     [Realtime
+        #     Dimensions](https://developers.google.com/analytics/devguides/reporting/data/v1/realtime-api-schema#dimensions)
+        #     for the list of dimension names supported by the `runRealtimeReport`
+        #     method. See
+        #     [Funnel
+        #     Dimensions](https://developers.google.com/analytics/devguides/reporting/data/v1/exploration-api-schema#dimensions)
+        #     for the list of dimension names supported by the `runFunnelReport`
+        #     method.
         #
         #     If `dimensionExpression` is specified, `name` can be any string that you
         #     would like within the allowed character set. For example if a
@@ -114,13 +123,19 @@ module Google
         # @!attribute [rw] lower_case
         #   @return [::Google::Analytics::Data::V1beta::DimensionExpression::CaseExpression]
         #     Used to convert a dimension value to lower case.
+        #
+        #     Note: The following fields are mutually exclusive: `lower_case`, `upper_case`, `concatenate`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] upper_case
         #   @return [::Google::Analytics::Data::V1beta::DimensionExpression::CaseExpression]
         #     Used to convert a dimension value to upper case.
+        #
+        #     Note: The following fields are mutually exclusive: `upper_case`, `lower_case`, `concatenate`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] concatenate
         #   @return [::Google::Analytics::Data::V1beta::DimensionExpression::ConcatenateExpression]
         #     Used to combine dimension values to a single dimension.
         #     For example, dimension "country, city": concatenate(country, ", ", city).
+        #
+        #     Note: The following fields are mutually exclusive: `concatenate`, `lower_case`, `upper_case`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class DimensionExpression
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -162,7 +177,16 @@ module Google
         #   @return [::String]
         #     The name of the metric. See the [API
         #     Metrics](https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema#metrics)
-        #     for the list of metric names.
+        #     for the list of metric names supported by core reporting methods such
+        #     as `runReport` and `batchRunReports`. See
+        #     [Realtime
+        #     Metrics](https://developers.google.com/analytics/devguides/reporting/data/v1/realtime-api-schema#metrics)
+        #     for the list of metric names supported by the `runRealtimeReport`
+        #     method. See
+        #     [Funnel
+        #     Metrics](https://developers.google.com/analytics/devguides/reporting/data/v1/exploration-api-schema#metrics)
+        #     for the list of metric names supported by the `runFunnelReport`
+        #     method.
         #
         #     If `expression` is specified, `name` can be any string that you would like
         #     within the allowed character set. For example if `expression` is
@@ -186,23 +210,52 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # To express dimension or metric filters.
-        # The fields in the same FilterExpression need to be either all dimensions or
-        # all metrics.
+        # Defines an individual comparison. Most requests will include multiple
+        # comparisons so that the report compares between the comparisons.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Each comparison produces separate rows in the response. In the response,
+        #     this comparison is identified by this name. If name is unspecified, we will
+        #     use the saved comparisons display name.
+        # @!attribute [rw] dimension_filter
+        #   @return [::Google::Analytics::Data::V1beta::FilterExpression]
+        #     A basic comparison.
+        #
+        #     Note: The following fields are mutually exclusive: `dimension_filter`, `comparison`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] comparison
+        #   @return [::String]
+        #     A saved comparison identified by the comparison's resource name.
+        #     For example, 'comparisons/1234'.
+        #
+        #     Note: The following fields are mutually exclusive: `comparison`, `dimension_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        class Comparison
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # To express dimension or metric filters. The fields in the same
+        # FilterExpression need to be either all dimensions or all metrics.
         # @!attribute [rw] and_group
         #   @return [::Google::Analytics::Data::V1beta::FilterExpressionList]
         #     The FilterExpressions in and_group have an AND relationship.
+        #
+        #     Note: The following fields are mutually exclusive: `and_group`, `or_group`, `not_expression`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] or_group
         #   @return [::Google::Analytics::Data::V1beta::FilterExpressionList]
         #     The FilterExpressions in or_group have an OR relationship.
+        #
+        #     Note: The following fields are mutually exclusive: `or_group`, `and_group`, `not_expression`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] not_expression
         #   @return [::Google::Analytics::Data::V1beta::FilterExpression]
         #     The FilterExpression is NOT of not_expression.
+        #
+        #     Note: The following fields are mutually exclusive: `not_expression`, `and_group`, `or_group`, `filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] filter
         #   @return [::Google::Analytics::Data::V1beta::Filter]
-        #     A primitive filter.
-        #     All fields in filter in same FilterExpression needs to be either all
-        #     dimensions or metrics.
+        #     A primitive filter. In the same FilterExpression, all of the filter's
+        #     field names need to be either all dimensions or all metrics.
+        #
+        #     Note: The following fields are mutually exclusive: `filter`, `and_group`, `or_group`, `not_expression`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class FilterExpression
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -220,20 +273,37 @@ module Google
         # An expression to filter dimension or metric values.
         # @!attribute [rw] field_name
         #   @return [::String]
-        #     The dimension name or metric name. Must be a name defined in dimensions
-        #     or metrics.
+        #     The dimension name or metric name.
+        #
+        #     In most methods, dimensions & metrics can be used for the first time in
+        #     this field. However in a RunPivotReportRequest, this field must be
+        #     additionally specified by name in the RunPivotReportRequest's dimensions or
+        #     metrics.
         # @!attribute [rw] string_filter
         #   @return [::Google::Analytics::Data::V1beta::Filter::StringFilter]
         #     Strings related filter.
+        #
+        #     Note: The following fields are mutually exclusive: `string_filter`, `in_list_filter`, `numeric_filter`, `between_filter`, `empty_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] in_list_filter
         #   @return [::Google::Analytics::Data::V1beta::Filter::InListFilter]
         #     A filter for in list values.
+        #
+        #     Note: The following fields are mutually exclusive: `in_list_filter`, `string_filter`, `numeric_filter`, `between_filter`, `empty_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] numeric_filter
         #   @return [::Google::Analytics::Data::V1beta::Filter::NumericFilter]
         #     A filter for numeric or date values.
+        #
+        #     Note: The following fields are mutually exclusive: `numeric_filter`, `string_filter`, `in_list_filter`, `between_filter`, `empty_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] between_filter
         #   @return [::Google::Analytics::Data::V1beta::Filter::BetweenFilter]
         #     A filter for two values.
+        #
+        #     Note: The following fields are mutually exclusive: `between_filter`, `string_filter`, `in_list_filter`, `numeric_filter`, `empty_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] empty_filter
+        #   @return [::Google::Analytics::Data::V1beta::Filter::EmptyFilter]
+        #     A filter for empty values such as "(not set)" and "" values.
+        #
+        #     Note: The following fields are mutually exclusive: `empty_filter`, `string_filter`, `in_list_filter`, `numeric_filter`, `between_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class Filter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -269,10 +339,10 @@ module Google
               # Contains the string value.
               CONTAINS = 4
 
-              # Full regular expression match with the string value.
+              # Full match for the regular expression with the string value.
               FULL_REGEXP = 5
 
-              # Partial regular expression match with the string value.
+              # Partial match for the regular expression with the string value.
               PARTIAL_REGEXP = 6
             end
           end
@@ -334,18 +404,32 @@ module Google
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
+
+          # Filter for empty values.
+          class EmptyFilter
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
         end
 
-        # The sort options.
+        # Order bys define how rows will be sorted in the response. For example,
+        # ordering rows by descending event count is one ordering, and ordering rows by
+        # the event name string is a different ordering.
         # @!attribute [rw] metric
         #   @return [::Google::Analytics::Data::V1beta::OrderBy::MetricOrderBy]
         #     Sorts results by a metric's values.
+        #
+        #     Note: The following fields are mutually exclusive: `metric`, `dimension`, `pivot`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] dimension
         #   @return [::Google::Analytics::Data::V1beta::OrderBy::DimensionOrderBy]
         #     Sorts results by a dimension's values.
+        #
+        #     Note: The following fields are mutually exclusive: `dimension`, `metric`, `pivot`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] pivot
         #   @return [::Google::Analytics::Data::V1beta::OrderBy::PivotOrderBy]
         #     Sorts results by a metric's values within a pivot column group.
+        #
+        #     Note: The following fields are mutually exclusive: `pivot`, `metric`, `dimension`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] desc
         #   @return [::Boolean]
         #     If true, sorts by descending order.
@@ -462,7 +546,7 @@ module Google
         #     single pivot requests.
         #
         #     The product of the `limit` for each `pivot` in a `RunPivotReportRequest`
-        #     must not exceed 100,000. For example, a two pivot request with `limit:
+        #     must not exceed 250,000. For example, a two pivot request with `limit:
         #     1000` in each pivot will fail because the product is `1,000,000`.
         # @!attribute [rw] metric_aggregations
         #   @return [::Array<::Google::Analytics::Data::V1beta::MetricAggregation>]
@@ -618,6 +702,18 @@ module Google
         #   @return [::Boolean]
         #     If true, indicates some buckets of dimension combinations are rolled into
         #     "(other)" row. This can happen for high cardinality reports.
+        #
+        #     The metadata parameter dataLossFromOtherRow is populated based on the
+        #     aggregated data table used in the report. The parameter will be accurately
+        #     populated regardless of the filters and limits in the report.
+        #
+        #     For example, the (other) row could be dropped from the report because the
+        #     request contains a filter on sessionSource = google. This parameter will
+        #     still be populated if data loss from other row was present in the input
+        #     aggregate data used to generate this report.
+        #
+        #     To learn more, see [About the (other) row and data
+        #     sampling](https://support.google.com/analytics/answer/13208658#reports).
         # @!attribute [rw] schema_restriction_response
         #   @return [::Google::Analytics::Data::V1beta::ResponseMetaData::SchemaRestrictionResponse]
         #     Describes the schema restrictions actively enforced in creating this
@@ -644,6 +740,24 @@ module Google
         # @!attribute [rw] empty_reason
         #   @return [::String]
         #     If empty reason is specified, the report is empty for this reason.
+        # @!attribute [rw] subject_to_thresholding
+        #   @return [::Boolean]
+        #     If `subjectToThresholding` is true, this report is subject to thresholding
+        #     and only returns data that meets the minimum aggregation thresholds. It is
+        #     possible for a request to be subject to thresholding thresholding and no
+        #     data is absent from the report, and this happens when all data is above the
+        #     thresholds. To learn more, see [Data
+        #     thresholds](https://support.google.com/analytics/answer/9383630).
+        # @!attribute [rw] sampling_metadatas
+        #   @return [::Array<::Google::Analytics::Data::V1beta::SamplingMetadata>]
+        #     If this report results is
+        #     [sampled](https://support.google.com/analytics/answer/13331292), this
+        #     describes the percentage of events used in this report. One
+        #     `samplingMetadatas` is populated for each date range. Each
+        #     `samplingMetadatas` corresponds to a date range in order that date ranges
+        #     were specified in the request.
+        #
+        #     However if the results are not sampled, this field will not be defined.
         class ResponseMetaData
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -673,6 +787,30 @@ module Google
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
           end
+        end
+
+        # If this report results is
+        # [sampled](https://support.google.com/analytics/answer/13331292), this
+        # describes the percentage of events used in this report. Sampling is the
+        # practice of analyzing a subset of all data in order to uncover the meaningful
+        # information in the larger data set.
+        # @!attribute [rw] samples_read_count
+        #   @return [::Integer]
+        #     The total number of events read in this sampled report for a date range.
+        #     This is the size of the subset this property's data that was analyzed in
+        #     this report.
+        # @!attribute [rw] sampling_space_size
+        #   @return [::Integer]
+        #     The total number of events present in this property's data that could
+        #     have been analyzed in this report for a date range. Sampling
+        #     uncovers the meaningful information about the larger data set, and this
+        #     is the size of the larger data set.
+        #
+        #     To calculate the percentage of available data that was used in this
+        #     report, compute `samplesReadCount/samplingSpaceSize`.
+        class SamplingMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # Describes a dimension column in the report. Dimensions requested in a report
@@ -797,9 +935,13 @@ module Google
         # @!attribute [rw] int64_value
         #   @return [::Integer]
         #     Integer value
+        #
+        #     Note: The following fields are mutually exclusive: `int64_value`, `double_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] double_value
         #   @return [::Float]
         #     Double value
+        #
+        #     Note: The following fields are mutually exclusive: `double_value`, `int64_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class NumericValue
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -810,15 +952,15 @@ module Google
         # Exhausted errors.
         # @!attribute [rw] tokens_per_day
         #   @return [::Google::Analytics::Data::V1beta::QuotaStatus]
-        #     Standard Analytics Properties can use up to 25,000 tokens per day;
-        #     Analytics 360 Properties can use 250,000 tokens per day. Most requests
+        #     Standard Analytics Properties can use up to 200,000 tokens per day;
+        #     Analytics 360 Properties can use 2,000,000 tokens per day. Most requests
         #     consume fewer than 10 tokens.
         # @!attribute [rw] tokens_per_hour
         #   @return [::Google::Analytics::Data::V1beta::QuotaStatus]
-        #     Standard Analytics Properties can use up to 5,000 tokens per hour;
-        #     Analytics 360 Properties can use 50,000 tokens per hour. An API request
-        #     consumes a single number of tokens, and that number is deducted from both
-        #     the hourly and daily quotas.
+        #     Standard Analytics Properties can use up to 40,000 tokens per hour;
+        #     Analytics 360 Properties can use 400,000 tokens per hour. An API request
+        #     consumes a single number of tokens, and that number is deducted from all of
+        #     the hourly, daily, and per project hourly quotas.
         # @!attribute [rw] concurrent_requests
         #   @return [::Google::Analytics::Data::V1beta::QuotaStatus]
         #     Standard Analytics Properties can send up to 10 concurrent requests;
@@ -834,6 +976,14 @@ module Google
         #     thresholded dimensions per hour. In a batch request, each report request
         #     is individually counted for this quota if the request contains potentially
         #     thresholded dimensions.
+        # @!attribute [rw] tokens_per_project_per_hour
+        #   @return [::Google::Analytics::Data::V1beta::QuotaStatus]
+        #     Analytics Properties can use up to 35% of their tokens per project per
+        #     hour. This amounts to standard Analytics Properties can use up to 14,000
+        #     tokens per project per hour, and Analytics 360 Properties can use 140,000
+        #     tokens per project per hour. An API request consumes a single number of
+        #     tokens, and that number is deducted from all of the hourly, daily, and per
+        #     project hourly quotas.
         class PropertyQuota
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -871,7 +1021,11 @@ module Google
         #     available only by `apiName`.
         # @!attribute [rw] custom_definition
         #   @return [::Boolean]
-        #     True if the dimension is a custom dimension for this property.
+        #     True if the dimension is custom to this property. This includes user,
+        #     event, & item scoped custom dimensions; to learn more about custom
+        #     dimensions, see https://support.google.com/analytics/answer/14240153. This
+        #     also include custom channel groups; to learn more about custom channel
+        #     groups, see https://support.google.com/analytics/answer/13051316.
         # @!attribute [rw] category
         #   @return [::String]
         #     The display name of the category that this dimension belongs to. Similar
@@ -941,6 +1095,22 @@ module Google
             # property, and this metric is cost related.
             NO_COST_METRICS = 2
           end
+        end
+
+        # The metadata for a single comparison.
+        # @!attribute [rw] api_name
+        #   @return [::String]
+        #     This comparison's resource name. Useable in [Comparison](#Comparison)'s
+        #     `comparison` field. For example, 'comparisons/1234'.
+        # @!attribute [rw] ui_name
+        #   @return [::String]
+        #     This comparison's name within the Google Analytics user interface.
+        # @!attribute [rw] description
+        #   @return [::String]
+        #     This comparison's description.
+        class ComparisonMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
         # The compatibility for a single dimension.
@@ -1033,8 +1203,8 @@ module Google
           TYPE_KILOMETERS = 13
         end
 
-        # Categories of data that you may be restricted from viewing on certain GA4
-        # properties.
+        # Categories of data that you may be restricted from viewing on certain
+        # Google Analytics properties.
         module RestrictedMetricType
           # Unspecified type.
           RESTRICTED_METRIC_TYPE_UNSPECIFIED = 0

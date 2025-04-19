@@ -174,17 +174,21 @@ module Google
     #   @return [::Array<::String>]
     #     Read-only. If present, then a [time
     #     series][google.monitoring.v3.TimeSeries], which is identified partially by
-    #     a metric type and a {::Google::Api::MonitoredResourceDescriptor MonitoredResourceDescriptor}, that is associated
-    #     with this metric type can only be associated with one of the monitored
-    #     resource types listed here.
+    #     a metric type and a
+    #     {::Google::Api::MonitoredResourceDescriptor MonitoredResourceDescriptor}, that
+    #     is associated with this metric type can only be associated with one of the
+    #     monitored resource types listed here.
     class MetricDescriptor
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods
 
       # Additional annotations that can be used to guide the usage of a metric.
       # @!attribute [rw] launch_stage
+      #   @deprecated This field is deprecated and may be removed in the next major version update.
       #   @return [::Google::Api::LaunchStage]
-      #     Deprecated. Must use the {::Google::Api::MetricDescriptor#launch_stage MetricDescriptor.launch_stage} instead.
+      #     Deprecated. Must use the
+      #     {::Google::Api::MetricDescriptor#launch_stage MetricDescriptor.launch_stage}
+      #     instead.
       # @!attribute [rw] sample_period
       #   @return [::Google::Protobuf::Duration]
       #     The sampling period of metric data points. For metrics which are written
@@ -196,9 +200,27 @@ module Google
       #     The delay of data points caused by ingestion. Data points older than this
       #     age are guaranteed to be ingested and available to be read, excluding
       #     data loss due to errors.
+      # @!attribute [rw] time_series_resource_hierarchy_level
+      #   @return [::Array<::Google::Api::MetricDescriptor::MetricDescriptorMetadata::TimeSeriesResourceHierarchyLevel>]
+      #     The scope of the timeseries data of the metric.
       class MetricDescriptorMetadata
         include ::Google::Protobuf::MessageExts
         extend ::Google::Protobuf::MessageExts::ClassMethods
+
+        # The resource hierarchy level of the timeseries data of a metric.
+        module TimeSeriesResourceHierarchyLevel
+          # Do not use this default value.
+          TIME_SERIES_RESOURCE_HIERARCHY_LEVEL_UNSPECIFIED = 0
+
+          # Scopes a metric to a project.
+          PROJECT = 1
+
+          # Scopes a metric to an organization.
+          ORGANIZATION = 2
+
+          # Scopes a metric to a folder.
+          FOLDER = 3
+        end
       end
 
       # The kind of measurement. It describes how the data is reported.
@@ -253,8 +275,9 @@ module Google
     # labels of a {::Google::Api::MetricDescriptor `MetricDescriptor`}.
     # @!attribute [rw] type
     #   @return [::String]
-    #     An existing metric type, see {::Google::Api::MetricDescriptor google.api.MetricDescriptor}.
-    #     For example, `custom.googleapis.com/invoice/paid/amount`.
+    #     An existing metric type, see
+    #     {::Google::Api::MetricDescriptor google.api.MetricDescriptor}. For example,
+    #     `custom.googleapis.com/invoice/paid/amount`.
     # @!attribute [rw] labels
     #   @return [::Google::Protobuf::Map{::String => ::String}]
     #     The set of label values that uniquely identify this metric. All

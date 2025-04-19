@@ -20,8 +20,9 @@ Metrics/BlockLength:
     - "google-cloud-bigtable.gemspec"
     - "Rakefile"
     - "lib/google-cloud-bigtable.rb"
+    - ".toys.rb"
 Metrics/ClassLength:
-  Max: 300
+  Max: 400
 Metrics/PerceivedComplexity:
   Max: 12
 Naming/FileName:

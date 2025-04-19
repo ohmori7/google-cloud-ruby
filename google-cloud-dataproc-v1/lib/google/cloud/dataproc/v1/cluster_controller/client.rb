@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/dataproc/v1/clusters_pb"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -31,6 +32,12 @@ module Google
           # of Compute Engine instances.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "dataproc.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -122,6 +129,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @cluster_controller_stub.universe_domain
+            end
+
+            ##
             # Create a new ClusterController client object.
             #
             # @example
@@ -154,8 +170,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -168,15 +185,38 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @cluster_controller_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Dataproc::V1::ClusterController::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @cluster_controller_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @cluster_controller_stub.endpoint
+                config.universe_domain = @cluster_controller_stub.universe_domain
+                config.logger = @cluster_controller_stub.logger if config.respond_to? :logger=
+              end
             end
 
             ##
@@ -185,6 +225,22 @@ module Google
             # @return [::Google::Cloud::Dataproc::V1::ClusterController::Operations]
             #
             attr_reader :operations_client
+
+            ##
+            # Get the associated client for mix-in of the IAMPolicy.
+            #
+            # @return [Google::Iam::V1::IAMPolicy::Client]
+            #
+            attr_reader :iam_policy_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @cluster_controller_stub.logger
+            end
 
             # Service calls
 
@@ -216,11 +272,12 @@ module Google
             #   @param cluster [::Google::Cloud::Dataproc::V1::Cluster, ::Hash]
             #     Required. The cluster to create.
             #   @param request_id [::String]
-            #     Optional. A unique ID used to identify the request. If the server receives two
+            #     Optional. A unique ID used to identify the request. If the server receives
+            #     two
             #     [CreateClusterRequest](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#google.cloud.dataproc.v1.CreateClusterRequest)s
             #     with the same id, then the second request will be ignored and the
-            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created and stored in the backend
-            #     is returned.
+            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created
+            #     and stored in the backend is returned.
             #
             #     It is recommended to always set this value to a
             #     [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
@@ -250,14 +307,14 @@ module Google
             #   # Call the create_cluster method.
             #   result = client.create_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_cluster request, options = nil
@@ -271,10 +328,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -299,7 +357,7 @@ module Google
               @cluster_controller_stub.call_rpc :create_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -309,7 +367,8 @@ module Google
             # Updates a cluster in a project. The returned
             # {::Google::Longrunning::Operation#metadata Operation.metadata} will be
             # [ClusterOperationMetadata](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#clusteroperationmetadata).
-            # The cluster must be in a {::Google::Cloud::Dataproc::V1::ClusterStatus::State `RUNNING`} state or an error
+            # The cluster must be in a
+            # {::Google::Cloud::Dataproc::V1::ClusterStatus::State `RUNNING`} state or an error
             # is returned.
             #
             # @overload update_cluster(request, options = nil)
@@ -337,7 +396,7 @@ module Google
             #   @param cluster [::Google::Cloud::Dataproc::V1::Cluster, ::Hash]
             #     Required. The changes to the cluster.
             #   @param graceful_decommission_timeout [::Google::Protobuf::Duration, ::Hash]
-            #     Optional. Timeout for graceful YARN decomissioning. Graceful
+            #     Optional. Timeout for graceful YARN decommissioning. Graceful
             #     decommissioning allows removing nodes from the cluster without
             #     interrupting jobs in progress. Timeout specifies how long to wait for jobs
             #     in progress to finish before forcefully removing nodes (and potentially
@@ -403,8 +462,8 @@ module Google
             #     receives two
             #     [UpdateClusterRequest](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#google.cloud.dataproc.v1.UpdateClusterRequest)s
             #     with the same id, then the second request will be ignored and the
-            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created and stored in the
-            #     backend is returned.
+            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created
+            #     and stored in the backend is returned.
             #
             #     It is recommended to always set this value to a
             #     [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
@@ -432,14 +491,14 @@ module Google
             #   # Call the update_cluster method.
             #   result = client.update_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_cluster request, options = nil
@@ -453,10 +512,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -484,7 +544,7 @@ module Google
               @cluster_controller_stub.call_rpc :update_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -523,8 +583,8 @@ module Google
             #     receives two
             #     [StopClusterRequest](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#google.cloud.dataproc.v1.StopClusterRequest)s
             #     with the same id, then the second request will be ignored and the
-            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created and stored in the
-            #     backend is returned.
+            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created
+            #     and stored in the backend is returned.
             #
             #     Recommendation: Set this value to a
             #     [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
@@ -552,14 +612,14 @@ module Google
             #   # Call the stop_cluster method.
             #   result = client.stop_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def stop_cluster request, options = nil
@@ -573,10 +633,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.stop_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -604,7 +665,7 @@ module Google
               @cluster_controller_stub.call_rpc :stop_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -643,8 +704,8 @@ module Google
             #     receives two
             #     [StartClusterRequest](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#google.cloud.dataproc.v1.StartClusterRequest)s
             #     with the same id, then the second request will be ignored and the
-            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created and stored in the
-            #     backend is returned.
+            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created
+            #     and stored in the backend is returned.
             #
             #     Recommendation: Set this value to a
             #     [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
@@ -672,14 +733,14 @@ module Google
             #   # Call the start_cluster method.
             #   result = client.start_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def start_cluster request, options = nil
@@ -693,10 +754,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.start_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -724,7 +786,7 @@ module Google
               @cluster_controller_stub.call_rpc :start_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -765,8 +827,8 @@ module Google
             #     receives two
             #     [DeleteClusterRequest](https://cloud.google.com/dataproc/docs/reference/rpc/google.cloud.dataproc.v1#google.cloud.dataproc.v1.DeleteClusterRequest)s
             #     with the same id, then the second request will be ignored and the
-            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created and stored in the
-            #     backend is returned.
+            #     first {::Google::Longrunning::Operation google.longrunning.Operation} created
+            #     and stored in the backend is returned.
             #
             #     It is recommended to always set this value to a
             #     [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier).
@@ -794,14 +856,14 @@ module Google
             #   # Call the delete_cluster method.
             #   result = client.delete_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_cluster request, options = nil
@@ -815,10 +877,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -846,7 +909,7 @@ module Google
               @cluster_controller_stub.call_rpc :delete_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -912,10 +975,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -942,7 +1006,6 @@ module Google
 
               @cluster_controller_stub.call_rpc :get_cluster, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -980,12 +1043,12 @@ module Google
             #     where **field** is one of `status.state`, `clusterName`, or `labels.[KEY]`,
             #     and `[KEY]` is a label key. **value** can be `*` to match all values.
             #     `status.state` can be one of the following: `ACTIVE`, `INACTIVE`,
-            #     `CREATING`, `RUNNING`, `ERROR`, `DELETING`, or `UPDATING`. `ACTIVE`
-            #     contains the `CREATING`, `UPDATING`, and `RUNNING` states. `INACTIVE`
-            #     contains the `DELETING` and `ERROR` states.
-            #     `clusterName` is the name of the cluster provided at creation time.
-            #     Only the logical `AND` operator is supported; space-separated items are
-            #     treated as having an implicit `AND` operator.
+            #     `CREATING`, `RUNNING`, `ERROR`, `DELETING`, `UPDATING`, `STOPPING`, or
+            #     `STOPPED`. `ACTIVE` contains the `CREATING`, `UPDATING`, and `RUNNING`
+            #     states. `INACTIVE` contains the `DELETING`, `ERROR`, `STOPPING`, and
+            #     `STOPPED` states. `clusterName` is the name of the cluster provided at
+            #     creation time. Only the logical `AND` operator is supported;
+            #     space-separated items are treated as having an implicit `AND` operator.
             #
             #     Example filter:
             #
@@ -1016,13 +1079,11 @@ module Google
             #   # Call the list_clusters method.
             #   result = client.list_clusters request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Dataproc::V1::Cluster.
-            #     p response
+            #     p item
             #   end
             #
             def list_clusters request, options = nil
@@ -1036,10 +1097,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_clusters.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1064,7 +1126,7 @@ module Google
               @cluster_controller_stub.call_rpc :list_clusters, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @cluster_controller_stub, :list_clusters, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1089,7 +1151,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload diagnose_cluster(project_id: nil, region: nil, cluster_name: nil)
+            # @overload diagnose_cluster(project_id: nil, region: nil, cluster_name: nil, tarball_gcs_dir: nil, tarball_access: nil, diagnosis_interval: nil, jobs: nil, yarn_application_ids: nil)
             #   Pass arguments to `diagnose_cluster` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1101,6 +1163,22 @@ module Google
             #     Required. The Dataproc region in which to handle the request.
             #   @param cluster_name [::String]
             #     Required. The cluster name.
+            #   @param tarball_gcs_dir [::String]
+            #     Optional. (Optional) The output Cloud Storage directory for the diagnostic
+            #     tarball. If not specified, a task-specific directory in the cluster's
+            #     staging bucket will be used.
+            #   @param tarball_access [::Google::Cloud::Dataproc::V1::DiagnoseClusterRequest::TarballAccess]
+            #     Optional. (Optional) The access type to the diagnostic tarball. If not
+            #     specified, falls back to default access of the bucket
+            #   @param diagnosis_interval [::Google::Type::Interval, ::Hash]
+            #     Optional. Time interval in which diagnosis should be carried out on the
+            #     cluster.
+            #   @param jobs [::Array<::String>]
+            #     Optional. Specifies a list of jobs on which diagnosis is to be performed.
+            #     Format: projects/\\{project}/regions/\\{region}/jobs/\\{job}
+            #   @param yarn_application_ids [::Array<::String>]
+            #     Optional. Specifies a list of yarn applications on which diagnosis is to be
+            #     performed.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::Operation]
@@ -1122,14 +1200,14 @@ module Google
             #   # Call the diagnose_cluster method.
             #   result = client.diagnose_cluster request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def diagnose_cluster request, options = nil
@@ -1143,10 +1221,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.diagnose_cluster.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Dataproc::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1174,7 +1253,7 @@ module Google
               @cluster_controller_stub.call_rpc :diagnose_cluster, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1210,20 +1289,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"dataproc.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1258,11 +1344,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "dataproc.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "dataproc.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1277,6 +1377,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1295,6 +1397,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

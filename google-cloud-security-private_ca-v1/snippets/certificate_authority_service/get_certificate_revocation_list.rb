@@ -19,15 +19,29 @@
 # [START privateca_v1_generated_CertificateAuthorityService_GetCertificateRevocationList_sync]
 require "google/cloud/security/private_ca/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new
+##
+# Snippet for the get_certificate_revocation_list call in the CertificateAuthorityService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#get_certificate_revocation_list.
+#
+def get_certificate_revocation_list
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Security::PrivateCA::V1::GetCertificateRevocationListRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Security::PrivateCA::V1::GetCertificateRevocationListRequest.new
 
-# Call the get_certificate_revocation_list method.
-result = client.get_certificate_revocation_list request
+  # Call the get_certificate_revocation_list method.
+  result = client.get_certificate_revocation_list request
 
-# The returned object is of type Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList.
-p result
+  # The returned object is of type Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList.
+  p result
+end
 # [END privateca_v1_generated_CertificateAuthorityService_GetCertificateRevocationList_sync]

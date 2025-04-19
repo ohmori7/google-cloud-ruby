@@ -1,5 +1,52 @@
 # Release History
 
+### 2.0.0 (2025-02-13)
+
+### ⚠ BREAKING CHANGES
+
+* Update to v2 of the cloud functions service ([#29039](https://github.com/googleapis/google-cloud-ruby/issues/29039))
+
+#### Features
+
+* Update to v2 of the cloud functions service ([#29039](https://github.com/googleapis/google-cloud-ruby/issues/29039)) 
+
+### 1.6.0 (2025-01-29)
+
+#### Features
+
+* Provide methods to determine whether services are available with the currently installed versioned client ([#28529](https://github.com/googleapis/google-cloud-ruby/issues/28529)) 
+* Update Ruby version requirement to 3.0 
+
+### 1.5.1 (2024-08-08)
+
+#### Documentation
+
+* Formatting updates to README.md ([#26627](https://github.com/googleapis/google-cloud-ruby/issues/26627)) 
+
+### 1.5.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24871](https://github.com/googleapis/google-cloud-ruby/issues/24871)) 
+
+### 1.4.0 (2024-01-15)
+
+#### Features
+
+* Support for universe_domain ([#24260](https://github.com/googleapis/google-cloud-ruby/issues/24260)) 
+
+### 1.3.0 (2023-03-09)
+
+#### Features
+
+* Support REST transport ([#20767](https://github.com/googleapis/google-cloud-ruby/issues/20767)) 
+
+### 1.2.0 (2022-07-02)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
 ### 1.1.3 / 2022-01-11
 
 #### Documentation

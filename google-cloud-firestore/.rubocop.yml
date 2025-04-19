@@ -10,6 +10,7 @@ AllCops:
     - "acceptance/**/*"
     - "conformance/**/*"
     - "test/**/*"
+    - "samples/acceptance/helper.rb"
 
 Style/Documentation:
   Enabled: false
@@ -17,6 +18,9 @@ Style/Documentation:
 Metrics/AbcSize:
   Exclude:
     - "lib/google/cloud/firestore/query.rb"
+Metrics/BlockLength:
+  Exclude:
+    - ".toys.rb"
 Metrics/ClassLength:
   Enabled: false
 Metrics/CyclomaticComplexity:

@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/contact_center_insights"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::ContactCenterInsights::ClientConstructionMinitest < Minitest::Test
-  def test_contact_center_insights
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_contact_center_insights_grpc
+    skip unless Google::Cloud::ContactCenterInsights.contact_center_insights_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::ContactCenterInsights.contact_center_insights do |config|
+      client = Google::Cloud::ContactCenterInsights.contact_center_insights transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Client, client
+    end
+  end
+
+  def test_contact_center_insights_rest
+    skip unless Google::Cloud::ContactCenterInsights.contact_center_insights_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::ContactCenterInsights.contact_center_insights transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::ContactCenterInsights::V1::ContactCenterInsights::Rest::Client, client
     end
   end
 end

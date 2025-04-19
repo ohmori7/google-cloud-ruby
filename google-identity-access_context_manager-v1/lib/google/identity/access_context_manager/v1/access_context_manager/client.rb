@@ -27,19 +27,25 @@ module Google
           ##
           # Client for the AccessContextManager service.
           #
-          # API for setting [Access Levels]
-          # [google.identity.accesscontextmanager.v1.AccessLevel] and [Service
-          # Perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
-          # for Google Cloud Projects. Each organization has one [AccessPolicy]
-          # [google.identity.accesscontextmanager.v1.AccessPolicy] containing the
-          # [Access Levels] [google.identity.accesscontextmanager.v1.AccessLevel]
-          # and [Service Perimeters]
+          # API for setting [access levels]
+          # [google.identity.accesscontextmanager.v1.AccessLevel] and [service
+          # perimeters] [google.identity.accesscontextmanager.v1.ServicePerimeter]
+          # for Google Cloud projects. Each organization has one [access policy]
+          # [google.identity.accesscontextmanager.v1.AccessPolicy] that contains the
+          # [access levels] [google.identity.accesscontextmanager.v1.AccessLevel]
+          # and [service perimeters]
           # [google.identity.accesscontextmanager.v1.ServicePerimeter]. This
-          # [AccessPolicy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
+          # [access policy] [google.identity.accesscontextmanager.v1.AccessPolicy] is
           # applicable to all resources in the organization.
           # AccessPolicies
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "accesscontextmanager.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -103,6 +109,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @access_context_manager_stub.universe_domain
+            end
+
+            ##
             # Create a new AccessContextManager client object.
             #
             # @example
@@ -135,8 +150,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -149,15 +165,30 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @access_context_manager_stub = ::Gapic::ServiceStub.new(
                 ::Google::Identity::AccessContextManager::V1::AccessContextManager::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @access_context_manager_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
             end
 
             ##
@@ -167,12 +198,21 @@ module Google
             #
             attr_reader :operations_client
 
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @access_context_manager_stub.logger
+            end
+
             # Service calls
 
             ##
-            # List all [AccessPolicies]
-            # [google.identity.accesscontextmanager.v1.AccessPolicy] under a
-            # container.
+            # Lists all [access policies]
+            # [google.identity.accesscontextmanager.v1.AccessPolicy] in an
+            # organization.
             #
             # @overload list_access_policies(request, options = nil)
             #   Pass arguments to `list_access_policies` via a request object, either of type
@@ -221,13 +261,11 @@ module Google
             #   # Call the list_access_policies method.
             #   result = client.list_access_policies request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Identity::AccessContextManager::V1::AccessPolicy.
-            #     p response
+            #     p item
             #   end
             #
             def list_access_policies request, options = nil
@@ -241,10 +279,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_access_policies.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.list_access_policies.timeout,
@@ -258,15 +297,15 @@ module Google
               @access_context_manager_stub.call_rpc :list_access_policies, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @access_context_manager_stub, :list_access_policies, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Get an [AccessPolicy]
-            # [google.identity.accesscontextmanager.v1.AccessPolicy] by name.
+            # Returns an [access policy]
+            # [google.identity.accesscontextmanager.v1.AccessPolicy] based on the name.
             #
             # @overload get_access_policy(request, options = nil)
             #   Pass arguments to `get_access_policy` via a request object, either of type
@@ -322,10 +361,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_access_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -346,17 +386,16 @@ module Google
 
               @access_context_manager_stub.call_rpc :get_access_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Create an `AccessPolicy`. Fails if this organization already has a
-            # `AccessPolicy`. The longrunning Operation will have a successful status
-            # once the `AccessPolicy` has propagated to long-lasting storage.
-            # Syntactic and basic semantic errors will be returned in `metadata` as a
+            # Creates an access policy. This method fails if the organization already has
+            # an access policy. The long-running operation has a successful status
+            # after the access policy propagates to long-lasting storage.
+            # Syntactic and basic semantic errors are returned in `metadata` as a
             # BadRequest proto.
             #
             # @overload create_access_policy(request, options = nil)
@@ -369,7 +408,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload create_access_policy(name: nil, parent: nil, title: nil, create_time: nil, update_time: nil, etag: nil)
+            # @overload create_access_policy(name: nil, parent: nil, title: nil, scopes: nil, create_time: nil, update_time: nil, etag: nil)
             #   Pass arguments to `create_access_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -383,6 +422,21 @@ module Google
             #     `organizations/{organization_id}`
             #   @param title [::String]
             #     Required. Human readable title. Does not affect behavior.
+            #   @param scopes [::Array<::String>]
+            #     The scopes of a policy define which resources an ACM policy can restrict,
+            #     and where ACM resources can be referenced.
+            #     For example, a policy with scopes=["folders/123"] has the following
+            #     behavior:
+            #     - vpcsc perimeters can only restrict projects within folders/123
+            #     - access levels can only be referenced by resources within folders/123.
+            #     If empty, there are no limitations on which resources can be restricted by
+            #     an ACM policy, and there are no limitations on where ACM resources can be
+            #     referenced.
+            #     Only one policy can include a given scope (attempting to create a second
+            #     policy which includes "folders/123" will result in an error).
+            #     Currently, scopes cannot be modified after a policy is created.
+            #     Currently, policies can only have a single scope.
+            #     Format: list of `folders/{folder_number}` or `projects/{project_number}`
             #   @param create_time [::Google::Protobuf::Timestamp, ::Hash]
             #     Output only. Time the `AccessPolicy` was created in UTC.
             #   @param update_time [::Google::Protobuf::Timestamp, ::Hash]
@@ -413,14 +467,14 @@ module Google
             #   # Call the create_access_policy method.
             #   result = client.create_access_policy request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_access_policy request, options = nil
@@ -434,10 +488,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_access_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               options.apply_defaults timeout:      @config.rpcs.create_access_policy.timeout,
@@ -451,20 +506,19 @@ module Google
               @access_context_manager_stub.call_rpc :create_access_policy, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Update an [AccessPolicy]
+            # Updates an [access policy]
             # [google.identity.accesscontextmanager.v1.AccessPolicy]. The
-            # longrunning Operation from this RPC will have a successful status once the
-            # changes to the [AccessPolicy]
-            # [google.identity.accesscontextmanager.v1.AccessPolicy] have propagated
-            # to long-lasting storage. Syntactic and basic semantic errors will be
-            # returned in `metadata` as a BadRequest proto.
+            # long-running operation from this RPC has a successful status after the
+            # changes to the [access policy]
+            # [google.identity.accesscontextmanager.v1.AccessPolicy] propagate
+            # to long-lasting storage.
             #
             # @overload update_access_policy(request, options = nil)
             #   Pass arguments to `update_access_policy` via a request object, either of type
@@ -506,14 +560,14 @@ module Google
             #   # Call the update_access_policy method.
             #   result = client.update_access_policy request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_access_policy request, options = nil
@@ -527,10 +581,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_access_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -552,18 +607,18 @@ module Google
               @access_context_manager_stub.call_rpc :update_access_policy, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Delete an [AccessPolicy]
-            # [google.identity.accesscontextmanager.v1.AccessPolicy] by resource
-            # name. The longrunning Operation will have a successful status once the
-            # [AccessPolicy] [google.identity.accesscontextmanager.v1.AccessPolicy]
-            # has been removed from long-lasting storage.
+            # Deletes an [access policy]
+            # [google.identity.accesscontextmanager.v1.AccessPolicy] based on the
+            # resource name. The long-running operation has a successful status after the
+            # [access policy] [google.identity.accesscontextmanager.v1.AccessPolicy]
+            # is removed from long-lasting storage.
             #
             # @overload delete_access_policy(request, options = nil)
             #   Pass arguments to `delete_access_policy` via a request object, either of type
@@ -605,14 +660,14 @@ module Google
             #   # Call the delete_access_policy method.
             #   result = client.delete_access_policy request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_access_policy request, options = nil
@@ -626,10 +681,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_access_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -651,14 +707,14 @@ module Google
               @access_context_manager_stub.call_rpc :delete_access_policy, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List all [Access Levels]
+            # Lists all [access levels]
             # [google.identity.accesscontextmanager.v1.AccessLevel] for an access
             # policy.
             #
@@ -716,13 +772,11 @@ module Google
             #   # Call the list_access_levels method.
             #   result = client.list_access_levels request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Identity::AccessContextManager::V1::AccessLevel.
-            #     p response
+            #     p item
             #   end
             #
             def list_access_levels request, options = nil
@@ -736,10 +790,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_access_levels.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -761,15 +816,15 @@ module Google
               @access_context_manager_stub.call_rpc :list_access_levels, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @access_context_manager_stub, :list_access_levels, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Get an [Access Level]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] by resource
+            # Gets an [access level]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] based on the resource
             # name.
             #
             # @overload get_access_level(request, options = nil)
@@ -837,10 +892,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_access_level.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -861,20 +917,19 @@ module Google
 
               @access_context_manager_stub.call_rpc :get_access_level, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Create an [Access Level]
-            # [google.identity.accesscontextmanager.v1.AccessLevel]. The longrunning
-            # operation from this RPC will have a successful status once the [Access
-            # Level] [google.identity.accesscontextmanager.v1.AccessLevel] has
-            # propagated to long-lasting storage. [Access Levels]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] containing
-            # errors will result in an error response for the first error encountered.
+            # Creates an [access level]
+            # [google.identity.accesscontextmanager.v1.AccessLevel]. The long-running
+            # operation from this RPC has a successful status after the [access
+            # level] [google.identity.accesscontextmanager.v1.AccessLevel]
+            # propagates to long-lasting storage. If [access levels]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] contain
+            # errors, an error response is returned for the first error encountered.
             #
             # @overload create_access_level(request, options = nil)
             #   Pass arguments to `create_access_level` via a request object, either of type
@@ -923,14 +978,14 @@ module Google
             #   # Call the create_access_level method.
             #   result = client.create_access_level request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_access_level request, options = nil
@@ -944,10 +999,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_access_level.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -969,21 +1025,21 @@ module Google
               @access_context_manager_stub.call_rpc :create_access_level, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Update an [Access Level]
-            # [google.identity.accesscontextmanager.v1.AccessLevel]. The longrunning
-            # operation from this RPC will have a successful status once the changes to
-            # the [Access Level]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] have propagated
-            # to long-lasting storage. [Access Levels]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] containing
-            # errors will result in an error response for the first error encountered.
+            # Updates an [access level]
+            # [google.identity.accesscontextmanager.v1.AccessLevel]. The long-running
+            # operation from this RPC has a successful status after the changes to
+            # the [access level]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] propagate
+            # to long-lasting storage. If [access levels]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] contain
+            # errors, an error response is returned for the first error encountered.
             #
             # @overload update_access_level(request, options = nil)
             #   Pass arguments to `update_access_level` via a request object, either of type
@@ -1029,14 +1085,14 @@ module Google
             #   # Call the update_access_level method.
             #   result = client.update_access_level request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_access_level request, options = nil
@@ -1050,10 +1106,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_access_level.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1075,17 +1132,17 @@ module Google
               @access_context_manager_stub.call_rpc :update_access_level, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Delete an [Access Level]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] by resource
-            # name. The longrunning operation from this RPC will have a successful status
-            # once the [Access Level]
+            # Deletes an [access level]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] based on the resource
+            # name. The long-running operation from this RPC has a successful status
+            # after the [access level]
             # [google.identity.accesscontextmanager.v1.AccessLevel] has been removed
             # from long-lasting storage.
             #
@@ -1131,14 +1188,14 @@ module Google
             #   # Call the delete_access_level method.
             #   result = client.delete_access_level request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_access_level request, options = nil
@@ -1152,10 +1209,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_access_level.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1177,29 +1235,29 @@ module Google
               @access_context_manager_stub.call_rpc :delete_access_level, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Replace all existing [Access Levels]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] in an [Access
-            # Policy] [google.identity.accesscontextmanager.v1.AccessPolicy] with
-            # the [Access Levels]
+            # Replaces all existing [access levels]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] in an [access
+            # policy] [google.identity.accesscontextmanager.v1.AccessPolicy] with
+            # the [access levels]
             # [google.identity.accesscontextmanager.v1.AccessLevel] provided. This
-            # is done atomically. The longrunning operation from this RPC will have a
-            # successful status once all replacements have propagated to long-lasting
-            # storage. Replacements containing errors will result in an error response
-            # for the first error encountered.  Replacement will be cancelled on error,
-            # existing [Access Levels]
-            # [google.identity.accesscontextmanager.v1.AccessLevel] will not be
-            # affected. Operation.response field will contain
-            # ReplaceAccessLevelsResponse. Removing [Access Levels]
+            # is done atomically. The long-running operation from this RPC has a
+            # successful status after all replacements propagate to long-lasting
+            # storage. If the replacement contains errors, an error response is returned
+            # for the first error encountered.  Upon error, the replacement is cancelled,
+            # and existing [access levels]
+            # [google.identity.accesscontextmanager.v1.AccessLevel] are not
+            # affected. The Operation.response field contains
+            # ReplaceAccessLevelsResponse. Removing [access levels]
             # [google.identity.accesscontextmanager.v1.AccessLevel] contained in existing
-            # [Service Perimeters]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] will result in
+            # [service perimeters]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] result in an
             # error.
             #
             # @overload replace_access_levels(request, options = nil)
@@ -1259,14 +1317,14 @@ module Google
             #   # Call the replace_access_levels method.
             #   result = client.replace_access_levels request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def replace_access_levels request, options = nil
@@ -1280,10 +1338,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.replace_access_levels.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1305,14 +1364,14 @@ module Google
               @access_context_manager_stub.call_rpc :replace_access_levels, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List all [Service Perimeters]
+            # Lists all [service perimeters]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter] for an
             # access policy.
             #
@@ -1366,13 +1425,11 @@ module Google
             #   # Call the list_service_perimeters method.
             #   result = client.list_service_perimeters request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Identity::AccessContextManager::V1::ServicePerimeter.
-            #     p response
+            #     p item
             #   end
             #
             def list_service_perimeters request, options = nil
@@ -1386,10 +1443,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_service_perimeters.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1411,16 +1469,16 @@ module Google
               @access_context_manager_stub.call_rpc :list_service_perimeters, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @access_context_manager_stub, :list_service_perimeters, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Get a [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] by resource
-            # name.
+            # Gets a [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] based on the
+            # resource name.
             #
             # @overload get_service_perimeter(request, options = nil)
             #   Pass arguments to `get_service_perimeter` via a request object, either of type
@@ -1478,10 +1536,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_service_perimeter.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1502,21 +1561,20 @@ module Google
 
               @access_context_manager_stub.call_rpc :get_service_perimeter, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Create a [Service Perimeter]
+            # Creates a [service perimeter]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter]. The
-            # longrunning operation from this RPC will have a successful status once the
-            # [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] has
-            # propagated to long-lasting storage. [Service Perimeters]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] containing
-            # errors will result in an error response for the first error encountered.
+            # long-running operation from this RPC has a successful status after the
+            # [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter]
+            # propagates to long-lasting storage. If a [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] contains
+            # errors, an error response is returned for the first error encountered.
             #
             # @overload create_service_perimeter(request, options = nil)
             #   Pass arguments to `create_service_perimeter` via a request object, either of type
@@ -1565,14 +1623,14 @@ module Google
             #   # Call the create_service_perimeter method.
             #   result = client.create_service_perimeter request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_service_perimeter request, options = nil
@@ -1586,10 +1644,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_service_perimeter.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1611,21 +1670,21 @@ module Google
               @access_context_manager_stub.call_rpc :create_service_perimeter, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Update a [Service Perimeter]
+            # Updates a [service perimeter]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter]. The
-            # longrunning operation from this RPC will have a successful status once the
-            # changes to the [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] have
-            # propagated to long-lasting storage. [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] containing
-            # errors will result in an error response for the first error encountered.
+            # long-running operation from this RPC has a successful status after the
+            # [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter]
+            # propagates to long-lasting storage. If a [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] contains
+            # errors, an error response is returned for the first error encountered.
             #
             # @overload update_service_perimeter(request, options = nil)
             #   Pass arguments to `update_service_perimeter` via a request object, either of type
@@ -1668,14 +1727,14 @@ module Google
             #   # Call the update_service_perimeter method.
             #   result = client.update_service_perimeter request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_service_perimeter request, options = nil
@@ -1689,10 +1748,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_service_perimeter.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1714,19 +1774,19 @@ module Google
               @access_context_manager_stub.call_rpc :update_service_perimeter, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Delete a [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] by resource
-            # name. The longrunning operation from this RPC will have a successful status
-            # once the [Service Perimeter]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] has been
-            # removed from long-lasting storage.
+            # Deletes a [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] based on the
+            # resource name. The long-running operation from this RPC has a successful
+            # status after the [service perimeter]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] is removed from
+            # long-lasting storage.
             #
             # @overload delete_service_perimeter(request, options = nil)
             #   Pass arguments to `delete_service_perimeter` via a request object, either of type
@@ -1770,14 +1830,14 @@ module Google
             #   # Call the delete_service_perimeter method.
             #   result = client.delete_service_perimeter request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_service_perimeter request, options = nil
@@ -1791,10 +1851,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_service_perimeter.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1816,25 +1877,25 @@ module Google
               @access_context_manager_stub.call_rpc :delete_service_perimeter, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Replace all existing [Service Perimeters]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] in an
-            # [Access Policy] [google.identity.accesscontextmanager.v1.AccessPolicy]
-            # with the [Service Perimeters]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] provided.
-            # This is done atomically. The longrunning operation from this
-            # RPC will have a successful status once all replacements have propagated to
-            # long-lasting storage. Replacements containing errors will result in an
-            # error response for the first error encountered. Replacement will be
-            # cancelled on error, existing [Service Perimeters]
-            # [google.identity.accesscontextmanager.v1.ServicePerimeter] will not be
-            # affected. Operation.response field will contain
+            # Replace all existing [service perimeters]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] in an [access
+            # policy] [google.identity.accesscontextmanager.v1.AccessPolicy] with the
+            # [service perimeters]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] provided. This
+            # is done atomically. The long-running operation from this RPC has a
+            # successful status after all replacements propagate to long-lasting storage.
+            # Replacements containing errors result in an error response for the first
+            # error encountered. Upon an error, replacement are cancelled and existing
+            # [service perimeters]
+            # [google.identity.accesscontextmanager.v1.ServicePerimeter] are not
+            # affected. The Operation.response field contains
             # ReplaceServicePerimetersResponse.
             #
             # @overload replace_service_perimeters(request, options = nil)
@@ -1894,14 +1955,14 @@ module Google
             #   # Call the replace_service_perimeters method.
             #   result = client.replace_service_perimeters request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def replace_service_perimeters request, options = nil
@@ -1915,10 +1976,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.replace_service_perimeters.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1940,28 +2002,28 @@ module Google
               @access_context_manager_stub.call_rpc :replace_service_perimeters, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Commit the dry-run spec for all the [Service Perimeters]
+            # Commits the dry-run specification for all the [service perimeters]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter] in an
-            # {::Google::Identity::AccessContextManager::V1::AccessPolicy Access Policy}.
-            # A commit operation on a Service Perimeter involves copying its `spec` field
-            # to that Service Perimeter's `status` field. Only [Service Perimeters]
+            # {::Google::Identity::AccessContextManager::V1::AccessPolicy access policy}.
+            # A commit operation on a service perimeter involves copying its `spec` field
+            # to the `status` field of the service perimeter. Only [service perimeters]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter] with
             # `use_explicit_dry_run_spec` field set to true are affected by a commit
-            # operation. The longrunning operation from this RPC will have a successful
-            # status once the dry-run specs for all the [Service Perimeters]
+            # operation. The long-running operation from this RPC has a successful
+            # status after the dry-run specifications for all the [service perimeters]
             # [google.identity.accesscontextmanager.v1.ServicePerimeter] have been
-            # committed. If a commit fails, it will cause the longrunning operation to
-            # return an error response and the entire commit operation will be cancelled.
-            # When successful, Operation.response field will contain
-            # CommitServicePerimetersResponse. The `dry_run` and the `spec` fields will
-            # be cleared after a successful commit operation.
+            # committed. If a commit fails, it causes the long-running operation to
+            # return an error response and the entire commit operation is cancelled.
+            # When successful, the Operation.response field contains
+            # CommitServicePerimetersResponse. The `dry_run` and the `spec` fields are
+            # cleared after a successful commit operation.
             #
             # @overload commit_service_perimeters(request, options = nil)
             #   Pass arguments to `commit_service_perimeters` via a request object, either of type
@@ -1988,7 +2050,7 @@ module Google
             #     Format: `accessPolicies/{policy_id}`
             #   @param etag [::String]
             #     Optional. The etag for the version of the [Access Policy]
-            #     [google.identity.accesscontextmanager.v1alpha.AccessPolicy] that this
+            #     [google.identity.accesscontextmanager.v1.AccessPolicy] that this
             #     commit operation is to be performed on. If, at the time of commit, the
             #     etag for the Access Policy stored in Access Context Manager is different
             #     from the specified etag, then the commit operation will not be performed
@@ -2015,14 +2077,14 @@ module Google
             #   # Call the commit_service_perimeters method.
             #   result = client.commit_service_perimeters request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def commit_service_perimeters request, options = nil
@@ -2036,10 +2098,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.commit_service_perimeters.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2061,7 +2124,7 @@ module Google
               @access_context_manager_stub.call_rpc :commit_service_perimeters, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2118,13 +2181,11 @@ module Google
             #   # Call the list_gcp_user_access_bindings method.
             #   result = client.list_gcp_user_access_bindings request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Identity::AccessContextManager::V1::GcpUserAccessBinding.
-            #     p response
+            #     p item
             #   end
             #
             def list_gcp_user_access_bindings request, options = nil
@@ -2138,10 +2199,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_gcp_user_access_bindings.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2163,7 +2225,7 @@ module Google
               @access_context_manager_stub.call_rpc :list_gcp_user_access_bindings, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @access_context_manager_stub, :list_gcp_user_access_bindings, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2226,10 +2288,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_gcp_user_access_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2250,7 +2313,6 @@ module Google
 
               @access_context_manager_stub.call_rpc :get_gcp_user_access_binding, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2261,7 +2323,7 @@ module Google
             # [google.identity.accesscontextmanager.v1.GcpUserAccessBinding]. If the
             # client specifies a [name]
             # [google.identity.accesscontextmanager.v1.GcpUserAccessBinding.name],
-            # the server will ignore it. Fails if a resource already exists with the same
+            # the server ignores it. Fails if a resource already exists with the same
             # [group_key]
             # [google.identity.accesscontextmanager.v1.GcpUserAccessBinding.group_key].
             # Completion of this long-running operation does not necessarily signify that
@@ -2309,14 +2371,14 @@ module Google
             #   # Call the create_gcp_user_access_binding method.
             #   result = client.create_gcp_user_access_binding request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_gcp_user_access_binding request, options = nil
@@ -2330,10 +2392,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_gcp_user_access_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2355,7 +2418,7 @@ module Google
               @access_context_manager_stub.call_rpc :create_gcp_user_access_binding, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2414,14 +2477,14 @@ module Google
             #   # Call the update_gcp_user_access_binding method.
             #   result = client.update_gcp_user_access_binding request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_gcp_user_access_binding request, options = nil
@@ -2435,10 +2498,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_gcp_user_access_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2460,7 +2524,7 @@ module Google
               @access_context_manager_stub.call_rpc :update_gcp_user_access_binding, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2511,14 +2575,14 @@ module Google
             #   # Call the delete_gcp_user_access_binding method.
             #   result = client.delete_gcp_user_access_binding request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_gcp_user_access_binding request, options = nil
@@ -2532,10 +2596,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_gcp_user_access_binding.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -2557,7 +2622,295 @@ module Google
               @access_context_manager_stub.call_rpc :delete_gcp_user_access_binding, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Sets the IAM policy for the specified Access Context Manager
+            # {::Google::Identity::AccessContextManager::V1::AccessPolicy access policy}.
+            # This method replaces the existing IAM policy on the access policy. The IAM
+            # policy controls the set of users who can perform specific operations on the
+            # Access Context Manager [access
+            # policy][google.identity.accesscontextmanager.v1.AccessPolicy].
+            #
+            # @overload set_iam_policy(request, options = nil)
+            #   Pass arguments to `set_iam_policy` via a request object, either of type
+            #   {::Google::Iam::V1::SetIamPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Iam::V1::SetIamPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
+            #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param resource [::String]
+            #     REQUIRED: The resource for which the policy is being specified.
+            #     See the operation documentation for the appropriate value for this field.
+            #   @param policy [::Google::Iam::V1::Policy, ::Hash]
+            #     REQUIRED: The complete policy to be applied to the `resource`. The size of
+            #     the policy is limited to a few 10s of KB. An empty policy is a
+            #     valid policy but certain Cloud Platform services (such as Projects)
+            #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Iam::V1::Policy]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Iam::V1::Policy]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/identity/access_context_manager/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Iam::V1::SetIamPolicyRequest.new
+            #
+            #   # Call the set_iam_policy method.
+            #   result = client.set_iam_policy request
+            #
+            #   # The returned object is of type Google::Iam::V1::Policy.
+            #   p result
+            #
+            def set_iam_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Iam::V1::SetIamPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.set_iam_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.resource
+                header_params["resource"] = request.resource
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.set_iam_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.set_iam_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @access_context_manager_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Gets the IAM policy for the specified Access Context Manager
+            # {::Google::Identity::AccessContextManager::V1::AccessPolicy access policy}.
+            #
+            # @overload get_iam_policy(request, options = nil)
+            #   Pass arguments to `get_iam_policy` via a request object, either of type
+            #   {::Google::Iam::V1::GetIamPolicyRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Iam::V1::GetIamPolicyRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload get_iam_policy(resource: nil, options: nil)
+            #   Pass arguments to `get_iam_policy` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param resource [::String]
+            #     REQUIRED: The resource for which the policy is being requested.
+            #     See the operation documentation for the appropriate value for this field.
+            #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
+            #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
+            #     `GetIamPolicy`.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Iam::V1::Policy]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Iam::V1::Policy]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/identity/access_context_manager/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Iam::V1::GetIamPolicyRequest.new
+            #
+            #   # Call the get_iam_policy method.
+            #   result = client.get_iam_policy request
+            #
+            #   # The returned object is of type Google::Iam::V1::Policy.
+            #   p result
+            #
+            def get_iam_policy request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Iam::V1::GetIamPolicyRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.get_iam_policy.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.resource
+                header_params["resource"] = request.resource
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.get_iam_policy.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.get_iam_policy.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @access_context_manager_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
+                yield response, operation if block_given?
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Returns the IAM permissions that the caller has on the specified Access
+            # Context Manager resource. The resource can be an
+            # {::Google::Identity::AccessContextManager::V1::AccessPolicy AccessPolicy},
+            # {::Google::Identity::AccessContextManager::V1::AccessLevel AccessLevel}, or
+            # [ServicePerimeter][google.identity.accesscontextmanager.v1.ServicePerimeter
+            # ]. This method does not support other resources.
+            #
+            # @overload test_iam_permissions(request, options = nil)
+            #   Pass arguments to `test_iam_permissions` via a request object, either of type
+            #   {::Google::Iam::V1::TestIamPermissionsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Iam::V1::TestIamPermissionsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload test_iam_permissions(resource: nil, permissions: nil)
+            #   Pass arguments to `test_iam_permissions` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param resource [::String]
+            #     REQUIRED: The resource for which the policy detail is being requested.
+            #     See the operation documentation for the appropriate value for this field.
+            #   @param permissions [::Array<::String>]
+            #     The set of permissions to check for the `resource`. Permissions with
+            #     wildcards (such as '*' or 'storage.*') are not allowed. For more
+            #     information see
+            #     [IAM Overview](https://cloud.google.com/iam/docs/overview#permissions).
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Google::Iam::V1::TestIamPermissionsResponse]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Google::Iam::V1::TestIamPermissionsResponse]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/identity/access_context_manager/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Identity::AccessContextManager::V1::AccessContextManager::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Iam::V1::TestIamPermissionsRequest.new
+            #
+            #   # Call the test_iam_permissions method.
+            #   result = client.test_iam_permissions request
+            #
+            #   # The returned object is of type Google::Iam::V1::TestIamPermissionsResponse.
+            #   p result
+            #
+            def test_iam_permissions request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Iam::V1::TestIamPermissionsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.test_iam_permissions.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Identity::AccessContextManager::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.resource
+                header_params["resource"] = request.resource
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.test_iam_permissions.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.test_iam_permissions.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @access_context_manager_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
+                yield response, operation if block_given?
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -2593,20 +2946,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"accesscontextmanager.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -2641,11 +3001,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "accesscontextmanager.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "accesscontextmanager.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -2660,6 +3034,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -2678,6 +3054,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -2813,6 +3197,21 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :delete_gcp_user_access_binding
+                ##
+                # RPC-specific configuration for `set_iam_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :set_iam_policy
+                ##
+                # RPC-specific configuration for `get_iam_policy`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :get_iam_policy
+                ##
+                # RPC-specific configuration for `test_iam_permissions`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :test_iam_permissions
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -2862,6 +3261,12 @@ module Google
                   @update_gcp_user_access_binding = ::Gapic::Config::Method.new update_gcp_user_access_binding_config
                   delete_gcp_user_access_binding_config = parent_rpcs.delete_gcp_user_access_binding if parent_rpcs.respond_to? :delete_gcp_user_access_binding
                   @delete_gcp_user_access_binding = ::Gapic::Config::Method.new delete_gcp_user_access_binding_config
+                  set_iam_policy_config = parent_rpcs.set_iam_policy if parent_rpcs.respond_to? :set_iam_policy
+                  @set_iam_policy = ::Gapic::Config::Method.new set_iam_policy_config
+                  get_iam_policy_config = parent_rpcs.get_iam_policy if parent_rpcs.respond_to? :get_iam_policy
+                  @get_iam_policy = ::Gapic::Config::Method.new get_iam_policy_config
+                  test_iam_permissions_config = parent_rpcs.test_iam_permissions if parent_rpcs.respond_to? :test_iam_permissions
+                  @test_iam_permissions = ::Gapic::Config::Method.new test_iam_permissions_config
 
                   yield self if block_given?
                 end

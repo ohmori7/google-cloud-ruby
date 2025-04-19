@@ -19,15 +19,29 @@
 # [START cloudasset_v1_generated_AssetService_AnalyzeMove_sync]
 require "google/cloud/asset/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Asset::V1::AssetService::Client.new
+##
+# Snippet for the analyze_move call in the AssetService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Asset::V1::AssetService::Client#analyze_move.
+#
+def analyze_move
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Asset::V1::AssetService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Asset::V1::AnalyzeMoveRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Asset::V1::AnalyzeMoveRequest.new
 
-# Call the analyze_move method.
-result = client.analyze_move request
+  # Call the analyze_move method.
+  result = client.analyze_move request
 
-# The returned object is of type Google::Cloud::Asset::V1::AnalyzeMoveResponse.
-p result
+  # The returned object is of type Google::Cloud::Asset::V1::AnalyzeMoveResponse.
+  p result
+end
 # [END cloudasset_v1_generated_AssetService_AnalyzeMove_sync]

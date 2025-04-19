@@ -19,15 +19,29 @@
 # [START dialogflow_v3_generated_Experiments_UpdateExperiment_sync]
 require "google/cloud/dialogflow/cx/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::CX::V3::Experiments::Client.new
+##
+# Snippet for the update_experiment call in the Experiments service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::CX::V3::Experiments::Client#update_experiment.
+#
+def update_experiment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::CX::V3::Experiments::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::CX::V3::UpdateExperimentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::CX::V3::UpdateExperimentRequest.new
 
-# Call the update_experiment method.
-result = client.update_experiment request
+  # Call the update_experiment method.
+  result = client.update_experiment request
 
-# The returned object is of type Google::Cloud::Dialogflow::CX::V3::Experiment.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::CX::V3::Experiment.
+  p result
+end
 # [END dialogflow_v3_generated_Experiments_UpdateExperiment_sync]

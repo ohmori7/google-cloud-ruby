@@ -19,15 +19,29 @@
 # [START dialogflow_v3_generated_Intents_GetIntent_sync]
 require "google/cloud/dialogflow/cx/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dialogflow::CX::V3::Intents::Client.new
+##
+# Snippet for the get_intent call in the Intents service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dialogflow::CX::V3::Intents::Client#get_intent.
+#
+def get_intent
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dialogflow::CX::V3::Intents::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dialogflow::CX::V3::GetIntentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dialogflow::CX::V3::GetIntentRequest.new
 
-# Call the get_intent method.
-result = client.get_intent request
+  # Call the get_intent method.
+  result = client.get_intent request
 
-# The returned object is of type Google::Cloud::Dialogflow::CX::V3::Intent.
-p result
+  # The returned object is of type Google::Cloud::Dialogflow::CX::V3::Intent.
+  p result
+end
 # [END dialogflow_v3_generated_Intents_GetIntent_sync]

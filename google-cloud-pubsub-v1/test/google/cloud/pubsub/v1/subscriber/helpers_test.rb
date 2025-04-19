@@ -23,8 +23,26 @@ require "gapic/grpc/service_stub"
 require "google/cloud/pubsub/v1/subscriber"
 
 class ::Google::Cloud::PubSub::V1::Subscriber::HelpersTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_config_channel_args
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       ::Google::Auth::Credentials.stub :default, :my_creds do
         ::Google::Cloud::PubSub::V1::Subscriber::Client.new do |config|
           channel_args = config.channel_args
@@ -33,6 +51,7 @@ class ::Google::Cloud::PubSub::V1::Subscriber::HelpersTest < Minitest::Test
           assert_equal -1, channel_args["grpc.max_receive_message_length"]
           assert_equal 300_000, channel_args["grpc.keepalive_time_ms"]
           assert_equal 1, channel_args["grpc.service_config_disable_resolution"]
+          assert_equal 4 * 1024 * 1024, channel_args["grpc.max_metadata_size"]
         end
       end
     end

@@ -28,9 +28,12 @@ module Google
   module Cloud
     module Compute
       module V1
-        # To load this service and instantiate a REST client:
+        ##
+        # The ImageFamilyViews API.
         #
-        #     require "google/cloud/compute/v1/image_family_views"
+        # @example Load this service and instantiate a REST client
+        #
+        #     require "google/cloud/compute/v1/image_family_views/rest"
         #     client = ::Google::Cloud::Compute::V1::ImageFamilyViews::Rest::Client.new
         #
         module ImageFamilyViews

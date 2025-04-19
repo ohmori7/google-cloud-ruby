@@ -41,9 +41,26 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
 
       @requests << @block&.call(*args, **kwargs)
 
-      yield @response, @operation if block_given?
+      catch :response do
+        yield @response, @operation if block_given?
+        @response
+      end
+    end
 
-      @response
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
     end
   end
 
@@ -500,6 +517,8 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
     name = "hello world"
     collection_ids = ["hello world"]
     output_uri_prefix = "hello world"
+    namespace_ids = ["hello world"]
+    snapshot_time = {}
 
     export_documents_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :export_documents, name
@@ -507,6 +526,8 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
       assert_equal "hello world", request["name"]
       assert_equal ["hello world"], request["collection_ids"]
       assert_equal "hello world", request["output_uri_prefix"]
+      assert_equal ["hello world"], request["namespace_ids"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::Timestamp), request["snapshot_time"]
       refute_nil options
     end
 
@@ -517,35 +538,35 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
       end
 
       # Use hash object
-      client.export_documents({ name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix }) do |response, operation|
+      client.export_documents({ name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix, namespace_ids: namespace_ids, snapshot_time: snapshot_time }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.export_documents name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix do |response, operation|
+      client.export_documents name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix, namespace_ids: namespace_ids, snapshot_time: snapshot_time do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.export_documents ::Google::Cloud::Firestore::Admin::V1::ExportDocumentsRequest.new(name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix) do |response, operation|
+      client.export_documents ::Google::Cloud::Firestore::Admin::V1::ExportDocumentsRequest.new(name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix, namespace_ids: namespace_ids, snapshot_time: snapshot_time) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.export_documents({ name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix }, grpc_options) do |response, operation|
+      client.export_documents({ name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix, namespace_ids: namespace_ids, snapshot_time: snapshot_time }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.export_documents(::Google::Cloud::Firestore::Admin::V1::ExportDocumentsRequest.new(name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix), grpc_options) do |response, operation|
+      client.export_documents(::Google::Cloud::Firestore::Admin::V1::ExportDocumentsRequest.new(name: name, collection_ids: collection_ids, output_uri_prefix: output_uri_prefix, namespace_ids: namespace_ids, snapshot_time: snapshot_time), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -567,6 +588,7 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
     name = "hello world"
     collection_ids = ["hello world"]
     input_uri_prefix = "hello world"
+    namespace_ids = ["hello world"]
 
     import_documents_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :import_documents, name
@@ -574,6 +596,7 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
       assert_equal "hello world", request["name"]
       assert_equal ["hello world"], request["collection_ids"]
       assert_equal "hello world", request["input_uri_prefix"]
+      assert_equal ["hello world"], request["namespace_ids"]
       refute_nil options
     end
 
@@ -584,35 +607,35 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
       end
 
       # Use hash object
-      client.import_documents({ name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix }) do |response, operation|
+      client.import_documents({ name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix, namespace_ids: namespace_ids }) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.import_documents name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix do |response, operation|
+      client.import_documents name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix, namespace_ids: namespace_ids do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.import_documents ::Google::Cloud::Firestore::Admin::V1::ImportDocumentsRequest.new(name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix) do |response, operation|
+      client.import_documents ::Google::Cloud::Firestore::Admin::V1::ImportDocumentsRequest.new(name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix, namespace_ids: namespace_ids) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.import_documents({ name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix }, grpc_options) do |response, operation|
+      client.import_documents({ name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix, namespace_ids: namespace_ids }, grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.import_documents(::Google::Cloud::Firestore::Admin::V1::ImportDocumentsRequest.new(name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix), grpc_options) do |response, operation|
+      client.import_documents(::Google::Cloud::Firestore::Admin::V1::ImportDocumentsRequest.new(name: name, collection_ids: collection_ids, input_uri_prefix: input_uri_prefix, namespace_ids: namespace_ids), grpc_options) do |response, operation|
         assert_kind_of Gapic::Operation, response
         assert_equal grpc_response, response.grpc_op
         assert_equal grpc_operation, operation
@@ -620,6 +643,140 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
 
       # Verify method calls
       assert_equal 5, import_documents_client_stub.call_rpc_count
+    end
+  end
+
+  def test_bulk_delete_documents
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    collection_ids = ["hello world"]
+    namespace_ids = ["hello world"]
+
+    bulk_delete_documents_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :bulk_delete_documents, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal ["hello world"], request["collection_ids"]
+      assert_equal ["hello world"], request["namespace_ids"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, bulk_delete_documents_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.bulk_delete_documents({ name: name, collection_ids: collection_ids, namespace_ids: namespace_ids }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.bulk_delete_documents name: name, collection_ids: collection_ids, namespace_ids: namespace_ids do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.bulk_delete_documents ::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest.new(name: name, collection_ids: collection_ids, namespace_ids: namespace_ids) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.bulk_delete_documents({ name: name, collection_ids: collection_ids, namespace_ids: namespace_ids }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.bulk_delete_documents(::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest.new(name: name, collection_ids: collection_ids, namespace_ids: namespace_ids), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, bulk_delete_documents_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_database
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    database = {}
+    database_id = "hello world"
+
+    create_database_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_database, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Firestore::Admin::V1::Database), request["database"]
+      assert_equal "hello world", request["database_id"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_database_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_database({ parent: parent, database: database, database_id: database_id }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_database parent: parent, database: database, database_id: database_id do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_database ::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest.new(parent: parent, database: database, database_id: database_id) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_database({ parent: parent, database: database, database_id: database_id }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_database(::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest.new(parent: parent, database: database, database_id: database_id), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_database_client_stub.call_rpc_count
     end
   end
 
@@ -690,11 +847,13 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
 
     # Create request parameters for a unary method.
     parent = "hello world"
+    show_deleted = true
 
     list_databases_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
       assert_equal :list_databases, name
       assert_kind_of ::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest, request
       assert_equal "hello world", request["parent"]
+      assert_equal true, request["show_deleted"]
       refute_nil options
     end
 
@@ -705,31 +864,31 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
       end
 
       # Use hash object
-      client.list_databases({ parent: parent }) do |response, operation|
+      client.list_databases({ parent: parent, show_deleted: show_deleted }) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use named arguments
-      client.list_databases parent: parent do |response, operation|
+      client.list_databases parent: parent, show_deleted: show_deleted do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object
-      client.list_databases ::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest.new(parent: parent) do |response, operation|
+      client.list_databases ::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest.new(parent: parent, show_deleted: show_deleted) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use hash object with options
-      client.list_databases({ parent: parent }, grpc_options) do |response, operation|
+      client.list_databases({ parent: parent, show_deleted: show_deleted }, grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
 
       # Use protobuf object with options
-      client.list_databases(::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest.new(parent: parent), grpc_options) do |response, operation|
+      client.list_databases(::Google::Cloud::Firestore::Admin::V1::ListDatabasesRequest.new(parent: parent, show_deleted: show_deleted), grpc_options) do |response, operation|
         assert_equal grpc_response, response
         assert_equal grpc_operation, operation
       end
@@ -804,11 +963,1026 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
     end
   end
 
+  def test_delete_database
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+    etag = "hello world"
+
+    delete_database_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_database, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest, request
+      assert_equal "hello world", request["name"]
+      assert_equal "hello world", request["etag"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_database_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_database({ name: name, etag: etag }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_database name: name, etag: etag do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_database ::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest.new(name: name, etag: etag) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_database({ name: name, etag: etag }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_database(::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest.new(name: name, etag: etag), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_database_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::UserCreds.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    user_creds = {}
+    user_creds_id = "hello world"
+
+    create_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Firestore::Admin::V1::UserCreds), request["user_creds"]
+      assert_equal "hello world", request["user_creds_id"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_user_creds({ parent: parent, user_creds: user_creds, user_creds_id: user_creds_id }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_user_creds parent: parent, user_creds: user_creds, user_creds_id: user_creds_id do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_user_creds ::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest.new(parent: parent, user_creds: user_creds, user_creds_id: user_creds_id) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_user_creds({ parent: parent, user_creds: user_creds, user_creds_id: user_creds_id }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_user_creds(::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest.new(parent: parent, user_creds: user_creds, user_creds_id: user_creds_id), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::UserCreds.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_user_creds({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_user_creds name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_user_creds ::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_user_creds({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_user_creds(::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::ListUserCredsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+
+    list_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest, request
+      assert_equal "hello world", request["parent"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_user_creds({ parent: parent }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_user_creds parent: parent do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_user_creds ::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest.new(parent: parent) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_user_creds({ parent: parent }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_user_creds(::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest.new(parent: parent), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_enable_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::UserCreds.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    enable_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :enable_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, enable_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.enable_user_creds({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.enable_user_creds name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.enable_user_creds ::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.enable_user_creds({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.enable_user_creds(::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, enable_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_disable_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::UserCreds.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    disable_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :disable_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, disable_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.disable_user_creds({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.disable_user_creds name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.disable_user_creds ::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.disable_user_creds({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.disable_user_creds(::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, disable_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_reset_user_password
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::UserCreds.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    reset_user_password_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :reset_user_password, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, reset_user_password_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.reset_user_password({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.reset_user_password name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.reset_user_password ::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.reset_user_password({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.reset_user_password(::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, reset_user_password_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_user_creds
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_user_creds_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_user_creds, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_user_creds_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_user_creds({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_user_creds name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_user_creds ::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_user_creds({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_user_creds(::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_user_creds_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_backup
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::Backup.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_backup_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_backup, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::GetBackupRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_backup_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_backup({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_backup name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_backup ::Google::Cloud::Firestore::Admin::V1::GetBackupRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_backup({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_backup(::Google::Cloud::Firestore::Admin::V1::GetBackupRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_backup_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_backups
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::ListBackupsResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    filter = "hello world"
+
+    list_backups_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_backups, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["filter"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_backups_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_backups({ parent: parent, filter: filter }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_backups parent: parent, filter: filter do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_backups ::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest.new(parent: parent, filter: filter) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_backups({ parent: parent, filter: filter }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_backups(::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest.new(parent: parent, filter: filter), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_backups_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_backup
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_backup_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_backup, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_backup_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_backup({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_backup name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_backup ::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_backup({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_backup(::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_backup_client_stub.call_rpc_count
+    end
+  end
+
+  def test_restore_database
+    # Create GRPC objects.
+    grpc_response = ::Google::Longrunning::Operation.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    database_id = "hello world"
+    backup = "hello world"
+    encryption_config = {}
+
+    restore_database_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :restore_database, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal "hello world", request["database_id"]
+      assert_equal "hello world", request["backup"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Firestore::Admin::V1::Database::EncryptionConfig), request["encryption_config"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, restore_database_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.restore_database({ parent: parent, database_id: database_id, backup: backup, encryption_config: encryption_config }) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.restore_database parent: parent, database_id: database_id, backup: backup, encryption_config: encryption_config do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.restore_database ::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest.new(parent: parent, database_id: database_id, backup: backup, encryption_config: encryption_config) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.restore_database({ parent: parent, database_id: database_id, backup: backup, encryption_config: encryption_config }, grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.restore_database(::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest.new(parent: parent, database_id: database_id, backup: backup, encryption_config: encryption_config), grpc_options) do |response, operation|
+        assert_kind_of Gapic::Operation, response
+        assert_equal grpc_response, response.grpc_op
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, restore_database_client_stub.call_rpc_count
+    end
+  end
+
+  def test_create_backup_schedule
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::BackupSchedule.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+    backup_schedule = {}
+
+    create_backup_schedule_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :create_backup_schedule, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest, request
+      assert_equal "hello world", request["parent"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Firestore::Admin::V1::BackupSchedule), request["backup_schedule"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, create_backup_schedule_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.create_backup_schedule({ parent: parent, backup_schedule: backup_schedule }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.create_backup_schedule parent: parent, backup_schedule: backup_schedule do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.create_backup_schedule ::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest.new(parent: parent, backup_schedule: backup_schedule) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.create_backup_schedule({ parent: parent, backup_schedule: backup_schedule }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.create_backup_schedule(::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest.new(parent: parent, backup_schedule: backup_schedule), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, create_backup_schedule_client_stub.call_rpc_count
+    end
+  end
+
+  def test_get_backup_schedule
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::BackupSchedule.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    get_backup_schedule_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :get_backup_schedule, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, get_backup_schedule_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.get_backup_schedule({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.get_backup_schedule name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.get_backup_schedule ::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.get_backup_schedule({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.get_backup_schedule(::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, get_backup_schedule_client_stub.call_rpc_count
+    end
+  end
+
+  def test_list_backup_schedules
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesResponse.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    parent = "hello world"
+
+    list_backup_schedules_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :list_backup_schedules, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest, request
+      assert_equal "hello world", request["parent"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, list_backup_schedules_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.list_backup_schedules({ parent: parent }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.list_backup_schedules parent: parent do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.list_backup_schedules ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest.new(parent: parent) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.list_backup_schedules({ parent: parent }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.list_backup_schedules(::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest.new(parent: parent), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, list_backup_schedules_client_stub.call_rpc_count
+    end
+  end
+
+  def test_update_backup_schedule
+    # Create GRPC objects.
+    grpc_response = ::Google::Cloud::Firestore::Admin::V1::BackupSchedule.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    backup_schedule = {}
+    update_mask = {}
+
+    update_backup_schedule_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :update_backup_schedule, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest, request
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Cloud::Firestore::Admin::V1::BackupSchedule), request["backup_schedule"]
+      assert_equal Gapic::Protobuf.coerce({}, to: ::Google::Protobuf::FieldMask), request["update_mask"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, update_backup_schedule_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.update_backup_schedule({ backup_schedule: backup_schedule, update_mask: update_mask }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.update_backup_schedule backup_schedule: backup_schedule, update_mask: update_mask do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.update_backup_schedule ::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest.new(backup_schedule: backup_schedule, update_mask: update_mask) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.update_backup_schedule({ backup_schedule: backup_schedule, update_mask: update_mask }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.update_backup_schedule(::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest.new(backup_schedule: backup_schedule, update_mask: update_mask), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, update_backup_schedule_client_stub.call_rpc_count
+    end
+  end
+
+  def test_delete_backup_schedule
+    # Create GRPC objects.
+    grpc_response = ::Google::Protobuf::Empty.new
+    grpc_operation = GRPC::ActiveCall::Operation.new nil
+    grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    grpc_options = {}
+
+    # Create request parameters for a unary method.
+    name = "hello world"
+
+    delete_backup_schedule_client_stub = ClientStub.new grpc_response, grpc_operation do |name, request, options:|
+      assert_equal :delete_backup_schedule, name
+      assert_kind_of ::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest, request
+      assert_equal "hello world", request["name"]
+      refute_nil options
+    end
+
+    Gapic::ServiceStub.stub :new, delete_backup_schedule_client_stub do
+      # Create client
+      client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      # Use hash object
+      client.delete_backup_schedule({ name: name }) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use named arguments
+      client.delete_backup_schedule name: name do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object
+      client.delete_backup_schedule ::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest.new(name: name) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use hash object with options
+      client.delete_backup_schedule({ name: name }, grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Use protobuf object with options
+      client.delete_backup_schedule(::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest.new(name: name), grpc_options) do |response, operation|
+        assert_equal grpc_response, response
+        assert_equal grpc_operation, operation
+      end
+
+      # Verify method calls
+      assert_equal 5, delete_backup_schedule_client_stub.call_rpc_count
+    end
+  end
+
   def test_configure
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = block_config = config = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -826,7 +2000,8 @@ class ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::ClientTest < Minite
     grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
 
     client = nil
-    Gapic::ServiceStub.stub :new, nil do
+    dummy_stub = ClientStub.new nil, nil
+    Gapic::ServiceStub.stub :new, dummy_stub do
       client = ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new do |config|
         config.credentials = grpc_channel
       end

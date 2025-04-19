@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/servicedirectory/v1/registration_service_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -44,6 +45,12 @@ module Google
           # `projects/*/locations/*/namespaces/*/services/*/endpoints/*`.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "servicedirectory.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -110,6 +117,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @registration_service_stub.universe_domain
+            end
+
+            ##
             # Create a new RegistrationService client object.
             #
             # @example
@@ -142,8 +158,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -154,17 +171,55 @@ module Google
 
               @registration_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::ServiceDirectory::V1::RegistrationService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @registration_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @registration_service_stub.endpoint
+                config.universe_domain = @registration_service_stub.universe_domain
+                config.logger = @registration_service_stub.logger if config.respond_to? :logger=
+              end
+            end
+
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @registration_service_stub.logger
             end
 
             # Service calls
 
             ##
-            # Creates a namespace, and returns the new Namespace.
+            # Creates a namespace, and returns the new namespace.
             #
             # @overload create_namespace(request, options = nil)
             #   Pass arguments to `create_namespace` via a request object, either of type
@@ -229,10 +284,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_namespace.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -253,7 +309,6 @@ module Google
 
               @registration_service_stub.call_rpc :create_namespace, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -279,46 +334,52 @@ module Google
             #
             #   @param parent [::String]
             #     Required. The resource name of the project and location whose namespaces
-            #     we'd like to list.
+            #     you'd like to list.
             #   @param page_size [::Integer]
             #     Optional. The maximum number of items to return.
             #   @param page_token [::String]
             #     Optional. The next_page_token value returned from a previous List request,
             #     if any.
             #   @param filter [::String]
-            #     Optional. The filter to list result by.
+            #     Optional. The filter to list results by.
             #
-            #     General filter string syntax:
-            #     <field> <operator> <value> (<logical connector>)
-            #     <field> can be "name", or "labels.<key>" for map field.
-            #     <operator> can be "<, >, <=, >=, !=, =, :". Of which ":" means HAS, and
-            #     is roughly the same as "=".
-            #     <value> must be the same data type as field.
-            #     <logical connector> can be "AND, OR, NOT".
+            #     General `filter` string syntax:
+            #     `<field> <operator> <value> (<logical connector>)`
+            #
+            #     *   `<field>` can be `name` or `labels.<key>` for map field
+            #     *   `<operator>` can be `<`, `>`, `<=`, `>=`, `!=`, `=`, `:`. Of which `:`
+            #         means `HAS`, and is roughly the same as `=`
+            #     *   `<value>` must be the same data type as field
+            #     *   `<logical connector>` can be `AND`, `OR`, `NOT`
             #
             #     Examples of valid filters:
-            #     * "labels.owner" returns Namespaces that have a label with the key "owner"
-            #       this is the same as "labels:owner".
-            #     * "labels.protocol=gRPC" returns Namespaces that have key/value
-            #       "protocol=gRPC".
-            #     * "name>projects/my-project/locations/us-east/namespaces/namespace-c"
-            #       returns Namespaces that have name that is alphabetically later than the
-            #       string, so "namespace-e" will be returned but "namespace-a" will not be.
-            #     * "labels.owner!=sd AND labels.foo=bar" returns Namespaces that have
-            #       "owner" in label key but value is not "sd" AND have key/value foo=bar.
-            #     * "doesnotexist.foo=bar" returns an empty list. Note that Namespace doesn't
-            #       have a field called "doesnotexist". Since the filter does not match any
-            #       Namespaces, it returns no results.
-            #   @param order_by [::String]
-            #     Optional. The order to list result by.
             #
-            #     General order by string syntax:
-            #     <field> (<asc|desc>) (,)
-            #     <field> allows values \\{"name"}
-            #     <asc/desc> ascending or descending order by <field>. If this is left
-            #     blank, "asc" is used.
-            #     Note that an empty order_by string result in default order, which is order
-            #     by name in ascending order.
+            #     *   `labels.owner` returns namespaces that have a label with the key
+            #         `owner`, this is the same as `labels:owner`
+            #     *   `labels.owner=sd` returns namespaces that have key/value
+            #         `owner=sd`
+            #     *   `name>projects/my-project/locations/us-east1/namespaces/namespace-c`
+            #         returns namespaces that have name that is alphabetically later than the
+            #         string, so "namespace-e" is returned but "namespace-a" is not
+            #     *   `labels.owner!=sd AND labels.foo=bar` returns namespaces that have
+            #         `owner` in label key but value is not `sd` AND have key/value `foo=bar`
+            #     *   `doesnotexist.foo=bar` returns an empty list. Note that namespace
+            #         doesn't have a field called "doesnotexist". Since the filter does not
+            #         match any namespaces, it returns no results
+            #
+            #     For more information about filtering, see
+            #     [API Filtering](https://aip.dev/160).
+            #   @param order_by [::String]
+            #     Optional. The order to list results by.
+            #
+            #     General `order_by` string syntax: `<field> (<asc|desc>) (,)`
+            #
+            #     *   `<field>` allows value: `name`
+            #     *   `<asc|desc>` ascending or descending order by `<field>`. If this is
+            #         left blank, `asc` is used
+            #
+            #     Note that an empty `order_by` string results in default order, which is
+            #     order by `name` in ascending order.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::ServiceDirectory::V1::Namespace>]
@@ -340,13 +401,11 @@ module Google
             #   # Call the list_namespaces method.
             #   result = client.list_namespaces request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ServiceDirectory::V1::Namespace.
-            #     p response
+            #     p item
             #   end
             #
             def list_namespaces request, options = nil
@@ -360,10 +419,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_namespaces.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -385,7 +445,7 @@ module Google
               @registration_service_stub.call_rpc :list_namespaces, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @registration_service_stub, :list_namespaces, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -446,10 +506,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_namespace.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -470,7 +531,6 @@ module Google
 
               @registration_service_stub.call_rpc :get_namespace, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -533,10 +593,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_namespace.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -557,7 +618,6 @@ module Google
 
               @registration_service_stub.call_rpc :update_namespace, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -619,10 +679,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_namespace.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -643,14 +704,13 @@ module Google
 
               @registration_service_stub.call_rpc :delete_namespace, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Creates a service, and returns the new Service.
+            # Creates a service, and returns the new service.
             #
             # @overload create_service(request, options = nil)
             #   Pass arguments to `create_service` via a request object, either of type
@@ -714,10 +774,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -738,7 +799,6 @@ module Google
 
               @registration_service_stub.call_rpc :create_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -763,7 +823,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the namespace whose services we'd
+            #     Required. The resource name of the namespace whose services you'd
             #     like to list.
             #   @param page_size [::Integer]
             #     Optional. The maximum number of items to return.
@@ -771,31 +831,47 @@ module Google
             #     Optional. The next_page_token value returned from a previous List request,
             #     if any.
             #   @param filter [::String]
-            #     Optional. The filter to list result by.
+            #     Optional. The filter to list results by.
             #
-            #     General filter string syntax:
-            #     <field> <operator> <value> (<logical connector>)
-            #     <field> can be "name", or "metadata.<key>" for map field.
-            #     <operator> can be "<, >, <=, >=, !=, =, :". Of which ":" means HAS, and
-            #     is roughly the same as "=".
-            #     <value> must be the same data type as field.
-            #     <logical connector> can be "AND, OR, NOT".
+            #     General `filter` string syntax:
+            #     `<field> <operator> <value> (<logical connector>)`
+            #
+            #     *   `<field>` can be `name` or `annotations.<key>` for map field
+            #     *   `<operator>` can be `<`, `>`, `<=`, `>=`, `!=`, `=`, `:`. Of which `:`
+            #         means `HAS`, and is roughly the same as `=`
+            #     *   `<value>` must be the same data type as field
+            #     *   `<logical connector>` can be `AND`, `OR`, `NOT`
             #
             #     Examples of valid filters:
-            #     * "metadata.owner" returns Services that have a label with the key "owner"
-            #       this is the same as "metadata:owner".
-            #     * "metadata.protocol=gRPC" returns Services that have key/value
-            #       "protocol=gRPC".
-            #     * "name>projects/my-project/locations/us-east/namespaces/my-namespace/services/service-c"
-            #       returns Services that have name that is alphabetically later than the
-            #       string, so "service-e" will be returned but "service-a" will not be.
-            #     * "metadata.owner!=sd AND metadata.foo=bar" returns Services that have
-            #       "owner" in label key but value is not "sd" AND have key/value foo=bar.
-            #     * "doesnotexist.foo=bar" returns an empty list. Note that Service doesn't
-            #       have a field called "doesnotexist". Since the filter does not match any
-            #       Services, it returns no results.
+            #
+            #     *   `annotations.owner` returns services that have a annotation with the
+            #         key `owner`, this is the same as `annotations:owner`
+            #     *   `annotations.protocol=gRPC` returns services that have key/value
+            #         `protocol=gRPC`
+            #     *
+            #     `name>projects/my-project/locations/us-east1/namespaces/my-namespace/services/service-c`
+            #         returns services that have name that is alphabetically later than the
+            #         string, so "service-e" is returned but "service-a" is not
+            #     *   `annotations.owner!=sd AND annotations.foo=bar` returns services that
+            #         have `owner` in annotation key but value is not `sd` AND have
+            #         key/value `foo=bar`
+            #     *   `doesnotexist.foo=bar` returns an empty list. Note that service
+            #         doesn't have a field called "doesnotexist". Since the filter does not
+            #         match any services, it returns no results
+            #
+            #     For more information about filtering, see
+            #     [API Filtering](https://aip.dev/160).
             #   @param order_by [::String]
-            #     Optional. The order to list result by.
+            #     Optional. The order to list results by.
+            #
+            #     General `order_by` string syntax: `<field> (<asc|desc>) (,)`
+            #
+            #     *   `<field>` allows value: `name`
+            #     *   `<asc|desc>` ascending or descending order by `<field>`. If this is
+            #         left blank, `asc` is used
+            #
+            #     Note that an empty `order_by` string results in default order, which is
+            #     order by `name` in ascending order.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::ServiceDirectory::V1::Service>]
@@ -817,13 +893,11 @@ module Google
             #   # Call the list_services method.
             #   result = client.list_services request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ServiceDirectory::V1::Service.
-            #     p response
+            #     p item
             #   end
             #
             def list_services request, options = nil
@@ -837,10 +911,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_services.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -862,7 +937,7 @@ module Google
               @registration_service_stub.call_rpc :list_services, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @registration_service_stub, :list_services, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -923,10 +998,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -947,7 +1023,6 @@ module Google
 
               @registration_service_stub.call_rpc :get_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1010,10 +1085,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1034,7 +1110,6 @@ module Google
 
               @registration_service_stub.call_rpc :update_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1096,10 +1171,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1120,14 +1196,13 @@ module Google
 
               @registration_service_stub.call_rpc :delete_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Creates a endpoint, and returns the new Endpoint.
+            # Creates an endpoint, and returns the new endpoint.
             #
             # @overload create_endpoint(request, options = nil)
             #   Pass arguments to `create_endpoint` via a request object, either of type
@@ -1191,10 +1266,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_endpoint.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1215,7 +1291,6 @@ module Google
 
               @registration_service_stub.call_rpc :create_endpoint, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1240,7 +1315,7 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. The resource name of the service whose endpoints we'd like to
+            #     Required. The resource name of the service whose endpoints you'd like to
             #     list.
             #   @param page_size [::Integer]
             #     Optional. The maximum number of items to return.
@@ -1248,33 +1323,50 @@ module Google
             #     Optional. The next_page_token value returned from a previous List request,
             #     if any.
             #   @param filter [::String]
-            #     Optional. The filter to list result by.
+            #     Optional. The filter to list results by.
             #
-            #     General filter string syntax:
-            #     <field> <operator> <value> (<logical connector>)
-            #     <field> can be "name", "address", "port" or "metadata.<key>" for map field.
-            #     <operator> can be "<, >, <=, >=, !=, =, :". Of which ":" means HAS, and
-            #     is roughly the same as "=".
-            #     <value> must be the same data type as field.
-            #     <logical connector> can be "AND, OR, NOT".
+            #     General `filter` string syntax:
+            #     `<field> <operator> <value> (<logical connector>)`
+            #
+            #     *   `<field>` can be `name`, `address`, `port`, or `annotations.<key>` for
+            #          map field
+            #     *   `<operator>` can be `<`, `>`, `<=`, `>=`, `!=`, `=`, `:`. Of which `:`
+            #         means `HAS`, and is roughly the same as `=`
+            #     *   `<value>` must be the same data type as field
+            #     *   `<logical connector>` can be `AND`, `OR`, `NOT`
             #
             #     Examples of valid filters:
-            #     * "metadata.owner" returns Endpoints that have a label with the key "owner"
-            #       this is the same as "metadata:owner".
-            #     * "metadata.protocol=gRPC" returns Endpoints that have key/value
-            #       "protocol=gRPC".
-            #     * "address=192.108.1.105" returns Endpoints that have this address.
-            #     * "port>8080" returns Endpoints that have port number larger than 8080.
-            #     * "name>projects/my-project/locations/us-east/namespaces/my-namespace/services/my-service/endpoints/endpoint-c"
-            #       returns Endpoints that have name that is alphabetically later than the
-            #       string, so "endpoint-e" will be returned but "endpoint-a" will not be.
-            #     * "metadata.owner!=sd AND metadata.foo=bar" returns Endpoints that have
-            #       "owner" in label key but value is not "sd" AND have key/value foo=bar.
-            #     * "doesnotexist.foo=bar" returns an empty list. Note that Endpoint doesn't
-            #       have a field called "doesnotexist". Since the filter does not match any
-            #       Endpoints, it returns no results.
+            #
+            #     *   `annotations.owner` returns endpoints that have a annotation with the
+            #         key `owner`, this is the same as `annotations:owner`
+            #     *   `annotations.protocol=gRPC` returns endpoints that have key/value
+            #         `protocol=gRPC`
+            #     *   `address=192.108.1.105` returns endpoints that have this address
+            #     *   `port>8080` returns endpoints that have port number larger than 8080
+            #     *
+            #     `name>projects/my-project/locations/us-east1/namespaces/my-namespace/services/my-service/endpoints/endpoint-c`
+            #         returns endpoints that have name that is alphabetically later than the
+            #         string, so "endpoint-e" is returned but "endpoint-a" is not
+            #     *   `annotations.owner!=sd AND annotations.foo=bar` returns endpoints that
+            #         have `owner` in annotation key but value is not `sd` AND have
+            #         key/value `foo=bar`
+            #     *   `doesnotexist.foo=bar` returns an empty list. Note that endpoint
+            #         doesn't have a field called "doesnotexist". Since the filter does not
+            #         match any endpoints, it returns no results
+            #
+            #     For more information about filtering, see
+            #     [API Filtering](https://aip.dev/160).
             #   @param order_by [::String]
-            #     Optional. The order to list result by.
+            #     Optional. The order to list results by.
+            #
+            #     General `order_by` string syntax: `<field> (<asc|desc>) (,)`
+            #
+            #     *   `<field>` allows values: `name`, `address`, `port`
+            #     *   `<asc|desc>` ascending or descending order by `<field>`. If this is
+            #         left blank, `asc` is used
+            #
+            #     Note that an empty `order_by` string results in default order, which is
+            #     order by `name` in ascending order.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::ServiceDirectory::V1::Endpoint>]
@@ -1296,13 +1388,11 @@ module Google
             #   # Call the list_endpoints method.
             #   result = client.list_endpoints request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::ServiceDirectory::V1::Endpoint.
-            #     p response
+            #     p item
             #   end
             #
             def list_endpoints request, options = nil
@@ -1316,10 +1406,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_endpoints.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1341,14 +1432,14 @@ module Google
               @registration_service_stub.call_rpc :list_endpoints, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @registration_service_stub, :list_endpoints, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Gets a endpoint.
+            # Gets an endpoint.
             #
             # @overload get_endpoint(request, options = nil)
             #   Pass arguments to `get_endpoint` via a request object, either of type
@@ -1402,10 +1493,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_endpoint.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1426,14 +1518,13 @@ module Google
 
               @registration_service_stub.call_rpc :get_endpoint, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Updates a endpoint.
+            # Updates an endpoint.
             #
             # @overload update_endpoint(request, options = nil)
             #   Pass arguments to `update_endpoint` via a request object, either of type
@@ -1489,10 +1580,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_endpoint.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1513,14 +1605,13 @@ module Google
 
               @registration_service_stub.call_rpc :update_endpoint, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Deletes a endpoint.
+            # Deletes an endpoint.
             #
             # @overload delete_endpoint(request, options = nil)
             #   Pass arguments to `delete_endpoint` via a request object, either of type
@@ -1574,10 +1665,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_endpoint.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1598,7 +1690,6 @@ module Google
 
               @registration_service_stub.call_rpc :delete_endpoint, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1627,7 +1718,7 @@ module Google
             #     See the operation documentation for the appropriate value for this field.
             #   @param options [::Google::Iam::V1::GetPolicyOptions, ::Hash]
             #     OPTIONAL: A `GetPolicyOptions` object for specifying options to
-            #     `GetIamPolicy`. This field is only used by Cloud IAM.
+            #     `GetIamPolicy`.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -1663,10 +1754,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1687,7 +1779,6 @@ module Google
 
               @registration_service_stub.call_rpc :get_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1706,7 +1797,7 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload set_iam_policy(resource: nil, policy: nil)
+            # @overload set_iam_policy(resource: nil, policy: nil, update_mask: nil)
             #   Pass arguments to `set_iam_policy` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1719,6 +1810,12 @@ module Google
             #     the policy is limited to a few 10s of KB. An empty policy is a
             #     valid policy but certain Cloud Platform services (such as Projects)
             #     might reject them.
+            #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+            #     OPTIONAL: A FieldMask specifying which fields of the policy to modify. Only
+            #     the fields in the mask will be modified. If no mask is provided, the
+            #     following default mask is used:
+            #
+            #     `paths: "bindings, etag"`
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Iam::V1::Policy]
@@ -1754,10 +1851,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.set_iam_policy.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1778,7 +1876,6 @@ module Google
 
               @registration_service_stub.call_rpc :set_iam_policy, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1845,10 +1942,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.test_iam_permissions.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::ServiceDirectory::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1869,7 +1967,6 @@ module Google
 
               @registration_service_stub.call_rpc :test_iam_permissions, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1905,20 +2002,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"servicedirectory.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1953,11 +2057,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "servicedirectory.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "servicedirectory.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1972,6 +2090,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1990,6 +2110,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

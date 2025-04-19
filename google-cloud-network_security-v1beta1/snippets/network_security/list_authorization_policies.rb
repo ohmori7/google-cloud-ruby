@@ -19,21 +19,33 @@
 # [START networksecurity_v1beta1_generated_NetworkSecurity_ListAuthorizationPolicies_sync]
 require "google/cloud/network_security/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
+##
+# Snippet for the list_authorization_policies call in the NetworkSecurity service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client#list_authorization_policies.
+#
+def list_authorization_policies
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::NetworkSecurity::V1beta1::NetworkSecurity::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::NetworkSecurity::V1beta1::ListAuthorizationPoliciesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::NetworkSecurity::V1beta1::ListAuthorizationPoliciesRequest.new
 
-# Call the list_authorization_policies method.
-result = client.list_authorization_policies request
+  # Call the list_authorization_policies method.
+  result = client.list_authorization_policies request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::NetworkSecurity::V1beta1::AuthorizationPolicy.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::NetworkSecurity::V1beta1::AuthorizationPolicy.
+    p item
+  end
 end
 # [END networksecurity_v1beta1_generated_NetworkSecurity_ListAuthorizationPolicies_sync]

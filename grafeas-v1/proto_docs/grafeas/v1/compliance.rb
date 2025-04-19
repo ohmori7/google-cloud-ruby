@@ -39,6 +39,8 @@ module Grafeas
     # @!attribute [rw] scan_instructions
     #   @return [::String]
     #     Serialized scan instructions with a predefined format.
+    # @!attribute [rw] impact
+    #   @return [::String]
     class ComplianceNote
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -60,6 +62,10 @@ module Grafeas
     #   @return [::String]
     #     The CPE URI (https://cpe.mitre.org/specification/) this benchmark is
     #     applicable to.
+    # @!attribute [rw] benchmark_document
+    #   @return [::String]
+    #     The name of the document that defines this benchmark, e.g. "CIS
+    #     Container-Optimized OS".
     # @!attribute [rw] version
     #   @return [::String]
     #     The version of the benchmark. This is set to the version of the OS-specific
@@ -75,6 +81,9 @@ module Grafeas
     #   @return [::Array<::Grafeas::V1::NonCompliantFile>]
     # @!attribute [rw] non_compliance_reason
     #   @return [::String]
+    # @!attribute [rw] version
+    #   @return [::Grafeas::V1::ComplianceVersion]
+    #     The OS and config version the benchmark was run on.
     class ComplianceOccurrence
       include ::Google::Protobuf::MessageExts
       extend ::Google::Protobuf::MessageExts::ClassMethods

@@ -25,11 +25,11 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     The resource name for the service.
-        #     Example: "services/DA34-426B-A397"
+        #     Example: "services/6F81-5844-456A"
         # @!attribute [rw] service_id
         #   @return [::String]
         #     The identifier for the service.
-        #     Example: "DA34-426B-A397"
+        #     Example: "6F81-5844-456A"
         # @!attribute [rw] display_name
         #   @return [::String]
         #     A human readable display name for this service.
@@ -42,15 +42,15 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # Encapsulates a single SKU in Google Cloud Platform
+        # Encapsulates a single SKU in Google Cloud
         # @!attribute [rw] name
         #   @return [::String]
         #     The resource name for the SKU.
-        #     Example: "services/DA34-426B-A397/skus/AA95-CD31-42FE"
+        #     Example: "services/6F81-5844-456A/skus/D041-B8A1-6E0B"
         # @!attribute [rw] sku_id
         #   @return [::String]
         #     The identifier for the SKU.
-        #     Example: "AA95-CD31-42FE"
+        #     Example: "D041-B8A1-6E0B"
         # @!attribute [rw] description
         #   @return [::String]
         #     A human readable description of the SKU, has a maximum length of 256
@@ -70,6 +70,9 @@ module Google
         #   @return [::String]
         #     Identifies the service provider.
         #     This is 'Google' for first party services in Google Cloud Platform.
+        # @!attribute [rw] geo_taxonomy
+        #   @return [::Google::Cloud::Billing::V1::GeoTaxonomy]
+        #     The geographic taxonomy for this sku.
         class Sku
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -142,6 +145,21 @@ module Google
         #   @return [::String]
         #     The short hand for unit of usage this pricing is specified in.
         #     Example: usage_unit of "GiBy" means that usage is specified in "Gibi Byte".
+        # @!attribute [rw] display_quantity
+        #   @return [::Float]
+        #     The recommended quantity of units for displaying pricing info. When
+        #     displaying pricing info it is recommended to display:
+        #     (unit_price * display_quantity) per display_quantity usage_unit.
+        #     This field does not affect the pricing formula and is for display purposes
+        #     only.
+        #     Example: If the unit_price is "0.0001 USD", the usage_unit is "GB" and
+        #     the display_quantity is "1000" then the recommended way of displaying the
+        #     pricing info is "0.10 USD per 1000 GB"
+        # @!attribute [rw] tiered_rates
+        #   @return [::Array<::Google::Cloud::Billing::V1::PricingExpression::TierRate>]
+        #     The list of tiered rates for this pricing. The total cost is computed by
+        #     applying each of the tiered rates on usage. This repeated list is sorted
+        #     by ascending order of start_usage_amount.
         # @!attribute [rw] usage_unit_description
         #   @return [::String]
         #     The unit of usage in human readable form.
@@ -161,21 +179,6 @@ module Google
         #     unit_price / base_unit_conversion_factor = price per base_unit.
         #     start_usage_amount * base_unit_conversion_factor = start_usage_amount in
         #     base_unit.
-        # @!attribute [rw] display_quantity
-        #   @return [::Float]
-        #     The recommended quantity of units for displaying pricing info. When
-        #     displaying pricing info it is recommended to display:
-        #     (unit_price * display_quantity) per display_quantity usage_unit.
-        #     This field does not affect the pricing formula and is for display purposes
-        #     only.
-        #     Example: If the unit_price is "0.0001 USD", the usage_unit is "GB" and
-        #     the display_quantity is "1000" then the recommended way of displaying the
-        #     pricing info is "0.10 USD per 1000 GB"
-        # @!attribute [rw] tiered_rates
-        #   @return [::Array<::Google::Cloud::Billing::V1::PricingExpression::TierRate>]
-        #     The list of tiered rates for this pricing. The total cost is computed by
-        #     applying each of the tiered rates on usage. This repeated list is sorted
-        #     by ascending order of start_usage_amount.
         class PricingExpression
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -233,6 +236,36 @@ module Google
           end
         end
 
+        # Encapsulates the geographic taxonomy data for a sku.
+        # @!attribute [rw] type
+        #   @return [::Google::Cloud::Billing::V1::GeoTaxonomy::Type]
+        #     The type of Geo Taxonomy: GLOBAL, REGIONAL, or MULTI_REGIONAL.
+        # @!attribute [rw] regions
+        #   @return [::Array<::String>]
+        #     The list of regions associated with a sku. Empty for Global skus, which are
+        #     associated with all Google Cloud regions.
+        class GeoTaxonomy
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # The type of Geo Taxonomy: GLOBAL, REGIONAL, or MULTI_REGIONAL.
+          module Type
+            # The type is not specified.
+            TYPE_UNSPECIFIED = 0
+
+            # The sku is global in nature, e.g. a license sku. Global skus are
+            # available in all regions, and so have an empty region list.
+            GLOBAL = 1
+
+            # The sku is available in a specific region, e.g. "us-west2".
+            REGIONAL = 2
+
+            # The sku is associated with multiple regions, e.g. "us-west2" and
+            # "us-east1".
+            MULTI_REGIONAL = 3
+          end
+        end
+
         # Request message for `ListServices`.
         # @!attribute [rw] page_size
         #   @return [::Integer]
@@ -265,7 +298,7 @@ module Google
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the service.
-        #     Example: "services/DA34-426B-A397"
+        #     Example: "services/6F81-5844-456A"
         # @!attribute [rw] start_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Optional inclusive start time of the time range for which the pricing

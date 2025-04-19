@@ -19,15 +19,29 @@
 # [START servicecontrol_v1_generated_QuotaController_AllocateQuota_sync]
 require "google/cloud/service_control/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ServiceControl::V1::QuotaController::Client.new
+##
+# Snippet for the allocate_quota call in the QuotaController service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ServiceControl::V1::QuotaController::Client#allocate_quota.
+#
+def allocate_quota
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ServiceControl::V1::QuotaController::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ServiceControl::V1::AllocateQuotaRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ServiceControl::V1::AllocateQuotaRequest.new
 
-# Call the allocate_quota method.
-result = client.allocate_quota request
+  # Call the allocate_quota method.
+  result = client.allocate_quota request
 
-# The returned object is of type Google::Cloud::ServiceControl::V1::AllocateQuotaResponse.
-p result
+  # The returned object is of type Google::Cloud::ServiceControl::V1::AllocateQuotaResponse.
+  p result
+end
 # [END servicecontrol_v1_generated_QuotaController_AllocateQuota_sync]

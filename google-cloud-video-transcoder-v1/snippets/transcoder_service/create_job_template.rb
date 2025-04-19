@@ -19,15 +19,29 @@
 # [START transcoder_v1_generated_TranscoderService_CreateJobTemplate_sync]
 require "google/cloud/video/transcoder/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Video::Transcoder::V1::TranscoderService::Client.new
+##
+# Snippet for the create_job_template call in the TranscoderService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Video::Transcoder::V1::TranscoderService::Client#create_job_template.
+#
+def create_job_template
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Video::Transcoder::V1::TranscoderService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Video::Transcoder::V1::CreateJobTemplateRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Video::Transcoder::V1::CreateJobTemplateRequest.new
 
-# Call the create_job_template method.
-result = client.create_job_template request
+  # Call the create_job_template method.
+  result = client.create_job_template request
 
-# The returned object is of type Google::Cloud::Video::Transcoder::V1::JobTemplate.
-p result
+  # The returned object is of type Google::Cloud::Video::Transcoder::V1::JobTemplate.
+  p result
+end
 # [END transcoder_v1_generated_TranscoderService_CreateJobTemplate_sync]

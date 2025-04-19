@@ -19,15 +19,29 @@
 # [START datastore_v1_generated_Datastore_ReserveIds_sync]
 require "google/cloud/datastore/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastore::V1::Datastore::Client.new
+##
+# Snippet for the reserve_ids call in the Datastore service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastore::V1::Datastore::Client#reserve_ids.
+#
+def reserve_ids
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastore::V1::Datastore::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastore::V1::ReserveIdsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastore::V1::ReserveIdsRequest.new
 
-# Call the reserve_ids method.
-result = client.reserve_ids request
+  # Call the reserve_ids method.
+  result = client.reserve_ids request
 
-# The returned object is of type Google::Cloud::Datastore::V1::ReserveIdsResponse.
-p result
+  # The returned object is of type Google::Cloud::Datastore::V1::ReserveIdsResponse.
+  p result
+end
 # [END datastore_v1_generated_Datastore_ReserveIds_sync]

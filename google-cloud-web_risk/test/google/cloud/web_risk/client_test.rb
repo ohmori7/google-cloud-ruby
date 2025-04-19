@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/web_risk"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::WebRisk::ClientConstructionMinitest < Minitest::Test
-  def test_web_risk_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_web_risk_service_grpc
+    skip unless Google::Cloud::WebRisk.web_risk_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::WebRisk.web_risk_service do |config|
+      client = Google::Cloud::WebRisk.web_risk_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::WebRisk::V1::WebRiskService::Client, client
+    end
+  end
+
+  def test_web_risk_service_rest
+    skip unless Google::Cloud::WebRisk.web_risk_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::WebRisk.web_risk_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::WebRisk::V1::WebRiskService::Rest::Client, client
     end
   end
 end

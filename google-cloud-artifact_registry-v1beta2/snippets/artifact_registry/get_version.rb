@@ -19,15 +19,29 @@
 # [START artifactregistry_v1beta2_generated_ArtifactRegistry_GetVersion_sync]
 require "google/cloud/artifact_registry/v1beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new
+##
+# Snippet for the get_version call in the ArtifactRegistry service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client#get_version.
+#
+def get_version
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ArtifactRegistry::V1beta2::GetVersionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ArtifactRegistry::V1beta2::GetVersionRequest.new
 
-# Call the get_version method.
-result = client.get_version request
+  # Call the get_version method.
+  result = client.get_version request
 
-# The returned object is of type Google::Cloud::ArtifactRegistry::V1beta2::Version.
-p result
+  # The returned object is of type Google::Cloud::ArtifactRegistry::V1beta2::Version.
+  p result
+end
 # [END artifactregistry_v1beta2_generated_ArtifactRegistry_GetVersion_sync]

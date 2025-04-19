@@ -33,7 +33,9 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     Optional. The unique identifier of this intent.
-        #     Required for {::Google::Cloud::Dialogflow::V2::Intents::Client#update_intent Intents.UpdateIntent} and {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents Intents.BatchUpdateIntents}
+        #     Required for
+        #     {::Google::Cloud::Dialogflow::V2::Intents::Client#update_intent Intents.UpdateIntent} and
+        #     {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents Intents.BatchUpdateIntents}
         #     methods.
         #     Format: `projects/<Project ID>/agent/intents/<Intent ID>`.
         # @!attribute [rw] display_name
@@ -125,22 +127,24 @@ module Google
         #   @return [::String]
         #     Read-only after creation. The unique identifier of the parent intent in the
         #     chain of followup intents. You can set this field when creating an intent,
-        #     for example with {::Google::Cloud::Dialogflow::V2::Intents::Client#create_intent CreateIntent} or
-        #     {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents BatchUpdateIntents}, in order to make this
-        #     intent a followup intent.
+        #     for example with
+        #     {::Google::Cloud::Dialogflow::V2::Intents::Client#create_intent CreateIntent} or
+        #     {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents BatchUpdateIntents},
+        #     in order to make this intent a followup intent.
         #
         #     It identifies the parent followup intent.
         #     Format: `projects/<Project ID>/agent/intents/<Intent ID>`.
         # @!attribute [r] followup_intent_info
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::Intent::FollowupIntentInfo>]
-        #     Output only. Read-only. Information about all followup intents that have this intent as
-        #     a direct or indirect parent. We populate this field only in the output.
+        #     Output only. Read-only. Information about all followup intents that have
+        #     this intent as a direct or indirect parent. We populate this field only in
+        #     the output.
         class Intent
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # Represents an example that the agent is trained on.
-          # @!attribute [rw] name
+          # @!attribute [r] name
           #   @return [::String]
           #     Output only. The unique identifier of this training phrase.
           # @!attribute [rw] type
@@ -158,7 +162,9 @@ module Google
           #     so the training phrase is well formatted when the parts are concatenated.
           #
           #     If the training phrase does not need to be annotated with parameters,
-          #     you just need a single part with only the {::Google::Cloud::Dialogflow::V2::Intent::TrainingPhrase::Part#text Part.text} field set.
+          #     you just need a single part with only the
+          #     {::Google::Cloud::Dialogflow::V2::Intent::TrainingPhrase::Part#text Part.text}
+          #     field set.
           #
           #     If you want to annotate the training phrase, you must create multiple
           #     parts, where the fields of each part are populated in one of two ways:
@@ -271,45 +277,73 @@ module Google
           # @!attribute [rw] text
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Text]
           #     The text response.
+          #
+          #     Note: The following fields are mutually exclusive: `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] image
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Image]
           #     The image response.
+          #
+          #     Note: The following fields are mutually exclusive: `image`, `text`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] quick_replies
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::QuickReplies]
           #     The quick replies response.
+          #
+          #     Note: The following fields are mutually exclusive: `quick_replies`, `text`, `image`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] card
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Card]
           #     The card response.
+          #
+          #     Note: The following fields are mutually exclusive: `card`, `text`, `image`, `quick_replies`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] payload
           #   @return [::Google::Protobuf::Struct]
           #     A custom platform-specific response.
+          #
+          #     Note: The following fields are mutually exclusive: `payload`, `text`, `image`, `quick_replies`, `card`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] simple_responses
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::SimpleResponses]
           #     The voice and text-only responses for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `simple_responses`, `text`, `image`, `quick_replies`, `card`, `payload`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] basic_card
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::BasicCard]
           #     The basic card response for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `basic_card`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] suggestions
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Suggestions]
           #     The suggestion chips for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `suggestions`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] link_out_suggestion
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::LinkOutSuggestion]
           #     The link out suggestion chip for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `link_out_suggestion`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] list_select
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::ListSelect]
           #     The list card response for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `list_select`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `carousel_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] carousel_select
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::CarouselSelect]
           #     The carousel card response for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `carousel_select`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `browse_carousel_card`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] browse_carousel_card
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::BrowseCarouselCard]
           #     Browse carousel card for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `browse_carousel_card`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `table_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] table_card
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::TableCard]
           #     Table card for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `table_card`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `media_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] media_content
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::MediaContent]
           #     The media content card for Actions on Google.
+          #
+          #     Note: The following fields are mutually exclusive: `media_content`, `text`, `image`, `quick_replies`, `card`, `payload`, `simple_responses`, `basic_card`, `suggestions`, `link_out_suggestion`, `list_select`, `carousel_select`, `browse_carousel_card`, `table_card`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] platform
           #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Platform]
           #     Optional. The platform that this message is intended for.
@@ -583,9 +617,13 @@ module Google
               # @!attribute [rw] large_image
               #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Image]
               #     Optional. Image to display above media content.
+              #
+              #     Note: The following fields are mutually exclusive: `large_image`, `icon`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               # @!attribute [rw] icon
               #   @return [::Google::Cloud::Dialogflow::V2::Intent::Message::Image]
               #     Optional. Icon to display above media content.
+              #
+              #     Note: The following fields are mutually exclusive: `icon`, `large_image`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               # @!attribute [rw] content_url
               #   @return [::String]
               #     Required. Url where the media is stored.
@@ -721,7 +759,8 @@ module Google
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
 
-            # Column properties for {::Google::Cloud::Dialogflow::V2::Intent::Message::TableCard TableCard}.
+            # Column properties for
+            # {::Google::Cloud::Dialogflow::V2::Intent::Message::TableCard TableCard}.
             # @!attribute [rw] header
             #   @return [::String]
             #     Required. Column heading.
@@ -760,7 +799,8 @@ module Google
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
 
-            # Cell of {::Google::Cloud::Dialogflow::V2::Intent::Message::TableCardRow TableCardRow}.
+            # Cell of
+            # {::Google::Cloud::Dialogflow::V2::Intent::Message::TableCardRow TableCardRow}.
             # @!attribute [rw] text
             #   @return [::String]
             #     Required. Text in this cell.
@@ -834,7 +874,8 @@ module Google
           end
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#list_intents Intents.ListIntents}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#list_intents Intents.ListIntents}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The agent to list all intents from.
@@ -869,7 +910,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response message for {::Google::Cloud::Dialogflow::V2::Intents::Client#list_intents Intents.ListIntents}.
+        # The response message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#list_intents Intents.ListIntents}.
         # @!attribute [rw] intents
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::Intent>]
         #     The list of agent intents. There will be a maximum number of items
@@ -883,7 +925,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#get_intent Intents.GetIntent}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#get_intent Intents.GetIntent}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the intent.
@@ -903,7 +946,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#create_intent Intents.CreateIntent}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#create_intent Intents.CreateIntent}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The agent to create a intent for.
@@ -926,7 +970,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#update_intent Intents.UpdateIntent}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#update_intent Intents.UpdateIntent}.
         # @!attribute [rw] intent
         #   @return [::Google::Cloud::Dialogflow::V2::Intent]
         #     Required. The intent to update.
@@ -948,7 +993,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#delete_intent Intents.DeleteIntent}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#delete_intent Intents.DeleteIntent}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The name of the intent to delete. If this intent has direct or
@@ -968,9 +1014,13 @@ module Google
         #     The URI to a Google Cloud Storage file containing intents to update or
         #     create. The file format can either be a serialized proto (of IntentBatch
         #     type) or JSON object. Note: The URI must start with "gs://".
+        #
+        #     Note: The following fields are mutually exclusive: `intent_batch_uri`, `intent_batch_inline`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] intent_batch_inline
         #   @return [::Google::Cloud::Dialogflow::V2::IntentBatch]
         #     The collection of intents to update or create.
+        #
+        #     Note: The following fields are mutually exclusive: `intent_batch_inline`, `intent_batch_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] language_code
         #   @return [::String]
         #     Optional. The language used to access language-specific data.
@@ -989,7 +1039,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response message for {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents Intents.BatchUpdateIntents}.
+        # The response message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_update_intents Intents.BatchUpdateIntents}.
         # @!attribute [rw] intents
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::Intent>]
         #     The collection of updated or created intents.
@@ -998,7 +1049,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_delete_intents Intents.BatchDeleteIntents}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::Intents::Client#batch_delete_intents Intents.BatchDeleteIntents}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The name of the agent to delete all entities types for. Format:

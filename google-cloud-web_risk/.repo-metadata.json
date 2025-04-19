@@ -3,6 +3,7 @@
     "api_shortname": "webrisk",
     "client_documentation": "https://cloud.google.com/ruby/docs/reference/google-cloud-web_risk/latest",
     "distribution_name": "google-cloud-web_risk",
+    "is_cloud": true,
     "language": "ruby",
     "name": "webrisk",
     "name_pretty": "Web Risk API",
@@ -13,5 +14,5 @@
     "ruby-cloud-description": "Web Risk is an enterprise security product that lets your client applications check URLs against Google's constantly updated lists of unsafe web resources.",
     "ruby-cloud-env-prefix": "WEBRISK",
     "ruby-cloud-product-url": "https://cloud.google.com/web-risk",
-    "library_type": "GAPIC_AUTO"
+    "library_type": "GAPIC_MANUAL"
 }

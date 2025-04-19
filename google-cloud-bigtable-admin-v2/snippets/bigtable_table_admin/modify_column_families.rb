@@ -19,15 +19,29 @@
 # [START bigtableadmin_v2_generated_BigtableTableAdmin_ModifyColumnFamilies_sync]
 require "google/cloud/bigtable/admin/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new
+##
+# Snippet for the modify_column_families call in the BigtableTableAdmin service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client#modify_column_families.
+#
+def modify_column_families
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigtable::Admin::V2::BigtableTableAdmin::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigtable::Admin::V2::ModifyColumnFamiliesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigtable::Admin::V2::ModifyColumnFamiliesRequest.new
 
-# Call the modify_column_families method.
-result = client.modify_column_families request
+  # Call the modify_column_families method.
+  result = client.modify_column_families request
 
-# The returned object is of type Google::Cloud::Bigtable::Admin::V2::Table.
-p result
+  # The returned object is of type Google::Cloud::Bigtable::Admin::V2::Table.
+  p result
+end
 # [END bigtableadmin_v2_generated_BigtableTableAdmin_ModifyColumnFamilies_sync]

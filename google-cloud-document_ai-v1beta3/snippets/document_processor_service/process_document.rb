@@ -19,15 +19,29 @@
 # [START documentai_v1beta3_generated_DocumentProcessorService_ProcessDocument_sync]
 require "google/cloud/document_ai/v1beta3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client.new
+##
+# Snippet for the process_document call in the DocumentProcessorService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client#process_document.
+#
+def process_document
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DocumentAI::V1beta3::DocumentProcessorService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DocumentAI::V1beta3::ProcessRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DocumentAI::V1beta3::ProcessRequest.new
 
-# Call the process_document method.
-result = client.process_document request
+  # Call the process_document method.
+  result = client.process_document request
 
-# The returned object is of type Google::Cloud::DocumentAI::V1beta3::ProcessResponse.
-p result
+  # The returned object is of type Google::Cloud::DocumentAI::V1beta3::ProcessResponse.
+  p result
+end
 # [END documentai_v1beta3_generated_DocumentProcessorService_ProcessDocument_sync]

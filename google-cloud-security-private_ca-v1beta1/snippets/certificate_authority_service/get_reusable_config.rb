@@ -19,15 +19,29 @@
 # [START privateca_v1beta1_generated_CertificateAuthorityService_GetReusableConfig_sync]
 require "google/cloud/security/private_ca/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
+##
+# Snippet for the get_reusable_config call in the CertificateAuthorityService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client#get_reusable_config.
+#
+def get_reusable_config
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Security::PrivateCA::V1beta1::CertificateAuthorityService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Security::PrivateCA::V1beta1::GetReusableConfigRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Security::PrivateCA::V1beta1::GetReusableConfigRequest.new
 
-# Call the get_reusable_config method.
-result = client.get_reusable_config request
+  # Call the get_reusable_config method.
+  result = client.get_reusable_config request
 
-# The returned object is of type Google::Cloud::Security::PrivateCA::V1beta1::ReusableConfig.
-p result
+  # The returned object is of type Google::Cloud::Security::PrivateCA::V1beta1::ReusableConfig.
+  p result
+end
 # [END privateca_v1beta1_generated_CertificateAuthorityService_GetReusableConfig_sync]

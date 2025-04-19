@@ -19,15 +19,29 @@
 # [START datastream_v1alpha1_generated_Datastream_GetPrivateConnection_sync]
 require "google/cloud/datastream/v1alpha1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Datastream::V1alpha1::Datastream::Client.new
+##
+# Snippet for the get_private_connection call in the Datastream service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Datastream::V1alpha1::Datastream::Client#get_private_connection.
+#
+def get_private_connection
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Datastream::V1alpha1::Datastream::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Datastream::V1alpha1::GetPrivateConnectionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Datastream::V1alpha1::GetPrivateConnectionRequest.new
 
-# Call the get_private_connection method.
-result = client.get_private_connection request
+  # Call the get_private_connection method.
+  result = client.get_private_connection request
 
-# The returned object is of type Google::Cloud::Datastream::V1alpha1::PrivateConnection.
-p result
+  # The returned object is of type Google::Cloud::Datastream::V1alpha1::PrivateConnection.
+  p result
+end
 # [END datastream_v1alpha1_generated_Datastream_GetPrivateConnection_sync]

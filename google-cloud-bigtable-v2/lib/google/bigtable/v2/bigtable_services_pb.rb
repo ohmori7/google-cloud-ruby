@@ -53,12 +53,29 @@ module Google
             rpc :MutateRows, ::Google::Cloud::Bigtable::V2::MutateRowsRequest, stream(::Google::Cloud::Bigtable::V2::MutateRowsResponse)
             # Mutates a row atomically based on the output of a predicate Reader filter.
             rpc :CheckAndMutateRow, ::Google::Cloud::Bigtable::V2::CheckAndMutateRowRequest, ::Google::Cloud::Bigtable::V2::CheckAndMutateRowResponse
+            # Warm up associated instance metadata for this connection.
+            # This call is not required but may be useful for connection keep-alive.
+            rpc :PingAndWarm, ::Google::Cloud::Bigtable::V2::PingAndWarmRequest, ::Google::Cloud::Bigtable::V2::PingAndWarmResponse
             # Modifies a row atomically on the server. The method reads the latest
             # existing timestamp and value from the specified columns and writes a new
             # entry based on pre-defined read/modify/write rules. The new value for the
             # timestamp is the greater of the existing timestamp or the current server
             # time. The method returns the new contents of all modified cells.
             rpc :ReadModifyWriteRow, ::Google::Cloud::Bigtable::V2::ReadModifyWriteRowRequest, ::Google::Cloud::Bigtable::V2::ReadModifyWriteRowResponse
+            # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+            # Returns the current list of partitions that make up the table's
+            # change stream. The union of partitions will cover the entire keyspace.
+            # Partitions can be read with `ReadChangeStream`.
+            rpc :GenerateInitialChangeStreamPartitions, ::Google::Cloud::Bigtable::V2::GenerateInitialChangeStreamPartitionsRequest, stream(::Google::Cloud::Bigtable::V2::GenerateInitialChangeStreamPartitionsResponse)
+            # NOTE: This API is intended to be used by Apache Beam BigtableIO.
+            # Reads changes from a table's change stream. Changes will
+            # reflect both user-initiated mutations and mutations that are caused by
+            # garbage collection.
+            rpc :ReadChangeStream, ::Google::Cloud::Bigtable::V2::ReadChangeStreamRequest, stream(::Google::Cloud::Bigtable::V2::ReadChangeStreamResponse)
+            # Prepares a GoogleSQL query for execution on a particular Bigtable instance.
+            rpc :PrepareQuery, ::Google::Cloud::Bigtable::V2::PrepareQueryRequest, ::Google::Cloud::Bigtable::V2::PrepareQueryResponse
+            # Executes a SQL query against a particular Bigtable instance.
+            rpc :ExecuteQuery, ::Google::Cloud::Bigtable::V2::ExecuteQueryRequest, stream(::Google::Cloud::Bigtable::V2::ExecuteQueryResponse)
           end
 
           Stub = Service.rpc_stub_class

@@ -19,15 +19,29 @@
 # [START webrisk_v1beta1_generated_WebRiskService_SearchUris_sync]
 require "google/cloud/web_risk/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::WebRisk::V1beta1::WebRiskService::Client.new
+##
+# Snippet for the search_uris call in the WebRiskService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::WebRisk::V1beta1::WebRiskService::Client#search_uris.
+#
+def search_uris
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::WebRisk::V1beta1::WebRiskService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::WebRisk::V1beta1::SearchUrisRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::WebRisk::V1beta1::SearchUrisRequest.new
 
-# Call the search_uris method.
-result = client.search_uris request
+  # Call the search_uris method.
+  result = client.search_uris request
 
-# The returned object is of type Google::Cloud::WebRisk::V1beta1::SearchUrisResponse.
-p result
+  # The returned object is of type Google::Cloud::WebRisk::V1beta1::SearchUrisResponse.
+  p result
+end
 # [END webrisk_v1beta1_generated_WebRiskService_SearchUris_sync]

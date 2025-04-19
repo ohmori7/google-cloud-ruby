@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/bigquery/datatransfer/v1/datatransfer_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -31,6 +32,12 @@ module Google
             # This API allows users to manage their data transfers into BigQuery.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "bigquerydatatransfer.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -148,6 +155,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @data_transfer_service_stub.universe_domain
+              end
+
+              ##
               # Create a new DataTransferService client object.
               #
               # @example
@@ -180,8 +196,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -192,11 +209,49 @@ module Google
 
                 @data_transfer_service_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @data_transfer_service_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+
+                @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @data_transfer_service_stub.endpoint
+                  config.universe_domain = @data_transfer_service_stub.universe_domain
+                  config.logger = @data_transfer_service_stub.logger if config.respond_to? :logger=
+                end
+              end
+
+              ##
+              # Get the associated client for mix-in of the Locations.
+              #
+              # @return [Google::Cloud::Location::Locations::Client]
+              #
+              attr_reader :location_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @data_transfer_service_stub.logger
               end
 
               # Service calls
@@ -220,8 +275,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The field will contain name of the resource requested, for example:
-              #     `projects/{project_id}/dataSources/{data_source_id}` or
+              #     Required. The field will contain name of the resource requested, for
+              #     example: `projects/{project_id}/dataSources/{data_source_id}` or
               #     `projects/{project_id}/locations/{location_id}/dataSources/{data_source_id}`
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -258,10 +313,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_data_source.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -282,7 +338,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :get_data_source, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -307,9 +362,9 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The BigQuery project id for which data sources should be returned.
-              #     Must be in the form: `projects/{project_id}` or
-              #     `projects/{project_id}/locations/{location_id}
+              #     Required. The BigQuery project id for which data sources should be
+              #     returned. Must be in the form: `projects/{project_id}` or
+              #     `projects/{project_id}/locations/{location_id}`
               #   @param page_token [::String]
               #     Pagination token, which can be used to request a specific page
               #     of `ListDataSourcesRequest` list results. For multiple-page
@@ -339,13 +394,11 @@ module Google
               #   # Call the list_data_sources method.
               #   result = client.list_data_sources request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::DataSource.
-              #     p response
+              #     p item
               #   end
               #
               def list_data_sources request, options = nil
@@ -359,10 +412,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_data_sources.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -384,7 +438,7 @@ module Google
                 @data_transfer_service_stub.call_rpc :list_data_sources, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @data_transfer_service_stub, :list_data_sources, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -409,41 +463,58 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The BigQuery project id where the transfer configuration should be created.
-              #     Must be in the format projects/\\{project_id}/locations/\\{location_id} or
-              #     projects/\\{project_id}. If specified location and location of the
-              #     destination bigquery dataset do not match - the request will fail.
+              #     Required. The BigQuery project id where the transfer configuration should
+              #     be created. Must be in the format
+              #     projects/\\{project_id}/locations/\\{location_id} or projects/\\{project_id}. If
+              #     specified location and location of the destination bigquery dataset do not
+              #     match - the request will fail.
               #   @param transfer_config [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig, ::Hash]
               #     Required. Data transfer configuration to create.
               #   @param authorization_code [::String]
-              #     Optional OAuth2 authorization code to use with this transfer configuration.
-              #     This is required if new credentials are needed, as indicated by
-              #     `CheckValidCreds`.
-              #     In order to obtain authorization_code, please make a
-              #     request to
-              #     https://www.gstatic.com/bigquerydatatransfer/oauthz/auth?client_id=<datatransferapiclientid>&scope=<data_source_scopes>&redirect_uri=<redirect_uri>
+              #     Deprecated: Authorization code was required when
+              #     `transferConfig.dataSourceId` is 'youtube_channel' but it is no longer used
+              #     in any data sources. Use `version_info` instead.
               #
-              #     * client_id should be OAuth client_id of BigQuery DTS API for the given
-              #       data source returned by ListDataSources method.
-              #     * data_source_scopes are the scopes returned by ListDataSources method.
-              #     * redirect_uri is an optional parameter. If not specified, then
-              #       authorization code is posted to the opener of authorization flow window.
-              #       Otherwise it will be sent to the redirect uri. A special value of
-              #       urn:ietf:wg:oauth:2.0:oob means that authorization code should be
-              #       returned in the title bar of the browser, with the page text prompting
-              #       the user to copy the code and paste it in the application.
+              #     Optional OAuth2 authorization code to use with this transfer configuration.
+              #     This is required only if `transferConfig.dataSourceId` is 'youtube_channel'
+              #     and new credentials are needed, as indicated by `CheckValidCreds`. In order
+              #     to obtain authorization_code, make a request to the following URL:
+              #     <pre class="prettyprint" suppresswarning="true">
+              #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=authorization_code&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+              #     </pre>
+              #     * The <var>client_id</var> is the OAuth client_id of the data source as
+              #     returned by ListDataSources method.
+              #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+              #     method.
+              #
+              #     Note that this should not be set when `service_account_name` is used to
+              #     create the transfer config.
               #   @param version_info [::String]
-              #     Optional version info. If users want to find a very recent access token,
-              #     that is, immediately after approving access, users have to set the
-              #     version_info claim in the token request. To obtain the version_info, users
-              #     must use the "none+gsession" response type. which be return a
-              #     version_info back in the authorization response which be be put in a JWT
-              #     claim in the token request.
+              #     Optional version info. This parameter replaces `authorization_code` which
+              #     is no longer used in any data sources. This is required only if
+              #     `transferConfig.dataSourceId` is 'youtube_channel' *or* new credentials
+              #     are needed, as indicated by `CheckValidCreds`. In order to obtain version
+              #     info, make a request to the following URL:
+              #     <pre class="prettyprint" suppresswarning="true">
+              #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=version_info&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+              #     </pre>
+              #     * The <var>client_id</var> is the OAuth client_id of the data source as
+              #     returned by ListDataSources method.
+              #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+              #     method.
+              #
+              #     Note that this should not be set when `service_account_name` is used to
+              #     create the transfer config.
               #   @param service_account_name [::String]
-              #     Optional service account name. If this field is set, transfer config will
-              #     be created with this service account credentials. It requires that
-              #     requesting user calling this API has permissions to act as this service
+              #     Optional service account email. If this field is set, the transfer config
+              #     will be created with this service account's credentials. It requires that
+              #     the requesting user calling this API has permissions to act as this service
               #     account.
+              #
+              #     Note that not all data sources support service account credentials when
+              #     creating a transfer config. For the latest list of data sources, read about
+              #     [using service
+              #     accounts](https://cloud.google.com/bigquery-transfer/docs/use-service-accounts).
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig]
@@ -479,10 +550,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_transfer_config.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -503,7 +575,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :create_transfer_config, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -531,37 +602,52 @@ module Google
               #   @param transfer_config [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig, ::Hash]
               #     Required. Data transfer configuration to create.
               #   @param authorization_code [::String]
-              #     Optional OAuth2 authorization code to use with this transfer configuration.
-              #     If it is provided, the transfer configuration will be associated with the
-              #     authorizing user.
-              #     In order to obtain authorization_code, please make a
-              #     request to
-              #     https://www.gstatic.com/bigquerydatatransfer/oauthz/auth?client_id=<datatransferapiclientid>&scope=<data_source_scopes>&redirect_uri=<redirect_uri>
+              #     Deprecated: Authorization code was required when
+              #     `transferConfig.dataSourceId` is 'youtube_channel' but it is no longer used
+              #     in any data sources. Use `version_info` instead.
               #
-              #     * client_id should be OAuth client_id of BigQuery DTS API for the given
-              #       data source returned by ListDataSources method.
-              #     * data_source_scopes are the scopes returned by ListDataSources method.
-              #     * redirect_uri is an optional parameter. If not specified, then
-              #       authorization code is posted to the opener of authorization flow window.
-              #       Otherwise it will be sent to the redirect uri. A special value of
-              #       urn:ietf:wg:oauth:2.0:oob means that authorization code should be
-              #       returned in the title bar of the browser, with the page text prompting
-              #       the user to copy the code and paste it in the application.
+              #     Optional OAuth2 authorization code to use with this transfer configuration.
+              #     This is required only if `transferConfig.dataSourceId` is 'youtube_channel'
+              #     and new credentials are needed, as indicated by `CheckValidCreds`. In order
+              #     to obtain authorization_code, make a request to the following URL:
+              #     <pre class="prettyprint" suppresswarning="true">
+              #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=authorization_code&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+              #     </pre>
+              #     * The <var>client_id</var> is the OAuth client_id of the data source as
+              #     returned by ListDataSources method.
+              #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+              #     method.
+              #
+              #     Note that this should not be set when `service_account_name` is used to
+              #     update the transfer config.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. Required list of fields to be updated in this request.
               #   @param version_info [::String]
-              #     Optional version info. If users want to find a very recent access token,
-              #     that is, immediately after approving access, users have to set the
-              #     version_info claim in the token request. To obtain the version_info, users
-              #     must use the "none+gsession" response type. which be return a
-              #     version_info back in the authorization response which be be put in a JWT
-              #     claim in the token request.
+              #     Optional version info. This parameter replaces `authorization_code` which
+              #     is no longer used in any data sources. This is required only if
+              #     `transferConfig.dataSourceId` is 'youtube_channel' *or* new credentials
+              #     are needed, as indicated by `CheckValidCreds`. In order to obtain version
+              #     info, make a request to the following URL:
+              #     <pre class="prettyprint" suppresswarning="true">
+              #     https://bigquery.cloud.google.com/datatransfer/oauthz/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=version_info&client_id=<var>client_id</var>&scope=<var>data_source_scopes</var>
+              #     </pre>
+              #     * The <var>client_id</var> is the OAuth client_id of the data source as
+              #     returned by ListDataSources method.
+              #     * <var>data_source_scopes</var> are the scopes returned by ListDataSources
+              #     method.
+              #
+              #     Note that this should not be set when `service_account_name` is used to
+              #     update the transfer config.
               #   @param service_account_name [::String]
-              #     Optional service account name. If this field is set and
-              #     "service_account_name" is set in update_mask, transfer config will be
-              #     updated to use this service account credentials. It requires that
-              #     requesting user calling this API has permissions to act as this service
+              #     Optional service account email. If this field is set, the transfer config
+              #     will be created with this service account's credentials. It requires that
+              #     the requesting user calling this API has permissions to act as this service
               #     account.
+              #
+              #     Note that not all data sources support service account credentials when
+              #     creating a transfer config. For the latest list of data sources, read about
+              #     [using service
+              #     accounts](https://cloud.google.com/bigquery-transfer/docs/use-service-accounts).
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig]
@@ -597,10 +683,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_transfer_config.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -621,7 +708,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :update_transfer_config, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -647,8 +733,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The field will contain name of the resource requested, for example:
-              #     `projects/{project_id}/transferConfigs/{config_id}` or
+              #     Required. The field will contain name of the resource requested, for
+              #     example: `projects/{project_id}/transferConfigs/{config_id}` or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -685,10 +771,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_transfer_config.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -709,7 +796,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :delete_transfer_config, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -734,8 +820,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The field will contain name of the resource requested, for example:
-              #     `projects/{project_id}/transferConfigs/{config_id}` or
+              #     Required. The field will contain name of the resource requested, for
+              #     example: `projects/{project_id}/transferConfigs/{config_id}` or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -772,10 +858,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_transfer_config.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -796,7 +883,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :get_transfer_config, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -822,7 +908,7 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The BigQuery project id for which data sources
+              #     Required. The BigQuery project id for which transfer configs
               #     should be returned: `projects/{project_id}` or
               #     `projects/{project_id}/locations/{location_id}`
               #   @param data_source_ids [::Array<::String>]
@@ -856,13 +942,11 @@ module Google
               #   # Call the list_transfer_configs method.
               #   result = client.list_transfer_configs request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferConfig.
-              #     p response
+              #     p item
               #   end
               #
               def list_transfer_configs request, options = nil
@@ -876,10 +960,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_transfer_configs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -901,7 +986,7 @@ module Google
                 @data_transfer_service_stub.call_rpc :list_transfer_configs, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @data_transfer_service_stub, :list_transfer_configs, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -976,10 +1061,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.schedule_transfer_runs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1000,7 +1086,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :schedule_transfer_runs, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1028,14 +1113,23 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Transfer configuration name in the form:
+              #     Required. Transfer configuration name in the form:
               #     `projects/{project_id}/transferConfigs/{config_id}` or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`.
               #   @param requested_time_range [::Google::Cloud::Bigquery::DataTransfer::V1::StartManualTransferRunsRequest::TimeRange, ::Hash]
-              #     Time range for the transfer runs that should be started.
+              #     A time_range start and end timestamp for historical data files or reports
+              #     that are scheduled to be transferred by the scheduled transfer run.
+              #     requested_time_range must be a past time and cannot include future time
+              #     values.
+              #
+              #     Note: The following fields are mutually exclusive: `requested_time_range`, `requested_run_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #   @param requested_run_time [::Google::Protobuf::Timestamp, ::Hash]
-              #     Specific run_time for a transfer run to be started. The
-              #     requested_run_time must not be in the future.
+              #     A run_time timestamp for historical data files or reports
+              #     that are scheduled to be transferred by the scheduled transfer run.
+              #     requested_run_time must be a past time and cannot include future time
+              #     values.
+              #
+              #     Note: The following fields are mutually exclusive: `requested_run_time`, `requested_time_range`. If a field in that set is populated, all other fields in the set will automatically be cleared.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Bigquery::DataTransfer::V1::StartManualTransferRunsResponse]
@@ -1071,10 +1165,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.start_manual_transfer_runs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1095,7 +1190,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :start_manual_transfer_runs, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1120,8 +1214,9 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The field will contain name of the resource requested, for example:
-              #     `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}` or
+              #     Required. The field will contain name of the resource requested, for
+              #     example: `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}`
+              #     or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}/runs/{run_id}`
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -1158,10 +1253,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_transfer_run.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1182,7 +1278,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :get_transfer_run, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1207,8 +1302,9 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The field will contain name of the resource requested, for example:
-              #     `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}` or
+              #     Required. The field will contain name of the resource requested, for
+              #     example: `projects/{project_id}/transferConfigs/{config_id}/runs/{run_id}`
+              #     or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}/runs/{run_id}`
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -1245,10 +1341,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_transfer_run.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1269,7 +1366,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :delete_transfer_run, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1294,8 +1390,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. Name of transfer configuration for which transfer runs should be retrieved.
-              #     Format of transfer configuration resource name is:
+              #     Required. Name of transfer configuration for which transfer runs should be
+              #     retrieved. Format of transfer configuration resource name is:
               #     `projects/{project_id}/transferConfigs/{config_id}` or
               #     `projects/{project_id}/locations/{location_id}/transferConfigs/{config_id}`.
               #   @param states [::Array<::Google::Cloud::Bigquery::DataTransfer::V1::TransferState>]
@@ -1331,13 +1427,11 @@ module Google
               #   # Call the list_transfer_runs method.
               #   result = client.list_transfer_runs request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferRun.
-              #     p response
+              #     p item
               #   end
               #
               def list_transfer_runs request, options = nil
@@ -1351,10 +1445,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_transfer_runs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1376,7 +1471,7 @@ module Google
                 @data_transfer_service_stub.call_rpc :list_transfer_runs, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @data_transfer_service_stub, :list_transfer_runs, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1436,13 +1531,11 @@ module Google
               #   # Call the list_transfer_logs method.
               #   result = client.list_transfer_logs request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Bigquery::DataTransfer::V1::TransferMessage.
-              #     p response
+              #     p item
               #   end
               #
               def list_transfer_logs request, options = nil
@@ -1456,10 +1549,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_transfer_logs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1481,7 +1575,7 @@ module Google
                 @data_transfer_service_stub.call_rpc :list_transfer_logs, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @data_transfer_service_stub, :list_transfer_logs, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1545,10 +1639,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.check_valid_creds.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1569,7 +1664,6 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :check_valid_creds, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1578,10 +1672,12 @@ module Google
               ##
               # Enroll data sources in a user project. This allows users to create transfer
               # configurations for these data sources. They will also appear in the
-              # ListDataSources RPC and as such, will appear in the BigQuery UI
-              # 'https://bigquery.cloud.google.com' (and the documents can be found at
-              # https://cloud.google.com/bigquery/bigquery-web-ui and
-              # https://cloud.google.com/bigquery/docs/working-with-transfers).
+              # ListDataSources RPC and as such, will appear in the
+              # [BigQuery UI](https://console.cloud.google.com/bigquery), and the documents
+              # can be found in the public guide for
+              # [BigQuery Web UI](https://cloud.google.com/bigquery/bigquery-web-ui) and
+              # [Data Transfer
+              # Service](https://cloud.google.com/bigquery/docs/working-with-transfers).
               #
               # @overload enroll_data_sources(request, options = nil)
               #   Pass arguments to `enroll_data_sources` via a request object, either of type
@@ -1599,7 +1695,7 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     The name of the project resource in the form:
+              #     Required. The name of the project resource in the form:
               #     `projects/{project_id}`
               #   @param data_source_ids [::Array<::String>]
               #     Data sources that are enrolled. It is required to provide at least one
@@ -1639,10 +1735,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.enroll_data_sources.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1663,7 +1760,99 @@ module Google
 
                 @data_transfer_service_stub.call_rpc :enroll_data_sources, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Unenroll data sources in a user project. This allows users to remove
+              # transfer configurations for these data sources. They will no longer appear
+              # in the ListDataSources RPC and will also no longer appear in the [BigQuery
+              # UI](https://console.cloud.google.com/bigquery). Data transfers
+              # configurations of unenrolled data sources will not be scheduled.
+              #
+              # @overload unenroll_data_sources(request, options = nil)
+              #   Pass arguments to `unenroll_data_sources` via a request object, either of type
+              #   {::Google::Cloud::Bigquery::DataTransfer::V1::UnenrollDataSourcesRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Bigquery::DataTransfer::V1::UnenrollDataSourcesRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload unenroll_data_sources(name: nil, data_source_ids: nil)
+              #   Pass arguments to `unenroll_data_sources` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. The name of the project resource in the form:
+              #     `projects/{project_id}`
+              #   @param data_source_ids [::Array<::String>]
+              #     Data sources that are unenrolled. It is required to provide at least one
+              #     data source id.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Protobuf::Empty]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Protobuf::Empty]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/bigquery/data_transfer/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Bigquery::DataTransfer::V1::DataTransferService::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Bigquery::DataTransfer::V1::UnenrollDataSourcesRequest.new
+              #
+              #   # Call the unenroll_data_sources method.
+              #   result = client.unenroll_data_sources request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
+              def unenroll_data_sources request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Bigquery::DataTransfer::V1::UnenrollDataSourcesRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.unenroll_data_sources.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Bigquery::DataTransfer::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.unenroll_data_sources.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.unenroll_data_sources.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @data_transfer_service_stub.call_rpc :unenroll_data_sources, request, options: options do |response, operation|
+                  yield response, operation if block_given?
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1699,20 +1888,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"bigquerydatatransfer.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -1747,11 +1943,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "bigquerydatatransfer.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "bigquerydatatransfer.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1766,6 +1976,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -1784,6 +1996,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##
@@ -1879,6 +2099,11 @@ module Google
                   # @return [::Gapic::Config::Method]
                   #
                   attr_reader :enroll_data_sources
+                  ##
+                  # RPC-specific configuration for `unenroll_data_sources`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :unenroll_data_sources
 
                   # @private
                   def initialize parent_rpcs = nil
@@ -1912,6 +2137,8 @@ module Google
                     @check_valid_creds = ::Gapic::Config::Method.new check_valid_creds_config
                     enroll_data_sources_config = parent_rpcs.enroll_data_sources if parent_rpcs.respond_to? :enroll_data_sources
                     @enroll_data_sources = ::Gapic::Config::Method.new enroll_data_sources_config
+                    unenroll_data_sources_config = parent_rpcs.unenroll_data_sources if parent_rpcs.respond_to? :unenroll_data_sources
+                    @unenroll_data_sources = ::Gapic::Config::Method.new unenroll_data_sources_config
 
                     yield self if block_given?
                   end

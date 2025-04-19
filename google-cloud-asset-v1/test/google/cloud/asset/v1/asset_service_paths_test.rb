@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/asset/v1/asset_service"
 
 class ::Google::Cloud::Asset::V1::AssetService::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_feed_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -38,6 +56,60 @@ class ::Google::Cloud::Asset::V1::AssetService::ClientPathsTest < Minitest::Test
 
       path = client.feed_path organization: "value0", feed: "value1"
       assert_equal "organizations/value0/feeds/value1", path
+    end
+  end
+
+  def test_folder_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.folder_path folder: "value0"
+      assert_equal "folders/value0", path
+    end
+  end
+
+  def test_organization_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.organization_path organization: "value0"
+      assert_equal "organizations/value0", path
+    end
+  end
+
+  def test_project_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.project_path project: "value0"
+      assert_equal "projects/value0", path
+    end
+  end
+
+  def test_saved_query_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Asset::V1::AssetService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.saved_query_path project: "value0", saved_query: "value1"
+      assert_equal "projects/value0/savedQueries/value1", path
+
+      path = client.saved_query_path folder: "value0", saved_query: "value1"
+      assert_equal "folders/value0/savedQueries/value1", path
+
+      path = client.saved_query_path organization: "value0", saved_query: "value1"
+      assert_equal "organizations/value0/savedQueries/value1", path
     end
   end
 end

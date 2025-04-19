@@ -25,13 +25,19 @@ module Google
         # @!attribute [rw] update
         #   @return [::Google::Cloud::Firestore::V1::Document]
         #     A document to write.
+        #
+        #     Note: The following fields are mutually exclusive: `update`, `delete`, `transform`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] delete
         #   @return [::String]
         #     A document name to delete. In the format:
         #     `projects/{project_id}/databases/{database_id}/documents/{document_path}`.
+        #
+        #     Note: The following fields are mutually exclusive: `delete`, `update`, `transform`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] transform
         #   @return [::Google::Cloud::Firestore::V1::DocumentTransform]
         #     Applies a transformation to a document.
+        #
+        #     Note: The following fields are mutually exclusive: `transform`, `update`, `delete`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] update_mask
         #   @return [::Google::Cloud::Firestore::V1::DocumentMask]
         #     The fields to update in this write.
@@ -77,11 +83,14 @@ module Google
           # A transformation of a field of the document.
           # @!attribute [rw] field_path
           #   @return [::String]
-          #     The path of the field. See {::Google::Cloud::Firestore::V1::Document#fields Document.fields} for the field path syntax
-          #     reference.
+          #     The path of the field. See
+          #     {::Google::Cloud::Firestore::V1::Document#fields Document.fields} for the field path
+          #     syntax reference.
           # @!attribute [rw] set_to_server_value
           #   @return [::Google::Cloud::Firestore::V1::DocumentTransform::FieldTransform::ServerValue]
           #     Sets the field to the given server value.
+          #
+          #     Note: The following fields are mutually exclusive: `set_to_server_value`, `increment`, `maximum`, `minimum`, `append_missing_elements`, `remove_all_from_array`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] increment
           #   @return [::Google::Cloud::Firestore::V1::Value]
           #     Adds the given value to the field's current value.
@@ -94,6 +103,8 @@ module Google
           #     representation of double values follow IEEE 754 semantics.
           #     If there is positive/negative integer overflow, the field is resolved
           #     to the largest magnitude positive/negative integer.
+          #
+          #     Note: The following fields are mutually exclusive: `increment`, `set_to_server_value`, `maximum`, `minimum`, `append_missing_elements`, `remove_all_from_array`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] maximum
           #   @return [::Google::Cloud::Firestore::V1::Value]
           #     Sets the field to the maximum of its current value and the given value.
@@ -108,6 +119,8 @@ module Google
           #     0, 0.0, and -0.0 are all zero. The maximum of a zero stored value and
           #     zero input value is always the stored value.
           #     The maximum of any numeric value x and NaN is NaN.
+          #
+          #     Note: The following fields are mutually exclusive: `maximum`, `set_to_server_value`, `increment`, `minimum`, `append_missing_elements`, `remove_all_from_array`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] minimum
           #   @return [::Google::Cloud::Firestore::V1::Value]
           #     Sets the field to the minimum of its current value and the given value.
@@ -122,6 +135,8 @@ module Google
           #     0, 0.0, and -0.0 are all zero. The minimum of a zero stored value and
           #     zero input value is always the stored value.
           #     The minimum of any numeric value x and NaN is NaN.
+          #
+          #     Note: The following fields are mutually exclusive: `minimum`, `set_to_server_value`, `increment`, `maximum`, `append_missing_elements`, `remove_all_from_array`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] append_missing_elements
           #   @return [::Google::Cloud::Firestore::V1::ArrayValue]
           #     Append the given elements in order if they are not already present in
@@ -136,6 +151,8 @@ module Google
           #     be considered.
           #
           #     The corresponding transform_result will be the null value.
+          #
+          #     Note: The following fields are mutually exclusive: `append_missing_elements`, `set_to_server_value`, `increment`, `maximum`, `minimum`, `remove_all_from_array`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] remove_all_from_array
           #   @return [::Google::Cloud::Firestore::V1::ArrayValue]
           #     Remove all of the given elements from the array in the field.
@@ -148,6 +165,8 @@ module Google
           #     This will remove all equivalent values if there are duplicates.
           #
           #     The corresponding transform_result will be the null value.
+          #
+          #     Note: The following fields are mutually exclusive: `remove_all_from_array`, `set_to_server_value`, `increment`, `maximum`, `minimum`, `append_missing_elements`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class FieldTransform
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -175,8 +194,9 @@ module Google
         #     previous update_time.
         # @!attribute [rw] transform_results
         #   @return [::Array<::Google::Cloud::Firestore::V1::Value>]
-        #     The results of applying each {::Google::Cloud::Firestore::V1::DocumentTransform::FieldTransform DocumentTransform.FieldTransform}, in the
-        #     same order.
+        #     The results of applying each
+        #     {::Google::Cloud::Firestore::V1::DocumentTransform::FieldTransform DocumentTransform.FieldTransform},
+        #     in the same order.
         class WriteResult
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -184,11 +204,12 @@ module Google
 
         # A {::Google::Cloud::Firestore::V1::Document Document} has changed.
         #
-        # May be the result of multiple {::Google::Cloud::Firestore::V1::Write writes}, including deletes, that
-        # ultimately resulted in a new value for the {::Google::Cloud::Firestore::V1::Document Document}.
+        # May be the result of multiple {::Google::Cloud::Firestore::V1::Write writes}, including
+        # deletes, that ultimately resulted in a new value for the
+        # {::Google::Cloud::Firestore::V1::Document Document}.
         #
-        # Multiple {::Google::Cloud::Firestore::V1::DocumentChange DocumentChange} messages may be returned for the same logical
-        # change, if multiple targets are affected.
+        # Multiple {::Google::Cloud::Firestore::V1::DocumentChange DocumentChange} messages may be
+        # returned for the same logical change, if multiple targets are affected.
         # @!attribute [rw] document
         #   @return [::Google::Cloud::Firestore::V1::Document]
         #     The new state of the {::Google::Cloud::Firestore::V1::Document Document}.
@@ -207,14 +228,16 @@ module Google
 
         # A {::Google::Cloud::Firestore::V1::Document Document} has been deleted.
         #
-        # May be the result of multiple {::Google::Cloud::Firestore::V1::Write writes}, including updates, the
-        # last of which deleted the {::Google::Cloud::Firestore::V1::Document Document}.
+        # May be the result of multiple {::Google::Cloud::Firestore::V1::Write writes}, including
+        # updates, the last of which deleted the
+        # {::Google::Cloud::Firestore::V1::Document Document}.
         #
-        # Multiple {::Google::Cloud::Firestore::V1::DocumentDelete DocumentDelete} messages may be returned for the same logical
-        # delete, if multiple targets are affected.
+        # Multiple {::Google::Cloud::Firestore::V1::DocumentDelete DocumentDelete} messages may be
+        # returned for the same logical delete, if multiple targets are affected.
         # @!attribute [rw] document
         #   @return [::String]
-        #     The resource name of the {::Google::Cloud::Firestore::V1::Document Document} that was deleted.
+        #     The resource name of the {::Google::Cloud::Firestore::V1::Document Document} that was
+        #     deleted.
         # @!attribute [rw] removed_target_ids
         #   @return [::Array<::Integer>]
         #     A set of target IDs for targets that previously matched this entity.
@@ -228,17 +251,20 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # A {::Google::Cloud::Firestore::V1::Document Document} has been removed from the view of the targets.
+        # A {::Google::Cloud::Firestore::V1::Document Document} has been removed from the view of
+        # the targets.
         #
         # Sent if the document is no longer relevant to a target and is out of view.
         # Can be sent instead of a DocumentDelete or a DocumentChange if the server
         # can not send the new value of the document.
         #
-        # Multiple {::Google::Cloud::Firestore::V1::DocumentRemove DocumentRemove} messages may be returned for the same logical
-        # write or delete, if multiple targets are affected.
+        # Multiple {::Google::Cloud::Firestore::V1::DocumentRemove DocumentRemove} messages may be
+        # returned for the same logical write or delete, if multiple targets are
+        # affected.
         # @!attribute [rw] document
         #   @return [::String]
-        #     The resource name of the {::Google::Cloud::Firestore::V1::Document Document} that has gone out of view.
+        #     The resource name of the {::Google::Cloud::Firestore::V1::Document Document} that has
+        #     gone out of view.
         # @!attribute [rw] removed_target_ids
         #   @return [::Array<::Integer>]
         #     A set of target IDs for targets that previously matched this document.
@@ -258,10 +284,29 @@ module Google
         #     The target ID to which this filter applies.
         # @!attribute [rw] count
         #   @return [::Integer]
-        #     The total count of documents that match {::Google::Cloud::Firestore::V1::ExistenceFilter#target_id target_id}.
+        #     The total count of documents that match
+        #     {::Google::Cloud::Firestore::V1::ExistenceFilter#target_id target_id}.
         #
         #     If different from the count of documents in the client that match, the
         #     client must manually determine which documents no longer match the target.
+        #
+        #     The client can use the `unchanged_names` bloom filter to assist with
+        #     this determination by testing ALL the document names against the filter;
+        #     if the document name is NOT in the filter, it means the document no
+        #     longer matches the target.
+        # @!attribute [rw] unchanged_names
+        #   @return [::Google::Cloud::Firestore::V1::BloomFilter]
+        #     A bloom filter that, despite its name, contains the UTF-8 byte encodings of
+        #     the resource names of ALL the documents that match
+        #     {::Google::Cloud::Firestore::V1::ExistenceFilter#target_id target_id}, in the form
+        #     `projects/{project_id}/databases/{database_id}/documents/{document_path}`.
+        #
+        #     This bloom filter may be omitted at the server's discretion, such as if it
+        #     is deemed that the client will not make use of it or if it is too
+        #     computationally expensive to calculate or transmit. Clients must gracefully
+        #     handle this field being absent by falling back to the logic used before
+        #     this field existed; that is, re-add the target without a resume token to
+        #     figure out which documents in the client's cache are out of sync.
         class ExistenceFilter
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

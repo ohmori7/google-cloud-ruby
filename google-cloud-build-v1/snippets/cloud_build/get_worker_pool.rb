@@ -19,15 +19,29 @@
 # [START cloudbuild_v1_generated_CloudBuild_GetWorkerPool_sync]
 require "google/cloud/build/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Build::V1::CloudBuild::Client.new
+##
+# Snippet for the get_worker_pool call in the CloudBuild service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Build::V1::CloudBuild::Client#get_worker_pool.
+#
+def get_worker_pool
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Build::V1::CloudBuild::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Build::V1::GetWorkerPoolRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Build::V1::GetWorkerPoolRequest.new
 
-# Call the get_worker_pool method.
-result = client.get_worker_pool request
+  # Call the get_worker_pool method.
+  result = client.get_worker_pool request
 
-# The returned object is of type Google::Cloud::Build::V1::WorkerPool.
-p result
+  # The returned object is of type Google::Cloud::Build::V1::WorkerPool.
+  p result
+end
 # [END cloudbuild_v1_generated_CloudBuild_GetWorkerPool_sync]

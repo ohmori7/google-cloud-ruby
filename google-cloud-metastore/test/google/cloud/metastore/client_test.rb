@@ -20,15 +20,66 @@ require "helper"
 require "google/cloud/metastore"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Metastore::ClientConstructionMinitest < Minitest::Test
-  def test_dataproc_metastore
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_dataproc_metastore_grpc
+    skip unless Google::Cloud::Metastore.dataproc_metastore_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Metastore.dataproc_metastore do |config|
+      client = Google::Cloud::Metastore.dataproc_metastore transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Metastore::V1::DataprocMetastore::Client, client
+    end
+  end
+
+  def test_dataproc_metastore_rest
+    skip unless Google::Cloud::Metastore.dataproc_metastore_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Metastore.dataproc_metastore transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Metastore::V1::DataprocMetastore::Rest::Client, client
+    end
+  end
+
+  def test_dataproc_metastore_federation_grpc
+    skip unless Google::Cloud::Metastore.dataproc_metastore_federation_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
+      grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+      client = Google::Cloud::Metastore.dataproc_metastore_federation transport: :grpc do |config|
+        config.credentials = grpc_channel
+      end
+      assert_kind_of Google::Cloud::Metastore::V1::DataprocMetastoreFederation::Client, client
+    end
+  end
+
+  def test_dataproc_metastore_federation_rest
+    skip unless Google::Cloud::Metastore.dataproc_metastore_federation_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Metastore.dataproc_metastore_federation transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Metastore::V1::DataprocMetastoreFederation::Rest::Client, client
     end
   end
 end

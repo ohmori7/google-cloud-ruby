@@ -29,10 +29,14 @@ module Google
         #   @return [::Google::Protobuf::Timestamp]
         #     The time at which this conversation should expire. After this time, the
         #     conversation data and any associated analyses will be deleted.
+        #
+        #     Note: The following fields are mutually exclusive: `expire_time`, `ttl`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] ttl
         #   @return [::Google::Protobuf::Duration]
         #     Input only. The TTL for this resource. If specified, then this TTL will
         #     be used to calculate the expire time.
+        #
+        #     Note: The following fields are mutually exclusive: `ttl`, `expire_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] name
         #   @return [::String]
         #     Immutable. The resource name of the conversation.
@@ -59,14 +63,23 @@ module Google
         #     the conversation.
         # @!attribute [rw] labels
         #   @return [::Google::Protobuf::Map{::String => ::String}]
-        #     A map for the user to specify any custom fields. A maximum of 20 labels per
-        #     conversation is allowed, with a maximum of 256 characters per entry.
+        #     A map for the user to specify any custom fields. A maximum of 100 labels
+        #     per conversation is allowed, with a maximum of 256 characters per entry.
+        # @!attribute [rw] quality_metadata
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::QualityMetadata]
+        #     Conversation metadata related to quality management.
+        # @!attribute [rw] metadata_json
+        #   @return [::String]
+        #     Input only. JSON metadata encoded as a string.
+        #     This field is primarily used by Insights integrations with various telphony
+        #     systems and must be in one of Insight's supported formats.
         # @!attribute [r] transcript
         #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::Transcript]
         #     Output only. The conversation transcript.
         # @!attribute [rw] medium
         #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::Medium]
-        #     Immutable. The conversation medium, if unspecified will default to PHONE_CALL.
+        #     Immutable. The conversation medium, if unspecified will default to
+        #     PHONE_CALL.
         # @!attribute [r] duration
         #   @return [::Google::Protobuf::Duration]
         #     Output only. The duration of the conversation.
@@ -76,14 +89,17 @@ module Google
         # @!attribute [r] latest_analysis
         #   @return [::Google::Cloud::ContactCenterInsights::V1::Analysis]
         #     Output only. The conversation's latest analysis, if one exists.
+        # @!attribute [r] latest_summary
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationSummarizationSuggestionData]
+        #     Output only. Latest summary of the conversation.
         # @!attribute [r] runtime_annotations
         #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::RuntimeAnnotation>]
-        #     Output only. The annotations that were generated during the customer and agent
-        #     interaction.
+        #     Output only. The annotations that were generated during the customer and
+        #     agent interaction.
         # @!attribute [r] dialogflow_intents
         #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::ContactCenterInsights::V1::DialogflowIntent}]
-        #     Output only. All the matched Dialogflow intents in the call. The key corresponds to a
-        #     Dialogflow intent, format:
+        #     Output only. All the matched Dialogflow intents in the call. The key
+        #     corresponds to a Dialogflow intent, format:
         #     projects/\\{project}/agent/\\{agent}/intents/\\{intent}
         # @!attribute [rw] obfuscated_user_id
         #   @return [::String]
@@ -102,6 +118,46 @@ module Google
           class CallMetadata
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Conversation metadata related to quality management.
+          # @!attribute [rw] customer_satisfaction_rating
+          #   @return [::Integer]
+          #     An arbitrary integer value indicating the customer's satisfaction rating.
+          # @!attribute [rw] wait_duration
+          #   @return [::Google::Protobuf::Duration]
+          #     The amount of time the customer waited to connect with an agent.
+          # @!attribute [rw] menu_path
+          #   @return [::String]
+          #     An arbitrary string value specifying the menu path the customer took.
+          # @!attribute [rw] agent_info
+          #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::Conversation::QualityMetadata::AgentInfo>]
+          #     Information about agents involved in the call.
+          class QualityMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Information about an agent involved in the conversation.
+            # @!attribute [rw] agent_id
+            #   @return [::String]
+            #     A user-specified string representing the agent.
+            # @!attribute [rw] display_name
+            #   @return [::String]
+            #     The agent's name.
+            # @!attribute [rw] team
+            #   @return [::String]
+            #     A user-specified string representing the agent's team.
+            # @!attribute [rw] disposition_code
+            #   @return [::String]
+            #     A user-provided string indicating the outcome of the agent's segment of
+            #     the call.
+            # @!attribute [rw] agent_type
+            #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationParticipant::Role]
+            #     The agent type, e.g. HUMAN_AGENT.
+            class AgentInfo
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
           # A message representing the transcript of a conversation.
@@ -225,12 +281,16 @@ module Google
         #     Output only. The time at which the analysis was requested.
         # @!attribute [r] create_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     Output only. The time at which the analysis was created, which occurs when the
-        #     long-running operation completes.
+        #     Output only. The time at which the analysis was created, which occurs when
+        #     the long-running operation completes.
         # @!attribute [r] analysis_result
         #   @return [::Google::Cloud::ContactCenterInsights::V1::AnalysisResult]
-        #     Output only. The result of the analysis, which is populated when the analysis
-        #     finishes.
+        #     Output only. The result of the analysis, which is populated when the
+        #     analysis finishes.
+        # @!attribute [rw] annotator_selector
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector]
+        #     To select the annotators to run and the phrase matchers to use
+        #     (if any). If not specified, all annotators will be run.
         class Analysis
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -240,9 +300,13 @@ module Google
         # @!attribute [rw] gcs_source
         #   @return [::Google::Cloud::ContactCenterInsights::V1::GcsSource]
         #     A Cloud Storage location specification for the audio and transcript.
+        #
+        #     Note: The following fields are mutually exclusive: `gcs_source`, `dialogflow_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] dialogflow_source
         #   @return [::Google::Cloud::ContactCenterInsights::V1::DialogflowSource]
         #     The source when the conversation comes from Dialogflow.
+        #
+        #     Note: The following fields are mutually exclusive: `dialogflow_source`, `gcs_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class ConversationDataSource
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -255,8 +319,8 @@ module Google
         #     audio.
         # @!attribute [rw] transcript_uri
         #   @return [::String]
-        #     Immutable. Cloud Storage URI that points to a file that contains the conversation
-        #     transcript.
+        #     Immutable. Cloud Storage URI that points to a file that contains the
+        #     conversation transcript.
         class GcsSource
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -298,6 +362,9 @@ module Google
           # @!attribute [rw] sentiments
           #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::ConversationLevelSentiment>]
           #     Overall conversation-level sentiment for each channel of the call.
+          # @!attribute [rw] silence
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationLevelSilence]
+          #     Overall conversation-level silence during the call.
           # @!attribute [rw] intents
           #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::ContactCenterInsights::V1::Intent}]
           #     All the matched intents in the call.
@@ -307,6 +374,9 @@ module Google
           # @!attribute [rw] issue_model_result
           #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueModelResult]
           #     Overall conversation-level issue modeling result.
+          # @!attribute [rw] qa_scorecard_results
+          #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaScorecardResult>]
+          #     Results of scoring QaScorecards.
           class CallAnalysisMetadata
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -353,6 +423,36 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Represents a conversation, resource, and label provided by the user.
+        # @!attribute [rw] label
+        #   @return [::String]
+        #     String label.
+        #
+        #     Note: The following fields are mutually exclusive: `label`, `qa_answer_label`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] qa_answer_label
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaAnswer::AnswerValue]
+        #     QaAnswer label.
+        #
+        #     Note: The following fields are mutually exclusive: `qa_answer_label`, `label`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Immutable. Resource name of the FeedbackLabel.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/conversations/\\{conversation}/feedbackLabels/\\{feedback_label}
+        # @!attribute [rw] labeled_resource
+        #   @return [::String]
+        #     Resource name of the resource to be labeled.
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. Create time of the label.
+        # @!attribute [r] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. Update time of the label.
+        class FeedbackLabel
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # One channel of conversation-level sentiment data.
         # @!attribute [rw] channel_tag
         #   @return [::Integer]
@@ -361,6 +461,18 @@ module Google
         #   @return [::Google::Cloud::ContactCenterInsights::V1::SentimentData]
         #     Data specifying sentiment.
         class ConversationLevelSentiment
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Conversation-level silence data.
+        # @!attribute [rw] silence_duration
+        #   @return [::Google::Protobuf::Duration]
+        #     Amount of time calculated to be in silence.
+        # @!attribute [rw] silence_percentage
+        #   @return [::Float]
+        #     Percentage of the total conversation spent in silence.
+        class ConversationLevelSilence
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
@@ -375,8 +487,8 @@ module Google
         #     currently bounded on [0,1].
         # @!attribute [rw] display_name
         #   @return [::String]
-        #     Immutable. Display name of the assigned issue. This field is set at time of analyis
-        #     and immutable since then.
+        #     Immutable. Display name of the assigned issue. This field is set at time of
+        #     analyis and immutable since then.
         class IssueAssignment
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -386,24 +498,43 @@ module Google
         # @!attribute [rw] interruption_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::InterruptionData]
         #     Data specifying an interruption.
+        #
+        #     Note: The following fields are mutually exclusive: `interruption_data`, `sentiment_data`, `silence_data`, `hold_data`, `entity_mention_data`, `intent_match_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] sentiment_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::SentimentData]
         #     Data specifying sentiment.
+        #
+        #     Note: The following fields are mutually exclusive: `sentiment_data`, `interruption_data`, `silence_data`, `hold_data`, `entity_mention_data`, `intent_match_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] silence_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::SilenceData]
         #     Data specifying silence.
+        #
+        #     Note: The following fields are mutually exclusive: `silence_data`, `interruption_data`, `sentiment_data`, `hold_data`, `entity_mention_data`, `intent_match_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] hold_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::HoldData]
         #     Data specifying a hold.
+        #
+        #     Note: The following fields are mutually exclusive: `hold_data`, `interruption_data`, `sentiment_data`, `silence_data`, `entity_mention_data`, `intent_match_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] entity_mention_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::EntityMentionData]
         #     Data specifying an entity mention.
+        #
+        #     Note: The following fields are mutually exclusive: `entity_mention_data`, `interruption_data`, `sentiment_data`, `silence_data`, `hold_data`, `intent_match_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] intent_match_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::IntentMatchData]
         #     Data specifying an intent match.
+        #
+        #     Note: The following fields are mutually exclusive: `intent_match_data`, `interruption_data`, `sentiment_data`, `silence_data`, `hold_data`, `entity_mention_data`, `phrase_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] phrase_match_data
         #   @return [::Google::Cloud::ContactCenterInsights::V1::PhraseMatchData]
         #     Data specifying a phrase match.
+        #
+        #     Note: The following fields are mutually exclusive: `phrase_match_data`, `interruption_data`, `sentiment_data`, `silence_data`, `hold_data`, `entity_mention_data`, `intent_match_data`, `issue_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] issue_match_data
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueMatchData]
+        #     Data specifying an issue match.
+        #
+        #     Note: The following fields are mutually exclusive: `issue_match_data`, `interruption_data`, `sentiment_data`, `silence_data`, `hold_data`, `entity_mention_data`, `intent_match_data`, `phrase_match_data`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] channel_tag
         #   @return [::Integer]
         #     The channel of the audio where the annotation occurs. For single-channel
@@ -662,6 +793,15 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # The data for an issue match annotation.
+        # @!attribute [rw] issue_assignment
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueAssignment]
+        #     Information about the issue's assignment.
+        class IssueMatchData
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # The issue model resource.
         # @!attribute [rw] name
         #   @return [::String]
@@ -677,6 +817,9 @@ module Google
         # @!attribute [r] update_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. The most recent time at which the issue model was updated.
+        # @!attribute [r] issue_count
+        #   @return [::Integer]
+        #     Output only. Number of issues in this issue model.
         # @!attribute [r] state
         #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueModel::State]
         #     Output only. State of the model.
@@ -685,13 +828,21 @@ module Google
         #     Configs for the input data that used to create the issue model.
         # @!attribute [r] training_stats
         #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueModelLabelStats]
-        #     Output only. Immutable. The issue model's label statistics on its training data.
+        #     Output only. Immutable. The issue model's label statistics on its training
+        #     data.
+        # @!attribute [rw] model_type
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::IssueModel::ModelType]
+        #     Type of the model.
+        # @!attribute [rw] language_code
+        #   @return [::String]
+        #     Language of the model.
         class IssueModel
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
           # Configs for the input data used to create the issue model.
           # @!attribute [rw] medium
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Google::Cloud::ContactCenterInsights::V1::Conversation::Medium]
           #     Medium of conversations used in training data. This field is being
           #     deprecated. To specify the medium to be used in training a new issue
@@ -729,6 +880,18 @@ module Google
             # Model is being deleted.
             DELETING = 5
           end
+
+          # Type of the model.
+          module ModelType
+            # Unspecified model type.
+            MODEL_TYPE_UNSPECIFIED = 0
+
+            # Type V1.
+            TYPE_V1 = 1
+
+            # Type V2.
+            TYPE_V2 = 2
+          end
         end
 
         # The issue resource.
@@ -746,6 +909,13 @@ module Google
         # @!attribute [r] update_time
         #   @return [::Google::Protobuf::Timestamp]
         #     Output only. The most recent time that this issue was updated.
+        # @!attribute [r] sample_utterances
+        #   @return [::Array<::String>]
+        #     Output only. Resource names of the sample representative utterances that
+        #     match to this issue.
+        # @!attribute [rw] display_description
+        #   @return [::String]
+        #     Representative description of the issue.
         class Issue
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -811,8 +981,8 @@ module Google
         #     it will default to `revision_id`.
         # @!attribute [r] revision_create_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     Output only. The timestamp of when the revision was created. It is also the create time
-        #     when a new matcher is added.
+        #     Output only. The timestamp of when the revision was created. It is also the
+        #     create time when a new matcher is added.
         # @!attribute [rw] display_name
         #   @return [::String]
         #     The human-readable name of the phrase matcher.
@@ -827,7 +997,8 @@ module Google
         #     A list of phase match rule groups that are included in this matcher.
         # @!attribute [r] activation_update_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     Output only. The most recent time at which the activation status was updated.
+        #     Output only. The most recent time at which the activation status was
+        #     updated.
         # @!attribute [rw] role_match
         #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationParticipant::Role]
         #     The role whose utterances the phrase matcher should be matched
@@ -860,7 +1031,7 @@ module Google
         #     Required. The type of this phrase match rule group.
         # @!attribute [rw] phrase_match_rules
         #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::PhraseMatchRule>]
-        #     A list of phase match rules that are included in this group.
+        #     A list of phrase match rules that are included in this group.
         class PhraseMatchRuleGroup
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -914,7 +1085,12 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The settings resource.
+        # The CCAI Insights project wide settings.
+        # Use these settings to configure the behavior of Insights.
+        # View these settings with
+        # [`getsettings`](https://cloud.google.com/contact-center/insights/docs/reference/rest/v1/projects.locations/getSettings)
+        # and change the settings with
+        # [`updateSettings`](https://cloud.google.com/contact-center/insights/docs/reference/rest/v1/projects.locations/updateSettings).
         # @!attribute [rw] name
         #   @return [::String]
         #     Immutable. The resource name of the settings resource.
@@ -949,14 +1125,30 @@ module Google
         #     * "create-analysis": Notify each time an analysis is created.
         #     * "create-conversation": Notify each time a conversation is created.
         #     * "export-insights-data": Notify each time an export is complete.
+        #     * "ingest-conversations": Notify each time an IngestConversations LRO is
+        #     complete.
         #     * "update-conversation": Notify each time a conversation is updated via
         #     UpdateConversation.
+        #     * "upload-conversation": Notify when an UploadConversation LRO is complete.
         #
         #     Values are Pub/Sub topics. The format of each Pub/Sub topic is:
         #     projects/\\{project}/topics/\\{topic}
         # @!attribute [rw] analysis_config
         #   @return [::Google::Cloud::ContactCenterInsights::V1::Settings::AnalysisConfig]
         #     Default analysis settings.
+        # @!attribute [rw] redaction_config
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::RedactionConfig]
+        #     Default DLP redaction resources to be applied while ingesting
+        #     conversations. This applies to conversations ingested from the
+        #     `UploadConversation` and `IngestConversations` endpoints, including
+        #     conversations coming from CCAI Platform.
+        # @!attribute [rw] speech_config
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::SpeechConfig]
+        #     Optional. Default Speech-to-Text resources to use while ingesting audio
+        #     files. Optional, CCAI Insights will create a default if not provided. This
+        #     applies to conversations ingested from the `UploadConversation` and
+        #     `IngestConversations` endpoints, including conversations coming from CCAI
+        #     Platform.
         class Settings
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -966,6 +1158,14 @@ module Google
           #   @return [::Float]
           #     Percentage of conversations created using Dialogflow runtime integration
           #     to analyze automatically, between [0, 100].
+          # @!attribute [rw] upload_conversation_analysis_percentage
+          #   @return [::Float]
+          #     Percentage of conversations created using the UploadConversation endpoint
+          #     to analyze automatically, between [0, 100].
+          # @!attribute [rw] annotator_selector
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector]
+          #     To select the annotators to run and the phrase matchers to use
+          #     (if any). If not specified, all annotators will be run.
           class AnalysisConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -981,22 +1181,137 @@ module Google
           end
         end
 
+        # The CCAI Insights project wide analysis rule. This rule will be applied to
+        # all conversations that match the filter defined in the rule. For a
+        # conversation matches the filter, the annotators specified in the rule will be
+        # run. If a conversation matches multiple rules, a union of all the annotators
+        # will be run. One project can have multiple analysis rules.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. The resource name of the analysis rule.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/analysisRules/\\{analysis_rule}
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The time at which this analysis rule was created.
+        # @!attribute [r] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The most recent time at which this analysis rule was updated.
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     Display Name of the analysis rule.
+        # @!attribute [rw] conversation_filter
+        #   @return [::String]
+        #     Filter for the conversations that should apply this analysis
+        #     rule. An empty filter means this analysis rule applies to all
+        #     conversations.
+        # @!attribute [rw] annotator_selector
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector]
+        #     Selector of annotators to run and the phrase matchers to use for
+        #     conversations that matches the conversation_filter. If not specified, NO
+        #     annotators will be run.
+        # @!attribute [rw] analysis_percentage
+        #   @return [::Float]
+        #     Percentage of conversations that we should apply this analysis setting
+        #     automatically, between [0, 1]. For example, 0.1 means 10%. Conversations
+        #     are sampled in a determenestic way. The original runtime_percentage &
+        #     upload percentage will be replaced by defining filters on the conversation.
+        # @!attribute [rw] active
+        #   @return [::Boolean]
+        #     If true, apply this rule to conversations. Otherwise, this rule is
+        #     inactive and saved as a draft.
+        class AnalysisRule
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A customer-managed encryption key specification that can be applied to all
+        # created resources (e.g. `Conversation`).
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Immutable. The resource name of the encryption key specification resource.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/encryptionSpec
+        # @!attribute [rw] kms_key
+        #   @return [::String]
+        #     Required. The name of customer-managed encryption key that is used to
+        #     secure a resource and its sub-resources. If empty, the resource is secured
+        #     by our default encryption key. Only the key in the same location as this
+        #     resource is allowed to be used for encryption. Format:
+        #     `projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{key}`
+        class EncryptionSpec
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # DLP resources used for redaction while ingesting conversations.
+        # DLP settings are applied to conversations ingested from the
+        # `UploadConversation` and `IngestConversations` endpoints, including
+        # conversation coming from CCAI Platform. They are not applied to conversations
+        # ingested from the `CreateConversation` endpoint or the Dialogflow / Agent
+        # Assist runtime integrations. When using Dialogflow / Agent Assist runtime
+        # integrations, redaction should be performed in Dialogflow / Agent Assist.
+        # @!attribute [rw] deidentify_template
+        #   @return [::String]
+        #     The fully-qualified DLP deidentify template resource name.
+        #     Format:
+        #     `projects/{project}/deidentifyTemplates/{template}`
+        # @!attribute [rw] inspect_template
+        #   @return [::String]
+        #     The fully-qualified DLP inspect template resource name.
+        #     Format:
+        #     `projects/{project}/locations/{location}/inspectTemplates/{template}`
+        class RedactionConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Speech-to-Text configuration.
+        # Speech-to-Text settings are applied to conversations ingested from the
+        # `UploadConversation` and `IngestConversations` endpoints, including
+        # conversation coming from CCAI Platform. They are not applied to conversations
+        # ingested from the `CreateConversation` endpoint.
+        # @!attribute [rw] speech_recognizer
+        #   @return [::String]
+        #     The fully-qualified Speech Recognizer resource name.
+        #     Format:
+        #     `projects/{project_id}/locations/{location}/recognizer/{recognizer}`
+        class SpeechConfig
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
         # An annotation that was generated during the customer and agent interaction.
         # @!attribute [rw] article_suggestion
         #   @return [::Google::Cloud::ContactCenterInsights::V1::ArticleSuggestionData]
         #     Agent Assist Article Suggestion data.
+        #
+        #     Note: The following fields are mutually exclusive: `article_suggestion`, `faq_answer`, `smart_reply`, `smart_compose_suggestion`, `dialogflow_interaction`, `conversation_summarization_suggestion`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] faq_answer
         #   @return [::Google::Cloud::ContactCenterInsights::V1::FaqAnswerData]
         #     Agent Assist FAQ answer data.
+        #
+        #     Note: The following fields are mutually exclusive: `faq_answer`, `article_suggestion`, `smart_reply`, `smart_compose_suggestion`, `dialogflow_interaction`, `conversation_summarization_suggestion`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] smart_reply
         #   @return [::Google::Cloud::ContactCenterInsights::V1::SmartReplyData]
         #     Agent Assist Smart Reply data.
+        #
+        #     Note: The following fields are mutually exclusive: `smart_reply`, `article_suggestion`, `faq_answer`, `smart_compose_suggestion`, `dialogflow_interaction`, `conversation_summarization_suggestion`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] smart_compose_suggestion
         #   @return [::Google::Cloud::ContactCenterInsights::V1::SmartComposeSuggestionData]
         #     Agent Assist Smart Compose suggestion data.
+        #
+        #     Note: The following fields are mutually exclusive: `smart_compose_suggestion`, `article_suggestion`, `faq_answer`, `smart_reply`, `dialogflow_interaction`, `conversation_summarization_suggestion`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] dialogflow_interaction
         #   @return [::Google::Cloud::ContactCenterInsights::V1::DialogflowInteractionData]
         #     Dialogflow interaction data.
+        #
+        #     Note: The following fields are mutually exclusive: `dialogflow_interaction`, `article_suggestion`, `faq_answer`, `smart_reply`, `smart_compose_suggestion`, `conversation_summarization_suggestion`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+        # @!attribute [rw] conversation_summarization_suggestion
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::ConversationSummarizationSuggestionData]
+        #     Conversation summarization suggestion data.
+        #
+        #     Note: The following fields are mutually exclusive: `conversation_summarization_suggestion`, `article_suggestion`, `faq_answer`, `smart_reply`, `smart_compose_suggestion`, `dialogflow_interaction`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] annotation_id
         #   @return [::String]
         #     The unique identifier of the annotation.
@@ -1014,9 +1329,42 @@ module Google
         # @!attribute [rw] answer_feedback
         #   @return [::Google::Cloud::ContactCenterInsights::V1::AnswerFeedback]
         #     The feedback that the customer has about the answer in `data`.
+        # @!attribute [rw] user_input
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::RuntimeAnnotation::UserInput]
+        #     Explicit input used for generating the answer
         class RuntimeAnnotation
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Explicit input used for generating the answer
+          # @!attribute [rw] query
+          #   @return [::String]
+          #     Query text. Article Search uses this to store the input query used
+          #     to generate the search results.
+          # @!attribute [rw] generator_name
+          #   @return [::String]
+          #     The resource name of associated generator. Format:
+          #     `projects/<Project ID>/locations/<Location ID>/generators/<Generator ID>`
+          # @!attribute [rw] query_source
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::RuntimeAnnotation::UserInput::QuerySource]
+          #     Query source for the answer.
+          class UserInput
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # The source of the query.
+            module QuerySource
+              # Unknown query source.
+              QUERY_SOURCE_UNSPECIFIED = 0
+
+              # The query is from agents.
+              AGENT_QUERY = 1
+
+              # The query is a query from previous suggestions, e.g. from a preceding
+              # SuggestKnowledgeAssist response.
+              SUGGESTED_QUERY = 2
+            end
+          end
         end
 
         # The feedback that the customer has about a certain answer in the
@@ -1069,9 +1417,9 @@ module Google
         #     that it originates from.
         # @!attribute [rw] query_record
         #   @return [::String]
-        #     Name of the query record.
+        #     The name of the answer record.
         #     Format:
-        #     projects/\\{project}/locations/\\{location}/queryRecords/\\{query_record}
+        #     projects/\\{project}/locations/\\{location}/answerRecords/\\{answer_record}
         # @!attribute [rw] source
         #   @return [::String]
         #     The knowledge document that this answer was extracted from.
@@ -1109,9 +1457,9 @@ module Google
         #     it originates from.
         # @!attribute [rw] query_record
         #   @return [::String]
-        #     Name of the query record.
+        #     The name of the answer record.
         #     Format:
-        #     projects/\\{project}/locations/\\{location}/queryRecords/\\{query_record}.
+        #     projects/\\{project}/locations/\\{location}/answerRecords/\\{answer_record}
         # @!attribute [rw] source
         #   @return [::String]
         #     The knowledge document that this answer was extracted from.
@@ -1146,9 +1494,9 @@ module Google
         #     which it originates.
         # @!attribute [rw] query_record
         #   @return [::String]
-        #     Name of the query record.
+        #     The name of the answer record.
         #     Format:
-        #     projects/\\{project}/locations/\\{location}/queryRecords/\\{query_record}
+        #     projects/\\{project}/locations/\\{location}/answerRecords/\\{answer_record}
         class SmartReplyData
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -1178,9 +1526,9 @@ module Google
         #     document from which it originates.
         # @!attribute [rw] query_record
         #   @return [::String]
-        #     Name of the query record.
+        #     The name of the answer record.
         #     Format:
-        #     projects/\\{project}/locations/\\{location}/queryRecords/\\{query_record}
+        #     projects/\\{project}/locations/\\{location}/answerRecords/\\{answer_record}
         class SmartComposeSuggestionData
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -1209,15 +1557,69 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
+        # Conversation summarization suggestion data.
+        # @!attribute [rw] text
+        #   @return [::String]
+        #     The summarization content that is concatenated into one string.
+        # @!attribute [rw] text_sections
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     The summarization content that is divided into sections. The key is the
+        #     section's name and the value is the section's content. There is no
+        #     specific format for the key or value.
+        # @!attribute [rw] confidence
+        #   @return [::Float]
+        #     The confidence score of the summarization.
+        # @!attribute [rw] metadata
+        #   @return [::Google::Protobuf::Map{::String => ::String}]
+        #     A map that contains metadata about the summarization and the document
+        #     from which it originates.
+        # @!attribute [rw] answer_record
+        #   @return [::String]
+        #     The name of the answer record.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/answerRecords/\\{answer_record}
+        # @!attribute [rw] conversation_model
+        #   @return [::String]
+        #     The name of the model that generates this summary.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/conversationModels/\\{conversation_model}
+        class ConversationSummarizationSuggestionData
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class TextSectionsEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # @!attribute [rw] key
+          #   @return [::String]
+          # @!attribute [rw] value
+          #   @return [::String]
+          class MetadataEntry
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
         # The call participant speaking for a given utterance.
         # @!attribute [rw] dialogflow_participant_name
         #   @return [::String]
         #     The name of the participant provided by Dialogflow. Format:
         #     projects/\\{project}/locations/\\{location}/conversations/\\{conversation}/participants/\\{participant}
+        #
+        #     Note: The following fields are mutually exclusive: `dialogflow_participant_name`, `user_id`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] user_id
         #   @return [::String]
         #     A user-specified ID representing the participant.
+        #
+        #     Note: The following fields are mutually exclusive: `user_id`, `dialogflow_participant_name`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] dialogflow_participant
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::String]
         #     Deprecated. Use `dialogflow_participant_name` instead.
         #     The name of the Dialogflow participant. Format:
@@ -1268,10 +1670,520 @@ module Google
         #     Output only. The most recent time at which the view was updated.
         # @!attribute [rw] value
         #   @return [::String]
-        #     String with specific view properties.
+        #     String with specific view properties, must be non-empty.
         class View
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Selector of all available annotators and phrase matchers to run.
+        # @!attribute [rw] run_interruption_annotator
+        #   @return [::Boolean]
+        #     Whether to run the interruption annotator.
+        # @!attribute [rw] run_silence_annotator
+        #   @return [::Boolean]
+        #     Whether to run the silence annotator.
+        # @!attribute [rw] run_phrase_matcher_annotator
+        #   @return [::Boolean]
+        #     Whether to run the active phrase matcher annotator(s).
+        # @!attribute [rw] phrase_matchers
+        #   @return [::Array<::String>]
+        #     The list of phrase matchers to run. If not provided, all active phrase
+        #     matchers will be used. If inactive phrase matchers are provided, they will
+        #     not be used. Phrase matchers will be run only if
+        #     run_phrase_matcher_annotator is set to true. Format:
+        #     projects/\\{project}/locations/\\{location}/phraseMatchers/\\{phrase_matcher}
+        # @!attribute [rw] run_sentiment_annotator
+        #   @return [::Boolean]
+        #     Whether to run the sentiment annotator.
+        # @!attribute [rw] run_entity_annotator
+        #   @return [::Boolean]
+        #     Whether to run the entity annotator.
+        # @!attribute [rw] run_intent_annotator
+        #   @return [::Boolean]
+        #     Whether to run the intent annotator.
+        # @!attribute [rw] run_issue_model_annotator
+        #   @return [::Boolean]
+        #     Whether to run the issue model annotator. A model should have already been
+        #     deployed for this to take effect.
+        # @!attribute [rw] issue_models
+        #   @return [::Array<::String>]
+        #     The issue model to run. If not provided, the most recently deployed topic
+        #     model will be used. The provided issue model will only be used for
+        #     inference if the issue model is deployed and if run_issue_model_annotator
+        #     is set to true. If more than one issue model is provided, only the first
+        #     provided issue model will be used for inference.
+        # @!attribute [rw] run_summarization_annotator
+        #   @return [::Boolean]
+        #     Whether to run the summarization annotator.
+        # @!attribute [rw] summarization_config
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector::SummarizationConfig]
+        #     Configuration for the summarization annotator.
+        # @!attribute [rw] run_qa_annotator
+        #   @return [::Boolean]
+        #     Whether to run the QA annotator.
+        # @!attribute [rw] qa_config
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector::QaConfig]
+        #     Configuration for the QA annotator.
+        class AnnotatorSelector
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Configuration for summarization.
+          # @!attribute [rw] conversation_profile
+          #   @return [::String]
+          #     Resource name of the Dialogflow conversation profile.
+          #     Format:
+          #     projects/\\{project}/locations/\\{location}/conversationProfiles/\\{conversation_profile}
+          #
+          #     Note: The following fields are mutually exclusive: `conversation_profile`, `summarization_model`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] summarization_model
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector::SummarizationConfig::SummarizationModel]
+          #     Default summarization model to be used.
+          #
+          #     Note: The following fields are mutually exclusive: `summarization_model`, `conversation_profile`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          class SummarizationConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Summarization model to use, if `conversation_profile` is not used.
+            module SummarizationModel
+              # Unspecified summarization model.
+              SUMMARIZATION_MODEL_UNSPECIFIED = 0
+
+              # The CCAI baseline model.
+              BASELINE_MODEL = 1
+
+              # The CCAI baseline model, V2.0.
+              BASELINE_MODEL_V2_0 = 2
+            end
+          end
+
+          # Configuration for the QA feature.
+          # @!attribute [rw] scorecard_list
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::AnnotatorSelector::QaConfig::ScorecardList]
+          #     A manual list of scorecards to score.
+          class QaConfig
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Container for a list of scorecards.
+            # @!attribute [rw] qa_scorecard_revisions
+            #   @return [::Array<::String>]
+            #     List of QaScorecardRevisions.
+            class ScorecardList
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+        end
+
+        # A single question to be scored by the Insights QA feature.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. The resource name of the question.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/qaScorecards/\\{qa_scorecard}/revisions/\\{revision}/qaQuestions/\\{qa_question}
+        # @!attribute [rw] abbreviation
+        #   @return [::String]
+        #     Short, descriptive string, used in the UI where it's not practical
+        #     to display the full question body. E.g., "Greeting".
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The time at which this question was created.
+        # @!attribute [r] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The most recent time at which the question was updated.
+        # @!attribute [rw] question_body
+        #   @return [::String]
+        #     Question text. E.g., "Did the agent greet the customer?"
+        # @!attribute [rw] answer_instructions
+        #   @return [::String]
+        #     Instructions describing how to determine the answer.
+        # @!attribute [rw] answer_choices
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaQuestion::AnswerChoice>]
+        #     A list of valid answers to the question, which the LLM must choose from.
+        # @!attribute [rw] tags
+        #   @return [::Array<::String>]
+        #     User-defined list of arbitrary tags for the question. Used for
+        #     grouping/organization and for weighting the score of each question.
+        # @!attribute [rw] order
+        #   @return [::Integer]
+        #     Defines the order of the question within its parent scorecard revision.
+        # @!attribute [rw] metrics
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaQuestion::Metrics]
+        #     Metrics of the underlying tuned LLM over a holdout/test set while fine
+        #     tuning the underlying LLM for the given question. This field will only be
+        #     populated if and only if the question is part of a scorecard revision that
+        #     has been tuned.
+        # @!attribute [rw] tuning_metadata
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaQuestion::TuningMetadata]
+        #     Metadata about the tuning operation for the question.This field will only
+        #     be populated if and only if the question is part of a scorecard revision
+        #     that has been tuned.
+        class QaQuestion
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Message representing a possible answer to the question.
+          # @!attribute [rw] str_value
+          #   @return [::String]
+          #     String value.
+          #
+          #     Note: The following fields are mutually exclusive: `str_value`, `num_value`, `bool_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] num_value
+          #   @return [::Float]
+          #     Numerical value.
+          #
+          #     Note: The following fields are mutually exclusive: `num_value`, `str_value`, `bool_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] bool_value
+          #   @return [::Boolean]
+          #     Boolean value.
+          #
+          #     Note: The following fields are mutually exclusive: `bool_value`, `str_value`, `num_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] na_value
+          #   @return [::Boolean]
+          #     A value of "Not Applicable (N/A)". If provided, this field may only
+          #     be set to `true`. If a question receives this answer, it will be
+          #     excluded from any score calculations.
+          #
+          #     Note: The following fields are mutually exclusive: `na_value`, `str_value`, `num_value`, `bool_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] key
+          #   @return [::String]
+          #     A short string used as an identifier.
+          # @!attribute [rw] score
+          #   @return [::Float]
+          #     Numerical score of the answer, used for generating the overall score of
+          #     a QaScorecardResult. If the answer uses na_value, this field is unused.
+          class AnswerChoice
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A wrapper representing metrics calculated against a test-set on a LLM that
+          # was fine tuned for this question.
+          # @!attribute [r] accuracy
+          #   @return [::Float]
+          #     Output only. Accuracy of the model. Measures the percentage of correct
+          #     answers the model gave on the test set.
+          class Metrics
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Metadata about the tuning operation for the question. Will only be set if a
+          # scorecard containing this question has been tuned.
+          # @!attribute [rw] total_valid_label_count
+          #   @return [::Integer]
+          #     Total number of valid labels provided for the question at the time of
+          #     tuining.
+          # @!attribute [rw] dataset_validation_warnings
+          #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::DatasetValidationWarning>]
+          #     A list of any applicable data validation warnings about the question's
+          #     feedback labels.
+          # @!attribute [rw] tuning_error
+          #   @return [::String]
+          #     Error status of the tuning operation for the question. Will only be set
+          #     if the tuning operation failed.
+          class TuningMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+        end
+
+        # A QaScorecard represents a collection of questions to be scored during
+        # analysis.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. The scorecard name.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/qaScorecards/\\{qa_scorecard}
+        # @!attribute [rw] display_name
+        #   @return [::String]
+        #     The user-specified display name of the scorecard.
+        # @!attribute [rw] description
+        #   @return [::String]
+        #     A text description explaining the intent of the scorecard.
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The time at which this scorecard was created.
+        # @!attribute [r] update_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The most recent time at which the scorecard was updated.
+        class QaScorecard
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # A revision of a QaScorecard.
+        #
+        # Modifying published scorecard fields would invalidate existing scorecard
+        # results — the questions may have changed, or the score weighting will make
+        # existing scores impossible to understand. So changes must create a new
+        # revision, rather than modifying the existing resource.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. The name of the scorecard revision.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/qaScorecards/\\{qa_scorecard}/revisions/\\{revision}
+        # @!attribute [rw] snapshot
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaScorecard]
+        #     The snapshot of the scorecard at the time of this revision's creation.
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The timestamp that the revision was created.
+        # @!attribute [r] alternate_ids
+        #   @return [::Array<::String>]
+        #     Output only. Alternative IDs for this revision of the scorecard, e.g.,
+        #     `latest`.
+        # @!attribute [r] state
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaScorecardRevision::State]
+        #     Output only. State of the scorecard revision, indicating whether it's ready
+        #     to be used in analysis.
+        class QaScorecardRevision
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Enum representing the set of states a scorecard revision may be in.
+          module State
+            # Unspecified.
+            STATE_UNSPECIFIED = 0
+
+            # The scorecard revision can be edited.
+            EDITABLE = 12
+
+            # Scorecard model training is in progress.
+            TRAINING = 2
+
+            # Scorecard revision model training failed.
+            TRAINING_FAILED = 9
+
+            # The revision can be used in analysis.
+            READY = 11
+
+            # Scorecard is being deleted.
+            DELETING = 7
+
+            # Scorecard model training was explicitly cancelled by the user.
+            TRAINING_CANCELLED = 14
+          end
+        end
+
+        # An answer to a QaQuestion.
+        # @!attribute [rw] qa_question
+        #   @return [::String]
+        #     The QaQuestion answered by this answer.
+        # @!attribute [rw] conversation
+        #   @return [::String]
+        #     The conversation the answer applies to.
+        # @!attribute [rw] question_body
+        #   @return [::String]
+        #     Question text. E.g., "Did the agent greet the customer?"
+        # @!attribute [rw] answer_value
+        #   @return [::Google::Cloud::ContactCenterInsights::V1::QaAnswer::AnswerValue]
+        #     The main answer value, incorporating any manual edits if they exist.
+        # @!attribute [rw] tags
+        #   @return [::Array<::String>]
+        #     User-defined list of arbitrary tags. Matches the value from
+        #     QaScorecard.ScorecardQuestion.tags. Used for grouping/organization and
+        #     for weighting the score of each answer.
+        # @!attribute [rw] answer_sources
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaAnswer::AnswerSource>]
+        #     List of all individual answers given to the question.
+        class QaAnswer
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Message for holding the value of a
+          # {::Google::Cloud::ContactCenterInsights::V1::QaAnswer QaAnswer}.
+          # {::Google::Cloud::ContactCenterInsights::V1::QaQuestion::AnswerChoice QaQuestion.AnswerChoice}
+          # defines the possible answer values for a question.
+          # @!attribute [rw] str_value
+          #   @return [::String]
+          #     String value.
+          #
+          #     Note: The following fields are mutually exclusive: `str_value`, `num_value`, `bool_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] num_value
+          #   @return [::Float]
+          #     Numerical value.
+          #
+          #     Note: The following fields are mutually exclusive: `num_value`, `str_value`, `bool_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] bool_value
+          #   @return [::Boolean]
+          #     Boolean value.
+          #
+          #     Note: The following fields are mutually exclusive: `bool_value`, `str_value`, `num_value`, `na_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] na_value
+          #   @return [::Boolean]
+          #     A value of "Not Applicable (N/A)". Should only ever be `true`.
+          #
+          #     Note: The following fields are mutually exclusive: `na_value`, `str_value`, `num_value`, `bool_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] key
+          #   @return [::String]
+          #     A short string used as an identifier. Matches the value used in
+          #     QaQuestion.AnswerChoice.key.
+          # @!attribute [r] score
+          #   @return [::Float]
+          #     Output only. Numerical score of the answer.
+          # @!attribute [r] potential_score
+          #   @return [::Float]
+          #     Output only. The maximum potential score of the question.
+          # @!attribute [r] normalized_score
+          #   @return [::Float]
+          #     Output only. Normalized score of the questions. Calculated as score /
+          #     potential_score.
+          class AnswerValue
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A question may have multiple answers from varying sources, one of which
+          # becomes the "main" answer above. AnswerSource represents each individual
+          # answer.
+          # @!attribute [rw] source_type
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::QaAnswer::AnswerSource::SourceType]
+          #     What created the answer.
+          # @!attribute [rw] answer_value
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::QaAnswer::AnswerValue]
+          #     The answer value from this source.
+          class AnswerSource
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # What created the answer.
+            module SourceType
+              # Source type is unspecified.
+              SOURCE_TYPE_UNSPECIFIED = 0
+
+              # Answer was system-generated; created during an Insights analysis.
+              SYSTEM_GENERATED = 1
+
+              # Answer was created by a human via manual edit.
+              MANUAL_EDIT = 2
+            end
+          end
+        end
+
+        # The results of scoring a single conversation against a QaScorecard. Contains
+        # a collection of QaAnswers and aggregate score.
+        # @!attribute [rw] name
+        #   @return [::String]
+        #     Identifier. The name of the scorecard result.
+        #     Format:
+        #     projects/\\{project}/locations/\\{location}/qaScorecardResults/\\{qa_scorecard_result}
+        # @!attribute [rw] qa_scorecard_revision
+        #   @return [::String]
+        #     The QaScorecardRevision scored by this result.
+        # @!attribute [rw] conversation
+        #   @return [::String]
+        #     The conversation scored by this result.
+        # @!attribute [r] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Output only. The timestamp that the revision was created.
+        # @!attribute [rw] agent_id
+        #   @return [::String]
+        #     ID of the agent that handled the conversation.
+        # @!attribute [rw] qa_answers
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaAnswer>]
+        #     Set of QaAnswers represented in the result.
+        # @!attribute [rw] score
+        #   @return [::Float]
+        #     The overall numerical score of the result, incorporating any manual edits
+        #     if they exist.
+        # @!attribute [rw] potential_score
+        #   @return [::Float]
+        #     The maximum potential overall score of the scorecard. Any questions
+        #     answered using `na_value` are excluded from this calculation.
+        # @!attribute [rw] normalized_score
+        #   @return [::Float]
+        #     The normalized score, which is the score divided by the potential score.
+        #     Any manual edits are included if they exist.
+        # @!attribute [rw] qa_tag_results
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaScorecardResult::QaTagResult>]
+        #     Collection of tags and their scores.
+        # @!attribute [rw] score_sources
+        #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaScorecardResult::ScoreSource>]
+        #     List of all individual score sets.
+        class QaScorecardResult
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+
+          # Tags and their corresponding results.
+          # @!attribute [rw] tag
+          #   @return [::String]
+          #     The tag the score applies to.
+          # @!attribute [rw] score
+          #   @return [::Float]
+          #     The score the tag applies to.
+          # @!attribute [rw] potential_score
+          #   @return [::Float]
+          #     The potential score the tag applies to.
+          # @!attribute [rw] normalized_score
+          #   @return [::Float]
+          #     The normalized score the tag applies to.
+          class QaTagResult
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # A scorecard result may have multiple sets of scores from varying sources,
+          # one of which becomes the "main" answer above. A ScoreSource represents
+          # each individual set of scores.
+          # @!attribute [rw] source_type
+          #   @return [::Google::Cloud::ContactCenterInsights::V1::QaScorecardResult::ScoreSource::SourceType]
+          #     What created the score.
+          # @!attribute [rw] score
+          #   @return [::Float]
+          #     The overall numerical score of the result.
+          # @!attribute [rw] potential_score
+          #   @return [::Float]
+          #     The maximum potential overall score of the scorecard. Any questions
+          #     answered using `na_value` are excluded from this calculation.
+          # @!attribute [rw] normalized_score
+          #   @return [::Float]
+          #     The normalized score, which is the score divided by the potential score.
+          # @!attribute [rw] qa_tag_results
+          #   @return [::Array<::Google::Cloud::ContactCenterInsights::V1::QaScorecardResult::QaTagResult>]
+          #     Collection of tags and their scores.
+          class ScoreSource
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # What created the score.
+            module SourceType
+              # Source type is unspecified.
+              SOURCE_TYPE_UNSPECIFIED = 0
+
+              # Score is derived only from system-generated answers.
+              SYSTEM_GENERATED_ONLY = 1
+
+              # Score is derived from both system-generated answers, and includes
+              # any manual edits if they exist.
+              INCLUDES_MANUAL_EDITS = 2
+            end
+          end
+        end
+
+        # Enum for the different types of issues a tuning dataset can have.
+        # These warnings are currentlyraised when trying to validate a dataset for
+        # tuning a scorecard.
+        module DatasetValidationWarning
+          # Unspecified data validation warning.
+          DATASET_VALIDATION_WARNING_UNSPECIFIED = 0
+
+          # A non-trivial percentage of the feedback labels are invalid.
+          TOO_MANY_INVALID_FEEDBACK_LABELS = 1
+
+          # The quantity of valid feedback labels provided is less than the
+          # recommended minimum.
+          INSUFFICIENT_FEEDBACK_LABELS = 2
+
+          # One or more of the answers have less than the recommended minimum of
+          # feedback labels.
+          INSUFFICIENT_FEEDBACK_LABELS_PER_ANSWER = 3
+
+          # All the labels in the dataset come from a single answer choice.
+          ALL_FEEDBACK_LABELS_HAVE_THE_SAME_ANSWER = 4
         end
       end
     end

@@ -19,15 +19,29 @@
 # [START logging_v2_generated_LoggingService_WriteLogEntries_sync]
 require "google/cloud/logging/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Logging::V2::LoggingService::Client.new
+##
+# Snippet for the write_log_entries call in the LoggingService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Logging::V2::LoggingService::Client#write_log_entries.
+#
+def write_log_entries
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Logging::V2::LoggingService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Logging::V2::WriteLogEntriesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Logging::V2::WriteLogEntriesRequest.new
 
-# Call the write_log_entries method.
-result = client.write_log_entries request
+  # Call the write_log_entries method.
+  result = client.write_log_entries request
 
-# The returned object is of type Google::Cloud::Logging::V2::WriteLogEntriesResponse.
-p result
+  # The returned object is of type Google::Cloud::Logging::V2::WriteLogEntriesResponse.
+  p result
+end
 # [END logging_v2_generated_LoggingService_WriteLogEntries_sync]

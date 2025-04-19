@@ -18,6 +18,8 @@
 
 require "google/cloud/errors"
 require "google/cloud/security/privateca/v1/service_pb"
+require "google/cloud/location"
+require "google/iam/v1"
 
 module Google
   module Cloud
@@ -28,10 +30,17 @@ module Google
             ##
             # Client for the CertificateAuthorityService service.
             #
-            # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client Certificate Authority Service} manages private
-            # certificate authorities and issued certificates.
+            # [Certificate Authority
+            # Service][google.cloud.security.privateca.v1.CertificateAuthorityService]
+            # manages private certificate authorities and issued certificates.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "privateca.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -98,6 +107,15 @@ module Google
               end
 
               ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @certificate_authority_service_stub.universe_domain
+              end
+
+              ##
               # Create a new CertificateAuthorityService client object.
               #
               # @example
@@ -130,8 +148,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -142,16 +161,48 @@ module Google
 
                 @operations_client = Operations.new do |config|
                   config.credentials = credentials
+                  config.quota_project = @quota_project_id
                   config.endpoint = @config.endpoint
+                  config.universe_domain = @config.universe_domain
                 end
 
                 @certificate_authority_service_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @certificate_authority_service_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+
+                @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @certificate_authority_service_stub.endpoint
+                  config.universe_domain = @certificate_authority_service_stub.universe_domain
+                  config.logger = @certificate_authority_service_stub.logger if config.respond_to? :logger=
+                end
+
+                @iam_policy_client = Google::Iam::V1::IAMPolicy::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @certificate_authority_service_stub.endpoint
+                  config.universe_domain = @certificate_authority_service_stub.universe_domain
+                  config.logger = @certificate_authority_service_stub.logger if config.respond_to? :logger=
+                end
               end
 
               ##
@@ -161,10 +212,34 @@ module Google
               #
               attr_reader :operations_client
 
+              ##
+              # Get the associated client for mix-in of the Locations.
+              #
+              # @return [Google::Cloud::Location::Locations::Client]
+              #
+              attr_reader :location_client
+
+              ##
+              # Get the associated client for mix-in of the IAMPolicy.
+              #
+              # @return [Google::Iam::V1::IAMPolicy::Client]
+              #
+              attr_reader :iam_policy_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @certificate_authority_service_stub.logger
+              end
+
               # Service calls
 
               ##
-              # Create a new {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} in a given Project, Location from a particular
+              # Create a new {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}
+              # in a given Project, Location from a particular
               # {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}.
               #
               # @overload create_certificate(request, options = nil)
@@ -183,45 +258,62 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The resource name of the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate},
-              #     in the format `projects/*/locations/*/caPools/*`.
+              #     Required. The resource name of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}, in the
+              #     format `projects/*/locations/*/caPools/*`.
               #   @param certificate_id [::String]
               #     Optional. It must be unique within a location and match the regular
               #     expression `[a-zA-Z0-9_-]{1,63}`. This field is required when using a
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the Enterprise [CertificateAuthority.Tier][],
-              #     but is optional and its value is ignored otherwise.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the Enterprise [CertificateAuthority.Tier][], but is optional and its
+              #     value is ignored otherwise.
               #   @param certificate [::Google::Cloud::Security::PrivateCA::V1::Certificate, ::Hash]
-              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} with initial field values.
+              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}
+              #     with initial field values.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
-              #     ID, the server can check if original operation with the same request ID
-              #     was received, and if so, will ignore the second request. This prevents
-              #     clients from accidentally creating duplicate commitments.
+              #     For example, consider a situation where you make an initial request and the
+              #     request times out. If you make the request again with the same request ID,
+              #     the server can check if original operation with the same request ID was
+              #     received, and if so, will ignore the second request. This prevents clients
+              #     from accidentally creating duplicate commitments.
               #
               #     The request ID must be a valid UUID with the exception that zero UUID is
               #     not supported (00000000-0000-0000-0000-000000000000).
               #   @param validate_only [::Boolean]
-              #     Optional. If this is true, no {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} resource will be persisted regardless
-              #     of the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}'s {::Google::Cloud::Security::PrivateCA::V1::CaPool#tier tier}, and the returned {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}
-              #     will not contain the {::Google::Cloud::Security::PrivateCA::V1::Certificate#pem_certificate pem_certificate} field.
+              #     Optional. If this is true, no
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} resource will
+              #     be persisted regardless of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}'s
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool#tier tier}, and the returned
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} will not
+              #     contain the
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate#pem_certificate pem_certificate}
+              #     field.
               #   @param issuing_certificate_authority_id [::String]
-              #     Optional. The resource ID of the {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} that should issue the
-              #     certificate.  This optional field will ignore the load-balancing scheme of
-              #     the Pool and directly issue the certificate from the CA with the specified
-              #     ID, contained in the same {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} referenced by `parent`. Per-CA quota
-              #     rules apply. If left empty, a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} will be chosen from
-              #     the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} by the service. For example, to issue a {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} from
-              #     a Certificate Authority with resource name
+              #     Optional. The resource ID of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     that should issue the certificate.  This optional field will ignore the
+              #     load-balancing scheme of the Pool and directly issue the certificate from
+              #     the CA with the specified ID, contained in the same
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} referenced by `parent`.
+              #     Per-CA quota rules apply. If left empty, a
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     will be chosen from the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}
+              #     by the service. For example, to issue a
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} from a
+              #     Certificate Authority with resource name
               #     "projects/my-project/locations/us-central1/caPools/my-pool/certificateAuthorities/my-ca",
-              #     you can set the {::Google::Cloud::Security::PrivateCA::V1::CreateCertificateRequest#parent parent} to
-              #     "projects/my-project/locations/us-central1/caPools/my-pool" and the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CreateCertificateRequest#issuing_certificate_authority_id issuing_certificate_authority_id} to "my-ca".
+              #     you can set the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CreateCertificateRequest#parent parent}
+              #     to "projects/my-project/locations/us-central1/caPools/my-pool" and the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CreateCertificateRequest#issuing_certificate_authority_id issuing_certificate_authority_id}
+              #     to "my-ca".
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::Certificate]
@@ -257,10 +349,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_certificate.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -281,7 +374,6 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :create_certificate, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -306,7 +398,9 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::Certificate#name name} of the {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} to get.
+              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::Certificate#name name}
+              #     of the {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} to
+              #     get.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::Certificate]
@@ -342,10 +436,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_certificate.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -366,7 +461,6 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :get_certificate, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -392,25 +486,27 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The resource name of the location associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates}, in the format
-              #     `projects/*/locations/*/caPools/*`.
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates}, in the
+              #     format `projects/*/locations/*/caPools/*`.
               #   @param page_size [::Integer]
               #     Optional. Limit on the number of
-              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates} to include in the
-              #     response. Further {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates} can subsequently be obtained
-              #     by including the
-              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificatesResponse#next_page_token ListCertificatesResponse.next_page_token} in a subsequent
-              #     request. If unspecified, the server will pick an appropriate default.
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates} to include
+              #     in the response. Further
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificates} can
+              #     subsequently be obtained by including the
+              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificatesResponse#next_page_token ListCertificatesResponse.next_page_token}
+              #     in a subsequent request. If unspecified, the server will pick an
+              #     appropriate default.
               #   @param page_token [::String]
               #     Optional. Pagination token, returned earlier via
               #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificatesResponse#next_page_token ListCertificatesResponse.next_page_token}.
               #   @param filter [::String]
-              #     Optional. Only include resources that match the filter in the response. For details
-              #     on supported filters and syntax, see [Certificates Filtering
+              #     Optional. Only include resources that match the filter in the response. For
+              #     details on supported filters and syntax, see [Certificates Filtering
               #     documentation](https://cloud.google.com/certificate-authority-service/docs/sorting-filtering-certificates#filtering_support).
               #   @param order_by [::String]
-              #     Optional. Specify how the results should be sorted. For details on supported fields
-              #     and syntax, see [Certificates Sorting
+              #     Optional. Specify how the results should be sorted. For details on
+              #     supported fields and syntax, see [Certificates Sorting
               #     documentation](https://cloud.google.com/certificate-authority-service/docs/sorting-filtering-certificates#sorting_support).
               #
               # @yield [response, operation] Access the result along with the RPC operation
@@ -433,13 +529,11 @@ module Google
               #   # Call the list_certificates method.
               #   result = client.list_certificates request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Security::PrivateCA::V1::Certificate.
-              #     p response
+              #     p item
               #   end
               #
               def list_certificates request, options = nil
@@ -453,10 +547,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_certificates.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -478,7 +573,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :list_certificates, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @certificate_authority_service_stub, :list_certificates, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -503,19 +598,21 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} in the
-              #     format
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} in the format
               #     `projects/*/locations/*/caPools/*/certificates/*`.
               #   @param reason [::Google::Cloud::Security::PrivateCA::V1::RevocationReason]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::RevocationReason RevocationReason} for revoking this certificate.
+              #     Required. The
+              #     {::Google::Cloud::Security::PrivateCA::V1::RevocationReason RevocationReason} for
+              #     revoking this certificate.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -557,10 +654,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.revoke_certificate.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -581,14 +679,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :revoke_certificate, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Update a {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}. Currently, the only field you can update is the
+              # Update a {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}.
+              # Currently, the only field you can update is the
               # {::Google::Cloud::Security::PrivateCA::V1::Certificate#labels labels} field.
               #
               # @overload update_certificate(request, options = nil)
@@ -607,17 +705,18 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param certificate [::Google::Cloud::Security::PrivateCA::V1::Certificate, ::Hash]
-              #     Required. {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate} with updated values.
+              #     Required. {::Google::Cloud::Security::PrivateCA::V1::Certificate Certificate}
+              #     with updated values.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. A list of fields to be updated in this request.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -659,10 +758,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_certificate.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -683,19 +783,22 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :update_certificate, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Activate a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} that is in state
+              # Activate a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              # that is in state
               # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::State::AWAITING_USER_ACTIVATION AWAITING_USER_ACTIVATION}
-              # and is of type {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::Type::SUBORDINATE SUBORDINATE}. After
-              # the parent Certificate Authority signs a certificate signing request from
-              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#fetch_certificate_authority_csr FetchCertificateAuthorityCsr}, this method can complete the activation
-              # process.
+              # and is of type
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::Type::SUBORDINATE SUBORDINATE}.
+              # After the parent Certificate Authority signs a certificate signing request
+              # from
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#fetch_certificate_authority_csr FetchCertificateAuthorityCsr},
+              # this method can complete the activation process.
               #
               # @overload activate_certificate_authority(request, options = nil)
               #   Pass arguments to `activate_certificate_authority` via a request object, either of type
@@ -713,22 +816,23 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param pem_ca_certificate [::String]
               #     Required. The signed CA certificate issued from
               #     {::Google::Cloud::Security::PrivateCA::V1::FetchCertificateAuthorityCsrResponse#pem_csr FetchCertificateAuthorityCsrResponse.pem_csr}.
               #   @param subordinate_config [::Google::Cloud::Security::PrivateCA::V1::SubordinateConfig, ::Hash]
-              #     Required. Must include information about the issuer of 'pem_ca_certificate', and any
-              #     further issuers until the self-signed CA.
+              #     Required. Must include information about the issuer of
+              #     'pem_ca_certificate', and any further issuers until the self-signed CA.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -756,14 +860,14 @@ module Google
               #   # Call the activate_certificate_authority method.
               #   result = client.activate_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def activate_certificate_authority request, options = nil
@@ -777,10 +881,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.activate_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -802,14 +907,16 @@ module Google
                 @certificate_authority_service_stub.call_rpc :activate_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Create a new {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in a given Project and Location.
+              # Create a new
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              # in a given Project and Location.
               #
               # @overload create_certificate_authority(request, options = nil)
               #   Pass arguments to `create_certificate_authority` via a request object, either of type
@@ -827,22 +934,25 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The resource name of the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}, in the format
-              #     `projects/*/locations/*/caPools/*`.
+              #     Required. The resource name of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities},
+              #     in the format `projects/*/locations/*/caPools/*`.
               #   @param certificate_authority_id [::String]
               #     Required. It must be unique within a location and match the regular
               #     expression `[a-zA-Z0-9_-]{1,63}`
               #   @param certificate_authority [::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority, ::Hash]
-              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} with initial field values.
+              #     Required. A
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     with initial field values.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -870,14 +980,14 @@ module Google
               #   # Call the create_certificate_authority method.
               #   result = client.create_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def create_certificate_authority request, options = nil
@@ -891,10 +1001,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -916,14 +1027,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :create_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Disable a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
+              # Disable a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
               #
               # @overload disable_certificate_authority(request, options = nil)
               #   Pass arguments to `disable_certificate_authority` via a request object, either of type
@@ -935,28 +1047,34 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload disable_certificate_authority(name: nil, request_id: nil)
+              # @overload disable_certificate_authority(name: nil, request_id: nil, ignore_dependent_resources: nil)
               #   Pass arguments to `disable_certificate_authority` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
               #
               #     The request ID must be a valid UUID with the exception that zero UUID is
               #     not supported (00000000-0000-0000-0000-000000000000).
+              #   @param ignore_dependent_resources [::Boolean]
+              #     Optional. This field allows this CA to be disabled even if it's being
+              #     depended on by another resource. However, doing so may result in unintended
+              #     and unrecoverable effects on any dependent resources since the CA will
+              #     no longer be able to issue certificates.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -978,14 +1096,14 @@ module Google
               #   # Call the disable_certificate_authority method.
               #   result = client.disable_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def disable_certificate_authority request, options = nil
@@ -999,10 +1117,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.disable_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1024,14 +1143,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :disable_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Enable a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
+              # Enable a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
               #
               # @overload enable_certificate_authority(request, options = nil)
               #   Pass arguments to `enable_certificate_authority` via a request object, either of type
@@ -1049,16 +1169,17 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1086,14 +1207,14 @@ module Google
               #   # Call the enable_certificate_authority method.
               #   result = client.enable_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def enable_certificate_authority request, options = nil
@@ -1107,10 +1228,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.enable_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1132,20 +1254,24 @@ module Google
                 @certificate_authority_service_stub.call_rpc :enable_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Fetch a certificate signing request (CSR) from a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              # Fetch a certificate signing request (CSR) from a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
               # that is in state
               # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::State::AWAITING_USER_ACTIVATION AWAITING_USER_ACTIVATION}
-              # and is of type {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::Type::SUBORDINATE SUBORDINATE}. The
-              # CSR must then be signed by the desired parent Certificate Authority, which
-              # could be another {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} resource, or could be an on-prem
-              # certificate authority. See also {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#activate_certificate_authority ActivateCertificateAuthority}.
+              # and is of type
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority::Type::SUBORDINATE SUBORDINATE}.
+              # The CSR must then be signed by the desired parent Certificate Authority,
+              # which could be another
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              # resource, or could be an on-prem certificate authority. See also
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client#activate_certificate_authority ActivateCertificateAuthority}.
               #
               # @overload fetch_certificate_authority_csr(request, options = nil)
               #   Pass arguments to `fetch_certificate_authority_csr` via a request object, either of type
@@ -1163,8 +1289,9 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::FetchCertificateAuthorityCsrResponse]
@@ -1200,10 +1327,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.fetch_certificate_authority_csr.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1224,14 +1352,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :fetch_certificate_authority_csr, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Returns a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
+              # Returns a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
               #
               # @overload get_certificate_authority(request, options = nil)
               #   Pass arguments to `get_certificate_authority` via a request object, either of type
@@ -1249,8 +1377,10 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority#name name} of the {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} to
-              #     get.
+              #     Required. The
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority#name name} of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     to get.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority]
@@ -1286,10 +1416,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1310,14 +1441,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :get_certificate_authority, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Lists {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}.
+              # Lists
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}.
               #
               # @overload list_certificate_authorities(request, options = nil)
               #   Pass arguments to `list_certificate_authorities` via a request object, either of type
@@ -1335,16 +1466,19 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param parent [::String]
-              #     Required. The resource name of the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}, in the format
-              #     `projects/*/locations/*/caPools/*`.
+              #     Required. The resource name of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} associated with the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities},
+              #     in the format `projects/*/locations/*/caPools/*`.
               #   @param page_size [::Integer]
-              #     Optional. Limit on the number of {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities} to
-              #     include in the response.
-              #     Further {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities} can subsequently be
-              #     obtained by including the
-              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateAuthoritiesResponse#next_page_token ListCertificateAuthoritiesResponse.next_page_token} in a subsequent
-              #     request. If unspecified, the server will pick an appropriate default.
+              #     Optional. Limit on the number of
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}
+              #     to include in the response. Further
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthorities}
+              #     can subsequently be obtained by including the
+              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateAuthoritiesResponse#next_page_token ListCertificateAuthoritiesResponse.next_page_token}
+              #     in a subsequent request. If unspecified, the server will pick an
+              #     appropriate default.
               #   @param page_token [::String]
               #     Optional. Pagination token, returned earlier via
               #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateAuthoritiesResponse#next_page_token ListCertificateAuthoritiesResponse.next_page_token}.
@@ -1373,13 +1507,11 @@ module Google
               #   # Call the list_certificate_authorities method.
               #   result = client.list_certificate_authorities request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority.
-              #     p response
+              #     p item
               #   end
               #
               def list_certificate_authorities request, options = nil
@@ -1393,10 +1525,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_certificate_authorities.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1418,14 +1551,16 @@ module Google
                 @certificate_authority_service_stub.call_rpc :list_certificate_authorities, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @certificate_authority_service_stub, :list_certificate_authorities, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Undelete a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} that has been deleted.
+              # Undelete a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              # that has been deleted.
               #
               # @overload undelete_certificate_authority(request, options = nil)
               #   Pass arguments to `undelete_certificate_authority` via a request object, either of type
@@ -1443,16 +1578,17 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1480,14 +1616,14 @@ module Google
               #   # Call the undelete_certificate_authority method.
               #   result = client.undelete_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def undelete_certificate_authority request, options = nil
@@ -1501,10 +1637,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.undelete_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1526,14 +1663,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :undelete_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Delete a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
+              # Delete a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
               #
               # @overload delete_certificate_authority(request, options = nil)
               #   Pass arguments to `delete_certificate_authority` via a request object, either of type
@@ -1545,22 +1683,23 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload delete_certificate_authority(name: nil, request_id: nil, ignore_active_certificates: nil)
+              # @overload delete_certificate_authority(name: nil, request_id: nil, ignore_active_certificates: nil, skip_grace_period: nil, ignore_dependent_resources: nil)
               #   Pass arguments to `delete_certificate_authority` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} in the
-              #     format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1570,6 +1709,15 @@ module Google
               #   @param ignore_active_certificates [::Boolean]
               #     Optional. This field allows the CA to be deleted even if the CA has
               #     active certs. Active certs include both unrevoked and unexpired certs.
+              #   @param skip_grace_period [::Boolean]
+              #     Optional. If this flag is set, the Certificate Authority will be deleted as
+              #     soon as possible without a 30-day grace period where undeletion would have
+              #     been allowed. If you proceed, there will be no way to recover this CA.
+              #   @param ignore_dependent_resources [::Boolean]
+              #     Optional. This field allows this CA to be deleted even if it's being
+              #     depended on by another resource. However, doing so may result in unintended
+              #     and unrecoverable effects on any dependent resources since the CA will
+              #     no longer be able to issue certificates.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -1591,14 +1739,14 @@ module Google
               #   # Call the delete_certificate_authority method.
               #   result = client.delete_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def delete_certificate_authority request, options = nil
@@ -1612,10 +1760,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1637,14 +1786,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :delete_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Update a {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
+              # Update a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}.
               #
               # @overload update_certificate_authority(request, options = nil)
               #   Pass arguments to `update_certificate_authority` via a request object, either of type
@@ -1662,17 +1812,19 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param certificate_authority [::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority, ::Hash]
-              #     Required. {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority} with updated values.
+              #     Required.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
+              #     with updated values.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. A list of fields to be updated in this request.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1700,14 +1852,14 @@ module Google
               #   # Call the update_certificate_authority method.
               #   result = client.update_certificate_authority request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_certificate_authority request, options = nil
@@ -1721,10 +1873,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_certificate_authority.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1746,7 +1899,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :update_certificate_authority, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1772,20 +1925,22 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The resource name of the location associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}, in the format `projects/*/locations/*`.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}, in the format
+              #     `projects/*/locations/*`.
               #   @param ca_pool_id [::String]
               #     Required. It must be unique within a location and match the regular
               #     expression `[a-zA-Z0-9_-]{1,63}`
               #   @param ca_pool [::Google::Cloud::Security::PrivateCA::V1::CaPool, ::Hash]
-              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} with initial field values.
+              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} with
+              #     initial field values.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1813,14 +1968,14 @@ module Google
               #   # Call the create_ca_pool method.
               #   result = client.create_ca_pool request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def create_ca_pool request, options = nil
@@ -1834,10 +1989,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_ca_pool.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1859,7 +2015,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :create_ca_pool, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1884,17 +2040,18 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param ca_pool [::Google::Cloud::Security::PrivateCA::V1::CaPool, ::Hash]
-              #     Required. {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} with updated values.
+              #     Required. {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} with updated
+              #     values.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. A list of fields to be updated in this request.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -1922,14 +2079,14 @@ module Google
               #   # Call the update_ca_pool method.
               #   result = client.update_ca_pool request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_ca_pool request, options = nil
@@ -1943,10 +2100,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_ca_pool.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1968,7 +2126,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :update_ca_pool, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1993,7 +2151,8 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::CaPool#name name} of the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} to get.
+              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::CaPool#name name} of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} to get.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::CaPool]
@@ -2029,10 +2188,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_ca_pool.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2053,7 +2213,6 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :get_ca_pool, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -2082,12 +2241,13 @@ module Google
               #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPools}, in the format
               #     `projects/*/locations/*`.
               #   @param page_size [::Integer]
-              #     Optional. Limit on the number of {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPools} to
-              #     include in the response.
-              #     Further {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPools} can subsequently be
-              #     obtained by including the
-              #     {::Google::Cloud::Security::PrivateCA::V1::ListCaPoolsResponse#next_page_token ListCaPoolsResponse.next_page_token} in a subsequent
-              #     request. If unspecified, the server will pick an appropriate default.
+              #     Optional. Limit on the number of
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPools} to include in the
+              #     response. Further {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPools} can
+              #     subsequently be obtained by including the
+              #     {::Google::Cloud::Security::PrivateCA::V1::ListCaPoolsResponse#next_page_token ListCaPoolsResponse.next_page_token}
+              #     in a subsequent request. If unspecified, the server will pick an
+              #     appropriate default.
               #   @param page_token [::String]
               #     Optional. Pagination token, returned earlier via
               #     {::Google::Cloud::Security::PrivateCA::V1::ListCaPoolsResponse#next_page_token ListCaPoolsResponse.next_page_token}.
@@ -2116,13 +2276,11 @@ module Google
               #   # Call the list_ca_pools method.
               #   result = client.list_ca_pools request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Security::PrivateCA::V1::CaPool.
-              #     p response
+              #     p item
               #   end
               #
               def list_ca_pools request, options = nil
@@ -2136,10 +2294,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_ca_pools.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2161,7 +2320,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :list_ca_pools, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @certificate_authority_service_stub, :list_ca_pools, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -2180,28 +2339,34 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload delete_ca_pool(name: nil, request_id: nil)
+              # @overload delete_ca_pool(name: nil, request_id: nil, ignore_dependent_resources: nil)
               #   Pass arguments to `delete_ca_pool` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} in the
-              #     format `projects/*/locations/*/caPools/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} in the format
+              #     `projects/*/locations/*/caPools/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
               #
               #     The request ID must be a valid UUID with the exception that zero UUID is
               #     not supported (00000000-0000-0000-0000-000000000000).
+              #   @param ignore_dependent_resources [::Boolean]
+              #     Optional. This field allows this pool to be deleted even if it's being
+              #     depended on by another resource. However, doing so may result in unintended
+              #     and unrecoverable effects on any dependent resources since the pool will
+              #     no longer be able to issue certificates.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -2223,14 +2388,14 @@ module Google
               #   # Call the delete_ca_pool method.
               #   result = client.delete_ca_pool request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def delete_ca_pool request, options = nil
@@ -2244,10 +2409,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_ca_pool.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2269,16 +2435,17 @@ module Google
                 @certificate_authority_service_stub.call_rpc :delete_ca_pool, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # FetchCaCerts returns the current trust anchor for the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}. This will
-              # include CA certificate chains for all ACTIVE {::Google::Cloud::Security::PrivateCA::V1::CertificateAuthority CertificateAuthority}
-              # resources in the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}.
+              # FetchCaCerts returns the current trust anchor for the
+              # {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool}. This will include CA
+              # certificate chains for all certificate authorities in the ENABLED,
+              # DISABLED, or STAGED states.
               #
               # @overload fetch_ca_certs(request, options = nil)
               #   Pass arguments to `fetch_ca_certs` via a request object, either of type
@@ -2296,16 +2463,17 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param ca_pool [::String]
-              #     Required. The resource name for the {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} in the
-              #     format `projects/*/locations/*/caPools/*`.
+              #     Required. The resource name for the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CaPool CaPool} in the format
+              #     `projects/*/locations/*/caPools/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -2347,10 +2515,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.fetch_ca_certs.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2371,14 +2540,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :fetch_ca_certs, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Returns a {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}.
+              # Returns a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}.
               #
               # @overload get_certificate_revocation_list(request, options = nil)
               #   Pass arguments to `get_certificate_revocation_list` via a request object, either of type
@@ -2396,8 +2565,11 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList#name name} of the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList} to get.
+              #     Required. The
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList#name name}
+              #     of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}
+              #     to get.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList]
@@ -2433,10 +2605,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_certificate_revocation_list.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2457,14 +2630,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :get_certificate_revocation_list, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Lists {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}.
+              # Lists
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}.
               #
               # @overload list_certificate_revocation_lists(request, options = nil)
               #   Pass arguments to `list_certificate_revocation_lists` via a request object, either of type
@@ -2483,15 +2656,17 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The resource name of the location associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}, in the format
-              #     `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists},
+              #     in the format `projects/*/locations/*/caPools/*/certificateAuthorities/*`.
               #   @param page_size [::Integer]
               #     Optional. Limit on the number of
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists} to include in the
-              #     response. Further {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}
+              #     to include in the response. Further
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationLists}
               #     can subsequently be obtained by including the
-              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateRevocationListsResponse#next_page_token ListCertificateRevocationListsResponse.next_page_token} in a subsequent
-              #     request. If unspecified, the server will pick an appropriate default.
+              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateRevocationListsResponse#next_page_token ListCertificateRevocationListsResponse.next_page_token}
+              #     in a subsequent request. If unspecified, the server will pick an
+              #     appropriate default.
               #   @param page_token [::String]
               #     Optional. Pagination token, returned earlier via
               #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateRevocationListsResponse#next_page_token ListCertificateRevocationListsResponse.next_page_token}.
@@ -2520,13 +2695,11 @@ module Google
               #   # Call the list_certificate_revocation_lists method.
               #   result = client.list_certificate_revocation_lists request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList.
-              #     p response
+              #     p item
               #   end
               #
               def list_certificate_revocation_lists request, options = nil
@@ -2540,10 +2713,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_certificate_revocation_lists.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2565,14 +2739,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :list_certificate_revocation_lists, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @certificate_authority_service_stub, :list_certificate_revocation_lists, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Update a {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}.
+              # Update a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}.
               #
               # @overload update_certificate_revocation_list(request, options = nil)
               #   Pass arguments to `update_certificate_revocation_list` via a request object, either of type
@@ -2590,17 +2765,19 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param certificate_revocation_list [::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList, ::Hash]
-              #     Required. {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList} with updated values.
+              #     Required.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateRevocationList CertificateRevocationList}
+              #     with updated values.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. A list of fields to be updated in this request.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -2628,14 +2805,14 @@ module Google
               #   # Call the update_certificate_revocation_list method.
               #   result = client.update_certificate_revocation_list request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_certificate_revocation_list request, options = nil
@@ -2649,10 +2826,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_certificate_revocation_list.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2674,14 +2852,16 @@ module Google
                 @certificate_authority_service_stub.call_rpc :update_certificate_revocation_list, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Create a new {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate} in a given Project and Location.
+              # Create a new
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}
+              # in a given Project and Location.
               #
               # @overload create_certificate_template(request, options = nil)
               #   Pass arguments to `create_certificate_template` via a request object, either of type
@@ -2700,21 +2880,23 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The resource name of the location associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}, in the format
-              #     `projects/*/locations/*`.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate},
+              #     in the format `projects/*/locations/*`.
               #   @param certificate_template_id [::String]
               #     Required. It must be unique within a location and match the regular
               #     expression `[a-zA-Z0-9_-]{1,63}`
               #   @param certificate_template [::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate, ::Hash]
-              #     Required. A {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate} with initial field values.
+              #     Required. A
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}
+              #     with initial field values.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -2742,14 +2924,14 @@ module Google
               #   # Call the create_certificate_template method.
               #   result = client.create_certificate_template request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def create_certificate_template request, options = nil
@@ -2763,10 +2945,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_certificate_template.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2788,14 +2971,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :create_certificate_template, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # DeleteCertificateTemplate deletes a {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
+              # DeleteCertificateTemplate deletes a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
               #
               # @overload delete_certificate_template(request, options = nil)
               #   Pass arguments to `delete_certificate_template` via a request object, either of type
@@ -2813,16 +2997,17 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The resource name for this {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate} in the format
-              #     `projects/*/locations/*/certificateTemplates/*`.
+              #     Required. The resource name for this
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}
+              #     in the format `projects/*/locations/*/certificateTemplates/*`.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -2850,14 +3035,14 @@ module Google
               #   # Call the delete_certificate_template method.
               #   result = client.delete_certificate_template request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def delete_certificate_template request, options = nil
@@ -2871,10 +3056,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_certificate_template.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2896,14 +3082,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :delete_certificate_template, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Returns a {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
+              # Returns a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
               #
               # @overload get_certificate_template(request, options = nil)
               #   Pass arguments to `get_certificate_template` via a request object, either of type
@@ -2921,8 +3108,10 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param name [::String]
-              #     Required. The {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate#name name} of the {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate} to
-              #     get.
+              #     Required. The
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate#name name} of the
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}
+              #     to get.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate]
@@ -2958,10 +3147,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_certificate_template.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -2982,14 +3172,14 @@ module Google
 
                 @certificate_authority_service_stub.call_rpc :get_certificate_template, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Lists {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates}.
+              # Lists
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates}.
               #
               # @overload list_certificate_templates(request, options = nil)
               #   Pass arguments to `list_certificate_templates` via a request object, either of type
@@ -3008,15 +3198,17 @@ module Google
               #
               #   @param parent [::String]
               #     Required. The resource name of the location associated with the
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates}, in the format
-              #     `projects/*/locations/*`.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates},
+              #     in the format `projects/*/locations/*`.
               #   @param page_size [::Integer]
               #     Optional. Limit on the number of
-              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates} to include in the response.
-              #     Further {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates} can subsequently be
-              #     obtained by including the
-              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateTemplatesResponse#next_page_token ListCertificateTemplatesResponse.next_page_token} in a subsequent
-              #     request. If unspecified, the server will pick an appropriate default.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates}
+              #     to include in the response. Further
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplates}
+              #     can subsequently be obtained by including the
+              #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateTemplatesResponse#next_page_token ListCertificateTemplatesResponse.next_page_token}
+              #     in a subsequent request. If unspecified, the server will pick an
+              #     appropriate default.
               #   @param page_token [::String]
               #     Optional. Pagination token, returned earlier via
               #     {::Google::Cloud::Security::PrivateCA::V1::ListCertificateTemplatesResponse#next_page_token ListCertificateTemplatesResponse.next_page_token}.
@@ -3045,13 +3237,11 @@ module Google
               #   # Call the list_certificate_templates method.
               #   result = client.list_certificate_templates request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate.
-              #     p response
+              #     p item
               #   end
               #
               def list_certificate_templates request, options = nil
@@ -3065,10 +3255,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_certificate_templates.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -3090,14 +3281,15 @@ module Google
                 @certificate_authority_service_stub.call_rpc :list_certificate_templates, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @certificate_authority_service_stub, :list_certificate_templates, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
               end
 
               ##
-              # Update a {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
+              # Update a
+              # {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}.
               #
               # @overload update_certificate_template(request, options = nil)
               #   Pass arguments to `update_certificate_template` via a request object, either of type
@@ -3115,17 +3307,19 @@ module Google
               #   the default parameter values, pass an empty Hash as a request object (see above).
               #
               #   @param certificate_template [::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate, ::Hash]
-              #     Required. {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate} with updated values.
+              #     Required.
+              #     {::Google::Cloud::Security::PrivateCA::V1::CertificateTemplate CertificateTemplate}
+              #     with updated values.
               #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
               #     Required. A list of fields to be updated in this request.
               #   @param request_id [::String]
-              #     Optional. An ID to identify requests. Specify a unique request ID so that if you must
-              #     retry your request, the server will know to ignore the request if it has
-              #     already been completed. The server will guarantee that for at least 60
-              #     minutes since the first request.
+              #     Optional. An ID to identify requests. Specify a unique request ID so that
+              #     if you must retry your request, the server will know to ignore the request
+              #     if it has already been completed. The server will guarantee that for at
+              #     least 60 minutes since the first request.
               #
-              #     For example, consider a situation where you make an initial request and t
-              #     he request times out. If you make the request again with the same request
+              #     For example, consider a situation where you make an initial request and
+              #     the request times out. If you make the request again with the same request
               #     ID, the server can check if original operation with the same request ID
               #     was received, and if so, will ignore the second request. This prevents
               #     clients from accidentally creating duplicate commitments.
@@ -3153,14 +3347,14 @@ module Google
               #   # Call the update_certificate_template method.
               #   result = client.update_certificate_template request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_certificate_template request, options = nil
@@ -3174,10 +3368,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_certificate_template.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Security::PrivateCA::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -3199,7 +3394,7 @@ module Google
                 @certificate_authority_service_stub.call_rpc :update_certificate_template, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -3235,20 +3430,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"privateca.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -3283,11 +3485,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "privateca.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "privateca.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -3302,6 +3518,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -3320,6 +3538,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##

@@ -25,12 +25,12 @@ module Google
           # Request message for BigtableInstanceAdmin.CreateInstance.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the project in which to create the new instance.
-          #     Values are of the form `projects/{project}`.
+          #     Required. The unique name of the project in which to create the new
+          #     instance. Values are of the form `projects/{project}`.
           # @!attribute [rw] instance_id
           #   @return [::String]
-          #     Required. The ID to be used when referring to the new instance within its project,
-          #     e.g., just `myinstance` rather than
+          #     Required. The ID to be used when referring to the new instance within its
+          #     project, e.g., just `myinstance` rather than
           #     `projects/myproject/instances/myinstance`.
           # @!attribute [rw] instance
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Instance]
@@ -42,7 +42,6 @@ module Google
           #     cluster ID, e.g., just `mycluster` rather than
           #     `projects/myproject/instances/myinstance/clusters/mycluster`.
           #     Fields marked `OutputOnly` must be left blank.
-          #     Currently, at most four clusters can be specified.
           class CreateInstanceRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -70,8 +69,8 @@ module Google
           # Request message for BigtableInstanceAdmin.ListInstances.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the project for which a list of instances is requested.
-          #     Values are of the form `projects/{project}`.
+          #     Required. The unique name of the project for which a list of instances is
+          #     requested. Values are of the form `projects/{project}`.
           # @!attribute [rw] page_token
           #   @return [::String]
           #     DEPRECATED: This field is unused and ignored.
@@ -126,13 +125,12 @@ module Google
           # Request message for BigtableInstanceAdmin.CreateCluster.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the instance in which to create the new cluster.
-          #     Values are of the form
-          #     `projects/{project}/instances/{instance}`.
+          #     Required. The unique name of the instance in which to create the new
+          #     cluster. Values are of the form `projects/{project}/instances/{instance}`.
           # @!attribute [rw] cluster_id
           #   @return [::String]
-          #     Required. The ID to be used when referring to the new cluster within its instance,
-          #     e.g., just `mycluster` rather than
+          #     Required. The ID to be used when referring to the new cluster within its
+          #     instance, e.g., just `mycluster` rather than
           #     `projects/myproject/instances/myinstance/clusters/mycluster`.
           # @!attribute [rw] cluster
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster]
@@ -156,10 +154,11 @@ module Google
           # Request message for BigtableInstanceAdmin.ListClusters.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the instance for which a list of clusters is requested.
-          #     Values are of the form `projects/{project}/instances/{instance}`.
-          #     Use `{instance} = '-'` to list Clusters for all Instances in a project,
-          #     e.g., `projects/myproject/instances/-`.
+          #     Required. The unique name of the instance for which a list of clusters is
+          #     requested. Values are of the form
+          #     `projects/{project}/instances/{instance}`. Use `{instance} = '-'` to list
+          #     Clusters for all Instances in a project, e.g.,
+          #     `projects/myproject/instances/-`.
           # @!attribute [rw] page_token
           #   @return [::String]
           #     DEPRECATED: This field is unused and ignored.
@@ -190,8 +189,8 @@ module Google
           # Request message for BigtableInstanceAdmin.DeleteCluster.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The unique name of the cluster to be deleted. Values are of the form
-          #     `projects/{project}/instances/{instance}/clusters/{cluster}`.
+          #     Required. The unique name of the cluster to be deleted. Values are of the
+          #     form `projects/{project}/instances/{instance}/clusters/{cluster}`.
           class DeleteClusterRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -237,9 +236,62 @@ module Google
           # @!attribute [rw] finish_time
           #   @return [::Google::Protobuf::Timestamp]
           #     The time at which the operation failed or was completed successfully.
+          # @!attribute [rw] tables
+          #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::Bigtable::Admin::V2::CreateClusterMetadata::TableProgress}]
+          #     Keys: the full `name` of each table that existed in the instance when
+          #     CreateCluster was first called, i.e.
+          #     `projects/<project>/instances/<instance>/tables/<table>`. Any table added
+          #     to the instance by a later API call will be created in the new cluster by
+          #     that API call, not this one.
+          #
+          #     Values: information on how much of a table's data has been copied to the
+          #     newly-created cluster so far.
           class CreateClusterMetadata
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Progress info for copying a table's data to the new cluster.
+            # @!attribute [rw] estimated_size_bytes
+            #   @return [::Integer]
+            #     Estimate of the size of the table to be copied.
+            # @!attribute [rw] estimated_copied_bytes
+            #   @return [::Integer]
+            #     Estimate of the number of bytes copied so far for this table.
+            #     This will eventually reach 'estimated_size_bytes' unless the table copy
+            #     is CANCELLED.
+            # @!attribute [rw] state
+            #   @return [::Google::Cloud::Bigtable::Admin::V2::CreateClusterMetadata::TableProgress::State]
+            class TableProgress
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              module State
+                STATE_UNSPECIFIED = 0
+
+                # The table has not yet begun copying to the new cluster.
+                PENDING = 1
+
+                # The table is actively being copied to the new cluster.
+                COPYING = 2
+
+                # The table has been fully copied to the new cluster.
+                COMPLETED = 3
+
+                # The table was deleted before it finished copying to the new cluster.
+                # Note that tables deleted after completion will stay marked as
+                # COMPLETED, not CANCELLED.
+                CANCELLED = 4
+              end
+            end
+
+            # @!attribute [rw] key
+            #   @return [::String]
+            # @!attribute [rw] value
+            #   @return [::Google::Cloud::Bigtable::Admin::V2::CreateClusterMetadata::TableProgress]
+            class TablesEntry
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
           # The metadata for the Operation returned by UpdateCluster.
@@ -275,8 +327,8 @@ module Google
           # Request message for BigtableInstanceAdmin.PartialUpdateCluster.
           # @!attribute [rw] cluster
           #   @return [::Google::Cloud::Bigtable::Admin::V2::Cluster]
-          #     Required. The Cluster which contains the partial updates to be applied, subject to
-          #     the update_mask.
+          #     Required. The Cluster which contains the partial updates to be applied,
+          #     subject to the update_mask.
           # @!attribute [rw] update_mask
           #   @return [::Google::Protobuf::FieldMask]
           #     Required. The subset of Cluster fields which should be replaced.
@@ -288,13 +340,12 @@ module Google
           # Request message for BigtableInstanceAdmin.CreateAppProfile.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the instance in which to create the new app profile.
-          #     Values are of the form
-          #     `projects/{project}/instances/{instance}`.
+          #     Required. The unique name of the instance in which to create the new app
+          #     profile. Values are of the form `projects/{project}/instances/{instance}`.
           # @!attribute [rw] app_profile_id
           #   @return [::String]
-          #     Required. The ID to be used when referring to the new app profile within its
-          #     instance, e.g., just `myprofile` rather than
+          #     Required. The ID to be used when referring to the new app profile within
+          #     its instance, e.g., just `myprofile` rather than
           #     `projects/myproject/instances/myinstance/appProfiles/myprofile`.
           # @!attribute [rw] app_profile
           #   @return [::Google::Cloud::Bigtable::Admin::V2::AppProfile]
@@ -311,8 +362,8 @@ module Google
           # Request message for BigtableInstanceAdmin.GetAppProfile.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The unique name of the requested app profile. Values are of the form
-          #     `projects/{project}/instances/{instance}/appProfiles/{app_profile}`.
+          #     Required. The unique name of the requested app profile. Values are of the
+          #     form `projects/{project}/instances/{instance}/appProfiles/{app_profile}`.
           class GetAppProfileRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -321,8 +372,8 @@ module Google
           # Request message for BigtableInstanceAdmin.ListAppProfiles.
           # @!attribute [rw] parent
           #   @return [::String]
-          #     Required. The unique name of the instance for which a list of app profiles is
-          #     requested. Values are of the form
+          #     Required. The unique name of the instance for which a list of app profiles
+          #     is requested. Values are of the form
           #     `projects/{project}/instances/{instance}`.
           #     Use `{instance} = '-'` to list AppProfiles for all Instances in a project,
           #     e.g., `projects/myproject/instances/-`.
@@ -384,7 +435,8 @@ module Google
           # Request message for BigtableInstanceAdmin.DeleteAppProfile.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. The unique name of the app profile to be deleted. Values are of the form
+          #     Required. The unique name of the app profile to be deleted. Values are of
+          #     the form
           #     `projects/{project}/instances/{instance}/appProfiles/{app_profile}`.
           # @!attribute [rw] ignore_warnings
           #   @return [::Boolean]
@@ -396,6 +448,315 @@ module Google
 
           # The metadata for the Operation returned by UpdateAppProfile.
           class UpdateAppProfileMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.ListHotTablets.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The cluster name to list hot tablets.
+          #     Value is in the following form:
+          #     `projects/{project}/instances/{instance}/clusters/{cluster}`.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The start time to list hot tablets. The hot tablets in the response will
+          #     have start times between the requested start time and end time. Start time
+          #     defaults to Now if it is unset, and end time defaults to Now - 24 hours if
+          #     it is unset. The start time should be less than the end time, and the
+          #     maximum allowed time range between start time and end time is 48 hours.
+          #     Start time and end time should have values between Now and Now - 14 days.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The end time to list hot tablets.
+          # @!attribute [rw] page_size
+          #   @return [::Integer]
+          #     Maximum number of results per page.
+          #
+          #     A page_size that is empty or zero lets the server choose the number of
+          #     items to return. A page_size which is strictly positive will return at most
+          #     that many items. A negative page_size will cause an error.
+          #
+          #     Following the first request, subsequent paginated calls do not need a
+          #     page_size field. If a page_size is set in subsequent calls, it must match
+          #     the page_size given in the first request.
+          # @!attribute [rw] page_token
+          #   @return [::String]
+          #     The value of `next_page_token` returned by a previous call.
+          class ListHotTabletsRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Response message for BigtableInstanceAdmin.ListHotTablets.
+          # @!attribute [rw] hot_tablets
+          #   @return [::Array<::Google::Cloud::Bigtable::Admin::V2::HotTablet>]
+          #     List of hot tablets in the tables of the requested cluster that fall
+          #     within the requested time range. Hot tablets are ordered by node cpu usage
+          #     percent. If there are multiple hot tablets that correspond to the same
+          #     tablet within a 15-minute interval, only the hot tablet with the highest
+          #     node cpu usage will be included in the response.
+          # @!attribute [rw] next_page_token
+          #   @return [::String]
+          #     Set if not all hot tablets could be returned in a single response.
+          #     Pass this value to `page_token` in another request to get the next
+          #     page of results.
+          class ListHotTabletsResponse
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.CreateLogicalView.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The parent instance where this logical view will be created.
+          #     Format: `projects/{project}/instances/{instance}`.
+          # @!attribute [rw] logical_view_id
+          #   @return [::String]
+          #     Required. The ID to use for the logical view, which will become the final
+          #     component of the logical view's resource name.
+          # @!attribute [rw] logical_view
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::LogicalView]
+          #     Required. The logical view to create.
+          class CreateLogicalViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The metadata for the Operation returned by CreateLogicalView.
+          # @!attribute [rw] original_request
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::CreateLogicalViewRequest]
+          #     The request that prompted the initiation of this CreateLogicalView
+          #     operation.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The time at which this operation started.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     If set, the time at which this operation finished or was canceled.
+          class CreateLogicalViewMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.GetLogicalView.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Required. The unique name of the requested logical view. Values are of the
+          #     form `projects/{project}/instances/{instance}/logicalViews/{logical_view}`.
+          class GetLogicalViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.ListLogicalViews.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The unique name of the instance for which the list of logical
+          #     views is requested. Values are of the form
+          #     `projects/{project}/instances/{instance}`.
+          # @!attribute [rw] page_size
+          #   @return [::Integer]
+          #     Optional. The maximum number of logical views to return. The service may
+          #     return fewer than this value
+          # @!attribute [rw] page_token
+          #   @return [::String]
+          #     Optional. A page token, received from a previous `ListLogicalViews` call.
+          #     Provide this to retrieve the subsequent page.
+          #
+          #     When paginating, all other parameters provided to `ListLogicalViews` must
+          #     match the call that provided the page token.
+          class ListLogicalViewsRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Response message for BigtableInstanceAdmin.ListLogicalViews.
+          # @!attribute [rw] logical_views
+          #   @return [::Array<::Google::Cloud::Bigtable::Admin::V2::LogicalView>]
+          #     The list of requested logical views.
+          # @!attribute [rw] next_page_token
+          #   @return [::String]
+          #     A token, which can be sent as `page_token` to retrieve the next page.
+          #     If this field is omitted, there are no subsequent pages.
+          class ListLogicalViewsResponse
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.UpdateLogicalView.
+          # @!attribute [rw] logical_view
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::LogicalView]
+          #     Required. The logical view to update.
+          #
+          #     The logical view's `name` field is used to identify the view to update.
+          #     Format:
+          #     `projects/{project}/instances/{instance}/logicalViews/{logical_view}`.
+          # @!attribute [rw] update_mask
+          #   @return [::Google::Protobuf::FieldMask]
+          #     Optional. The list of fields to update.
+          class UpdateLogicalViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The metadata for the Operation returned by UpdateLogicalView.
+          # @!attribute [rw] original_request
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::UpdateLogicalViewRequest]
+          #     The request that prompted the initiation of this UpdateLogicalView
+          #     operation.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The time at which this operation was started.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     If set, the time at which this operation finished or was canceled.
+          class UpdateLogicalViewMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.DeleteLogicalView.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Required. The unique name of the logical view to be deleted.
+          #     Format:
+          #     `projects/{project}/instances/{instance}/logicalViews/{logical_view}`.
+          # @!attribute [rw] etag
+          #   @return [::String]
+          #     Optional. The current etag of the logical view.
+          #     If an etag is provided and does not match the current etag of the
+          #     logical view, deletion will be blocked and an ABORTED error will be
+          #     returned.
+          class DeleteLogicalViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.CreateMaterializedView.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The parent instance where this materialized view will be created.
+          #     Format: `projects/{project}/instances/{instance}`.
+          # @!attribute [rw] materialized_view_id
+          #   @return [::String]
+          #     Required. The ID to use for the materialized view, which will become the
+          #     final component of the materialized view's resource name.
+          # @!attribute [rw] materialized_view
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::MaterializedView]
+          #     Required. The materialized view to create.
+          class CreateMaterializedViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The metadata for the Operation returned by CreateMaterializedView.
+          # @!attribute [rw] original_request
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::CreateMaterializedViewRequest]
+          #     The request that prompted the initiation of this CreateMaterializedView
+          #     operation.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The time at which this operation started.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     If set, the time at which this operation finished or was canceled.
+          class CreateMaterializedViewMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.GetMaterializedView.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Required. The unique name of the requested materialized view. Values are of
+          #     the form
+          #     `projects/{project}/instances/{instance}/materializedViews/{materialized_view}`.
+          class GetMaterializedViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.ListMaterializedViews.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The unique name of the instance for which the list of
+          #     materialized views is requested. Values are of the form
+          #     `projects/{project}/instances/{instance}`.
+          # @!attribute [rw] page_size
+          #   @return [::Integer]
+          #     Optional. The maximum number of materialized views to return. The service
+          #     may return fewer than this value
+          # @!attribute [rw] page_token
+          #   @return [::String]
+          #     Optional. A page token, received from a previous `ListMaterializedViews`
+          #     call. Provide this to retrieve the subsequent page.
+          #
+          #     When paginating, all other parameters provided to `ListMaterializedViews`
+          #     must match the call that provided the page token.
+          class ListMaterializedViewsRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Response message for BigtableInstanceAdmin.ListMaterializedViews.
+          # @!attribute [rw] materialized_views
+          #   @return [::Array<::Google::Cloud::Bigtable::Admin::V2::MaterializedView>]
+          #     The list of requested materialized views.
+          # @!attribute [rw] next_page_token
+          #   @return [::String]
+          #     A token, which can be sent as `page_token` to retrieve the next page.
+          #     If this field is omitted, there are no subsequent pages.
+          class ListMaterializedViewsResponse
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.UpdateMaterializedView.
+          # @!attribute [rw] materialized_view
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::MaterializedView]
+          #     Required. The materialized view to update.
+          #
+          #     The materialized view's `name` field is used to identify the view to
+          #     update. Format:
+          #     `projects/{project}/instances/{instance}/materializedViews/{materialized_view}`.
+          # @!attribute [rw] update_mask
+          #   @return [::Google::Protobuf::FieldMask]
+          #     Optional. The list of fields to update.
+          class UpdateMaterializedViewRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The metadata for the Operation returned by UpdateMaterializedView.
+          # @!attribute [rw] original_request
+          #   @return [::Google::Cloud::Bigtable::Admin::V2::UpdateMaterializedViewRequest]
+          #     The request that prompted the initiation of this UpdateMaterializedView
+          #     operation.
+          # @!attribute [rw] start_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     The time at which this operation was started.
+          # @!attribute [rw] end_time
+          #   @return [::Google::Protobuf::Timestamp]
+          #     If set, the time at which this operation finished or was canceled.
+          class UpdateMaterializedViewMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Request message for BigtableInstanceAdmin.DeleteMaterializedView.
+          # @!attribute [rw] name
+          #   @return [::String]
+          #     Required. The unique name of the materialized view to be deleted.
+          #     Format:
+          #     `projects/{project}/instances/{instance}/materializedViews/{materialized_view}`.
+          # @!attribute [rw] etag
+          #   @return [::String]
+          #     Optional. The current etag of the materialized view.
+          #     If an etag is provided and does not match the current etag of the
+          #     materialized view, deletion will be blocked and an ABORTED error will be
+          #     returned.
+          class DeleteMaterializedViewRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

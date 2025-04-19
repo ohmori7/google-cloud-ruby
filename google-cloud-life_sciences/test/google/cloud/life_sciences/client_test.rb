@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/life_sciences"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::LifeSciences::ClientConstructionMinitest < Minitest::Test
-  def test_workflows_service
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_workflows_service_grpc
+    skip unless Google::Cloud::LifeSciences.workflows_service_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::LifeSciences.workflows_service do |config|
+      client = Google::Cloud::LifeSciences.workflows_service transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::LifeSciences::V2beta::WorkflowsService::Client, client
+    end
+  end
+
+  def test_workflows_service_rest
+    skip unless Google::Cloud::LifeSciences.workflows_service_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::LifeSciences.workflows_service transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::LifeSciences::V2beta::WorkflowsService::Rest::Client, client
     end
   end
 end

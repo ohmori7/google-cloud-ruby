@@ -19,21 +19,33 @@
 # [START artifactregistry_v1beta2_generated_ArtifactRegistry_ListVersions_sync]
 require "google/cloud/artifact_registry/v1beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new
+##
+# Snippet for the list_versions call in the ArtifactRegistry service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client#list_versions.
+#
+def list_versions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ArtifactRegistry::V1beta2::ArtifactRegistry::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ArtifactRegistry::V1beta2::ListVersionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ArtifactRegistry::V1beta2::ListVersionsRequest.new
 
-# Call the list_versions method.
-result = client.list_versions request
+  # Call the list_versions method.
+  result = client.list_versions request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::ArtifactRegistry::V1beta2::Version.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::ArtifactRegistry::V1beta2::Version.
+    p item
+  end
 end
 # [END artifactregistry_v1beta2_generated_ArtifactRegistry_ListVersions_sync]

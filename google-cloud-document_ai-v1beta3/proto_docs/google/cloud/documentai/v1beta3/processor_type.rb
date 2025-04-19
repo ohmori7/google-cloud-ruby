@@ -26,20 +26,26 @@ module Google
         # @!attribute [rw] name
         #   @return [::String]
         #     The resource name of the processor type.
+        #     Format: `projects/{project}/processorTypes/{processor_type}`
         # @!attribute [rw] type
         #   @return [::String]
-        #     The type of the processor.
+        #     The processor type, such as: `OCR_PROCESSOR`, `INVOICE_PROCESSOR`.
         # @!attribute [rw] category
         #   @return [::String]
-        #     The processor category.
+        #     The processor category, used by UI to group processor types.
         # @!attribute [rw] available_locations
         #   @return [::Array<::Google::Cloud::DocumentAI::V1beta3::ProcessorType::LocationInfo>]
         #     The locations in which this processor is available.
         # @!attribute [rw] allow_creation
         #   @return [::Boolean]
-        #     Whether the processor type allows creation. If yes, user can create a
-        #     processor of this processor type. Otherwise, user needs to require for
-        #     whitelisting.
+        #     Whether the processor type allows creation. If true, users can create a
+        #     processor of this processor type. Otherwise, users need to request access.
+        # @!attribute [rw] launch_stage
+        #   @return [::Google::Api::LaunchStage]
+        #     Launch stage of the processor type
+        # @!attribute [rw] sample_document_uris
+        #   @return [::Array<::String>]
+        #     A set of Cloud Storage URIs of sample documents for this processor.
         class ProcessorType
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -47,7 +53,8 @@ module Google
           # The location information about where the processor is available.
           # @!attribute [rw] location_id
           #   @return [::String]
-          #     The location id.
+          #     The location ID. For supported locations, refer to [regional and
+          #     multi-regional support](/document-ai/docs/regions).
           class LocationInfo
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods

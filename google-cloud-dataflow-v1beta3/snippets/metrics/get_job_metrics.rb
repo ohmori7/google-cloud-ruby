@@ -19,15 +19,29 @@
 # [START dataflow_v1beta3_generated_Metrics_GetJobMetrics_sync]
 require "google/cloud/dataflow/v1beta3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Dataflow::V1beta3::Metrics::Client.new
+##
+# Snippet for the get_job_metrics call in the Metrics service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Dataflow::V1beta3::Metrics::Client#get_job_metrics.
+#
+def get_job_metrics
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Dataflow::V1beta3::Metrics::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Dataflow::V1beta3::GetJobMetricsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Dataflow::V1beta3::GetJobMetricsRequest.new
 
-# Call the get_job_metrics method.
-result = client.get_job_metrics request
+  # Call the get_job_metrics method.
+  result = client.get_job_metrics request
 
-# The returned object is of type Google::Cloud::Dataflow::V1beta3::JobMetrics.
-p result
+  # The returned object is of type Google::Cloud::Dataflow::V1beta3::JobMetrics.
+  p result
+end
 # [END dataflow_v1beta3_generated_Metrics_GetJobMetrics_sync]

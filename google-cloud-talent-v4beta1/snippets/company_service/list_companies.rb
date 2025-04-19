@@ -19,21 +19,33 @@
 # [START jobs_v4beta1_generated_CompanyService_ListCompanies_sync]
 require "google/cloud/talent/v4beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Talent::V4beta1::CompanyService::Client.new
+##
+# Snippet for the list_companies call in the CompanyService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Talent::V4beta1::CompanyService::Client#list_companies.
+#
+def list_companies
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Talent::V4beta1::CompanyService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Talent::V4beta1::ListCompaniesRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Talent::V4beta1::ListCompaniesRequest.new
 
-# Call the list_companies method.
-result = client.list_companies request
+  # Call the list_companies method.
+  result = client.list_companies request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Talent::V4beta1::Company.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Talent::V4beta1::Company.
+    p item
+  end
 end
 # [END jobs_v4beta1_generated_CompanyService_ListCompanies_sync]

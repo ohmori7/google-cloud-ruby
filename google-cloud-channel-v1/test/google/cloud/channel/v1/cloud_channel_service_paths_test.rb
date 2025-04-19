@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/channel/v1/cloud_channel_service"
 
 class ::Google::Cloud::Channel::V1::CloudChannelService::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_channel_partner_link_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -35,9 +53,21 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientPathsTest < Minit
     end
   end
 
+  def test_channel_partner_repricing_config_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.channel_partner_repricing_config_path account: "value0", channel_partner: "value1", channel_partner_repricing_config: "value2"
+      assert_equal "accounts/value0/channelPartnerLinks/value1/channelPartnerRepricingConfigs/value2", path
+    end
+  end
+
   def test_customer_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -47,9 +77,21 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientPathsTest < Minit
     end
   end
 
+  def test_customer_repricing_config_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.customer_repricing_config_path account: "value0", customer: "value1", customer_repricing_config: "value2"
+      assert_equal "accounts/value0/customers/value1/customerRepricingConfigs/value2", path
+    end
+  end
+
   def test_entitlement_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +103,7 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientPathsTest < Minit
 
   def test_offer_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -73,13 +115,25 @@ class ::Google::Cloud::Channel::V1::CloudChannelService::ClientPathsTest < Minit
 
   def test_product_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
         config.credentials = grpc_channel
       end
 
       path = client.product_path product: "value0"
       assert_equal "products/value0", path
+    end
+  end
+
+  def test_sku_group_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Channel::V1::CloudChannelService::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.sku_group_path account: "value0", sku_group: "value1"
+      assert_equal "accounts/value0/skuGroups/value1", path
     end
   end
 end

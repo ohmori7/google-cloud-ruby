@@ -437,14 +437,21 @@ module Google
         ##
         # The table in which the query results are stored.
         #
+        # @param [String] view Specifies the view that determines which table information is returned.
+        #   By default, basic table information and storage statistics (STORAGE_STATS) are returned.
+        #   Accepted values include `:unspecified`, `:basic`, `:storage`, and
+        #   `:full`. For more information, see [BigQuery Classes](@todo: Update the link).
+        #   The default value is the `:unspecified` view type.
+        #
         # @return [Table] A table instance.
         #
-        def destination
+        def destination view: nil
           table = @gapi.configuration.query.destination_table
           return nil unless table
           retrieve_table table.project_id,
                          table.dataset_id,
-                         table.table_id
+                         table.table_id,
+                         metadata_view: view
         end
 
         ##
@@ -741,11 +748,10 @@ module Google
         def data token: nil, max: nil, start: nil
           return nil unless done?
           return Data.from_gapi_json({ rows: [] }, nil, @gapi, service) if dryrun?
-          if ddl? || dml?
+          if ddl? || dml? || !ensure_schema!
             data_hash = { totalRows: nil, rows: [] }
             return Data.from_gapi_json data_hash, nil, @gapi, service
           end
-          ensure_schema!
 
           data_hash = service.list_tabledata destination_table_dataset_id,
                                              destination_table_table_id,
@@ -921,6 +927,7 @@ module Google
           #   | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.           |
           #   | `DATE`       | `Date`                               |                                                  |
           #   | `GEOGRAPHY`  | `String` (WKT or GeoJSON)            | NOT AUTOMATIC: Must be mapped using `types`.     |
+          #   | `JSON`       | `String` (Stringified JSON)          | String, as JSON does not have a schema to verify.|
           #   | `TIMESTAMP`  | `Time`                               |                                                  |
           #   | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                  |
           #   | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                  |
@@ -958,6 +965,7 @@ module Google
           #   | `DATETIME`   | `DateTime`                           | `DATETIME` does not support time zone.           |
           #   | `DATE`       | `Date`                               |                                                  |
           #   | `GEOGRAPHY`  | `String` (WKT or GeoJSON)            | NOT AUTOMATIC: Must be mapped using `types`.     |
+          #   | `JSON`       | `String` (Stringified JSON)          | String, as JSON does not have a schema to verify.|
           #   | `TIMESTAMP`  | `Time`                               |                                                  |
           #   | `TIME`       | `Google::Cloud::BigQuery::Time`      |                                                  |
           #   | `BYTES`      | `File`, `IO`, `StringIO`, or similar |                                                  |
@@ -984,6 +992,7 @@ module Google
           #   * `:DATETIME`
           #   * `:DATE`
           #   * `:GEOGRAPHY`
+          #   * `:JSON`
           #   * `:TIMESTAMP`
           #   * `:TIME`
           #   * `:BYTES`
@@ -1193,7 +1202,7 @@ module Google
           #
           def external= value
             external_table_pairs = value.map { |name, obj| [String(name), obj.to_gapi] }
-            external_table_hash = Hash[external_table_pairs]
+            external_table_hash = external_table_pairs.to_h
             @gapi.configuration.query.table_definitions = external_table_hash
           end
 
@@ -1784,10 +1793,10 @@ module Google
         protected
 
         def ensure_schema!
-          return unless destination_schema.nil?
+          return true unless destination_schema.nil?
 
           query_results_gapi = service.job_query_results job_id, location: location, max: 0
-          # raise "unable to retrieve schema" if query_results_gapi.schema.nil?
+          return false if query_results_gapi.schema.nil?
           @destination_schema_gapi = query_results_gapi.schema
         end
 

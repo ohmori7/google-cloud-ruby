@@ -24,10 +24,17 @@ module Google
     module Workflows
       module Executions
         ##
-        # To load this package, including all its services, and instantiate a client:
+        # API client module.
+        #
+        # @example Load this package, including all its services, and instantiate a gRPC client
         #
         #     require "google/cloud/workflows/executions/v1"
         #     client = ::Google::Cloud::Workflows::Executions::V1::Executions::Client.new
+        #
+        # @example Load this package, including all its services, and instantiate a REST client
+        #
+        #     require "google/cloud/workflows/executions/v1"
+        #     client = ::Google::Cloud::Workflows::Executions::V1::Executions::Rest::Client.new
         #
         module V1
         end

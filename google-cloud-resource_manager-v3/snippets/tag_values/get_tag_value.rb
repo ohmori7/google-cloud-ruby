@@ -19,15 +19,29 @@
 # [START cloudresourcemanager_v3_generated_TagValues_GetTagValue_sync]
 require "google/cloud/resource_manager/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ResourceManager::V3::TagValues::Client.new
+##
+# Snippet for the get_tag_value call in the TagValues service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ResourceManager::V3::TagValues::Client#get_tag_value.
+#
+def get_tag_value
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ResourceManager::V3::TagValues::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ResourceManager::V3::GetTagValueRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ResourceManager::V3::GetTagValueRequest.new
 
-# Call the get_tag_value method.
-result = client.get_tag_value request
+  # Call the get_tag_value method.
+  result = client.get_tag_value request
 
-# The returned object is of type Google::Cloud::ResourceManager::V3::TagValue.
-p result
+  # The returned object is of type Google::Cloud::ResourceManager::V3::TagValue.
+  p result
+end
 # [END cloudresourcemanager_v3_generated_TagValues_GetTagValue_sync]

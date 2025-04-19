@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/firestore/admin/v1/firestore_admin_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -58,6 +59,12 @@ module Google
             # service `google.longrunning.Operations`.
             #
             class Client
+              # @private
+              API_VERSION = ""
+
+              # @private
+              DEFAULT_ENDPOINT_TEMPLATE = "firestore.$UNIVERSE_DOMAIN$"
+
               include Paths
 
               # @private
@@ -125,6 +132,12 @@ module Google
 
                   default_config.rpcs.import_documents.timeout = 60.0
 
+                  default_config.rpcs.bulk_delete_documents.timeout = 60.0
+
+                  default_config.rpcs.create_database.timeout = 120.0
+
+                  default_config.rpcs.restore_database.timeout = 120.0
+
                   default_config
                 end
                 yield @configure if block_given?
@@ -149,6 +162,15 @@ module Google
               def configure
                 yield @config if block_given?
                 @config
+              end
+
+              ##
+              # The effective universe domain
+              #
+              # @return [String]
+              #
+              def universe_domain
+                @firestore_admin_stub.universe_domain
               end
 
               ##
@@ -184,8 +206,9 @@ module Google
                 credentials = @config.credentials
                 # Use self-signed JWT if the endpoint is unchanged from default,
                 # but only if the default endpoint does not have a region prefix.
-                enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                         !@config.endpoint.split(".").first.include?("-")
+                enable_self_signed_jwt = @config.endpoint.nil? ||
+                                         (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                         !@config.endpoint.split(".").first.include?("-"))
                 credentials ||= Credentials.default scope: @config.scope,
                                                     enable_self_signed_jwt: enable_self_signed_jwt
                 if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -198,15 +221,38 @@ module Google
                   config.credentials = credentials
                   config.quota_project = @quota_project_id
                   config.endpoint = @config.endpoint
+                  config.universe_domain = @config.universe_domain
                 end
 
                 @firestore_admin_stub = ::Gapic::ServiceStub.new(
                   ::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Stub,
-                  credentials:  credentials,
-                  endpoint:     @config.endpoint,
+                  credentials: credentials,
+                  endpoint: @config.endpoint,
+                  endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                  universe_domain: @config.universe_domain,
                   channel_args: @config.channel_args,
-                  interceptors: @config.interceptors
+                  interceptors: @config.interceptors,
+                  channel_pool_config: @config.channel_pool,
+                  logger: @config.logger
                 )
+
+                @firestore_admin_stub.stub_logger&.info do |entry|
+                  entry.set_system_name
+                  entry.set_service
+                  entry.message = "Created client for #{entry.service}"
+                  entry.set_credentials_fields credentials
+                  entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                  entry.set "defaultTimeout", @config.timeout if @config.timeout
+                  entry.set "quotaProject", @quota_project_id if @quota_project_id
+                end
+
+                @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                  config.credentials = credentials
+                  config.quota_project = @quota_project_id
+                  config.endpoint = @firestore_admin_stub.endpoint
+                  config.universe_domain = @firestore_admin_stub.universe_domain
+                  config.logger = @firestore_admin_stub.logger if config.respond_to? :logger=
+                end
               end
 
               ##
@@ -216,12 +262,30 @@ module Google
               #
               attr_reader :operations_client
 
+              ##
+              # Get the associated client for mix-in of the Locations.
+              #
+              # @return [Google::Cloud::Location::Locations::Client]
+              #
+              attr_reader :location_client
+
+              ##
+              # The logger used for request/response debug logging.
+              #
+              # @return [Logger]
+              #
+              def logger
+                @firestore_admin_stub.logger
+              end
+
               # Service calls
 
               ##
-              # Creates a composite index. This returns a {::Google::Longrunning::Operation google.longrunning.Operation}
-              # which may be used to track the status of the creation. The metadata for
-              # the operation will be the type {::Google::Cloud::Firestore::Admin::V1::IndexOperationMetadata IndexOperationMetadata}.
+              # Creates a composite index. This returns a
+              # {::Google::Longrunning::Operation google.longrunning.Operation} which may be
+              # used to track the status of the creation. The metadata for the operation
+              # will be the type
+              # {::Google::Cloud::Firestore::Admin::V1::IndexOperationMetadata IndexOperationMetadata}.
               #
               # @overload create_index(request, options = nil)
               #   Pass arguments to `create_index` via a request object, either of type
@@ -264,14 +328,14 @@ module Google
               #   # Call the create_index method.
               #   result = client.create_index request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def create_index request, options = nil
@@ -285,10 +349,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.create_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -310,7 +375,7 @@ module Google
                 @firestore_admin_stub.call_rpc :create_index, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -343,8 +408,8 @@ module Google
               #     The number of results to return.
               #   @param page_token [::String]
               #     A page token, returned from a previous call to
-              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_indexes FirestoreAdmin.ListIndexes}, that may be used to get the next
-              #     page of results.
+              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_indexes FirestoreAdmin.ListIndexes},
+              #     that may be used to get the next page of results.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Firestore::Admin::V1::Index>]
@@ -366,13 +431,11 @@ module Google
               #   # Call the list_indexes method.
               #   result = client.list_indexes request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Firestore::Admin::V1::Index.
-              #     p response
+              #     p item
               #   end
               #
               def list_indexes request, options = nil
@@ -386,10 +449,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_indexes.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -411,7 +475,7 @@ module Google
                 @firestore_admin_stub.call_rpc :list_indexes, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @firestore_admin_stub, :list_indexes, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -473,10 +537,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -497,7 +562,6 @@ module Google
 
                 @firestore_admin_stub.call_rpc :get_index, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -559,10 +623,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.delete_index.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -583,7 +648,6 @@ module Google
 
                 @firestore_admin_stub.call_rpc :delete_index, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -645,10 +709,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_field.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -669,7 +734,6 @@ module Google
 
                 @firestore_admin_stub.call_rpc :get_field, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -678,13 +742,16 @@ module Google
               ##
               # Updates a field configuration. Currently, field updates apply only to
               # single field index configuration. However, calls to
-              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#update_field FirestoreAdmin.UpdateField} should provide a field mask to avoid
-              # changing any configuration that the caller isn't aware of. The field mask
-              # should be specified as: `{ paths: "index_config" }`.
+              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#update_field FirestoreAdmin.UpdateField}
+              # should provide a field mask to avoid changing any configuration that the
+              # caller isn't aware of. The field mask should be specified as: `{ paths:
+              # "index_config" }`.
               #
-              # This call returns a {::Google::Longrunning::Operation google.longrunning.Operation} which may be used to
-              # track the status of the field update. The metadata for
-              # the operation will be the type {::Google::Cloud::Firestore::Admin::V1::FieldOperationMetadata FieldOperationMetadata}.
+              # This call returns a
+              # {::Google::Longrunning::Operation google.longrunning.Operation} which may be
+              # used to track the status of the field update. The metadata for the
+              # operation will be the type
+              # {::Google::Cloud::Firestore::Admin::V1::FieldOperationMetadata FieldOperationMetadata}.
               #
               # To configure the default field settings for the database, use
               # the special `Field` with resource name:
@@ -731,14 +798,14 @@ module Google
               #   # Call the update_field method.
               #   result = client.update_field request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_field request, options = nil
@@ -752,10 +819,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_field.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -777,7 +845,7 @@ module Google
                 @firestore_admin_stub.call_rpc :update_field, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -786,10 +854,13 @@ module Google
               ##
               # Lists the field configuration and metadata for this database.
               #
-              # Currently, {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields} only supports listing fields
-              # that have been explicitly overridden. To issue this query, call
-              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields} with the filter set to
-              # `indexConfig.usesAncestorConfig:false` .
+              # Currently,
+              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields}
+              # only supports listing fields that have been explicitly overridden. To issue
+              # this query, call
+              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields}
+              # with the filter set to `indexConfig.usesAncestorConfig:false` or
+              # `ttlConfig:*`.
               #
               # @overload list_fields(request, options = nil)
               #   Pass arguments to `list_fields` via a request object, either of type
@@ -811,16 +882,18 @@ module Google
               #     `projects/{project_id}/databases/{database_id}/collectionGroups/{collection_id}`
               #   @param filter [::String]
               #     The filter to apply to list results. Currently,
-              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields} only supports listing fields
-              #     that have been explicitly overridden. To issue this query, call
-              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields} with a filter that includes
-              #     `indexConfig.usesAncestorConfig:false` .
+              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields}
+              #     only supports listing fields that have been explicitly overridden. To issue
+              #     this query, call
+              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields}
+              #     with a filter that includes `indexConfig.usesAncestorConfig:false` or
+              #     `ttlConfig:*`.
               #   @param page_size [::Integer]
               #     The number of results to return.
               #   @param page_token [::String]
               #     A page token, returned from a previous call to
-              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields}, that may be used to get the next
-              #     page of results.
+              #     {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#list_fields FirestoreAdmin.ListFields},
+              #     that may be used to get the next page of results.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Firestore::Admin::V1::Field>]
@@ -842,13 +915,11 @@ module Google
               #   # Call the list_fields method.
               #   result = client.list_fields request
               #
-              #   # The returned object is of type Gapic::PagedEnumerable. You can
-              #   # iterate over all elements by calling #each, and the enumerable
-              #   # will lazily make API calls to fetch subsequent pages. Other
-              #   # methods are also available for managing paging directly.
-              #   result.each do |response|
+              #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+              #   # over elements, and API calls will be issued to fetch pages as needed.
+              #   result.each do |item|
               #     # Each element is of type ::Google::Cloud::Firestore::Admin::V1::Field.
-              #     p response
+              #     p item
               #   end
               #
               def list_fields request, options = nil
@@ -862,10 +933,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_fields.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -887,7 +959,7 @@ module Google
                 @firestore_admin_stub.call_rpc :list_fields, request, options: options do |response, operation|
                   response = ::Gapic::PagedEnumerable.new @firestore_admin_stub, :list_fields, request, response, operation, options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -916,7 +988,7 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload export_documents(name: nil, collection_ids: nil, output_uri_prefix: nil)
+              # @overload export_documents(name: nil, collection_ids: nil, output_uri_prefix: nil, namespace_ids: nil, snapshot_time: nil)
               #   Pass arguments to `export_documents` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -925,7 +997,8 @@ module Google
               #     Required. Database to export. Should be of the form:
               #     `projects/{project_id}/databases/{database_id}`.
               #   @param collection_ids [::Array<::String>]
-              #     Which collection ids to export. Unspecified means all collections.
+              #     Which collection IDs to export. Unspecified means all collections. Each
+              #     collection ID in this list must be unique.
               #   @param output_uri_prefix [::String]
               #     The output URI. Currently only supports Google Cloud Storage URIs of the
               #     form: `gs://BUCKET_NAME[/NAMESPACE_PATH]`, where `BUCKET_NAME` is the name
@@ -935,6 +1008,21 @@ module Google
               #     guidelines: https://cloud.google.com/storage/docs/naming.
               #     If the URI is a bucket (without a namespace path), a prefix will be
               #     generated based on the start time.
+              #   @param namespace_ids [::Array<::String>]
+              #     An empty list represents all namespaces. This is the preferred
+              #     usage for databases that don't use namespaces.
+              #
+              #     An empty string element represents the default namespace. This should be
+              #     used if the database has data in non-default namespaces, but doesn't want
+              #     to include them. Each namespace in this list must be unique.
+              #   @param snapshot_time [::Google::Protobuf::Timestamp, ::Hash]
+              #     The timestamp that corresponds to the version of the database to be
+              #     exported. The timestamp must be in the past, rounded to the minute and not
+              #     older than
+              #     {::Google::Cloud::Firestore::Admin::V1::Database#earliest_version_time earliestVersionTime}.
+              #     If specified, then the exported documents will represent a consistent view
+              #     of the database at the provided time. Otherwise, there are no guarantees
+              #     about the consistency of the exported documents.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -956,14 +1044,14 @@ module Google
               #   # Call the export_documents method.
               #   result = client.export_documents request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def export_documents request, options = nil
@@ -977,10 +1065,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.export_documents.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1002,7 +1091,7 @@ module Google
                 @firestore_admin_stub.call_rpc :export_documents, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1025,7 +1114,7 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload import_documents(name: nil, collection_ids: nil, input_uri_prefix: nil)
+              # @overload import_documents(name: nil, collection_ids: nil, input_uri_prefix: nil, namespace_ids: nil)
               #   Pass arguments to `import_documents` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1034,14 +1123,21 @@ module Google
               #     Required. Database to import into. Should be of the form:
               #     `projects/{project_id}/databases/{database_id}`.
               #   @param collection_ids [::Array<::String>]
-              #     Which collection ids to import. Unspecified means all collections included
-              #     in the import.
+              #     Which collection IDs to import. Unspecified means all collections included
+              #     in the import. Each collection ID in this list must be unique.
               #   @param input_uri_prefix [::String]
               #     Location of the exported files.
               #     This must match the output_uri_prefix of an ExportDocumentsResponse from
               #     an export that has completed successfully.
               #     See:
               #     {::Google::Cloud::Firestore::Admin::V1::ExportDocumentsResponse#output_uri_prefix google.firestore.admin.v1.ExportDocumentsResponse.output_uri_prefix}.
+              #   @param namespace_ids [::Array<::String>]
+              #     An empty list represents all namespaces. This is the preferred
+              #     usage for databases that don't use namespaces.
+              #
+              #     An empty string element represents the default namespace. This should be
+              #     used if the database has data in non-default namespaces, but doesn't want
+              #     to include them. Each namespace in this list must be unique.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Gapic::Operation]
@@ -1063,14 +1159,14 @@ module Google
               #   # Call the import_documents method.
               #   result = client.import_documents request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def import_documents request, options = nil
@@ -1084,10 +1180,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.import_documents.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1109,7 +1206,231 @@ module Google
                 @firestore_admin_stub.call_rpc :import_documents, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Bulk deletes a subset of documents from Google Cloud Firestore.
+              # Documents created or updated after the underlying system starts to process
+              # the request will not be deleted. The bulk delete occurs in the background
+              # and its progress can be monitored and managed via the Operation resource
+              # that is created.
+              #
+              # For more details on bulk delete behavior, refer to:
+              # https://cloud.google.com/firestore/docs/manage-data/bulk-delete
+              #
+              # @overload bulk_delete_documents(request, options = nil)
+              #   Pass arguments to `bulk_delete_documents` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload bulk_delete_documents(name: nil, collection_ids: nil, namespace_ids: nil)
+              #   Pass arguments to `bulk_delete_documents` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. Database to operate. Should be of the form:
+              #     `projects/{project_id}/databases/{database_id}`.
+              #   @param collection_ids [::Array<::String>]
+              #     Optional. IDs of the collection groups to delete. Unspecified means all
+              #     collection groups.
+              #
+              #     Each collection group in this list must be unique.
+              #   @param namespace_ids [::Array<::String>]
+              #     Optional. Namespaces to delete.
+              #
+              #     An empty list means all namespaces. This is the recommended
+              #     usage for databases that don't use namespaces.
+              #
+              #     An empty string element represents the default namespace. This should be
+              #     used if the database has data in non-default namespaces, but doesn't want
+              #     to delete from them.
+              #
+              #     Each namespace in this list must be unique.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Gapic::Operation]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Gapic::Operation]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest.new
+              #
+              #   # Call the bulk_delete_documents method.
+              #   result = client.bulk_delete_documents request
+              #
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
+              #   result.wait_until_done! timeout: 60
+              #   if result.response?
+              #     p result.response
+              #   else
+              #     puts "No response received."
+              #   end
+              #
+              def bulk_delete_documents request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::BulkDeleteDocumentsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.bulk_delete_documents.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.bulk_delete_documents.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.bulk_delete_documents.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :bulk_delete_documents, request, options: options do |response, operation|
+                  response = ::Gapic::Operation.new response, @operations_client, options: options
+                  yield response, operation if block_given?
+                  throw :response, response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Create a database.
+              #
+              # @overload create_database(request, options = nil)
+              #   Pass arguments to `create_database` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload create_database(parent: nil, database: nil, database_id: nil)
+              #   Pass arguments to `create_database` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. A parent name of the form
+              #     `projects/{project_id}`
+              #   @param database [::Google::Cloud::Firestore::Admin::V1::Database, ::Hash]
+              #     Required. The Database to create.
+              #   @param database_id [::String]
+              #     Required. The ID to use for the database, which will become the final
+              #     component of the database's resource name.
+              #
+              #     This value should be 4-63 characters. Valid characters are /[a-z][0-9]-/
+              #     with first character a letter and the last a letter or a number. Must not
+              #     be UUID-like /[0-9a-f]\\{8}(-[0-9a-f]\\{4})\\{3}-[0-9a-f]\\{12}/.
+              #
+              #     "(default)" database ID is also valid.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Gapic::Operation]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Gapic::Operation]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest.new
+              #
+              #   # Call the create_database method.
+              #   result = client.create_database request
+              #
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
+              #   result.wait_until_done! timeout: 60
+              #   if result.response?
+              #     p result.response
+              #   else
+              #     puts "No response received."
+              #   end
+              #
+              def create_database request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::CreateDatabaseRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.create_database.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.create_database.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.create_database.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :create_database, request, options: options do |response, operation|
+                  response = ::Gapic::Operation.new response, @operations_client, options: options
+                  yield response, operation if block_given?
+                  throw :response, response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1171,10 +1492,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.get_database.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1195,7 +1517,6 @@ module Google
 
                 @firestore_admin_stub.call_rpc :get_database, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1214,7 +1535,7 @@ module Google
               #   @param options [::Gapic::CallOptions, ::Hash]
               #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
               #
-              # @overload list_databases(parent: nil)
+              # @overload list_databases(parent: nil, show_deleted: nil)
               #   Pass arguments to `list_databases` via keyword arguments. Note that at
               #   least one keyword argument is required. To specify no parameters, or to keep all
               #   the default parameter values, pass an empty Hash as a request object (see above).
@@ -1222,6 +1543,8 @@ module Google
               #   @param parent [::String]
               #     Required. A parent name of the form
               #     `projects/{project_id}`
+              #   @param show_deleted [::Boolean]
+              #     If true, also returns deleted resources.
               #
               # @yield [response, operation] Access the result along with the RPC operation
               # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::ListDatabasesResponse]
@@ -1257,10 +1580,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.list_databases.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1281,7 +1605,6 @@ module Google
 
                 @firestore_admin_stub.call_rpc :list_databases, request, options: options do |response, operation|
                   yield response, operation if block_given?
-                  return response
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1330,14 +1653,14 @@ module Google
               #   # Call the update_database method.
               #   result = client.update_database request
               #
-              #   # The returned object is of type Gapic::Operation. You can use this
-              #   # object to check the status of an operation, cancel it, or wait
-              #   # for results. Here is how to block until completion:
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
               #   result.wait_until_done! timeout: 60
               #   if result.response?
               #     p result.response
               #   else
-              #     puts "Error!"
+              #     puts "No response received."
               #   end
               #
               def update_database request, options = nil
@@ -1351,10 +1674,11 @@ module Google
                 # Customize the options with defaults
                 metadata = @config.rpcs.update_database.metadata.to_h
 
-                # Set x-goog-api-client and x-goog-user-project headers
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
                 metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                   lib_name: @config.lib_name, lib_version: @config.lib_version,
                   gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
                 metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
                 header_params = {}
@@ -1376,7 +1700,1572 @@ module Google
                 @firestore_admin_stub.call_rpc :update_database, request, options: options do |response, operation|
                   response = ::Gapic::Operation.new response, @operations_client, options: options
                   yield response, operation if block_given?
-                  return response
+                  throw :response, response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Deletes a database.
+              #
+              # @overload delete_database(request, options = nil)
+              #   Pass arguments to `delete_database` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload delete_database(name: nil, etag: nil)
+              #   Pass arguments to `delete_database` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}`
+              #   @param etag [::String]
+              #     The current etag of the Database.
+              #     If an etag is provided and does not match the current etag of the database,
+              #     deletion will be blocked and a FAILED_PRECONDITION error will be returned.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Gapic::Operation]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Gapic::Operation]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest.new
+              #
+              #   # Call the delete_database method.
+              #   result = client.delete_database request
+              #
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
+              #   result.wait_until_done! timeout: 60
+              #   if result.response?
+              #     p result.response
+              #   else
+              #     puts "No response received."
+              #   end
+              #
+              def delete_database request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::DeleteDatabaseRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.delete_database.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.delete_database.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.delete_database.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :delete_database, request, options: options do |response, operation|
+                  response = ::Gapic::Operation.new response, @operations_client, options: options
+                  yield response, operation if block_given?
+                  throw :response, response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Create a user creds.
+              #
+              # @overload create_user_creds(request, options = nil)
+              #   Pass arguments to `create_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload create_user_creds(parent: nil, user_creds: nil, user_creds_id: nil)
+              #   Pass arguments to `create_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. A parent name of the form
+              #     `projects/{project_id}/databases/{database_id}`
+              #   @param user_creds [::Google::Cloud::Firestore::Admin::V1::UserCreds, ::Hash]
+              #     Required. The user creds to create.
+              #   @param user_creds_id [::String]
+              #     Required. The ID to use for the user creds, which will become the final
+              #     component of the user creds's resource name.
+              #
+              #     This value should be 4-63 characters. Valid characters are /[a-z][0-9]-/
+              #     with first character a letter and the last a letter or a number. Must not
+              #     be UUID-like /[0-9a-f]\\{8}(-[0-9a-f]\\{4})\\{3}-[0-9a-f]\\{12}/.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest.new
+              #
+              #   # Call the create_user_creds method.
+              #   result = client.create_user_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::UserCreds.
+              #   p result
+              #
+              def create_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::CreateUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.create_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.create_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.create_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :create_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Gets a user creds resource. Note that the returned resource does not
+              # contain the secret value itself.
+              #
+              # @overload get_user_creds(request, options = nil)
+              #   Pass arguments to `get_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload get_user_creds(name: nil)
+              #   Pass arguments to `get_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}/userCreds/{user_creds_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest.new
+              #
+              #   # Call the get_user_creds method.
+              #   result = client.get_user_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::UserCreds.
+              #   p result
+              #
+              def get_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::GetUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.get_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.get_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.get_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :get_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # List all user creds in the database. Note that the returned resource
+              # does not contain the secret value itself.
+              #
+              # @overload list_user_creds(request, options = nil)
+              #   Pass arguments to `list_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload list_user_creds(parent: nil)
+              #   Pass arguments to `list_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. A parent database name of the form
+              #     `projects/{project_id}/databases/{database_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::ListUserCredsResponse]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::ListUserCredsResponse]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest.new
+              #
+              #   # Call the list_user_creds method.
+              #   result = client.list_user_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::ListUserCredsResponse.
+              #   p result
+              #
+              def list_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::ListUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.list_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.list_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.list_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :list_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Enables a user creds. No-op if the user creds are already enabled.
+              #
+              # @overload enable_user_creds(request, options = nil)
+              #   Pass arguments to `enable_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload enable_user_creds(name: nil)
+              #   Pass arguments to `enable_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}/userCreds/{user_creds_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest.new
+              #
+              #   # Call the enable_user_creds method.
+              #   result = client.enable_user_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::UserCreds.
+              #   p result
+              #
+              def enable_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::EnableUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.enable_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.enable_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.enable_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :enable_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Disables a user creds. No-op if the user creds are already disabled.
+              #
+              # @overload disable_user_creds(request, options = nil)
+              #   Pass arguments to `disable_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload disable_user_creds(name: nil)
+              #   Pass arguments to `disable_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}/userCreds/{user_creds_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest.new
+              #
+              #   # Call the disable_user_creds method.
+              #   result = client.disable_user_creds request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::UserCreds.
+              #   p result
+              #
+              def disable_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::DisableUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.disable_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.disable_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.disable_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :disable_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Resets the password of a user creds.
+              #
+              # @overload reset_user_password(request, options = nil)
+              #   Pass arguments to `reset_user_password` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload reset_user_password(name: nil)
+              #   Pass arguments to `reset_user_password` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}/userCreds/{user_creds_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::UserCreds]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest.new
+              #
+              #   # Call the reset_user_password method.
+              #   result = client.reset_user_password request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::UserCreds.
+              #   p result
+              #
+              def reset_user_password request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::ResetUserPasswordRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.reset_user_password.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.reset_user_password.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.reset_user_password.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :reset_user_password, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Deletes a user creds.
+              #
+              # @overload delete_user_creds(request, options = nil)
+              #   Pass arguments to `delete_user_creds` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload delete_user_creds(name: nil)
+              #   Pass arguments to `delete_user_creds` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. A name of the form
+              #     `projects/{project_id}/databases/{database_id}/userCreds/{user_creds_id}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Protobuf::Empty]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Protobuf::Empty]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest.new
+              #
+              #   # Call the delete_user_creds method.
+              #   result = client.delete_user_creds request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
+              def delete_user_creds request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::DeleteUserCredsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.delete_user_creds.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.delete_user_creds.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.delete_user_creds.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :delete_user_creds, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Gets information about a backup.
+              #
+              # @overload get_backup(request, options = nil)
+              #   Pass arguments to `get_backup` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::GetBackupRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::GetBackupRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload get_backup(name: nil)
+              #   Pass arguments to `get_backup` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. Name of the backup to fetch.
+              #
+              #     Format is `projects/{project}/locations/{location}/backups/{backup}`.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::Backup]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::Backup]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::GetBackupRequest.new
+              #
+              #   # Call the get_backup method.
+              #   result = client.get_backup request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::Backup.
+              #   p result
+              #
+              def get_backup request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::GetBackupRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.get_backup.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.get_backup.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.get_backup.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :get_backup, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Lists all the backups.
+              #
+              # @overload list_backups(request, options = nil)
+              #   Pass arguments to `list_backups` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload list_backups(parent: nil, filter: nil)
+              #   Pass arguments to `list_backups` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. The location to list backups from.
+              #
+              #     Format is `projects/{project}/locations/{location}`.
+              #     Use `{location} = '-'` to list backups from all locations for the given
+              #     project. This allows listing backups from a single location or from all
+              #     locations.
+              #   @param filter [::String]
+              #     An expression that filters the list of returned backups.
+              #
+              #     A filter expression consists of a field name, a comparison operator, and a
+              #     value for filtering.
+              #     The value must be a string, a number, or a boolean. The comparison operator
+              #     must be one of: `<`, `>`, `<=`, `>=`, `!=`, `=`, or `:`.
+              #     Colon `:` is the contains operator. Filter rules are not case sensitive.
+              #
+              #     The following fields in the {::Google::Cloud::Firestore::Admin::V1::Backup Backup} are
+              #     eligible for filtering:
+              #
+              #       * `database_uid` (supports `=` only)
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::ListBackupsResponse]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::ListBackupsResponse]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::ListBackupsRequest.new
+              #
+              #   # Call the list_backups method.
+              #   result = client.list_backups request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::ListBackupsResponse.
+              #   p result
+              #
+              def list_backups request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::ListBackupsRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.list_backups.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.list_backups.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.list_backups.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :list_backups, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Deletes a backup.
+              #
+              # @overload delete_backup(request, options = nil)
+              #   Pass arguments to `delete_backup` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload delete_backup(name: nil)
+              #   Pass arguments to `delete_backup` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. Name of the backup to delete.
+              #
+              #     format is `projects/{project}/locations/{location}/backups/{backup}`.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Protobuf::Empty]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Protobuf::Empty]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest.new
+              #
+              #   # Call the delete_backup method.
+              #   result = client.delete_backup request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
+              def delete_backup request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::DeleteBackupRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.delete_backup.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.delete_backup.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.delete_backup.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :delete_backup, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Creates a new database by restoring from an existing backup.
+              #
+              # The new database must be in the same cloud region or multi-region location
+              # as the existing backup. This behaves similar to
+              # {::Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client#create_database FirestoreAdmin.CreateDatabase}
+              # except instead of creating a new empty database, a new database is created
+              # with the database type, index configuration, and documents from an existing
+              # backup.
+              #
+              # The {::Google::Longrunning::Operation long-running operation} can be used to
+              # track the progress of the restore, with the Operation's
+              # {::Google::Longrunning::Operation#metadata metadata} field type being the
+              # {::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseMetadata RestoreDatabaseMetadata}.
+              # The {::Google::Longrunning::Operation#response response} type is the
+              # {::Google::Cloud::Firestore::Admin::V1::Database Database} if the restore was
+              # successful. The new database is not readable or writeable until the LRO has
+              # completed.
+              #
+              # @overload restore_database(request, options = nil)
+              #   Pass arguments to `restore_database` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload restore_database(parent: nil, database_id: nil, backup: nil, encryption_config: nil)
+              #   Pass arguments to `restore_database` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. The project to restore the database in. Format is
+              #     `projects/{project_id}`.
+              #   @param database_id [::String]
+              #     Required. The ID to use for the database, which will become the final
+              #     component of the database's resource name. This database ID must not be
+              #     associated with an existing database.
+              #
+              #     This value should be 4-63 characters. Valid characters are /[a-z][0-9]-/
+              #     with first character a letter and the last a letter or a number. Must not
+              #     be UUID-like /[0-9a-f]\\{8}(-[0-9a-f]\\{4})\\{3}-[0-9a-f]\\{12}/.
+              #
+              #     "(default)" database ID is also valid.
+              #   @param backup [::String]
+              #     Required. Backup to restore from. Must be from the same project as the
+              #     parent.
+              #
+              #     The restored database will be created in the same location as the source
+              #     backup.
+              #
+              #     Format is: `projects/{project_id}/locations/{location}/backups/{backup}`
+              #   @param encryption_config [::Google::Cloud::Firestore::Admin::V1::Database::EncryptionConfig, ::Hash]
+              #     Optional. Encryption configuration for the restored database.
+              #
+              #     If this field is not specified, the restored database will use
+              #     the same encryption configuration as the backup, namely
+              #     {::Google::Cloud::Firestore::Admin::V1::Database::EncryptionConfig#use_source_encryption use_source_encryption}.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Gapic::Operation]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Gapic::Operation]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest.new
+              #
+              #   # Call the restore_database method.
+              #   result = client.restore_database request
+              #
+              #   # The returned object is of type Gapic::Operation. You can use it to
+              #   # check the status of an operation, cancel it, or wait for results.
+              #   # Here is how to wait for a response.
+              #   result.wait_until_done! timeout: 60
+              #   if result.response?
+              #     p result.response
+              #   else
+              #     puts "No response received."
+              #   end
+              #
+              def restore_database request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::RestoreDatabaseRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.restore_database.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.restore_database.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.restore_database.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :restore_database, request, options: options do |response, operation|
+                  response = ::Gapic::Operation.new response, @operations_client, options: options
+                  yield response, operation if block_given?
+                  throw :response, response
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Creates a backup schedule on a database.
+              # At most two backup schedules can be configured on a database, one daily
+              # backup schedule and one weekly backup schedule.
+              #
+              # @overload create_backup_schedule(request, options = nil)
+              #   Pass arguments to `create_backup_schedule` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload create_backup_schedule(parent: nil, backup_schedule: nil)
+              #   Pass arguments to `create_backup_schedule` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. The parent database.
+              #
+              #      Format `projects/{project}/databases/{database}`
+              #   @param backup_schedule [::Google::Cloud::Firestore::Admin::V1::BackupSchedule, ::Hash]
+              #     Required. The backup schedule to create.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest.new
+              #
+              #   # Call the create_backup_schedule method.
+              #   result = client.create_backup_schedule request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::BackupSchedule.
+              #   p result
+              #
+              def create_backup_schedule request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::CreateBackupScheduleRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.create_backup_schedule.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.create_backup_schedule.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.create_backup_schedule.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :create_backup_schedule, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Gets information about a backup schedule.
+              #
+              # @overload get_backup_schedule(request, options = nil)
+              #   Pass arguments to `get_backup_schedule` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload get_backup_schedule(name: nil)
+              #   Pass arguments to `get_backup_schedule` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. The name of the backup schedule.
+              #
+              #     Format
+              #     `projects/{project}/databases/{database}/backupSchedules/{backup_schedule}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest.new
+              #
+              #   # Call the get_backup_schedule method.
+              #   result = client.get_backup_schedule request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::BackupSchedule.
+              #   p result
+              #
+              def get_backup_schedule request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::GetBackupScheduleRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.get_backup_schedule.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.get_backup_schedule.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.get_backup_schedule.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :get_backup_schedule, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # List backup schedules.
+              #
+              # @overload list_backup_schedules(request, options = nil)
+              #   Pass arguments to `list_backup_schedules` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload list_backup_schedules(parent: nil)
+              #   Pass arguments to `list_backup_schedules` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param parent [::String]
+              #     Required. The parent database.
+              #
+              #     Format is `projects/{project}/databases/{database}`.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesResponse]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesResponse]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest.new
+              #
+              #   # Call the list_backup_schedules method.
+              #   result = client.list_backup_schedules request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesResponse.
+              #   p result
+              #
+              def list_backup_schedules request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::ListBackupSchedulesRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.list_backup_schedules.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.parent
+                  header_params["parent"] = request.parent
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.list_backup_schedules.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.list_backup_schedules.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :list_backup_schedules, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Updates a backup schedule.
+              #
+              # @overload update_backup_schedule(request, options = nil)
+              #   Pass arguments to `update_backup_schedule` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload update_backup_schedule(backup_schedule: nil, update_mask: nil)
+              #   Pass arguments to `update_backup_schedule` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param backup_schedule [::Google::Cloud::Firestore::Admin::V1::BackupSchedule, ::Hash]
+              #     Required. The backup schedule to update.
+              #   @param update_mask [::Google::Protobuf::FieldMask, ::Hash]
+              #     The list of fields to be updated.
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Cloud::Firestore::Admin::V1::BackupSchedule]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest.new
+              #
+              #   # Call the update_backup_schedule method.
+              #   result = client.update_backup_schedule request
+              #
+              #   # The returned object is of type Google::Cloud::Firestore::Admin::V1::BackupSchedule.
+              #   p result
+              #
+              def update_backup_schedule request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::UpdateBackupScheduleRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.update_backup_schedule.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.backup_schedule&.name
+                  header_params["backup_schedule.name"] = request.backup_schedule.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.update_backup_schedule.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.update_backup_schedule.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :update_backup_schedule, request, options: options do |response, operation|
+                  yield response, operation if block_given?
+                end
+              rescue ::GRPC::BadStatus => e
+                raise ::Google::Cloud::Error.from_error(e)
+              end
+
+              ##
+              # Deletes a backup schedule.
+              #
+              # @overload delete_backup_schedule(request, options = nil)
+              #   Pass arguments to `delete_backup_schedule` via a request object, either of type
+              #   {::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest} or an equivalent Hash.
+              #
+              #   @param request [::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest, ::Hash]
+              #     A request object representing the call parameters. Required. To specify no
+              #     parameters, or to keep all the default parameter values, pass an empty Hash.
+              #   @param options [::Gapic::CallOptions, ::Hash]
+              #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+              #
+              # @overload delete_backup_schedule(name: nil)
+              #   Pass arguments to `delete_backup_schedule` via keyword arguments. Note that at
+              #   least one keyword argument is required. To specify no parameters, or to keep all
+              #   the default parameter values, pass an empty Hash as a request object (see above).
+              #
+              #   @param name [::String]
+              #     Required. The name of the backup schedule.
+              #
+              #     Format
+              #     `projects/{project}/databases/{database}/backupSchedules/{backup_schedule}`
+              #
+              # @yield [response, operation] Access the result along with the RPC operation
+              # @yieldparam response [::Google::Protobuf::Empty]
+              # @yieldparam operation [::GRPC::ActiveCall::Operation]
+              #
+              # @return [::Google::Protobuf::Empty]
+              #
+              # @raise [::Google::Cloud::Error] if the RPC is aborted.
+              #
+              # @example Basic example
+              #   require "google/cloud/firestore/admin/v1"
+              #
+              #   # Create a client object. The client can be reused for multiple calls.
+              #   client = Google::Cloud::Firestore::Admin::V1::FirestoreAdmin::Client.new
+              #
+              #   # Create a request. To set request fields, pass in keyword arguments.
+              #   request = Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest.new
+              #
+              #   # Call the delete_backup_schedule method.
+              #   result = client.delete_backup_schedule request
+              #
+              #   # The returned object is of type Google::Protobuf::Empty.
+              #   p result
+              #
+              def delete_backup_schedule request, options = nil
+                raise ::ArgumentError, "request must be provided" if request.nil?
+
+                request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Firestore::Admin::V1::DeleteBackupScheduleRequest
+
+                # Converts hash and nil to an options object
+                options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+                # Customize the options with defaults
+                metadata = @config.rpcs.delete_backup_schedule.metadata.to_h
+
+                # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+                metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                  lib_name: @config.lib_name, lib_version: @config.lib_version,
+                  gapic_version: ::Google::Cloud::Firestore::Admin::V1::VERSION
+                metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+                metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+                header_params = {}
+                if request.name
+                  header_params["name"] = request.name
+                end
+
+                request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+                metadata[:"x-goog-request-params"] ||= request_params_header
+
+                options.apply_defaults timeout:      @config.rpcs.delete_backup_schedule.timeout,
+                                       metadata:     metadata,
+                                       retry_policy: @config.rpcs.delete_backup_schedule.retry_policy
+
+                options.apply_defaults timeout:      @config.timeout,
+                                       metadata:     @config.metadata,
+                                       retry_policy: @config.retry_policy
+
+                @firestore_admin_stub.call_rpc :delete_backup_schedule, request, options: options do |response, operation|
+                  yield response, operation if block_given?
                 end
               rescue ::GRPC::BadStatus => e
                 raise ::Google::Cloud::Error.from_error(e)
@@ -1412,20 +3301,27 @@ module Google
               #   end
               #
               # @!attribute [rw] endpoint
-              #   The hostname or hostname:port of the service endpoint.
-              #   Defaults to `"firestore.googleapis.com"`.
-              #   @return [::String]
+              #   A custom service endpoint, as a hostname or hostname:port. The default is
+              #   nil, indicating to use the default endpoint in the current universe domain.
+              #   @return [::String,nil]
               # @!attribute [rw] credentials
               #   Credentials to send with calls. You may provide any of the following types:
               #    *  (`String`) The path to a service account key file in JSON format
               #    *  (`Hash`) A service account key as a Hash
               #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-              #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+              #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
               #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-              #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+              #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
               #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
               #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
               #    *  (`nil`) indicating no credentials
+              #
+              #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+              #   external source for authentication to Google Cloud, you must validate it before
+              #   providing it to a Google API client library. Providing an unvalidated credential
+              #   configuration to Google APIs can compromise the security of your systems and data.
+              #   For more information, refer to [Validate credential configurations from external
+              #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
               #   @return [::Object]
               # @!attribute [rw] scope
               #   The OAuth scopes
@@ -1460,11 +3356,25 @@ module Google
               # @!attribute [rw] quota_project
               #   A separate project against which to charge quota.
               #   @return [::String]
+              # @!attribute [rw] universe_domain
+              #   The universe domain within which to make requests. This determines the
+              #   default endpoint URL. The default value of nil uses the environment
+              #   universe (usually the default "googleapis.com" universe).
+              #   @return [::String,nil]
+              # @!attribute [rw] logger
+              #   A custom logger to use for request/response debug logging, or the value
+              #   `:default` (the default) to construct a default logger, or `nil` to
+              #   explicitly disable logging.
+              #   @return [::Logger,:default,nil]
               #
               class Configuration
                 extend ::Gapic::Config
 
-                config_attr :endpoint,      "firestore.googleapis.com", ::String
+                # @private
+                # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+                DEFAULT_ENDPOINT = "firestore.googleapis.com"
+
+                config_attr :endpoint,      nil, ::String, nil
                 config_attr :credentials,   nil do |value|
                   allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                   allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1479,6 +3389,8 @@ module Google
                 config_attr :metadata,      nil, ::Hash, nil
                 config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
                 config_attr :quota_project, nil, ::String, nil
+                config_attr :universe_domain, nil, ::String, nil
+                config_attr :logger, :default, ::Logger, nil, :default
 
                 # @private
                 def initialize parent_config = nil
@@ -1497,6 +3409,14 @@ module Google
                     parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                     Rpcs.new parent_rpcs
                   end
+                end
+
+                ##
+                # Configuration for the channel pool
+                # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+                #
+                def channel_pool
+                  @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
                 end
 
                 ##
@@ -1563,6 +3483,16 @@ module Google
                   #
                   attr_reader :import_documents
                   ##
+                  # RPC-specific configuration for `bulk_delete_documents`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :bulk_delete_documents
+                  ##
+                  # RPC-specific configuration for `create_database`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :create_database
+                  ##
                   # RPC-specific configuration for `get_database`
                   # @return [::Gapic::Config::Method]
                   #
@@ -1577,6 +3507,91 @@ module Google
                   # @return [::Gapic::Config::Method]
                   #
                   attr_reader :update_database
+                  ##
+                  # RPC-specific configuration for `delete_database`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :delete_database
+                  ##
+                  # RPC-specific configuration for `create_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :create_user_creds
+                  ##
+                  # RPC-specific configuration for `get_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :get_user_creds
+                  ##
+                  # RPC-specific configuration for `list_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :list_user_creds
+                  ##
+                  # RPC-specific configuration for `enable_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :enable_user_creds
+                  ##
+                  # RPC-specific configuration for `disable_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :disable_user_creds
+                  ##
+                  # RPC-specific configuration for `reset_user_password`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :reset_user_password
+                  ##
+                  # RPC-specific configuration for `delete_user_creds`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :delete_user_creds
+                  ##
+                  # RPC-specific configuration for `get_backup`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :get_backup
+                  ##
+                  # RPC-specific configuration for `list_backups`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :list_backups
+                  ##
+                  # RPC-specific configuration for `delete_backup`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :delete_backup
+                  ##
+                  # RPC-specific configuration for `restore_database`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :restore_database
+                  ##
+                  # RPC-specific configuration for `create_backup_schedule`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :create_backup_schedule
+                  ##
+                  # RPC-specific configuration for `get_backup_schedule`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :get_backup_schedule
+                  ##
+                  # RPC-specific configuration for `list_backup_schedules`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :list_backup_schedules
+                  ##
+                  # RPC-specific configuration for `update_backup_schedule`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :update_backup_schedule
+                  ##
+                  # RPC-specific configuration for `delete_backup_schedule`
+                  # @return [::Gapic::Config::Method]
+                  #
+                  attr_reader :delete_backup_schedule
 
                   # @private
                   def initialize parent_rpcs = nil
@@ -1598,12 +3613,50 @@ module Google
                     @export_documents = ::Gapic::Config::Method.new export_documents_config
                     import_documents_config = parent_rpcs.import_documents if parent_rpcs.respond_to? :import_documents
                     @import_documents = ::Gapic::Config::Method.new import_documents_config
+                    bulk_delete_documents_config = parent_rpcs.bulk_delete_documents if parent_rpcs.respond_to? :bulk_delete_documents
+                    @bulk_delete_documents = ::Gapic::Config::Method.new bulk_delete_documents_config
+                    create_database_config = parent_rpcs.create_database if parent_rpcs.respond_to? :create_database
+                    @create_database = ::Gapic::Config::Method.new create_database_config
                     get_database_config = parent_rpcs.get_database if parent_rpcs.respond_to? :get_database
                     @get_database = ::Gapic::Config::Method.new get_database_config
                     list_databases_config = parent_rpcs.list_databases if parent_rpcs.respond_to? :list_databases
                     @list_databases = ::Gapic::Config::Method.new list_databases_config
                     update_database_config = parent_rpcs.update_database if parent_rpcs.respond_to? :update_database
                     @update_database = ::Gapic::Config::Method.new update_database_config
+                    delete_database_config = parent_rpcs.delete_database if parent_rpcs.respond_to? :delete_database
+                    @delete_database = ::Gapic::Config::Method.new delete_database_config
+                    create_user_creds_config = parent_rpcs.create_user_creds if parent_rpcs.respond_to? :create_user_creds
+                    @create_user_creds = ::Gapic::Config::Method.new create_user_creds_config
+                    get_user_creds_config = parent_rpcs.get_user_creds if parent_rpcs.respond_to? :get_user_creds
+                    @get_user_creds = ::Gapic::Config::Method.new get_user_creds_config
+                    list_user_creds_config = parent_rpcs.list_user_creds if parent_rpcs.respond_to? :list_user_creds
+                    @list_user_creds = ::Gapic::Config::Method.new list_user_creds_config
+                    enable_user_creds_config = parent_rpcs.enable_user_creds if parent_rpcs.respond_to? :enable_user_creds
+                    @enable_user_creds = ::Gapic::Config::Method.new enable_user_creds_config
+                    disable_user_creds_config = parent_rpcs.disable_user_creds if parent_rpcs.respond_to? :disable_user_creds
+                    @disable_user_creds = ::Gapic::Config::Method.new disable_user_creds_config
+                    reset_user_password_config = parent_rpcs.reset_user_password if parent_rpcs.respond_to? :reset_user_password
+                    @reset_user_password = ::Gapic::Config::Method.new reset_user_password_config
+                    delete_user_creds_config = parent_rpcs.delete_user_creds if parent_rpcs.respond_to? :delete_user_creds
+                    @delete_user_creds = ::Gapic::Config::Method.new delete_user_creds_config
+                    get_backup_config = parent_rpcs.get_backup if parent_rpcs.respond_to? :get_backup
+                    @get_backup = ::Gapic::Config::Method.new get_backup_config
+                    list_backups_config = parent_rpcs.list_backups if parent_rpcs.respond_to? :list_backups
+                    @list_backups = ::Gapic::Config::Method.new list_backups_config
+                    delete_backup_config = parent_rpcs.delete_backup if parent_rpcs.respond_to? :delete_backup
+                    @delete_backup = ::Gapic::Config::Method.new delete_backup_config
+                    restore_database_config = parent_rpcs.restore_database if parent_rpcs.respond_to? :restore_database
+                    @restore_database = ::Gapic::Config::Method.new restore_database_config
+                    create_backup_schedule_config = parent_rpcs.create_backup_schedule if parent_rpcs.respond_to? :create_backup_schedule
+                    @create_backup_schedule = ::Gapic::Config::Method.new create_backup_schedule_config
+                    get_backup_schedule_config = parent_rpcs.get_backup_schedule if parent_rpcs.respond_to? :get_backup_schedule
+                    @get_backup_schedule = ::Gapic::Config::Method.new get_backup_schedule_config
+                    list_backup_schedules_config = parent_rpcs.list_backup_schedules if parent_rpcs.respond_to? :list_backup_schedules
+                    @list_backup_schedules = ::Gapic::Config::Method.new list_backup_schedules_config
+                    update_backup_schedule_config = parent_rpcs.update_backup_schedule if parent_rpcs.respond_to? :update_backup_schedule
+                    @update_backup_schedule = ::Gapic::Config::Method.new update_backup_schedule_config
+                    delete_backup_schedule_config = parent_rpcs.delete_backup_schedule if parent_rpcs.respond_to? :delete_backup_schedule
+                    @delete_backup_schedule = ::Gapic::Config::Method.new delete_backup_schedule_config
 
                     yield self if block_given?
                   end

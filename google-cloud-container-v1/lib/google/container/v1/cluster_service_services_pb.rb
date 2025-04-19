@@ -96,8 +96,6 @@ module Google
             rpc :GetServerConfig, ::Google::Cloud::Container::V1::GetServerConfigRequest, ::Google::Cloud::Container::V1::ServerConfig
             # Gets the public component of the cluster signing keys in
             # JSON Web Key format.
-            # This API is not yet intended for general use, and is not available for all
-            # clusters.
             rpc :GetJSONWebKeys, ::Google::Cloud::Container::V1::GetJSONWebKeysRequest, ::Google::Cloud::Container::V1::GetJSONWebKeysResponse
             # Lists the node pools for a cluster.
             rpc :ListNodePools, ::Google::Cloud::Container::V1::ListNodePoolsRequest, ::Google::Cloud::Container::V1::ListNodePoolsResponse
@@ -107,6 +105,9 @@ module Google
             rpc :CreateNodePool, ::Google::Cloud::Container::V1::CreateNodePoolRequest, ::Google::Cloud::Container::V1::Operation
             # Deletes a node pool from a cluster.
             rpc :DeleteNodePool, ::Google::Cloud::Container::V1::DeleteNodePoolRequest, ::Google::Cloud::Container::V1::Operation
+            # CompleteNodePoolUpgrade will signal an on-going node pool upgrade to
+            # complete.
+            rpc :CompleteNodePoolUpgrade, ::Google::Cloud::Container::V1::CompleteNodePoolUpgradeRequest, ::Google::Protobuf::Empty
             # Rolls back a previously Aborted or Failed NodePool upgrade.
             # This makes no changes if the last upgrade successfully completed.
             rpc :RollbackNodePoolUpgrade, ::Google::Cloud::Container::V1::RollbackNodePoolUpgradeRequest, ::Google::Cloud::Container::V1::Operation
@@ -130,6 +131,9 @@ module Google
             rpc :SetMaintenancePolicy, ::Google::Cloud::Container::V1::SetMaintenancePolicyRequest, ::Google::Cloud::Container::V1::Operation
             # Lists subnetworks that are usable for creating clusters in a project.
             rpc :ListUsableSubnetworks, ::Google::Cloud::Container::V1::ListUsableSubnetworksRequest, ::Google::Cloud::Container::V1::ListUsableSubnetworksResponse
+            # Checks the cluster compatibility with Autopilot mode, and returns a list of
+            # compatibility issues.
+            rpc :CheckAutopilotCompatibility, ::Google::Cloud::Container::V1::CheckAutopilotCompatibilityRequest, ::Google::Cloud::Container::V1::CheckAutopilotCompatibilityResponse
           end
 
           Stub = Service.rpc_stub_class

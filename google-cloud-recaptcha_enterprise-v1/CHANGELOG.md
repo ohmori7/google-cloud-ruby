@@ -1,5 +1,231 @@
 # Release History
 
+### 1.7.0 (2025-03-13)
+
+#### Features
+
+* Support JA4 fingerprint for SSL clients ([#29327](https://github.com/googleapis/google-cloud-ruby/issues/29327)) 
+
+### 1.6.0 (2025-01-28)
+
+#### Features
+
+* Update Ruby version requirement to 3.0 
+#### Documentation
+
+* Clarify behavior of protobuf message fields that are part of mutually-exclusive sets 
+* Include note about validating externally-provided credentials 
+
+### 1.5.1 (2025-01-08)
+
+#### Documentation
+
+* Minor update to FraudPrevention description ([#28184](https://github.com/googleapis/google-cloud-ruby/issues/28184)) 
+
+### 1.5.0 (2024-12-10)
+
+#### Features
+
+* Provide opt-in debug logging 
+
+### 1.4.1 (2024-12-04)
+
+#### Documentation
+
+* Clarify that challenge information is also returned for INVISIBLE keys ([#27683](https://github.com/googleapis/google-cloud-ruby/issues/27683)) 
+
+### 1.4.0 (2024-11-14)
+
+#### Features
+
+* A new enum `Challenge` is added ([#27608](https://github.com/googleapis/google-cloud-ruby/issues/27608)) 
+* A new field `challenge` is added to message `.google.cloud.recaptchaenterprise.v1.RiskAnalysis` 
+
+### 1.3.0 (2024-11-04)
+
+#### Features
+
+* enable Akamai web application firewall 
+* support for ListIpOverrides and RemoveIpOverride ([#27532](https://github.com/googleapis/google-cloud-ruby/issues/27532)) 
+#### Documentation
+
+* minor updates to reference documentation 
+
+### 1.2.0 (2024-08-30)
+
+#### Features
+
+* add AssessmentEnvironment for CreateAssessement to explicitly describe the environment of the assessment 
+#### Documentation
+
+* Add field `experimental_features` to message `PythonSettings` 
+* Add field `experimental_features` to message `PythonSettings` ([#27011](https://github.com/googleapis/google-cloud-ruby/issues/27011)) 
+* minor doc fixes ([#27021](https://github.com/googleapis/google-cloud-ruby/issues/27021)) 
+
+### 1.1.0 (2024-08-22)
+
+#### Features
+
+* add `express_settings` to `Key` 
+* add AddIpOverride RPC ([#26975](https://github.com/googleapis/google-cloud-ruby/issues/26975)) 
+#### Documentation
+
+* clarify `Event.express` field 
+* fix billing, quota, and usecase links 
+
+### 1.0.0 (2024-07-08)
+
+#### Features
+
+* Bump version to 1.0.0 
+
+### 0.22.0 (2024-06-26)
+
+#### Features
+
+* Support SMS Toll Fraud assessment ([#26179](https://github.com/googleapis/google-cloud-ruby/issues/26179)) 
+
+### 0.21.0 (2024-04-25)
+
+#### Features
+
+* Support for fraud prevention settings 
+
+### 0.20.1 (2024-04-17)
+
+#### Documentation
+
+* Fixes the description of ListFirewallPoliciesResponse ([#25683](https://github.com/googleapis/google-cloud-ruby/issues/25683)) 
+
+### 0.20.0 (2024-04-15)
+
+#### Features
+
+* add Cloudflare key creation support ([#25430](https://github.com/googleapis/google-cloud-ruby/issues/25430)) 
+* add IPV4/V6 field_info format to user_ip_address in Event 
+
+### 0.19.0 (2024-03-22)
+
+#### Features
+
+* Support for the include_recaptcha_script firewall action ([#25297](https://github.com/googleapis/google-cloud-ruby/issues/25297)) 
+
+### 0.18.0 (2024-02-26)
+
+#### Features
+
+* Updated minimum Ruby version to 2.7 ([#24875](https://github.com/googleapis/google-cloud-ruby/issues/24875)) 
+* Support for the reorder_firewall_policies RPC ([#24819](https://github.com/googleapis/google-cloud-ruby/issues/24819)) 
+
+### 0.17.3 (2024-02-01)
+
+#### Bug Fixes
+
+* Eliminated a harmless but annoying warning in the protobuf class files 
+
+### 0.17.2 (2024-01-18)
+
+#### Documentation
+
+* Minor clarification to AccountVerificationInfo#username description ([#24432](https://github.com/googleapis/google-cloud-ruby/issues/24432)) 
+
+### 0.17.1 (2024-01-12)
+
+#### Bug Fixes
+
+* Ensure endpoints are correct for mixin clients ([#24032](https://github.com/googleapis/google-cloud-ruby/issues/24032)) 
+
+### 0.17.0 (2024-01-11)
+
+#### Features
+
+* Support for universe_domain ([#23784](https://github.com/googleapis/google-cloud-ruby/issues/23784)) 
+
+### 0.16.0 (2024-01-09)
+
+#### Features
+
+* Added account_id parameter to annotate_assessment 
+* Added Apple developer ID and non-Google app store flag to mobile key settings 
+* Added behavioral trust verdict to FraudPreventionAssessment 
+* Added extended verdict reasons to RiskAnalysis 
+* added stable account identifier to related group membership resources, and deprecated hashed identifier field ([#23640](https://github.com/googleapis/google-cloud-ruby/issues/23640)) 
+* Added user_info field to Event 
+* Additional information about events being assessed, including request UI, headers, and flags for express requests, WAF token assessments, and policy evaluations 
+* Support firewall policy assessments 
+* Support FirewallPolicy management calls ([#23424](https://github.com/googleapis/google-cloud-ruby/issues/23424)) 
+* Support fraud signals in assessments 
+
+### 0.15.0 (2023-09-12)
+
+#### Features
+
+* Support for channel pool configuration ([#22922](https://github.com/googleapis/google-cloud-ruby/issues/22922)) 
+
+### 0.14.1 (2023-06-06)
+
+#### Bug Fixes
+
+* Don't use self-signed JWT credentials if the global configuration endpoint has been modified 
+
+### 0.14.0 (2023-06-01)
+
+#### Features
+
+* Uses binary protobuf definitions for better forward compatibility ([#21677](https://github.com/googleapis/google-cloud-ruby/issues/21677)) 
+
+### 0.13.0 (2023-03-23)
+
+#### Features
+
+* Add support for reCAPTCHA Enterprise FraudPrevention API ([#20939](https://github.com/googleapis/google-cloud-ruby/issues/20939)) 
+* Add support for reCAPTCHA Enterprise TransactionData 
+* Add support for reCAPTCHA Enterprise TransactionEvent 
+
+### 0.12.0 (2022-12-09)
+
+#### Features
+
+* Added account verification information to the Assessment resource ([#19836](https://github.com/googleapis/google-cloud-ruby/issues/19836)) 
+* Added Android package or iOS bundle with which a token was generated 
+* Added option to skip the billing check when migrating a key to reCAPTCHA Enterprise 
+
+### 0.11.0 (2022-10-18)
+
+#### Features
+
+* add annotation reasons REFUND, REFUND_FRAUD, TRANSACTION_ACCEPTED, TRANSACTION_DECLINED and SOCIAL_SPAM 
+* support PrivatePasswordLeakVerification 
+* support RetrieveLegacySecretKey 
+
+### 0.10.0 (2022-07-07)
+
+#### Features
+
+* Updated minimum Ruby version to 2.6 ([#18443](https://github.com/googleapis/google-cloud-ruby/issues/18443)) 
+
+### 0.9.1 (2022-06-17)
+
+#### Bug Fixes
+
+* Fixed serialization of the Assessment.private_password_leak_verification field
+
+### 0.9.0 (2022-05-19)
+
+#### Features
+
+* add support for private_password_leak_verification
+
+### 0.8.0 (2022-05-05)
+
+#### Features
+
+* Added WAF settings to application keys
+
+#### Bug Fixes
+
+* BREAKING CHANGE: Renamed the "parent" argument to "project" in search_related_account_group_memberships to match what the service expects
+
 ### 0.7.1 / 2022-01-11
 
 #### Documentation

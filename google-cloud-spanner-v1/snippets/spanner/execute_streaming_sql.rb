@@ -19,18 +19,32 @@
 # [START spanner_v1_generated_Spanner_ExecuteStreamingSql_sync]
 require "google/cloud/spanner/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Spanner::V1::Spanner::Client.new
+##
+# Snippet for the execute_streaming_sql call in the Spanner service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Spanner::V1::Spanner::Client#execute_streaming_sql.
+#
+def execute_streaming_sql
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Spanner::V1::Spanner::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Spanner::V1::ExecuteSqlRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Spanner::V1::ExecuteSqlRequest.new
 
-# Call the execute_streaming_sql method.
-result = client.execute_streaming_sql request
+  # Call the execute_streaming_sql method to start streaming.
+  output = client.execute_streaming_sql request
 
-# The returned object is a streamed enumerable yielding elements of
-# type ::Google::Cloud::Spanner::V1::PartialResultSet.
-result.each do |response|
-  p response
+  # The returned object is a streamed enumerable yielding elements of type
+  # ::Google::Cloud::Spanner::V1::PartialResultSet
+  output.each do |current_response|
+    p current_response
+  end
 end
 # [END spanner_v1_generated_Spanner_ExecuteStreamingSql_sync]

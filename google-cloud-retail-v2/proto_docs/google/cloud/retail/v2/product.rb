@@ -25,28 +25,41 @@ module Google
         # searched.
         # @!attribute [rw] expire_time
         #   @return [::Google::Protobuf::Timestamp]
-        #     The timestamp when this product becomes unavailable for
-        #     {::Google::Cloud::Retail::V2::SearchService::Client#search SearchService.Search}.
+        #     Note that this field is applied in the following ways:
         #
-        #     If it is set, the {::Google::Cloud::Retail::V2::Product Product} is not
-        #     available for
-        #     {::Google::Cloud::Retail::V2::SearchService::Client#search SearchService.Search} after
-        #     {::Google::Cloud::Retail::V2::Product#expire_time expire_time}. However, the
-        #     product can still be retrieved by
-        #     {::Google::Cloud::Retail::V2::ProductService::Client#get_product ProductService.GetProduct}
-        #     and
-        #     {::Google::Cloud::Retail::V2::ProductService::Client#list_products ProductService.ListProducts}.
+        #     * If the {::Google::Cloud::Retail::V2::Product Product} is already expired
+        #     when it is uploaded, this product
+        #       is not indexed for search.
+        #
+        #     * If the {::Google::Cloud::Retail::V2::Product Product} is not expired when it
+        #     is uploaded, only the
+        #       {::Google::Cloud::Retail::V2::Product::Type::PRIMARY Type.PRIMARY}'s and
+        #       {::Google::Cloud::Retail::V2::Product::Type::COLLECTION Type.COLLECTION}'s
+        #       expireTime is respected, and
+        #       {::Google::Cloud::Retail::V2::Product::Type::VARIANT Type.VARIANT}'s
+        #       expireTime is not used.
+        #
+        #     In general, we suggest the users to delete the stale
+        #     products explicitly, instead of using this field to determine staleness.
         #
         #     {::Google::Cloud::Retail::V2::Product#expire_time expire_time} must be later
         #     than {::Google::Cloud::Retail::V2::Product#available_time available_time} and
         #     {::Google::Cloud::Retail::V2::Product#publish_time publish_time}, otherwise an
         #     INVALID_ARGUMENT error is thrown.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [expiration_date](https://support.google.com/merchants/answer/6324499).
+        #
+        #     Note: The following fields are mutually exclusive: `expire_time`, `ttl`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] ttl
         #   @return [::Google::Protobuf::Duration]
-        #     Input only. The TTL (time to live) of the product.
+        #     Input only. The TTL (time to live) of the product. Note that this is only
+        #     applicable to {::Google::Cloud::Retail::V2::Product::Type::PRIMARY Type.PRIMARY}
+        #     and {::Google::Cloud::Retail::V2::Product::Type::COLLECTION Type.COLLECTION},
+        #     and ignored for
+        #     {::Google::Cloud::Retail::V2::Product::Type::VARIANT Type.VARIANT}. In general,
+        #     we suggest the users to delete the stale products explicitly, instead of
+        #     using this field to determine staleness.
         #
         #     If it is set, it must be a non-negative value, and
         #     {::Google::Cloud::Retail::V2::Product#expire_time expire_time} is set as
@@ -62,6 +75,8 @@ module Google
         #     {::Google::Cloud::Retail::V2::ProductService::Client#get_product ProductService.GetProduct}
         #     and
         #     {::Google::Cloud::Retail::V2::ProductService::Client#list_products ProductService.ListProducts}.
+        #
+        #     Note: The following fields are mutually exclusive: `ttl`, `expire_time`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] name
         #   @return [::String]
         #     Immutable. Full resource name of the product, such as
@@ -77,9 +92,9 @@ module Google
         #     This field must be a UTF-8 encoded string with a length limit of 128
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [id](https://support.google.com/merchants/answer/6324405). Schema.org
-        #     Property [Product.sku](https://schema.org/sku).
+        #     property [Product.sku](https://schema.org/sku).
         # @!attribute [rw] type
         #   @return [::Google::Cloud::Retail::V2::Product::Type]
         #     Immutable. The type of the product. Default to
@@ -101,21 +116,23 @@ module Google
         #     {::Google::Cloud::Retail::V2::Product Product}. Otherwise, an INVALID_ARGUMENT
         #     error is returned.
         #
-        #     Google Merchant Center Property
+        #     Corresponding properties: Google Merchant Center property
         #     [item_group_id](https://support.google.com/merchants/answer/6324507).
-        #     Schema.org Property
+        #     Schema.org property
         #     [Product.inProductGroupWithID](https://schema.org/inProductGroupWithID).
-        #
-        #     This field must be enabled before it can be used. [Learn
-        #     more](/recommendations-ai/docs/catalog#item-group-id).
         # @!attribute [rw] collection_member_ids
         #   @return [::Array<::String>]
         #     The {::Google::Cloud::Retail::V2::Product#id id} of the collection members when
         #     {::Google::Cloud::Retail::V2::Product#type type} is
         #     {::Google::Cloud::Retail::V2::Product::Type::COLLECTION Type.COLLECTION}.
         #
-        #     Should not set it for other types. A maximum of 1000 values are allowed.
-        #     Otherwise, an INVALID_ARGUMENT error is return.
+        #     Non-existent product ids are allowed.
+        #     The {::Google::Cloud::Retail::V2::Product#type type} of the members must be
+        #     either {::Google::Cloud::Retail::V2::Product::Type::PRIMARY Type.PRIMARY} or
+        #     {::Google::Cloud::Retail::V2::Product::Type::VARIANT Type.VARIANT} otherwise an
+        #     INVALID_ARGUMENT error is thrown. Should not set it for other types. A
+        #     maximum of 1000 values are allowed. Otherwise, an INVALID_ARGUMENT error is
+        #     return.
         # @!attribute [rw] gtin
         #   @return [::String]
         #     The Global Trade Item Number (GTIN) of the product.
@@ -126,13 +143,13 @@ module Google
         #     This field must be a Unigram. Otherwise, an INVALID_ARGUMENT error is
         #     returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [gtin](https://support.google.com/merchants/answer/6324461).
         #     Schema.org property
-        #     [Product.isbn](https://schema.org/isbn) or
-        #     [Product.gtin8](https://schema.org/gtin8) or
-        #     [Product.gtin12](https://schema.org/gtin12) or
-        #     [Product.gtin13](https://schema.org/gtin13) or
+        #     [Product.isbn](https://schema.org/isbn),
+        #     [Product.gtin8](https://schema.org/gtin8),
+        #     [Product.gtin12](https://schema.org/gtin12),
+        #     [Product.gtin13](https://schema.org/gtin13), or
         #     [Product.gtin14](https://schema.org/gtin14).
         #
         #     If the value is not a valid GTIN, an INVALID_ARGUMENT error is returned.
@@ -144,7 +161,7 @@ module Google
         #
         #
         #     To represent full path of category, use '>' sign to separate different
-        #     hierarchies. If '>' is part of the category name, please replace it with
+        #     hierarchies. If '>' is part of the category name, replace it with
         #     other character(s).
         #
         #     For example, if a shoes product belongs to both
@@ -162,11 +179,12 @@ module Google
         #     error is returned.
         #
         #     At most 250 values are allowed per
-        #     {::Google::Cloud::Retail::V2::Product Product}. Empty values are not allowed.
-        #     Each value must be a UTF-8 encoded string with a length limit of 5,000
-        #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
+        #     {::Google::Cloud::Retail::V2::Product Product} unless overridden through the
+        #     Google Cloud console. Empty values are not allowed. Each value must be a
+        #     UTF-8 encoded string with a length limit of 5,000 characters. Otherwise, an
+        #     INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [google_product_category][mc_google_product_category]. Schema.org property
         #     [Product.category] (https://schema.org/category).
         #
@@ -179,18 +197,19 @@ module Google
         #     This field must be a UTF-8 encoded string with a length limit of 1,000
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [title](https://support.google.com/merchants/answer/6324415). Schema.org
         #     property [Product.name](https://schema.org/name).
         # @!attribute [rw] brands
         #   @return [::Array<::String>]
         #     The brands of the product.
         #
-        #     A maximum of 30 brands are allowed. Each brand must be a UTF-8 encoded
-        #     string with a length limit of 1,000 characters. Otherwise, an
-        #     INVALID_ARGUMENT error is returned.
+        #     A maximum of 30 brands are allowed unless overridden through the Google
+        #     Cloud console. Each
+        #     brand must be a UTF-8 encoded string with a length limit of 1,000
+        #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [brand](https://support.google.com/merchants/answer/6324351). Schema.org
         #     property [Product.brand](https://schema.org/brand).
         # @!attribute [rw] description
@@ -200,13 +219,13 @@ module Google
         #     This field must be a UTF-8 encoded string with a length limit of 5,000
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [description](https://support.google.com/merchants/answer/6324468).
-        #     schema.org property [Product.description](https://schema.org/description).
+        #     Schema.org property [Product.description](https://schema.org/description).
         # @!attribute [rw] language_code
         #   @return [::String]
         #     Language of the title/description and other string attributes. Use language
-        #     tags defined by [BCP 47][https://www.rfc-editor.org/rfc/bcp/bcp47.txt].
+        #     tags defined by [BCP 47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt).
         #
         #     For product prediction, this field is ignored and the model automatically
         #     detects the text language. The {::Google::Cloud::Retail::V2::Product Product}
@@ -240,7 +259,12 @@ module Google
         #     * The key must be a UTF-8 encoded string with a length limit of 128
         #       characters.
         #     * For indexable attribute, the key must match the pattern:
-        #       `[a-zA-Z0-9][a-zA-Z0-9_]*`. For example, key0LikeThis or KEY_1_LIKE_THIS.
+        #       `[a-zA-Z0-9][a-zA-Z0-9_]*`. For example, `key0LikeThis` or
+        #       `KEY_1_LIKE_THIS`.
+        #     * For text attributes, at most 400 values are allowed. Empty values are not
+        #       allowed. Each value must be a non-empty UTF-8 encoded string with a
+        #       length limit of 256 characters.
+        #     * For number attributes, at most 400 values are allowed.
         # @!attribute [rw] tags
         #   @return [::Array<::String>]
         #     Custom tags associated with the product.
@@ -254,13 +278,13 @@ module Google
         #     tag as part of the
         #     {::Google::Cloud::Retail::V2::PredictRequest#filter PredictRequest.filter}.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [custom_label_0–4](https://support.google.com/merchants/answer/6324473).
         # @!attribute [rw] price_info
         #   @return [::Google::Cloud::Retail::V2::PriceInfo]
         #     Product price and cost information.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [price](https://support.google.com/merchants/answer/6324371).
         # @!attribute [rw] rating
         #   @return [::Google::Cloud::Retail::V2::Rating]
@@ -269,16 +293,29 @@ module Google
         #   @return [::Google::Protobuf::Timestamp]
         #     The timestamp when this {::Google::Cloud::Retail::V2::Product Product} becomes
         #     available for
-        #     {::Google::Cloud::Retail::V2::SearchService::Client#search SearchService.Search}.
+        #     {::Google::Cloud::Retail::V2::SearchService::Client#search SearchService.Search}. Note
+        #     that this is only applicable to
+        #     {::Google::Cloud::Retail::V2::Product::Type::PRIMARY Type.PRIMARY} and
+        #     {::Google::Cloud::Retail::V2::Product::Type::COLLECTION Type.COLLECTION}, and
+        #     ignored for {::Google::Cloud::Retail::V2::Product::Type::VARIANT Type.VARIANT}.
         # @!attribute [rw] availability
         #   @return [::Google::Cloud::Retail::V2::Product::Availability]
         #     The online availability of the {::Google::Cloud::Retail::V2::Product Product}.
         #     Default to
         #     {::Google::Cloud::Retail::V2::Product::Availability::IN_STOCK Availability.IN_STOCK}.
         #
-        #     Google Merchant Center Property
+        #     For primary products with variants set the availability of the primary as
+        #     {::Google::Cloud::Retail::V2::Product::Availability::OUT_OF_STOCK Availability.OUT_OF_STOCK}
+        #     and set the true availability at the variant level. This way the primary
+        #     product will be considered "in stock" as long as it has at least one
+        #     variant in stock.
+        #
+        #     For primary products with no variants set the true availability at the
+        #     primary level.
+        #
+        #     Corresponding properties: Google Merchant Center property
         #     [availability](https://support.google.com/merchants/answer/6324448).
-        #     Schema.org Property [Offer.availability](https://schema.org/availability).
+        #     Schema.org property [Offer.availability](https://schema.org/availability).
         # @!attribute [rw] available_quantity
         #   @return [::Google::Protobuf::Int32Value]
         #     The available quantity of the item.
@@ -300,17 +337,17 @@ module Google
         #     This field must be a UTF-8 encoded string with a length limit of 5,000
         #     characters. Otherwise, an INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [link](https://support.google.com/merchants/answer/6324416). Schema.org
         #     property [Offer.url](https://schema.org/url).
         # @!attribute [rw] images
         #   @return [::Array<::Google::Cloud::Retail::V2::Image>]
-        #     Product images for the product.Highly recommended to put the main image
-        #     to the first.
+        #     Product images for the product. We highly recommend putting the main
+        #     image first.
         #
         #     A maximum of 300 images are allowed.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [image_link](https://support.google.com/merchants/answer/6324350).
         #     Schema.org property [Product.image](https://schema.org/image).
         # @!attribute [rw] audience
@@ -321,7 +358,7 @@ module Google
         #   @return [::Google::Cloud::Retail::V2::ColorInfo]
         #     The color of the product.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [color](https://support.google.com/merchants/answer/6324487). Schema.org
         #     property [Product.color](https://schema.org/color).
         # @!attribute [rw] sizes
@@ -339,9 +376,9 @@ module Google
         #     encoded string with a length limit of 128 characters. Otherwise, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [size](https://support.google.com/merchants/answer/6324492),
-        #     [size_type](https://support.google.com/merchants/answer/6324497) and
+        #     [size_type](https://support.google.com/merchants/answer/6324497), and
         #     [size_system](https://support.google.com/merchants/answer/6324502).
         #     Schema.org property [Product.size](https://schema.org/size).
         # @!attribute [rw] materials
@@ -349,10 +386,10 @@ module Google
         #     The material of the product. For example, "leather", "wooden".
         #
         #     A maximum of 20 values are allowed. Each value must be a UTF-8 encoded
-        #     string with a length limit of 128 characters. Otherwise, an
+        #     string with a length limit of 200 characters. Otherwise, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [material](https://support.google.com/merchants/answer/6324410). Schema.org
         #     property [Product.material](https://schema.org/material).
         # @!attribute [rw] patterns
@@ -365,7 +402,7 @@ module Google
         #     encoded string with a length limit of 128 characters. Otherwise, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [pattern](https://support.google.com/merchants/answer/6324483). Schema.org
         #     property [Product.pattern](https://schema.org/pattern).
         # @!attribute [rw] conditions
@@ -373,19 +410,21 @@ module Google
         #     The condition of the product. Strongly encouraged to use the standard
         #     values: "new", "refurbished", "used".
         #
-        #     A maximum of 5 values are allowed per
+        #     A maximum of 1 value is allowed per
         #     {::Google::Cloud::Retail::V2::Product Product}. Each value must be a UTF-8
         #     encoded string with a length limit of 128 characters. Otherwise, an
         #     INVALID_ARGUMENT error is returned.
         #
-        #     Google Merchant Center property
+        #     Corresponding properties: Google Merchant Center property
         #     [condition](https://support.google.com/merchants/answer/6324469).
         #     Schema.org property
         #     [Offer.itemCondition](https://schema.org/itemCondition).
         # @!attribute [rw] promotions
         #   @return [::Array<::Google::Cloud::Retail::V2::Promotion>]
         #     The promotions applied to the product. A maximum of 10 values are allowed
-        #     per {::Google::Cloud::Retail::V2::Product Product}.
+        #     per {::Google::Cloud::Retail::V2::Product Product}. Only
+        #     {::Google::Cloud::Retail::V2::Promotion#promotion_id Promotion.promotion_id}
+        #     will be used, other fields will be ignored if set.
         # @!attribute [rw] publish_time
         #   @return [::Google::Protobuf::Timestamp]
         #     The timestamp when the product is published by the retailer for the first
@@ -395,6 +434,7 @@ module Google
         #     purely describes product freshness regardless of when it is available on
         #     search and recommendation.
         # @!attribute [rw] retrievable_fields
+        #   @deprecated This field is deprecated and may be removed in the next major version update.
         #   @return [::Google::Protobuf::FieldMask]
         #     Indicates which fields in the {::Google::Cloud::Retail::V2::Product Product}s
         #     are returned in {::Google::Cloud::Retail::V2::SearchResponse SearchResponse}.
@@ -447,12 +487,12 @@ module Google
         #     * {::Google::Cloud::Retail::V2::Product#name name}
         #     * {::Google::Cloud::Retail::V2::Product#color_info color_info}
         #
-        #     Maximum number of paths is 30. Otherwise, an INVALID_ARGUMENT error is
-        #     returned.
         #
         #     Note: Returning more fields in
-        #     {::Google::Cloud::Retail::V2::SearchResponse SearchResponse} may increase
+        #     {::Google::Cloud::Retail::V2::SearchResponse SearchResponse} can increase
         #     response payload size and serving latency.
+        #
+        #     This field is deprecated. Use the retrievable site-wide control instead.
         # @!attribute [r] variants
         #   @return [::Array<::Google::Cloud::Retail::V2::Product>]
         #     Output only. Product variants grouped together on primary product which
@@ -465,6 +505,15 @@ module Google
         #     Note: This field is OUTPUT_ONLY for
         #     {::Google::Cloud::Retail::V2::ProductService::Client#get_product ProductService.GetProduct}.
         #     Do not set this field in API requests.
+        # @!attribute [r] local_inventories
+        #   @return [::Array<::Google::Cloud::Retail::V2::LocalInventory>]
+        #     Output only. A list of local inventories specific to different places.
+        #
+        #     This field can be managed by
+        #     {::Google::Cloud::Retail::V2::ProductService::Client#add_local_inventories ProductService.AddLocalInventories}
+        #     and
+        #     {::Google::Cloud::Retail::V2::ProductService::Client#remove_local_inventories ProductService.RemoveLocalInventories}
+        #     APIs if fine-grained, high-volume updates are necessary.
         class Product
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods

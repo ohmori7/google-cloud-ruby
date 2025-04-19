@@ -19,15 +19,29 @@
 # [START language_v1beta2_generated_LanguageService_AnalyzeEntitySentiment_sync]
 require "google/cloud/language/v1beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Language::V1beta2::LanguageService::Client.new
+##
+# Snippet for the analyze_entity_sentiment call in the LanguageService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Language::V1beta2::LanguageService::Client#analyze_entity_sentiment.
+#
+def analyze_entity_sentiment
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Language::V1beta2::LanguageService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Language::V1beta2::AnalyzeEntitySentimentRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Language::V1beta2::AnalyzeEntitySentimentRequest.new
 
-# Call the analyze_entity_sentiment method.
-result = client.analyze_entity_sentiment request
+  # Call the analyze_entity_sentiment method.
+  result = client.analyze_entity_sentiment request
 
-# The returned object is of type Google::Cloud::Language::V1beta2::AnalyzeEntitySentimentResponse.
-p result
+  # The returned object is of type Google::Cloud::Language::V1beta2::AnalyzeEntitySentimentResponse.
+  p result
+end
 # [END language_v1beta2_generated_LanguageService_AnalyzeEntitySentiment_sync]

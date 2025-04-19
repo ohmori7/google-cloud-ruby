@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :video_intelligence do |config|
-  config.add_field! :endpoint,      "videointelligence.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,6 +39,7 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -48,12 +49,19 @@ module Google
       # Create a new client object for VideoIntelligenceService.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::VideoIntelligence::V1::VideoIntelligenceService::Client](https://googleapis.dev/ruby/google-cloud-video_intelligence-v1/latest/Google/Cloud/VideoIntelligence/V1/VideoIntelligenceService/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::VideoIntelligence::V1::VideoIntelligenceService::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-video_intelligence-v1/latest/Google-Cloud-VideoIntelligence-V1-VideoIntelligenceService-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the VideoIntelligenceService service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the VideoIntelligenceService service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::VideoIntelligence.video_intelligence_service_available?}.
       #
       # ## About VideoIntelligenceService
       #
@@ -61,17 +69,50 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [VideoIntelligenceService::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.video_intelligence_service version: :v1, &block
+      def self.video_intelligence_service version: :v1, transport: :grpc, &block
         require "google/cloud/video_intelligence/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::VideoIntelligence
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::VideoIntelligence.const_get package_name
-        package_module.const_get(:VideoIntelligenceService).const_get(:Client).new(&block)
+        service_module = Google::Cloud::VideoIntelligence.const_get(package_name).const_get(:VideoIntelligenceService)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the VideoIntelligenceService service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::VideoIntelligence.video_intelligence_service}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the VideoIntelligenceService service,
+      # or if the versioned client gem needs an update to support the VideoIntelligenceService service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.video_intelligence_service_available? version: :v1, transport: :grpc
+        require "google/cloud/video_intelligence/#{version.to_s.downcase}"
+        package_name = Google::Cloud::VideoIntelligence
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::VideoIntelligence.const_get package_name
+        return false unless service_module.const_defined? :VideoIntelligenceService
+        service_module = service_module.const_get :VideoIntelligenceService
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -91,7 +132,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

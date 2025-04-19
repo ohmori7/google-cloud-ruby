@@ -19,21 +19,33 @@
 # [START cloudfunctions_v1_generated_CloudFunctionsService_ListFunctions_sync]
 require "google/cloud/functions/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Functions::V1::CloudFunctionsService::Client.new
+##
+# Snippet for the list_functions call in the CloudFunctionsService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Functions::V1::CloudFunctionsService::Client#list_functions.
+#
+def list_functions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Functions::V1::CloudFunctionsService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Functions::V1::ListFunctionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Functions::V1::ListFunctionsRequest.new
 
-# Call the list_functions method.
-result = client.list_functions request
+  # Call the list_functions method.
+  result = client.list_functions request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::Functions::V1::CloudFunction.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::Functions::V1::CloudFunction.
+    p item
+  end
 end
 # [END cloudfunctions_v1_generated_CloudFunctionsService_ListFunctions_sync]

@@ -122,12 +122,10 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new(project_id: project_id)
       }
 
@@ -177,7 +175,7 @@ describe Google::Cloud do
     end
 
     it "uses provided endpoints" do
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil, **_other_keywords|
         _(credentials).must_equal default_credentials
         _(timeout).must_be :nil?
         _(host).must_equal "bigtable-endpoint2.example.com"
@@ -205,12 +203,10 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new project_id: project_id
       }
 
@@ -237,12 +233,10 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new project_id: project_id
       }
 
@@ -253,6 +247,38 @@ describe Google::Cloud do
             Google::Cloud::Bigtable::Credentials.stub :new, stubbed_credentials do
               Google::Cloud::Bigtable::Service.stub :new, stubbed_service do
                 bigtable = Google::Cloud::Bigtable.new project_id: "project-id", credentials: "path/to/keyfile.json"
+                _(bigtable).must_be_kind_of Google::Cloud::Bigtable::Project
+                _(bigtable.project_id).must_equal "project-id"
+                _(bigtable.service).must_be_kind_of OpenStruct
+              end
+            end
+          end
+        end
+      end
+    end
+
+    it "uses provided channel_selection and channel_count" do
+      stubbed_credentials = lambda { |keyfile, scope: nil|
+        _(keyfile).must_equal "path/to/keyfile.json"
+        _(scope).must_equal default_scope
+        "bigtable-credentials"
+      }
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, channel_selection: nil, channel_count: nil, **_other_keywords|
+        _(project_id).must_equal "project-id"
+        _(credentials).must_equal "bigtable-credentials"
+        _(timeout).must_be :nil?
+        _(channel_selection).must_equal :least_loaded
+        _(channel_count).must_equal 5
+        OpenStruct.new project_id: project_id
+      }
+
+      # Clear all environment variables
+      ENV.stub :[], nil do
+        File.stub :file?, true, ["path/to/keyfile.json"] do
+          File.stub :read, found_credentials, ["path/to/keyfile.json"] do
+            Google::Cloud::Bigtable::Credentials.stub :new, stubbed_credentials do
+              Google::Cloud::Bigtable::Service.stub :new, stubbed_service do
+                bigtable = Google::Cloud::Bigtable.new project_id: "project-id", credentials: "path/to/keyfile.json", channel_selection: :least_loaded, channel_count: 5
                 _(bigtable).must_be_kind_of Google::Cloud::Bigtable::Project
                 _(bigtable.project_id).must_equal "project-id"
                 _(bigtable.service).must_be_kind_of OpenStruct
@@ -305,13 +331,11 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         OpenStruct.new project_id: "project-id"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_be_kind_of OpenStruct
         _(credentials.project_id).must_equal "project-id"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new project_id: project_id
       }
       empty_env = OpenStruct.new
@@ -334,6 +358,29 @@ describe Google::Cloud do
         end
       end
     end
+
+    it "uses channel config" do
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, channel_selection: nil, channel_count: nil, **_other_keywords|
+        _(credentials).must_equal default_credentials
+        _(timeout).must_be :nil?
+        _(channel_selection).must_equal :least_loaded
+        _(channel_count).must_equal 5
+        OpenStruct.new project_id: project_id
+      }
+
+      # Clear all environment variables
+      ENV.stub :[], nil do
+        Google::Cloud::Bigtable::Service.stub :new, stubbed_service do
+          bigtable = Google::Cloud::Bigtable.new project_id: "project-id",
+                                                 credentials: default_credentials,
+                                                 channel_selection: :least_loaded,
+                                                 channel_count: 5
+          _(bigtable).must_be_kind_of Google::Cloud::Bigtable::Project
+          _(bigtable.project_id).must_equal "project-id"
+          _(bigtable.service).must_be_kind_of OpenStruct
+        end
+      end
+    end
   end
 
   describe "bigtable.configure" do
@@ -349,12 +396,11 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
+
         OpenStruct.new project_id: project_id
       }
 
@@ -387,12 +433,10 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_be :nil?
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new project_id: project_id
       }
 
@@ -419,19 +463,17 @@ describe Google::Cloud do
       end
     end
 
-    it "uses bigtable config for project and keyfile" do
+    it "uses bigtable config for project, keyfile, and universe domain" do
       stubbed_credentials = lambda { |credentials, scope: nil|
         _(credentials).must_equal "path/to/keyfile.json"
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, universe_domain: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_equal 42
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
-        OpenStruct.new project_id: project_id
+        OpenStruct.new project_id: project_id, universe_domain: universe_domain
       }
 
       # Clear all environment variables
@@ -441,6 +483,7 @@ describe Google::Cloud do
           config.project_id = "project-id"
           config.credentials = "path/to/keyfile.json"
           config.timeout = 42
+          config.universe_domain = "myuniverse.com"
         end
 
         File.stub :file?, true, ["path/to/keyfile.json"] do
@@ -450,6 +493,7 @@ describe Google::Cloud do
                 bigtable = Google::Cloud::Bigtable.new
                 _(bigtable).must_be_kind_of Google::Cloud::Bigtable::Project
                 _(bigtable.project_id).must_equal "project-id"
+                _(bigtable.universe_domain).must_equal "myuniverse.com"
                 _(bigtable.service).must_be_kind_of OpenStruct
               end
             end
@@ -464,12 +508,10 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(timeout).must_equal 42
-        _(host).must_equal default_host
-        _(host_admin).must_equal default_host_admin
         OpenStruct.new project_id: project_id
       }
 
@@ -503,7 +545,7 @@ describe Google::Cloud do
         _(scope).must_equal default_scope
         "bigtable-credentials"
       }
-      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil|
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, host: nil, host_admin: nil, **_other_keywords|
         _(project_id).must_equal "project-id"
         _(credentials).must_equal "bigtable-credentials"
         _(host).must_equal "bigtable-endpoint2.example.com"
@@ -519,6 +561,45 @@ describe Google::Cloud do
           config.credentials = "path/to/keyfile.json"
           config.endpoint = "bigtable-endpoint2.example.com"
           config.endpoint_admin = "bigtable-admin-endpoint2.example.com"
+        end
+
+        File.stub :file?, true, ["path/to/keyfile.json"] do
+          File.stub :read, found_credentials, ["path/to/keyfile.json"] do
+            Google::Cloud::Bigtable::Credentials.stub :new, stubbed_credentials do
+              Google::Cloud::Bigtable::Service.stub :new, stubbed_service do
+                bigtable = Google::Cloud::Bigtable.new
+                _(bigtable).must_be_kind_of Google::Cloud::Bigtable::Project
+                _(bigtable.project_id).must_equal "project-id"
+                _(bigtable.service).must_be_kind_of OpenStruct
+              end
+            end
+          end
+        end
+      end
+    end
+
+    it "uses bigtable config for channel config" do
+      stubbed_credentials = lambda { |keyfile, scope: nil|
+        _(keyfile).must_equal "path/to/keyfile.json"
+        _(scope).must_equal default_scope
+        "bigtable-credentials"
+      }
+      stubbed_service = lambda { |project_id, credentials, timeout: nil, channel_selection: nil, channel_count: nil, **_other_keywords|
+        _(project_id).must_equal "project-id"
+        _(credentials).must_equal "bigtable-credentials"
+        _(channel_selection).must_equal :least_loaded
+        _(channel_count).must_equal 5
+        OpenStruct.new project_id: project_id
+      }
+
+      # Clear all environment variables
+      ENV.stub :[], nil do
+        # Set new configuration
+        Google::Cloud::Bigtable.configure do |config|
+          config.project_id = "project-id"
+          config.credentials = "path/to/keyfile.json"
+          config.channel_selection = :least_loaded
+          config.channel_count = 5
         end
 
         File.stub :file?, true, ["path/to/keyfile.json"] do

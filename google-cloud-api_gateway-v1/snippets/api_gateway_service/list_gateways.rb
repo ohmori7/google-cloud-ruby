@@ -19,21 +19,33 @@
 # [START apigateway_v1_generated_ApiGatewayService_ListGateways_sync]
 require "google/cloud/api_gateway/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::ApiGateway::V1::ApiGatewayService::Client.new
+##
+# Snippet for the list_gateways call in the ApiGatewayService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::ApiGateway::V1::ApiGatewayService::Client#list_gateways.
+#
+def list_gateways
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::ApiGateway::V1::ApiGatewayService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::ApiGateway::V1::ListGatewaysRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::ApiGateway::V1::ListGatewaysRequest.new
 
-# Call the list_gateways method.
-result = client.list_gateways request
+  # Call the list_gateways method.
+  result = client.list_gateways request
 
-# The returned object is of type Gapic::PagedEnumerable. You can
-# iterate over all elements by calling #each, and the enumerable
-# will lazily make API calls to fetch subsequent pages. Other
-# methods are also available for managing paging directly.
-result.each do |response|
-  # Each element is of type ::Google::Cloud::ApiGateway::V1::Gateway.
-  p response
+  # The returned object is of type Gapic::PagedEnumerable. You can iterate
+  # over elements, and API calls will be issued to fetch pages as needed.
+  result.each do |item|
+    # Each element is of type ::Google::Cloud::ApiGateway::V1::Gateway.
+    p item
+  end
 end
 # [END apigateway_v1_generated_ApiGatewayService_ListGateways_sync]

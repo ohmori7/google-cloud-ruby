@@ -19,15 +19,29 @@
 # [START cloudkms_v1_generated_KeyManagementService_UpdateCryptoKeyPrimaryVersion_sync]
 require "google/cloud/kms/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
+##
+# Snippet for the update_crypto_key_primary_version call in the KeyManagementService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Kms::V1::KeyManagementService::Client#update_crypto_key_primary_version.
+#
+def update_crypto_key_primary_version
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Kms::V1::KeyManagementService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Kms::V1::UpdateCryptoKeyPrimaryVersionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Kms::V1::UpdateCryptoKeyPrimaryVersionRequest.new
 
-# Call the update_crypto_key_primary_version method.
-result = client.update_crypto_key_primary_version request
+  # Call the update_crypto_key_primary_version method.
+  result = client.update_crypto_key_primary_version request
 
-# The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
-p result
+  # The returned object is of type Google::Cloud::Kms::V1::CryptoKey.
+  p result
+end
 # [END cloudkms_v1_generated_KeyManagementService_UpdateCryptoKeyPrimaryVersion_sync]

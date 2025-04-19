@@ -25,29 +25,27 @@ module Google
           # Represents a single field in the database.
           #
           # Fields are grouped by their "Collection Group", which represent all
-          # collections in the database with the same id.
+          # collections in the database with the same ID.
           # @!attribute [rw] name
           #   @return [::String]
-          #     Required. A field name of the form
+          #     Required. A field name of the form:
           #     `projects/{project_id}/databases/{database_id}/collectionGroups/{collection_id}/fields/{field_path}`
           #
-          #     A field path may be a simple field name, e.g. `address` or a path to fields
-          #     within map_value , e.g. `address.city`,
+          #     A field path can be a simple field name, e.g. `address` or a path to fields
+          #     within `map_value` , e.g. `address.city`,
           #     or a special field path. The only valid special field is `*`, which
           #     represents any field.
           #
-          #     Field paths may be quoted using ` (backtick). The only character that needs
-          #     to be escaped within a quoted field path is the backtick character itself,
-          #     escaped using a backslash. Special characters in field paths that
+          #     Field paths can be quoted using `` ` `` (backtick). The only character that
+          #     must be escaped within a quoted field path is the backtick character
+          #     itself, escaped using a backslash. Special characters in field paths that
           #     must be quoted include: `*`, `.`,
-          #     ``` (backtick), `[`, `]`, as well as any ascii symbolic characters.
+          #     `` ` `` (backtick), `[`, `]`, as well as any ascii symbolic characters.
           #
           #     Examples:
-          #     (Note: Comments here are written in markdown syntax, so there is an
-          #      additional layer of backticks to represent a code block)
-          #     `\`address.city\`` represents a field named `address.city`, not the map key
-          #     `city` in the field `address`.
-          #     `\`*\`` represents a field named `*`, not any field.
+          #     `` `address.city` `` represents a field named `address.city`, not the map
+          #     key `city` in the field `address`. `` `*` `` represents a field named `*`,
+          #     not any field.
           #
           #     A special `Field` contains the default indexing settings for all fields.
           #     This field's resource name is:
@@ -60,6 +58,11 @@ module Google
           #     revert to the configuration defined by the `ancestor_field`. To
           #     explicitly remove all indexes for this field, specify an index config
           #     with an empty list of indexes.
+          # @!attribute [rw] ttl_config
+          #   @return [::Google::Cloud::Firestore::Admin::V1::Field::TtlConfig]
+          #     The TTL configuration for this `Field`.
+          #     Setting or unsetting this will enable or disable the TTL for
+          #     documents that have this `Field`.
           class Field
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -75,8 +78,8 @@ module Google
             #     When false, the `Field`'s index configuration is defined explicitly.
             # @!attribute [rw] ancestor_field
             #   @return [::String]
-            #     Output only. Specifies the resource name of the `Field` from which this field's
-            #     index configuration is set (when `uses_ancestor_config` is true),
+            #     Output only. Specifies the resource name of the `Field` from which this
+            #     field's index configuration is set (when `uses_ancestor_config` is true),
             #     or from which it *would* be set if this field had no index configuration
             #     (when `uses_ancestor_config` is false).
             # @!attribute [rw] reverting
@@ -89,6 +92,44 @@ module Google
             class IndexConfig
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # The TTL (time-to-live) configuration for documents that have this `Field`
+            # set.
+            #
+            # Storing a timestamp value into a TTL-enabled field will be treated as
+            # the document's absolute expiration time. Timestamp values in the past
+            # indicate that the document is eligible for immediate expiration. Using any
+            # other data type or leaving the field absent will disable expiration for the
+            # individual document.
+            # @!attribute [r] state
+            #   @return [::Google::Cloud::Firestore::Admin::V1::Field::TtlConfig::State]
+            #     Output only. The state of the TTL configuration.
+            class TtlConfig
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # The state of applying the TTL configuration to all documents.
+              module State
+                # The state is unspecified or unknown.
+                STATE_UNSPECIFIED = 0
+
+                # The TTL is being applied. There is an active long-running operation to
+                # track the change. Newly written documents will have TTLs applied as
+                # requested. Requested TTLs on existing documents are still being
+                # processed. When TTLs on all existing documents have been processed, the
+                # state will move to 'ACTIVE'.
+                CREATING = 1
+
+                # The TTL is active for all documents.
+                ACTIVE = 2
+
+                # The TTL configuration could not be enabled for all existing documents.
+                # Newly written documents will continue to have their TTL applied.
+                # The LRO returned when last attempting to enable TTL for this `Field`
+                # has failed, and may have more details.
+                NEEDS_REPAIR = 3
+              end
             end
           end
         end

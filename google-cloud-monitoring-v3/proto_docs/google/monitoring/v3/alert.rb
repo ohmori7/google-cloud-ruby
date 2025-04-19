@@ -23,16 +23,16 @@ module Google
       module V3
         # A description of the conditions under which some aspect of your system is
         # considered to be "unhealthy" and the ways to notify people or services about
-        # this state. For an overview of alert policies, see
+        # this state. For an overview of alerting policies, see
         # [Introduction to Alerting](https://cloud.google.com/monitoring/alerts/).
         # @!attribute [rw] name
         #   @return [::String]
-        #     Required if the policy exists. The resource name for this policy. The
-        #     format is:
+        #     Identifier. Required if the policy exists. The resource name for this
+        #     policy. The format is:
         #
         #         projects/[PROJECT_ID_OR_NUMBER]/alertPolicies/[ALERT_POLICY_ID]
         #
-        #     `[ALERT_POLICY_ID]` is assigned by Stackdriver Monitoring when the policy
+        #     `[ALERT_POLICY_ID]` is assigned by Cloud Monitoring when the policy
         #     is created. When calling the
         #     {::Google::Cloud::Monitoring::V3::AlertPolicyService::Client#create_alert_policy alertPolicies.create}
         #     method, do not include the `name` field in the alerting policy passed as
@@ -43,6 +43,12 @@ module Google
         #     notifications, and incidents. To avoid confusion, don't use the same
         #     display name for multiple policies in the same project. The name is
         #     limited to 512 Unicode characters.
+        #
+        #     The convention for the display_name of a PrometheusQueryLanguageCondition
+        #     is "\\{rule group name}/\\{alert name}", where the \\{rule group name} and
+        #     \\{alert name} should be taken from the corresponding Prometheus
+        #     configuration file. This convention is not enforced.
+        #     In any case the display_name is not a unique key of the AlertPolicy.
         # @!attribute [rw] documentation
         #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Documentation]
         #     Documentation that is included with notifications and incidents related to
@@ -59,6 +65,13 @@ module Google
         #     63 Unicode characters or 128 bytes, whichever is smaller. Labels and
         #     values can contain only lowercase letters, numerals, underscores, and
         #     dashes. Keys must begin with a letter.
+        #
+        #     Note that Prometheus \\{alert name} is a
+        #     [valid Prometheus label
+        #     names](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels),
+        #     whereas Prometheus \\{rule group} is an unrestricted UTF-8 string.
+        #     This means that they cannot be stored as-is in user labels, because
+        #     they may contain characters that are not allowed in user-label values.
         # @!attribute [rw] conditions
         #   @return [::Array<::Google::Cloud::Monitoring::V3::AlertPolicy::Condition>]
         #     A list of conditions for the policy. The conditions are combined by AND or
@@ -66,6 +79,8 @@ module Google
         #     to true, then an incident is created. A policy can have from one to six
         #     conditions.
         #     If `condition_time_series_query_language` is present, it must be the only
+        #     `condition`.
+        #     If `condition_monitoring_query_language` is present, it must be the only
         #     `condition`.
         # @!attribute [rw] combiner
         #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::ConditionCombinerType]
@@ -82,8 +97,9 @@ module Google
         #     a field projection has been specified that strips it out.
         # @!attribute [rw] validity
         #   @return [::Google::Rpc::Status]
-        #     Read-only description of how the alert policy is invalid. OK if the alert
-        #     policy is valid. If not OK, the alert policy will not generate incidents.
+        #     Read-only description of how the alerting policy is invalid. This field is
+        #     only set when the alerting policy is invalid. An invalid alerting policy
+        #     will not generate incidents.
         # @!attribute [rw] notification_channels
         #   @return [::Array<::String>]
         #     Identifies the notification channels to which notifications should be sent
@@ -106,27 +122,69 @@ module Google
         #     provided in a call to create or update, this field will be ignored.
         # @!attribute [rw] alert_strategy
         #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::AlertStrategy]
-        #     Control over how this alert policy's notification channels are notified.
+        #     Control over how this alerting policy's notification channels are notified.
+        # @!attribute [rw] severity
+        #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Severity]
+        #     Optional. The severity of an alerting policy indicates how important
+        #     incidents generated by that policy are. The severity level will be
+        #     displayed on the Incident detail page and in notifications.
         class AlertPolicy
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # A content string and a MIME type that describes the content string's
-          # format.
+          # Documentation that is included in the notifications and incidents
+          # pertaining to this policy.
           # @!attribute [rw] content
           #   @return [::String]
-          #     The text of the documentation, interpreted according to `mime_type`.
+          #     The body of the documentation, interpreted according to `mime_type`.
           #     The content may not exceed 8,192 Unicode characters and may not exceed
           #     more than 10,240 bytes when encoded in UTF-8 format, whichever is
-          #     smaller.
+          #     smaller. This text can be [templatized by using
+          #     variables](https://cloud.google.com/monitoring/alerts/doc-variables#doc-vars).
           # @!attribute [rw] mime_type
           #   @return [::String]
           #     The format of the `content` field. Presently, only the value
           #     `"text/markdown"` is supported. See
           #     [Markdown](https://en.wikipedia.org/wiki/Markdown) for more information.
+          # @!attribute [rw] subject
+          #   @return [::String]
+          #     Optional. The subject line of the notification. The subject line may not
+          #     exceed 10,240 bytes. In notifications generated by this policy, the
+          #     contents of the subject line after variable expansion will be truncated
+          #     to 255 bytes or shorter at the latest UTF-8 character boundary. The
+          #     255-byte limit is recommended by [this
+          #     thread](https://stackoverflow.com/questions/1592291/what-is-the-email-subject-length-limit).
+          #     It is both the limit imposed by some third-party ticketing products and
+          #     it is common to define textual fields in databases as VARCHAR(255).
+          #
+          #     The contents of the subject line can be [templatized by using
+          #     variables](https://cloud.google.com/monitoring/alerts/doc-variables#doc-vars).
+          #     If this field is missing or empty, a default subject line will be
+          #     generated.
+          # @!attribute [rw] links
+          #   @return [::Array<::Google::Cloud::Monitoring::V3::AlertPolicy::Documentation::Link>]
+          #     Optional. Links to content such as playbooks, repositories, and other
+          #     resources. This field can contain up to 3 entries.
           class Documentation
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Links to content such as playbooks, repositories, and other resources.
+            # @!attribute [rw] display_name
+            #   @return [::String]
+            #     A short display name for the link. The display name must not be empty
+            #     or exceed 63 characters. Example: "playbook".
+            # @!attribute [rw] url
+            #   @return [::String]
+            #     The url of a webpage.
+            #     A url can be templatized by using variables
+            #     in the path or the query parameters. The total length of a URL should
+            #     not exceed 2083 characters before and after variable expansion.
+            #     Example: "https://my_domain.com/playbook?name=$\\{resource.name}"
+            class Link
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
           end
 
           # A condition is a true/false test that determines when an alerting policy
@@ -139,13 +197,13 @@ module Google
           #
           #         projects/[PROJECT_ID_OR_NUMBER]/alertPolicies/[POLICY_ID]/conditions/[CONDITION_ID]
           #
-          #     `[CONDITION_ID]` is assigned by Stackdriver Monitoring when the
+          #     `[CONDITION_ID]` is assigned by Cloud Monitoring when the
           #     condition is created as part of a new or updated alerting policy.
           #
           #     When calling the
           #     {::Google::Cloud::Monitoring::V3::AlertPolicyService::Client#create_alert_policy alertPolicies.create}
           #     method, do not include the `name` field in the conditions of the
-          #     requested alerting policy. Stackdriver Monitoring creates the
+          #     requested alerting policy. Cloud Monitoring creates the
           #     condition identifiers and includes them in the new policy.
           #
           #     When calling the
@@ -167,18 +225,36 @@ module Google
           # @!attribute [rw] condition_threshold
           #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::MetricThreshold]
           #     A condition that compares a time series against a threshold.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_threshold`, `condition_absent`, `condition_matched_log`, `condition_monitoring_query_language`, `condition_prometheus_query_language`, `condition_sql`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] condition_absent
           #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::MetricAbsence]
           #     A condition that checks that a time series continues to
           #     receive new data points.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_absent`, `condition_threshold`, `condition_matched_log`, `condition_monitoring_query_language`, `condition_prometheus_query_language`, `condition_sql`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] condition_matched_log
           #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::LogMatch]
           #     A condition that checks for log messages matching given constraints. If
           #     set, no other conditions can be present.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_matched_log`, `condition_threshold`, `condition_absent`, `condition_monitoring_query_language`, `condition_prometheus_query_language`, `condition_sql`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] condition_monitoring_query_language
           #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::MonitoringQueryLanguageCondition]
           #     A condition that uses the Monitoring Query Language to define
           #     alerts.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_monitoring_query_language`, `condition_threshold`, `condition_absent`, `condition_matched_log`, `condition_prometheus_query_language`, `condition_sql`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] condition_prometheus_query_language
+          #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::PrometheusQueryLanguageCondition]
+          #     A condition that uses the Prometheus query language to define alerts.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_prometheus_query_language`, `condition_threshold`, `condition_absent`, `condition_matched_log`, `condition_monitoring_query_language`, `condition_sql`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] condition_sql
+          #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition]
+          #     A condition that periodically evaluates a SQL query result.
+          #
+          #     Note: The following fields are mutually exclusive: `condition_sql`, `condition_threshold`, `condition_absent`, `condition_matched_log`, `condition_monitoring_query_language`, `condition_prometheus_query_language`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class Condition
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -189,10 +265,14 @@ module Google
             #   @return [::Integer]
             #     The absolute number of time series that must fail
             #     the predicate for the condition to be triggered.
+            #
+            #     Note: The following fields are mutually exclusive: `count`, `percent`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             # @!attribute [rw] percent
             #   @return [::Float]
             #     The percentage of time series that must fail the
             #     predicate for the condition to be triggered.
+            #
+            #     Note: The following fields are mutually exclusive: `percent`, `count`. If a field in that set is populated, all other fields in the set will automatically be cleared.
             class Trigger
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -202,7 +282,8 @@ module Google
             # against a threshold.
             # @!attribute [rw] filter
             #   @return [::String]
-            #     Required. A [filter](https://cloud.google.com/monitoring/api/v3/filters) that
+            #     Required. A
+            #     [filter](https://cloud.google.com/monitoring/api/v3/filters) that
             #     identifies which time series should be compared with the threshold.
             #
             #     The filter is similar to the one that is specified in the
@@ -248,6 +329,13 @@ module Google
             #     When computing ratios, the `aggregations` and
             #     `denominator_aggregations` fields must use the same alignment period
             #     and produce time series that have the same periodicity and labels.
+            # @!attribute [rw] forecast_options
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::MetricThreshold::ForecastOptions]
+            #     When this field is present, the `MetricThreshold` condition forecasts
+            #     whether the time series is predicted to violate the threshold within
+            #     the `forecast_horizon`. When this field is not set, the
+            #     `MetricThreshold` tests the current value of the timeseries against the
+            #     threshold.
             # @!attribute [rw] comparison
             #   @return [::Google::Cloud::Monitoring::V3::ComparisonType]
             #     The comparison to apply between the time series (indicated by `filter`
@@ -279,9 +367,29 @@ module Google
             #     time series that have been identified by `filter` and `aggregations`,
             #     or by the ratio, if `denominator_filter` and `denominator_aggregations`
             #     are specified.
+            # @!attribute [rw] evaluation_missing_data
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::EvaluationMissingData]
+            #     A condition control that determines how metric-threshold conditions
+            #     are evaluated when data stops arriving. To use this control, the value
+            #     of the `duration` field must be greater than or equal to 60 seconds.
             class MetricThreshold
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Options used when forecasting the time series and testing
+              # the predicted value against the threshold.
+              # @!attribute [rw] forecast_horizon
+              #   @return [::Google::Protobuf::Duration]
+              #     Required. The length of time into the future to forecast whether a
+              #     time series will violate the threshold. If the predicted value is
+              #     found to violate the threshold, and the violation is observed in all
+              #     forecasts made for the configured `duration`, then the time series is
+              #     considered to be failing.
+              #     The forecast horizon can range from 1 hour to 60 hours.
+              class ForecastOptions
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
             end
 
             # A condition type that checks that monitored resources
@@ -291,7 +399,8 @@ module Google
             # resource does not include any data in the specified `duration`.
             # @!attribute [rw] filter
             #   @return [::String]
-            #     Required. A [filter](https://cloud.google.com/monitoring/api/v3/filters) that
+            #     Required. A
+            #     [filter](https://cloud.google.com/monitoring/api/v3/filters) that
             #     identifies which time series should be compared with the threshold.
             #
             #     The filter is similar to the one that is specified in the
@@ -370,7 +479,7 @@ module Google
               end
             end
 
-            # A condition type that allows alert policies to be defined using
+            # A condition type that allows alerting policies to be defined using
             # [Monitoring Query Language](https://cloud.google.com/monitoring/mql).
             # @!attribute [rw] query
             #   @return [::String]
@@ -396,9 +505,265 @@ module Google
             #     time series that have been identified by `filter` and `aggregations`,
             #     or by the ratio, if `denominator_filter` and `denominator_aggregations`
             #     are specified.
+            # @!attribute [rw] evaluation_missing_data
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::EvaluationMissingData]
+            #     A condition control that determines how metric-threshold conditions
+            #     are evaluated when data stops arriving.
             class MonitoringQueryLanguageCondition
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # A condition type that allows alerting policies to be defined using
+            # [Prometheus Query Language
+            # (PromQL)](https://prometheus.io/docs/prometheus/latest/querying/basics/).
+            #
+            # The PrometheusQueryLanguageCondition message contains information
+            # from a Prometheus alerting rule and its associated rule group.
+            #
+            # A Prometheus alerting rule is described
+            # [here](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
+            # The semantics of a Prometheus alerting rule is described
+            # [here](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/#rule).
+            #
+            # A Prometheus rule group is described
+            # [here](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/).
+            # The semantics of a Prometheus rule group is described
+            # [here](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/#rule_group).
+            #
+            # Because Cloud Alerting has no representation of a Prometheus rule
+            # group resource, we must embed the information of the parent rule
+            # group inside each of the conditions that refer to it. We must also
+            # update the contents of all Prometheus alerts in case the information
+            # of their rule group changes.
+            #
+            # The PrometheusQueryLanguageCondition protocol buffer combines the
+            # information of the corresponding rule group and alerting rule.
+            # The structure of the PrometheusQueryLanguageCondition protocol buffer
+            # does NOT mimic the structure of the Prometheus rule group and alerting
+            # rule YAML declarations. The PrometheusQueryLanguageCondition protocol
+            # buffer may change in the future to support future rule group and/or
+            # alerting rule features. There are no new such features at the present
+            # time (2023-06-26).
+            # @!attribute [rw] query
+            #   @return [::String]
+            #     Required. The PromQL expression to evaluate. Every evaluation cycle
+            #     this expression is evaluated at the current time, and all resultant
+            #     time series become pending/firing alerts. This field must not be empty.
+            # @!attribute [rw] duration
+            #   @return [::Google::Protobuf::Duration]
+            #     Optional. Alerts are considered firing once their PromQL expression was
+            #     evaluated to be "true" for this long.
+            #     Alerts whose PromQL expression was not evaluated to be "true" for
+            #     long enough are considered pending.
+            #     Must be a non-negative duration or missing.
+            #     This field is optional. Its default value is zero.
+            # @!attribute [rw] evaluation_interval
+            #   @return [::Google::Protobuf::Duration]
+            #     Optional. How often this rule should be evaluated.
+            #     Must be a positive multiple of 30 seconds or missing.
+            #     This field is optional. Its default value is 30 seconds.
+            #     If this PrometheusQueryLanguageCondition was generated from a
+            #     Prometheus alerting rule, then this value should be taken from the
+            #     enclosing rule group.
+            # @!attribute [rw] labels
+            #   @return [::Google::Protobuf::Map{::String => ::String}]
+            #     Optional. Labels to add to or overwrite in the PromQL query result.
+            #     Label names [must be
+            #     valid](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels).
+            #     Label values can be [templatized by using
+            #     variables](https://cloud.google.com/monitoring/alerts/doc-variables#doc-vars).
+            #     The only available variable names are the names of the labels in the
+            #     PromQL result, including "__name__" and "value". "labels" may be empty.
+            # @!attribute [rw] rule_group
+            #   @return [::String]
+            #     Optional. The rule group name of this alert in the corresponding
+            #     Prometheus configuration file.
+            #
+            #     Some external tools may require this field to be populated correctly
+            #     in order to refer to the original Prometheus configuration file.
+            #     The rule group name and the alert name are necessary to update the
+            #     relevant AlertPolicies in case the definition of the rule group changes
+            #     in the future.
+            #
+            #     This field is optional. If this field is not empty, then it must
+            #     contain a valid UTF-8 string.
+            #     This field may not exceed 2048 Unicode characters in length.
+            # @!attribute [rw] alert_rule
+            #   @return [::String]
+            #     Optional. The alerting rule name of this alert in the corresponding
+            #     Prometheus configuration file.
+            #
+            #     Some external tools may require this field to be populated correctly
+            #     in order to refer to the original Prometheus configuration file.
+            #     The rule group name and the alert name are necessary to update the
+            #     relevant AlertPolicies in case the definition of the rule group changes
+            #     in the future.
+            #
+            #     This field is optional. If this field is not empty, then it must be a
+            #     [valid Prometheus label
+            #     name](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels).
+            #     This field may not exceed 2048 Unicode characters in length.
+            # @!attribute [rw] disable_metric_validation
+            #   @return [::Boolean]
+            #     Optional. Whether to disable metric existence validation for this
+            #     condition.
+            #
+            #     This allows alerting policies to be defined on metrics that do not yet
+            #     exist, improving advanced customer workflows such as configuring
+            #     alerting policies using Terraform.
+            #
+            #     Users with the `monitoring.alertPolicyViewer` role are able to see the
+            #     name of the non-existent metric in the alerting policy condition.
+            class PrometheusQueryLanguageCondition
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # @!attribute [rw] key
+              #   @return [::String]
+              # @!attribute [rw] value
+              #   @return [::String]
+              class LabelsEntry
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
+
+            # A condition that allows alerting policies to be defined using GoogleSQL.
+            # SQL conditions examine a sliding window of logs using GoogleSQL.
+            # Alert policies with SQL conditions may incur additional billing.
+            # @!attribute [rw] query
+            #   @return [::String]
+            #     Required. The Log Analytics SQL query to run, as a string.  The query
+            #     must conform to the required shape. Specifically, the query must not
+            #     try to filter the input by time.  A filter will automatically be
+            #     applied to filter the input so that the query receives all rows
+            #     received since the last time the query was run.
+            #
+            #     For example, the following query extracts all log entries containing an
+            #     HTTP request:
+            #
+            #         SELECT
+            #           timestamp, log_name, severity, http_request, resource, labels
+            #         FROM
+            #           my-project.global._Default._AllLogs
+            #         WHERE
+            #           http_request IS NOT NULL
+            # @!attribute [rw] minutes
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition::Minutes]
+            #     Schedule the query to execute every so many minutes.
+            #
+            #     Note: The following fields are mutually exclusive: `minutes`, `hourly`, `daily`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] hourly
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition::Hourly]
+            #     Schedule the query to execute every so many hours.
+            #
+            #     Note: The following fields are mutually exclusive: `hourly`, `minutes`, `daily`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] daily
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition::Daily]
+            #     Schedule the query to execute every so many days.
+            #
+            #     Note: The following fields are mutually exclusive: `daily`, `minutes`, `hourly`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] row_count_test
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition::RowCountTest]
+            #     Test the row count against a threshold.
+            #
+            #     Note: The following fields are mutually exclusive: `row_count_test`, `boolean_test`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            # @!attribute [rw] boolean_test
+            #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::Condition::SqlCondition::BooleanTest]
+            #     Test the boolean value in the indicated column.
+            #
+            #     Note: The following fields are mutually exclusive: `boolean_test`, `row_count_test`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+            class SqlCondition
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Used to schedule the query to run every so many minutes.
+              # @!attribute [rw] periodicity
+              #   @return [::Integer]
+              #     Required. Number of minutes between runs. The interval must be
+              #     greater than or equal to 5 minutes and less than or equal to 1440
+              #     minutes.
+              class Minutes
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # Used to schedule the query to run every so many hours.
+              # @!attribute [rw] periodicity
+              #   @return [::Integer]
+              #     Required. The number of hours between runs. Must be greater than or
+              #     equal to 1 hour and less than or equal to 48 hours.
+              # @!attribute [rw] minute_offset
+              #   @return [::Integer]
+              #     Optional. The number of minutes after the hour (in UTC) to run the
+              #     query. Must be greater than or equal to 0 minutes and less than or
+              #     equal to 59 minutes.  If left unspecified, then an arbitrary offset
+              #     is used.
+              class Hourly
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # Used to schedule the query to run every so many days.
+              # @!attribute [rw] periodicity
+              #   @return [::Integer]
+              #     Required. The number of days between runs. Must be greater than or
+              #     equal to 1 day and less than or equal to 31 days.
+              # @!attribute [rw] execution_time
+              #   @return [::Google::Type::TimeOfDay]
+              #     Optional. The time of day (in UTC) at which the query should run. If
+              #     left unspecified, the server picks an arbitrary time of day and runs
+              #     the query at the same time each day.
+              class Daily
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # A test that checks if the number of rows in the result set
+              # violates some threshold.
+              # @!attribute [rw] comparison
+              #   @return [::Google::Cloud::Monitoring::V3::ComparisonType]
+              #     Required. The comparison to apply between the number of rows returned
+              #     by the query and the threshold.
+              # @!attribute [rw] threshold
+              #   @return [::Integer]
+              #     Required. The value against which to compare the row count.
+              class RowCountTest
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+
+              # A test that uses an alerting result in a boolean column produced by
+              # the SQL query.
+              # @!attribute [rw] column
+              #   @return [::String]
+              #     Required. The name of the column containing the boolean value. If the
+              #     value in a row is NULL, that row is ignored.
+              class BooleanTest
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
+            end
+
+            # A condition control that determines how metric-threshold conditions
+            # are evaluated when data stops arriving.
+            # This control doesn't affect metric-absence policies.
+            module EvaluationMissingData
+              # An unspecified evaluation missing data option.  Equivalent to
+              # EVALUATION_MISSING_DATA_NO_OP.
+              EVALUATION_MISSING_DATA_UNSPECIFIED = 0
+
+              # If there is no data to evaluate the condition, then evaluate the
+              # condition as false.
+              EVALUATION_MISSING_DATA_INACTIVE = 1
+
+              # If there is no data to evaluate the condition, then evaluate the
+              # condition as true.
+              EVALUATION_MISSING_DATA_ACTIVE = 2
+
+              # Do not evaluate the condition to any value if there is no data.
+              EVALUATION_MISSING_DATA_NO_OP = 3
             end
           end
 
@@ -406,18 +771,28 @@ module Google
           # are notified when this alert fires.
           # @!attribute [rw] notification_rate_limit
           #   @return [::Google::Cloud::Monitoring::V3::AlertPolicy::AlertStrategy::NotificationRateLimit]
-          #     Required for alert policies with a `LogMatch` condition.
+          #     Required for log-based alerting policies, i.e. policies with a `LogMatch`
+          #     condition.
           #
-          #     This limit is not implemented for alert policies that are not log-based.
+          #     This limit is not implemented for alerting policies that do not have
+          #     a LogMatch condition.
+          # @!attribute [rw] notification_prompts
+          #   @return [::Array<::Google::Cloud::Monitoring::V3::AlertPolicy::AlertStrategy::NotificationPrompt>]
+          #     For log-based alert policies, the notification prompts is always
+          #     [OPENED]. For non log-based alert policies, the notification prompts can
+          #     be [OPENED] or [OPENED, CLOSED].
           # @!attribute [rw] auto_close
           #   @return [::Google::Protobuf::Duration]
-          #     If an alert policy that was active has no data for this long, any open
+          #     If an alerting policy that was active has no data for this long, any open
           #     incidents will close
+          # @!attribute [rw] notification_channel_strategy
+          #   @return [::Array<::Google::Cloud::Monitoring::V3::AlertPolicy::AlertStrategy::NotificationChannelStrategy>]
+          #     Control how notifications will be sent out, on a per-channel basis.
           class AlertStrategy
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
 
-            # Control over the rate of notifications sent to this alert policy's
+            # Control over the rate of notifications sent to this alerting policy's
             # notification channels.
             # @!attribute [rw] period
             #   @return [::Google::Protobuf::Duration]
@@ -425,6 +800,38 @@ module Google
             class NotificationRateLimit
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Control over how the notification channels in `notification_channels`
+            # are notified when this alert fires, on a per-channel basis.
+            # @!attribute [rw] notification_channel_names
+            #   @return [::Array<::String>]
+            #     The full REST resource name for the notification channels that these
+            #     settings apply to. Each of these correspond to the name field in one
+            #     of the NotificationChannel objects referenced in the
+            #     notification_channels field of this AlertPolicy.
+            #     The format is:
+            #
+            #         projects/[PROJECT_ID_OR_NUMBER]/notificationChannels/[CHANNEL_ID]
+            # @!attribute [rw] renotify_interval
+            #   @return [::Google::Protobuf::Duration]
+            #     The frequency at which to send reminder notifications for open
+            #     incidents.
+            class NotificationChannelStrategy
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+
+            # Control when notifications will be sent out.
+            module NotificationPrompt
+              # No strategy specified. Treated as error.
+              NOTIFICATION_PROMPT_UNSPECIFIED = 0
+
+              # Notify when an incident is opened.
+              OPENED = 1
+
+              # Notify when an incident is closed.
+              CLOSED = 3
             end
           end
 
@@ -456,6 +863,25 @@ module Google
             # `AND` option, an incident is created only if all conditions are met
             # simultaneously on at least one resource.
             AND_WITH_MATCHING_RESOURCE = 3
+          end
+
+          # An enumeration of possible severity level for an alerting policy.
+          module Severity
+            # No severity is specified. This is the default value.
+            SEVERITY_UNSPECIFIED = 0
+
+            # This is the highest severity level. Use this if the problem could
+            # cause significant damage or downtime.
+            CRITICAL = 1
+
+            # This is the medium severity level. Use this if the problem could
+            # cause minor damage or downtime.
+            ERROR = 2
+
+            # This is the lowest severity level. Use this if the problem is not causing
+            # any damage or downtime, but could potentially lead to a problem in the
+            # future.
+            WARNING = 3
           end
         end
       end

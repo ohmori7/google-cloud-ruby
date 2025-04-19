@@ -58,6 +58,17 @@ module Google
         #   @return [::Google::Cloud::Dialogflow::V2::NotificationConfig]
         #     Configuration for publishing new message events. Event will be sent in
         #     format of {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent}
+        # @!attribute [rw] new_recognition_result_notification_config
+        #   @return [::Google::Cloud::Dialogflow::V2::NotificationConfig]
+        #     Optional. Configuration for publishing transcription intermediate results.
+        #     Event will be sent in format of
+        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent}. If
+        #     configured, the following information will be populated as
+        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent} Pub/Sub
+        #     message attributes:
+        #     - "participant_id"
+        #     - "participant_role"
+        #     - "message_id"
         # @!attribute [rw] stt_config
         #   @return [::Google::Cloud::Dialogflow::V2::SpeechToTextConfig]
         #     Settings for speech transcription.
@@ -78,12 +89,19 @@ module Google
         #     Name of the CX SecuritySettings reference for the agent.
         #     Format: `projects/<Project ID>/locations/<Location
         #     ID>/securitySettings/<Security Settings ID>`.
+        # @!attribute [rw] tts_config
+        #   @return [::Google::Cloud::Dialogflow::V2::SynthesizeSpeechConfig]
+        #     Configuration for Text-to-Speech synthesization.
+        #
+        #     Used by Phone Gateway to specify synthesization options. If agent defines
+        #     synthesization options as well, agent settings overrides the option here.
         class ConversationProfile
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#list_conversation_profiles ConversationProfiles.ListConversationProfiles}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#list_conversation_profiles ConversationProfiles.ListConversationProfiles}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The project to list all conversation profiles from.
@@ -100,7 +118,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The response message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#list_conversation_profiles ConversationProfiles.ListConversationProfiles}.
+        # The response message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#list_conversation_profiles ConversationProfiles.ListConversationProfiles}.
         # @!attribute [rw] conversation_profiles
         #   @return [::Array<::Google::Cloud::Dialogflow::V2::ConversationProfile>]
         #     The list of project conversation profiles. There is a maximum number
@@ -114,7 +133,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#get_conversation_profile ConversationProfiles.GetConversationProfile}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#get_conversation_profile ConversationProfiles.GetConversationProfile}.
         # @!attribute [rw] name
         #   @return [::String]
         #     Required. The resource name of the conversation profile.
@@ -125,7 +145,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#create_conversation_profile ConversationProfiles.CreateConversationProfile}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#create_conversation_profile ConversationProfiles.CreateConversationProfile}.
         # @!attribute [rw] parent
         #   @return [::String]
         #     Required. The project to create a conversation profile for.
@@ -138,7 +159,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#update_conversation_profile ConversationProfiles.UpdateConversationProfile}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#update_conversation_profile ConversationProfiles.UpdateConversationProfile}.
         # @!attribute [rw] conversation_profile
         #   @return [::Google::Cloud::Dialogflow::V2::ConversationProfile]
         #     Required. The conversation profile to update.
@@ -150,7 +172,8 @@ module Google
           extend ::Google::Protobuf::MessageExts::ClassMethods
         end
 
-        # The request message for {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#delete_conversation_profile ConversationProfiles.DeleteConversationProfile}.
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#delete_conversation_profile ConversationProfiles.DeleteConversationProfile}.
         #
         # This operation fails if the conversation profile is still referenced from
         # a phone number.
@@ -184,6 +207,12 @@ module Google
         #     ID>/agents/<Agent ID>/environments/<Environment ID
         #     or '-'>`. If environment is not specified, the default `draft` environment
         #     is used.
+        # @!attribute [rw] session_ttl
+        #   @return [::Google::Protobuf::Duration]
+        #     Optional. Configure lifetime of the Dialogflow session.
+        #     By default, a Dialogflow CX session remains active and its data is stored
+        #     for 30 minutes after the last request is sent for the session.
+        #     This value should be no longer than 1 day.
         class AutomatedAgentConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -231,7 +260,27 @@ module Google
           #     Automatically iterates all participants and tries to compile
           #     suggestions.
           #
-          #     Supported features: ARTICLE_SUGGESTION, FAQ, DIALOGFLOW_ASSIST.
+          #     Supported features: ARTICLE_SUGGESTION, FAQ, DIALOGFLOW_ASSIST,
+          #     KNOWLEDGE_ASSIST.
+          # @!attribute [rw] disable_agent_query_logging
+          #   @return [::Boolean]
+          #     Optional. Disable the logging of search queries sent by human agents. It
+          #     can prevent those queries from being stored at answer records.
+          #
+          #     Supported features: KNOWLEDGE_SEARCH.
+          # @!attribute [rw] enable_query_suggestion_when_no_answer
+          #   @return [::Boolean]
+          #     Optional. Enable query suggestion even if we can't find its answer.
+          #     By default, queries are suggested only if we find its answer.
+          #     Supported features: KNOWLEDGE_ASSIST
+          # @!attribute [rw] enable_conversation_augmented_query
+          #   @return [::Boolean]
+          #     Optional. Enable including conversation context during query answer
+          #     generation. Supported features: KNOWLEDGE_SEARCH.
+          # @!attribute [rw] enable_query_suggestion_only
+          #   @return [::Boolean]
+          #     Optional. Enable query suggestion only.
+          #     Supported features: KNOWLEDGE_ASSIST
           # @!attribute [rw] suggestion_trigger_settings
           #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionTriggerSettings]
           #     Settings of suggestion trigger.
@@ -268,6 +317,19 @@ module Google
           #     If `group_suggestion_responses` set to true. All the suggestions to the
           #     same participant based on the same context will be grouped into a single
           #     Pub/Sub event or StreamingAnalyzeContentResponse.
+          # @!attribute [rw] generators
+          #   @return [::Array<::String>]
+          #     Optional. List of various generator resource names used in the
+          #     conversation profile.
+          # @!attribute [rw] disable_high_latency_features_sync_delivery
+          #   @return [::Boolean]
+          #     Optional. When disable_high_latency_features_sync_delivery is true and
+          #     using the AnalyzeContent API, we will not deliver the responses from high
+          #     latency features in the API response. The
+          #     human_agent_assistant_config.notification_config must be configured and
+          #     enable_event_based_suggestion must be set to true to receive the
+          #     responses from high latency features in Pub/Sub. High latency feature(s):
+          #     KNOWLEDGE_ASSIST
           class SuggestionConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -278,13 +340,19 @@ module Google
           #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::KnowledgeBaseQuerySource]
           #     Query from knowledgebase. It is used by:
           #     ARTICLE_SUGGESTION, FAQ.
+          #
+          #     Note: The following fields are mutually exclusive: `knowledge_base_query_source`, `document_query_source`, `dialogflow_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] document_query_source
           #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::DocumentQuerySource]
           #     Query from knowledge base document. It is used by:
           #     SMART_REPLY, SMART_COMPOSE.
+          #
+          #     Note: The following fields are mutually exclusive: `document_query_source`, `knowledge_base_query_source`, `dialogflow_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] dialogflow_query_source
           #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::DialogflowQuerySource]
           #     Query from Dialogflow agent. It is used by DIALOGFLOW_ASSIST.
+          #
+          #     Note: The following fields are mutually exclusive: `dialogflow_query_source`, `knowledge_base_query_source`, `document_query_source`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] max_results
           #   @return [::Integer]
           #     Maximum number of results to return. Currently, if unset, defaults to 10.
@@ -309,11 +377,20 @@ module Google
           #     If this field is not set, it defaults to 0.0, which means that all
           #     suggestions are returned.
           #
-          #     Supported features: ARTICLE_SUGGESTION, FAQ, SMART_REPLY, SMART_COMPOSE.
+          #     Supported features: ARTICLE_SUGGESTION, FAQ, SMART_REPLY, SMART_COMPOSE,
+          #     KNOWLEDGE_SEARCH, KNOWLEDGE_ASSIST, ENTITY_EXTRACTION.
           # @!attribute [rw] context_filter_settings
           #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::ContextFilterSettings]
           #     Determines how recent conversation context is filtered when generating
           #     suggestions. If unspecified, no messages will be dropped.
+          # @!attribute [rw] sections
+          #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::Sections]
+          #     Optional. The customized sections chosen to return when requesting a
+          #     summary of a conversation.
+          # @!attribute [rw] context_size
+          #   @return [::Integer]
+          #     Optional. The number of recent messages to include in the context.
+          #     Supported features: KNOWLEDGE_ASSIST.
           class SuggestionQueryConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -351,13 +428,28 @@ module Google
             # Supported feature: DIALOGFLOW_ASSIST.
             # @!attribute [rw] agent
             #   @return [::String]
-            #     Required. The name of a Dialogflow virtual agent used for end user side intent
-            #     detection and suggestion. Format: `projects/<Project Number/
+            #     Required. The name of a Dialogflow virtual agent used for end user side
+            #     intent detection and suggestion. Format: `projects/<Project
             #     ID>/locations/<Location ID>/agent`. When multiple agents are allowed in
             #     the same Dialogflow project.
+            # @!attribute [rw] human_agent_side_config
+            #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::DialogflowQuerySource::HumanAgentSideConfig]
+            #     Optional. The Dialogflow assist configuration for human agent.
             class DialogflowQuerySource
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # The configuration used for human agent side Dialogflow assist
+              # suggestion.
+              # @!attribute [rw] agent
+              #   @return [::String]
+              #     Optional. The name of a dialogflow virtual agent used for intent
+              #     detection and suggestion triggered by human agent.
+              #     Format: `projects/<Project ID>/locations/<Location ID>/agent`.
+              class HumanAgentSideConfig
+                include ::Google::Protobuf::MessageExts
+                extend ::Google::Protobuf::MessageExts::ClassMethods
+              end
             end
 
             # Settings that determine how to filter recent conversation context when
@@ -376,15 +468,77 @@ module Google
               include ::Google::Protobuf::MessageExts
               extend ::Google::Protobuf::MessageExts::ClassMethods
             end
+
+            # Custom sections to return when requesting a summary of a conversation.
+            # This is only supported when `baseline_model_version` == '2.0'.
+            #
+            # Supported features: CONVERSATION_SUMMARIZATION,
+            # CONVERSATION_SUMMARIZATION_VOICE.
+            # @!attribute [rw] section_types
+            #   @return [::Array<::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionQueryConfig::Sections::SectionType>]
+            #     The selected sections chosen to return when requesting a summary of a
+            #     conversation. A duplicate selected section will be treated as a single
+            #     selected section. If section types are not provided, the default will
+            #     be \\{SITUATION, ACTION, RESULT}.
+            class Sections
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+
+              # Selectable sections to return when requesting a summary of a
+              # conversation.
+              module SectionType
+                # Undefined section type, does not return anything.
+                SECTION_TYPE_UNSPECIFIED = 0
+
+                # What the customer needs help with or has question about.
+                # Section name: "situation".
+                SITUATION = 1
+
+                # What the agent does to help the customer.
+                # Section name: "action".
+                ACTION = 2
+
+                # Result of the customer service. A single word describing the result
+                # of the conversation.
+                # Section name: "resolution".
+                RESOLUTION = 3
+
+                # Reason for cancellation if the customer requests for a cancellation.
+                # "N/A" otherwise.
+                # Section name: "reason_for_cancellation".
+                REASON_FOR_CANCELLATION = 4
+
+                # "Unsatisfied" or "Satisfied" depending on the customer's feelings at
+                # the end of the conversation.
+                # Section name: "customer_satisfaction".
+                CUSTOMER_SATISFACTION = 5
+
+                # Key entities extracted from the conversation, such as ticket number,
+                # order number, dollar amount, etc.
+                # Section names are prefixed by "entities/".
+                ENTITIES = 6
+              end
+            end
           end
 
           # Custom conversation models used in agent assist feature.
           #
-          # Supported feature: ARTICLE_SUGGESTION, SMART_COMPOSE, SMART_REPLY.
+          # Supported feature: ARTICLE_SUGGESTION, SMART_COMPOSE, SMART_REPLY,
+          # CONVERSATION_SUMMARIZATION.
           # @!attribute [rw] model
           #   @return [::String]
           #     Conversation model resource name. Format: `projects/<Project
           #     ID>/conversationModels/<Model ID>`.
+          # @!attribute [rw] baseline_model_version
+          #   @return [::String]
+          #     Version of current baseline model. It will be ignored if
+          #     {::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::ConversationModelConfig#model model}
+          #     is set. Valid versions are:
+          #       Article Suggestion baseline model:
+          #         - 0.9
+          #         - 1.0 (default)
+          #       Summarization baseline model:
+          #         - 1.0
           class ConversationModelConfig
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -417,11 +571,17 @@ module Google
           #     and identifies the prevailing subjective opinion, especially to determine
           #     a user's attitude as positive, negative, or neutral:
           #     https://cloud.google.com/natural-language/docs/basics#sentiment_analysis
-          #     For [Participants.StreamingAnalyzeContent][google.cloud.dialogflow.v2.Participants.StreamingAnalyzeContent] method, result will be in
-          #     [StreamingAnalyzeContentResponse.message.SentimentAnalysisResult][google.cloud.dialogflow.v2.StreamingAnalyzeContentResponse.message].
-          #     For {::Google::Cloud::Dialogflow::V2::Participants::Client#analyze_content Participants.AnalyzeContent} method, result will be in
+          #     For
+          #     {::Google::Cloud::Dialogflow::V2::Participants::Client#streaming_analyze_content Participants.StreamingAnalyzeContent}
+          #     method, result will be in
+          #     {::Google::Cloud::Dialogflow::V2::StreamingAnalyzeContentResponse#message StreamingAnalyzeContentResponse.message.SentimentAnalysisResult}.
+          #     For
+          #     {::Google::Cloud::Dialogflow::V2::Participants::Client#analyze_content Participants.AnalyzeContent}
+          #     method, result will be in
           #     {::Google::Cloud::Dialogflow::V2::AnalyzeContentResponse#message AnalyzeContentResponse.message.SentimentAnalysisResult}
-          #     For {::Google::Cloud::Dialogflow::V2::Conversations::Client#list_messages Conversations.ListMessages} method, result will be in
+          #     For
+          #     {::Google::Cloud::Dialogflow::V2::Conversations::Client#list_messages Conversations.ListMessages}
+          #     method, result will be in
           #     {::Google::Cloud::Dialogflow::V2::ListMessagesResponse#messages ListMessagesResponse.messages.SentimentAnalysisResult}
           #     If Pub/Sub notification is configured, result will be in
           #     {::Google::Cloud::Dialogflow::V2::ConversationEvent#new_message_payload ConversationEvent.new_message_payload.SentimentAnalysisResult}.
@@ -438,15 +598,19 @@ module Google
         # to get access.
         # @!attribute [rw] live_person_config
         #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentHandoffConfig::LivePersonConfig]
-        #     Uses LivePerson (https://www.liveperson.com).
+        #     Uses [LivePerson](https://www.liveperson.com).
+        #
+        #     Note: The following fields are mutually exclusive: `live_person_config`, `salesforce_live_agent_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] salesforce_live_agent_config
         #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentHandoffConfig::SalesforceLiveAgentConfig]
         #     Uses Salesforce Live Agent.
+        #
+        #     Note: The following fields are mutually exclusive: `salesforce_live_agent_config`, `live_person_config`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class HumanAgentHandoffConfig
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
 
-          # Configuration specific to LivePerson (https://www.liveperson.com).
+          # Configuration specific to [LivePerson](https://www.liveperson.com).
           # @!attribute [rw] account_number
           #   @return [::String]
           #     Required. Account number of the LivePerson account to connect. This is
@@ -483,13 +647,18 @@ module Google
         #   @return [::String]
         #     Name of the Pub/Sub topic to publish conversation
         #     events like
-        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent::Type::CONVERSATION_STARTED CONVERSATION_STARTED} as
-        #     serialized {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent} protos.
+        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent::Type::CONVERSATION_STARTED CONVERSATION_STARTED}
+        #     as serialized
+        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent} protos.
         #
-        #     Notification works for phone calls, if this topic either is in the same
-        #     project as the conversation or you grant `service-<Conversation Project
+        #     For telephony integration to receive notification, make sure either this
+        #     topic is in the same project as the conversation or you grant
+        #     `service-<Conversation Project
         #     Number>@gcp-sa-dialogflow.iam.gserviceaccount.com` the `Dialogflow Service
         #     Agent` role in the topic project.
+        #
+        #     For chat integration to receive notification, make sure API caller has been
+        #     granted the `Dialogflow Service Agent` role for the topic.
         #
         #     Format: `projects/<Project ID>/locations/<Location ID>/topics/<Topic ID>`.
         # @!attribute [rw] message_format
@@ -516,8 +685,8 @@ module Google
         # @!attribute [rw] enable_stackdriver_logging
         #   @return [::Boolean]
         #     Whether to log conversation events like
-        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent::Type::CONVERSATION_STARTED CONVERSATION_STARTED} to
-        #     Stackdriver in the conversation project as JSON format
+        #     {::Google::Cloud::Dialogflow::V2::ConversationEvent::Type::CONVERSATION_STARTED CONVERSATION_STARTED}
+        #     to Stackdriver in the conversation project as JSON format
         #     {::Google::Cloud::Dialogflow::V2::ConversationEvent ConversationEvent} protos.
         class LoggingConfig
           include ::Google::Protobuf::MessageExts
@@ -539,15 +708,108 @@ module Google
             # Unspecified feature type.
             TYPE_UNSPECIFIED = 0
 
-            # Run article suggestion model.
+            # Run article suggestion model for chat.
             ARTICLE_SUGGESTION = 1
 
-            # Run FAQ model.
+            # Run FAQ model for chat.
             FAQ = 2
 
-            # Run smart reply model.
+            # Run smart reply model for chat.
             SMART_REPLY = 3
+
+            # Run conversation summarization model for chat.
+            CONVERSATION_SUMMARIZATION = 8
+
+            # Run knowledge search with text input from agent or text generated query.
+            KNOWLEDGE_SEARCH = 14
+
+            # Run knowledge assist with automatic query generation.
+            KNOWLEDGE_ASSIST = 15
           end
+        end
+
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#set_suggestion_feature_config ConversationProfiles.SetSuggestionFeatureConfig}.
+        # @!attribute [rw] conversation_profile
+        #   @return [::String]
+        #     Required. The Conversation Profile to add or update the suggestion feature
+        #     config. Format: `projects/<Project ID>/locations/<Location
+        #     ID>/conversationProfiles/<Conversation Profile ID>`.
+        # @!attribute [rw] participant_role
+        #   @return [::Google::Cloud::Dialogflow::V2::Participant::Role]
+        #     Required. The participant role to add or update the suggestion feature
+        #     config. Only HUMAN_AGENT or END_USER can be used.
+        # @!attribute [rw] suggestion_feature_config
+        #   @return [::Google::Cloud::Dialogflow::V2::HumanAgentAssistantConfig::SuggestionFeatureConfig]
+        #     Required. The suggestion feature config to add or update.
+        class SetSuggestionFeatureConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # The request message for
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#clear_suggestion_feature_config ConversationProfiles.ClearSuggestionFeatureConfig}.
+        # @!attribute [rw] conversation_profile
+        #   @return [::String]
+        #     Required. The Conversation Profile to add or update the suggestion feature
+        #     config. Format: `projects/<Project ID>/locations/<Location
+        #     ID>/conversationProfiles/<Conversation Profile ID>`.
+        # @!attribute [rw] participant_role
+        #   @return [::Google::Cloud::Dialogflow::V2::Participant::Role]
+        #     Required. The participant role to remove the suggestion feature
+        #     config. Only HUMAN_AGENT or END_USER can be used.
+        # @!attribute [rw] suggestion_feature_type
+        #   @return [::Google::Cloud::Dialogflow::V2::SuggestionFeature::Type]
+        #     Required. The type of the suggestion feature to remove.
+        class ClearSuggestionFeatureConfigRequest
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Metadata for a
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#set_suggestion_feature_config ConversationProfiles.SetSuggestionFeatureConfig}
+        # operation.
+        # @!attribute [rw] conversation_profile
+        #   @return [::String]
+        #     The resource name of the conversation profile. Format:
+        #     `projects/<Project ID>/locations/<Location
+        #     ID>/conversationProfiles/<Conversation Profile ID>`
+        # @!attribute [rw] participant_role
+        #   @return [::Google::Cloud::Dialogflow::V2::Participant::Role]
+        #     Required. The participant role to add or update the suggestion feature
+        #     config. Only HUMAN_AGENT or END_USER can be used.
+        # @!attribute [rw] suggestion_feature_type
+        #   @return [::Google::Cloud::Dialogflow::V2::SuggestionFeature::Type]
+        #     Required. The type of the suggestion feature to add or update.
+        # @!attribute [rw] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Timestamp whe the request was created. The time is measured on server side.
+        class SetSuggestionFeatureConfigOperationMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
+        end
+
+        # Metadata for a
+        # {::Google::Cloud::Dialogflow::V2::ConversationProfiles::Client#clear_suggestion_feature_config ConversationProfiles.ClearSuggestionFeatureConfig}
+        # operation.
+        # @!attribute [rw] conversation_profile
+        #   @return [::String]
+        #     The resource name of the conversation profile. Format:
+        #     `projects/<Project ID>/locations/<Location
+        #     ID>/conversationProfiles/<Conversation Profile ID>`
+        # @!attribute [rw] participant_role
+        #   @return [::Google::Cloud::Dialogflow::V2::Participant::Role]
+        #     Required. The participant role to remove the suggestion feature
+        #     config. Only HUMAN_AGENT or END_USER can be used.
+        # @!attribute [rw] suggestion_feature_type
+        #   @return [::Google::Cloud::Dialogflow::V2::SuggestionFeature::Type]
+        #     Required. The type of the suggestion feature to remove.
+        # @!attribute [rw] create_time
+        #   @return [::Google::Protobuf::Timestamp]
+        #     Timestamp whe the request was created. The time is measured on server side.
+        class ClearSuggestionFeatureConfigOperationMetadata
+          include ::Google::Protobuf::MessageExts
+          extend ::Google::Protobuf::MessageExts::ClassMethods
         end
       end
     end

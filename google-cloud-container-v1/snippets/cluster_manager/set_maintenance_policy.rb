@@ -19,15 +19,29 @@
 # [START container_v1_generated_ClusterManager_SetMaintenancePolicy_sync]
 require "google/cloud/container/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Container::V1::ClusterManager::Client.new
+##
+# Snippet for the set_maintenance_policy call in the ClusterManager service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Container::V1::ClusterManager::Client#set_maintenance_policy.
+#
+def set_maintenance_policy
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Container::V1::ClusterManager::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Container::V1::SetMaintenancePolicyRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Container::V1::SetMaintenancePolicyRequest.new
 
-# Call the set_maintenance_policy method.
-result = client.set_maintenance_policy request
+  # Call the set_maintenance_policy method.
+  result = client.set_maintenance_policy request
 
-# The returned object is of type Google::Cloud::Container::V1::Operation.
-p result
+  # The returned object is of type Google::Cloud::Container::V1::Operation.
+  p result
+end
 # [END container_v1_generated_ClusterManager_SetMaintenancePolicy_sync]

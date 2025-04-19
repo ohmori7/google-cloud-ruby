@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/web_security_scanner/v1beta/web_security_scanner"
 
 class ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_finding_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::ClientPat
 
   def test_project_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -49,7 +67,7 @@ class ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::ClientPat
 
   def test_scan_config_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,7 +79,7 @@ class ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::ClientPat
 
   def test_scan_run_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::WebSecurityScanner::V1beta::WebSecurityScanner::Client.new do |config|
         config.credentials = grpc_channel
       end

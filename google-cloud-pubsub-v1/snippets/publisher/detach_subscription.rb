@@ -19,15 +19,29 @@
 # [START pubsub_v1_generated_Publisher_DetachSubscription_sync]
 require "google/cloud/pubsub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PubSub::V1::Publisher::Client.new
+##
+# Snippet for the detach_subscription call in the Publisher service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PubSub::V1::Publisher::Client#detach_subscription.
+#
+def detach_subscription
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PubSub::V1::Publisher::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PubSub::V1::DetachSubscriptionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PubSub::V1::DetachSubscriptionRequest.new
 
-# Call the detach_subscription method.
-result = client.detach_subscription request
+  # Call the detach_subscription method.
+  result = client.detach_subscription request
 
-# The returned object is of type Google::Cloud::PubSub::V1::DetachSubscriptionResponse.
-p result
+  # The returned object is of type Google::Cloud::PubSub::V1::DetachSubscriptionResponse.
+  p result
+end
 # [END pubsub_v1_generated_Publisher_DetachSubscription_sync]

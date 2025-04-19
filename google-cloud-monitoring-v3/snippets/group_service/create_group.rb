@@ -19,15 +19,29 @@
 # [START monitoring_v3_generated_GroupService_CreateGroup_sync]
 require "google/cloud/monitoring/v3"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Monitoring::V3::GroupService::Client.new
+##
+# Snippet for the create_group call in the GroupService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Monitoring::V3::GroupService::Client#create_group.
+#
+def create_group
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Monitoring::V3::GroupService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Monitoring::V3::CreateGroupRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Monitoring::V3::CreateGroupRequest.new
 
-# Call the create_group method.
-result = client.create_group request
+  # Call the create_group method.
+  result = client.create_group request
 
-# The returned object is of type Google::Cloud::Monitoring::V3::Group.
-p result
+  # The returned object is of type Google::Cloud::Monitoring::V3::Group.
+  p result
+end
 # [END monitoring_v3_generated_GroupService_CreateGroup_sync]

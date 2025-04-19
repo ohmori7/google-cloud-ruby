@@ -23,10 +23,17 @@ module Google
   module Cloud
     module Deploy
       ##
-      # To load this package, including all its services, and instantiate a client:
+      # API client module.
+      #
+      # @example Load this package, including all its services, and instantiate a gRPC client
       #
       #     require "google/cloud/deploy/v1"
       #     client = ::Google::Cloud::Deploy::V1::CloudDeploy::Client.new
+      #
+      # @example Load this package, including all its services, and instantiate a REST client
+      #
+      #     require "google/cloud/deploy/v1"
+      #     client = ::Google::Cloud::Deploy::V1::CloudDeploy::Rest::Client.new
       #
       module V1
       end

@@ -19,15 +19,29 @@
 # [START dataqna_v1alpha_generated_QuestionService_CreateQuestion_sync]
 require "google/cloud/dataqna/v1alpha"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::DataQnA::V1alpha::QuestionService::Client.new
+##
+# Snippet for the create_question call in the QuestionService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::DataQnA::V1alpha::QuestionService::Client#create_question.
+#
+def create_question
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::DataQnA::V1alpha::QuestionService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::DataQnA::V1alpha::CreateQuestionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::DataQnA::V1alpha::CreateQuestionRequest.new
 
-# Call the create_question method.
-result = client.create_question request
+  # Call the create_question method.
+  result = client.create_question request
 
-# The returned object is of type Google::Cloud::DataQnA::V1alpha::Question.
-p result
+  # The returned object is of type Google::Cloud::DataQnA::V1alpha::Question.
+  p result
+end
 # [END dataqna_v1alpha_generated_QuestionService_CreateQuestion_sync]

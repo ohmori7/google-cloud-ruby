@@ -45,19 +45,23 @@ module Google
           #
           # *   **User** - entities that are built for an individual user such as
           #     favorites, preferences, playlists, and so on. A user entity is
-          #     represented by the {::Google::Cloud::Dialogflow::CX::V3::SessionEntityType SessionEntityType} type.
+          #     represented by the
+          #     {::Google::Cloud::Dialogflow::CX::V3::SessionEntityType SessionEntityType}
+          #     type.
           #
           # For more information about entity types, see the [Dialogflow
           # documentation](https://cloud.google.com/dialogflow/docs/entities-overview).
           # @!attribute [rw] name
           #   @return [::String]
           #     The unique identifier of the entity type.
-          #     Required for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/entityTypes/<Entity Type ID>`.
+          #     Required for
+          #     {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entityTypes/<EntityTypeID>`.
           # @!attribute [rw] display_name
           #   @return [::String]
-          #     Required. The human-readable name of the entity type, unique within the agent.
+          #     Required. The human-readable name of the entity type, unique within the
+          #     agent.
           # @!attribute [rw] kind
           #   @return [::Google::Cloud::Dialogflow::CX::V3::EntityType::Kind]
           #     Required. Indicates the kind of entity type.
@@ -156,11 +160,213 @@ module Google
             end
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#export_entity_types EntityTypes.ExportEntityTypes}.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The name of the parent agent to export entity types.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
+          # @!attribute [rw] entity_types
+          #   @return [::Array<::String>]
+          #     Required. The name of the entity types to export.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entityTypes/<EntityTypeID>`.
+          # @!attribute [rw] entity_types_uri
+          #   @return [::String]
+          #     Optional. The [Google Cloud
+          #     Storage](https://cloud.google.com/storage/docs/) URI to export the entity
+          #     types to. The format of this URI must be
+          #     `gs://<bucket-name>/<object-name>`.
+          #
+          #     Dialogflow performs a write operation for the Cloud Storage object
+          #     on the caller's behalf, so your request authentication must
+          #     have write permissions for the object. For more information, see
+          #     [Dialogflow access
+          #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_uri`, `entity_types_content_inline`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] entity_types_content_inline
+          #   @return [::Boolean]
+          #     Optional. The option to return the serialized entity types inline.
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_content_inline`, `entity_types_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] data_format
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::ExportEntityTypesRequest::DataFormat]
+          #     Optional. The data format of the exported entity types. If not specified,
+          #     `BLOB` is assumed.
+          # @!attribute [rw] language_code
+          #   @return [::String]
+          #     Optional. The language to retrieve the entity type for. The following
+          #     fields are language dependent:
+          #
+          #     *   `EntityType.entities.value`
+          #     *   `EntityType.entities.synonyms`
+          #     *   `EntityType.excluded_phrases.value`
+          #
+          #     If not specified, all language dependent fields will be retrieved.
+          #     [Many
+          #     languages](https://cloud.google.com/dialogflow/docs/reference/language)
+          #     are supported.
+          #     Note: languages must be enabled in the agent before they can be used.
+          class ExportEntityTypesRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Data format of the exported entity types.
+            module DataFormat
+              # Unspecified format. Treated as `BLOB`.
+              DATA_FORMAT_UNSPECIFIED = 0
+
+              # EntityTypes will be exported as raw bytes.
+              BLOB = 1
+
+              # EntityTypes will be exported in JSON Package format.
+              JSON_PACKAGE = 5
+            end
+          end
+
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#export_entity_types EntityTypes.ExportEntityTypes}.
+          # @!attribute [rw] entity_types_uri
+          #   @return [::String]
+          #     The URI to a file containing the exported entity types. This field is
+          #     populated only if `entity_types_uri` is specified in
+          #     {::Google::Cloud::Dialogflow::CX::V3::ExportEntityTypesRequest ExportEntityTypesRequest}.
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_uri`, `entity_types_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] entity_types_content
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::InlineDestination]
+          #     Uncompressed byte content for entity types. This field is populated only
+          #     if `entity_types_content_inline` is set to true in
+          #     {::Google::Cloud::Dialogflow::CX::V3::ExportEntityTypesRequest ExportEntityTypesRequest}.
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_content`, `entity_types_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          class ExportEntityTypesResponse
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Metadata returned for the
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#export_entity_types EntityTypes.ExportEntityTypes}
+          # long running operation.
+          class ExportEntityTypesMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#import_entity_types EntityTypes.ImportEntityTypes}.
+          # @!attribute [rw] parent
+          #   @return [::String]
+          #     Required. The agent to import the entity types into.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
+          # @!attribute [rw] entity_types_uri
+          #   @return [::String]
+          #     The [Google Cloud Storage](https://cloud.google.com/storage/docs/) URI
+          #     to import entity types from. The format of this URI must be
+          #     `gs://<bucket-name>/<object-name>`.
+          #
+          #     Dialogflow performs a read operation for the Cloud Storage object
+          #     on the caller's behalf, so your request authentication must
+          #     have read permissions for the object. For more information, see
+          #     [Dialogflow access
+          #     control](https://cloud.google.com/dialogflow/cx/docs/concept/access-control#storage).
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_uri`, `entity_types_content`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] entity_types_content
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::InlineSource]
+          #     Uncompressed byte content of entity types.
+          #
+          #     Note: The following fields are mutually exclusive: `entity_types_content`, `entity_types_uri`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] merge_option
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::ImportEntityTypesRequest::MergeOption]
+          #     Required. Merge option for importing entity types.
+          # @!attribute [rw] target_entity_type
+          #   @return [::String]
+          #     Optional. The target entity type to import into.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entity_types/<EntityTypeID>`.
+          #     If set, there should be only one entity type included in
+          #     [entity_types][google.cloud.dialogflow.cx.v3.ImportEntityTypesRequest.entity_types],
+          #     of which the type should match the type of the target entity type. All
+          #     {::Google::Cloud::Dialogflow::CX::V3::EntityType#entities entities} in the
+          #     imported entity type will be added to the target entity type.
+          class ImportEntityTypesRequest
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Merge option when display name conflicts exist during import.
+            module MergeOption
+              # Unspecified. If used, system uses REPORT_CONFLICT as default.
+              MERGE_OPTION_UNSPECIFIED = 0
+
+              # Replace the original entity type in the agent with the new entity type
+              # when display name conflicts exist.
+              REPLACE = 1
+
+              # Merge the original entity type with the new entity type when display name
+              # conflicts exist.
+              MERGE = 2
+
+              # Create new entity types with new display names to differentiate them from
+              # the existing entity types when display name conflicts exist.
+              RENAME = 3
+
+              # Report conflict information if display names conflict is detected.
+              # Otherwise, import entity types.
+              REPORT_CONFLICT = 4
+
+              # Keep the original entity type and discard the conflicting new entity type
+              # when display name conflicts exist.
+              KEEP = 5
+            end
+          end
+
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#import_entity_types EntityTypes.ImportEntityTypes}.
+          # @!attribute [rw] entity_types
+          #   @return [::Array<::String>]
+          #     The unique identifier of the imported entity types.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entity_types/<EntityTypeID>`.
+          # @!attribute [rw] conflicting_resources
+          #   @return [::Google::Cloud::Dialogflow::CX::V3::ImportEntityTypesResponse::ConflictingResources]
+          #     Info which resources have conflicts when
+          #     [REPORT_CONFLICT][ImportEntityTypesResponse.REPORT_CONFLICT] merge_option
+          #     is set in ImportEntityTypesRequest.
+          class ImportEntityTypesResponse
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+
+            # Conflicting resources detected during the import process. Only filled when
+            # [REPORT_CONFLICT][ImportEntityTypesResponse.REPORT_CONFLICT] is set in the
+            # request and there are conflicts in the display names.
+            # @!attribute [rw] entity_type_display_names
+            #   @return [::Array<::String>]
+            #     Display names of conflicting entity types.
+            # @!attribute [rw] entity_display_names
+            #   @return [::Array<::String>]
+            #     Display names of conflicting entities.
+            class ConflictingResources
+              include ::Google::Protobuf::MessageExts
+              extend ::Google::Protobuf::MessageExts::ClassMethods
+            end
+          end
+
+          # Metadata returned for the
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#import_entity_types EntityTypes.ImportEntityTypes}
+          # long running operation.
+          class ImportEntityTypesMetadata
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent to list all entity types for.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     The language to list entity types for. The following fields are language
@@ -187,7 +393,8 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The response message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
+          # The response message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#list_entity_types EntityTypes.ListEntityTypes}.
           # @!attribute [rw] entity_types
           #   @return [::Array<::Google::Cloud::Dialogflow::CX::V3::EntityType>]
           #     The list of entity types. There will be a maximum number of items returned
@@ -201,12 +408,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#get_entity_type EntityTypes.GetEntityType}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#get_entity_type EntityTypes.GetEntityType}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the entity type.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/entityTypes/<Entity Type ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entityTypes/<EntityTypeID>`.
           # @!attribute [rw] language_code
           #   @return [::String]
           #     The language to retrieve the entity type for. The following fields are
@@ -226,11 +434,12 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#create_entity_type EntityTypes.CreateEntityType}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#create_entity_type EntityTypes.CreateEntityType}.
           # @!attribute [rw] parent
           #   @return [::String]
           #     Required. The agent to create a entity type for.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>`.
+          #     Format: `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>`.
           # @!attribute [rw] entity_type
           #   @return [::Google::Cloud::Dialogflow::CX::V3::EntityType]
           #     Required. The entity type to create.
@@ -252,7 +461,8 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#update_entity_type EntityTypes.UpdateEntityType}.
           # @!attribute [rw] entity_type
           #   @return [::Google::Cloud::Dialogflow::CX::V3::EntityType]
           #     Required. The entity type to update.
@@ -277,12 +487,13 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
-          # The request message for {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#delete_entity_type EntityTypes.DeleteEntityType}.
+          # The request message for
+          # {::Google::Cloud::Dialogflow::CX::V3::EntityTypes::Client#delete_entity_type EntityTypes.DeleteEntityType}.
           # @!attribute [rw] name
           #   @return [::String]
           #     Required. The name of the entity type to delete.
-          #     Format: `projects/<Project ID>/locations/<Location ID>/agents/<Agent
-          #     ID>/entityTypes/<Entity Type ID>`.
+          #     Format:
+          #     `projects/<ProjectID>/locations/<LocationID>/agents/<AgentID>/entityTypes/<EntityTypeID>`.
           # @!attribute [rw] force
           #   @return [::Boolean]
           #     This field has no effect for entity type not being used.
@@ -292,9 +503,11 @@ module Google
           #        indicating the referencing resources.
           #     *  If `force` is set to true, Dialogflow will remove the entity type, as
           #        well as any references to the entity type (i.e. Page
-          #        {::Google::Cloud::Dialogflow::CX::V3::Form::Parameter parameter} of the entity type will be changed to
-          #        '@sys.any' and intent {::Google::Cloud::Dialogflow::CX::V3::Intent::Parameter parameter} of the entity type
-          #        will be removed).
+          #        {::Google::Cloud::Dialogflow::CX::V3::Form::Parameter parameter} of the entity
+          #        type will be changed to
+          #        '@sys.any' and intent
+          #        {::Google::Cloud::Dialogflow::CX::V3::Intent::Parameter parameter} of the
+          #        entity type will be removed).
           class DeleteEntityTypeRequest
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods

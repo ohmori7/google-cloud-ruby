@@ -19,18 +19,32 @@
 # [START bigtable_v2_generated_Bigtable_SampleRowKeys_sync]
 require "google/cloud/bigtable/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Bigtable::V2::Bigtable::Client.new
+##
+# Snippet for the sample_row_keys call in the Bigtable service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Bigtable::V2::Bigtable::Client#sample_row_keys.
+#
+def sample_row_keys
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Bigtable::V2::Bigtable::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Bigtable::V2::SampleRowKeysRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Bigtable::V2::SampleRowKeysRequest.new
 
-# Call the sample_row_keys method.
-result = client.sample_row_keys request
+  # Call the sample_row_keys method to start streaming.
+  output = client.sample_row_keys request
 
-# The returned object is a streamed enumerable yielding elements of
-# type ::Google::Cloud::Bigtable::V2::SampleRowKeysResponse.
-result.each do |response|
-  p response
+  # The returned object is a streamed enumerable yielding elements of type
+  # ::Google::Cloud::Bigtable::V2::SampleRowKeysResponse
+  output.each do |current_response|
+    p current_response
+  end
 end
 # [END bigtable_v2_generated_Bigtable_SampleRowKeys_sync]

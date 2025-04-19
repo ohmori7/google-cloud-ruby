@@ -19,15 +19,29 @@
 # [START analyticsadmin_v1alpha_generated_AnalyticsAdminService_GetAccount_sync]
 require "google/analytics/admin/v1alpha"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client.new
+##
+# Snippet for the get_account call in the AnalyticsAdminService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client#get_account.
+#
+def get_account
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Analytics::Admin::V1alpha::AnalyticsAdminService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Analytics::Admin::V1alpha::GetAccountRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Analytics::Admin::V1alpha::GetAccountRequest.new
 
-# Call the get_account method.
-result = client.get_account request
+  # Call the get_account method.
+  result = client.get_account request
 
-# The returned object is of type Google::Analytics::Admin::V1alpha::Account.
-p result
+  # The returned object is of type Google::Analytics::Admin::V1alpha::Account.
+  p result
+end
 # [END analyticsadmin_v1alpha_generated_AnalyticsAdminService_GetAccount_sync]

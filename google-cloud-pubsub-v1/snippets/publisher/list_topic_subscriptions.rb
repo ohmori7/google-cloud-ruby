@@ -19,15 +19,29 @@
 # [START pubsub_v1_generated_Publisher_ListTopicSubscriptions_sync]
 require "google/cloud/pubsub/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::PubSub::V1::Publisher::Client.new
+##
+# Snippet for the list_topic_subscriptions call in the Publisher service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::PubSub::V1::Publisher::Client#list_topic_subscriptions.
+#
+def list_topic_subscriptions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::PubSub::V1::Publisher::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::PubSub::V1::ListTopicSubscriptionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::PubSub::V1::ListTopicSubscriptionsRequest.new
 
-# Call the list_topic_subscriptions method.
-result = client.list_topic_subscriptions request
+  # Call the list_topic_subscriptions method.
+  result = client.list_topic_subscriptions request
 
-# The returned object is of type Google::Cloud::PubSub::V1::ListTopicSubscriptionsResponse.
-p result
+  # The returned object is of type Google::Cloud::PubSub::V1::ListTopicSubscriptionsResponse.
+  p result
+end
 # [END pubsub_v1_generated_Publisher_ListTopicSubscriptions_sync]

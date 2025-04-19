@@ -55,8 +55,22 @@ module Google
               rpc :ListTables, ::Google::Cloud::Bigtable::Admin::V2::ListTablesRequest, ::Google::Cloud::Bigtable::Admin::V2::ListTablesResponse
               # Gets metadata information about the specified table.
               rpc :GetTable, ::Google::Cloud::Bigtable::Admin::V2::GetTableRequest, ::Google::Cloud::Bigtable::Admin::V2::Table
+              # Updates a specified table.
+              rpc :UpdateTable, ::Google::Cloud::Bigtable::Admin::V2::UpdateTableRequest, ::Google::Longrunning::Operation
               # Permanently deletes a specified table and all of its data.
               rpc :DeleteTable, ::Google::Cloud::Bigtable::Admin::V2::DeleteTableRequest, ::Google::Protobuf::Empty
+              # Restores a specified table which was accidentally deleted.
+              rpc :UndeleteTable, ::Google::Cloud::Bigtable::Admin::V2::UndeleteTableRequest, ::Google::Longrunning::Operation
+              # Creates a new AuthorizedView in a table.
+              rpc :CreateAuthorizedView, ::Google::Cloud::Bigtable::Admin::V2::CreateAuthorizedViewRequest, ::Google::Longrunning::Operation
+              # Lists all AuthorizedViews from a specific table.
+              rpc :ListAuthorizedViews, ::Google::Cloud::Bigtable::Admin::V2::ListAuthorizedViewsRequest, ::Google::Cloud::Bigtable::Admin::V2::ListAuthorizedViewsResponse
+              # Gets information from a specified AuthorizedView.
+              rpc :GetAuthorizedView, ::Google::Cloud::Bigtable::Admin::V2::GetAuthorizedViewRequest, ::Google::Cloud::Bigtable::Admin::V2::AuthorizedView
+              # Updates an AuthorizedView in a table.
+              rpc :UpdateAuthorizedView, ::Google::Cloud::Bigtable::Admin::V2::UpdateAuthorizedViewRequest, ::Google::Longrunning::Operation
+              # Permanently deletes a specified AuthorizedView.
+              rpc :DeleteAuthorizedView, ::Google::Cloud::Bigtable::Admin::V2::DeleteAuthorizedViewRequest, ::Google::Protobuf::Empty
               # Performs a series of column family modifications on the specified table.
               # Either all or none of the modifications will occur before this method
               # returns, but data requests received prior to that point may see a table
@@ -114,8 +128,8 @@ module Google
               # [metadata][google.longrunning.Operation.metadata] field type is
               # [CreateBackupMetadata][google.bigtable.admin.v2.CreateBackupMetadata]. The
               # [response][google.longrunning.Operation.response] field type is
-              # [Backup][google.bigtable.admin.v2.Backup], if successful. Cancelling the returned operation will stop the
-              # creation and delete the backup.
+              # [Backup][google.bigtable.admin.v2.Backup], if successful. Cancelling the
+              # returned operation will stop the creation and delete the backup.
               rpc :CreateBackup, ::Google::Cloud::Bigtable::Admin::V2::CreateBackupRequest, ::Google::Longrunning::Operation
               # Gets metadata on a pending or completed Cloud Bigtable Backup.
               rpc :GetBackup, ::Google::Cloud::Bigtable::Admin::V2::GetBackupRequest, ::Google::Cloud::Bigtable::Admin::V2::Backup
@@ -126,15 +140,17 @@ module Google
               # Lists Cloud Bigtable backups. Returns both completed and pending
               # backups.
               rpc :ListBackups, ::Google::Cloud::Bigtable::Admin::V2::ListBackupsRequest, ::Google::Cloud::Bigtable::Admin::V2::ListBackupsResponse
-              # Create a new table by restoring from a completed backup. The new table
-              # must be in the same project as the instance containing the backup.  The
+              # Create a new table by restoring from a completed backup.  The
               # returned table [long-running operation][google.longrunning.Operation] can
               # be used to track the progress of the operation, and to cancel it.  The
               # [metadata][google.longrunning.Operation.metadata] field type is
-              # [RestoreTableMetadata][google.bigtable.admin.RestoreTableMetadata].  The
+              # [RestoreTableMetadata][google.bigtable.admin.v2.RestoreTableMetadata].  The
               # [response][google.longrunning.Operation.response] type is
               # [Table][google.bigtable.admin.v2.Table], if successful.
               rpc :RestoreTable, ::Google::Cloud::Bigtable::Admin::V2::RestoreTableRequest, ::Google::Longrunning::Operation
+              # Copy a Cloud Bigtable backup to a new backup in the destination cluster
+              # located in the destination instance and project.
+              rpc :CopyBackup, ::Google::Cloud::Bigtable::Admin::V2::CopyBackupRequest, ::Google::Longrunning::Operation
               # Gets the access control policy for a Table or Backup resource.
               # Returns an empty policy if the resource exists but does not have a policy
               # set.
@@ -142,7 +158,8 @@ module Google
               # Sets the access control policy on a Table or Backup resource.
               # Replaces any existing policy.
               rpc :SetIamPolicy, ::Google::Iam::V1::SetIamPolicyRequest, ::Google::Iam::V1::Policy
-              # Returns permissions that the caller has on the specified Table or Backup resource.
+              # Returns permissions that the caller has on the specified Table or Backup
+              # resource.
               rpc :TestIamPermissions, ::Google::Iam::V1::TestIamPermissionsRequest, ::Google::Iam::V1::TestIamPermissionsResponse
             end
 

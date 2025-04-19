@@ -18,6 +18,7 @@
 
 require "google/cloud/errors"
 require "google/cloud/workflows/v1/workflows_pb"
+require "google/cloud/location"
 
 module Google
   module Cloud
@@ -32,6 +33,12 @@ module Google
           # networking interruptions.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "workflows.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -93,6 +100,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @workflows_stub.universe_domain
+            end
+
+            ##
             # Create a new Workflows client object.
             #
             # @example
@@ -125,8 +141,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -139,15 +156,38 @@ module Google
                 config.credentials = credentials
                 config.quota_project = @quota_project_id
                 config.endpoint = @config.endpoint
+                config.universe_domain = @config.universe_domain
               end
 
               @workflows_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Workflows::V1::Workflows::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @workflows_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+
+              @location_client = Google::Cloud::Location::Locations::Client.new do |config|
+                config.credentials = credentials
+                config.quota_project = @quota_project_id
+                config.endpoint = @workflows_stub.endpoint
+                config.universe_domain = @workflows_stub.universe_domain
+                config.logger = @workflows_stub.logger if config.respond_to? :logger=
+              end
             end
 
             ##
@@ -157,10 +197,26 @@ module Google
             #
             attr_reader :operations_client
 
+            ##
+            # Get the associated client for mix-in of the Locations.
+            #
+            # @return [Google::Cloud::Location::Locations::Client]
+            #
+            attr_reader :location_client
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @workflows_stub.logger
+            end
+
             # Service calls
 
             ##
-            # Lists Workflows in a given project and location.
+            # Lists workflows in a given project and location.
             # The default order is not specified.
             #
             # @overload list_workflows(request, options = nil)
@@ -182,10 +238,10 @@ module Google
             #     Required. Project and location from which the workflows should be listed.
             #     Format: projects/\\{project}/locations/\\{location}
             #   @param page_size [::Integer]
-            #     Maximum number of workflows to return per call. The service may return
-            #     fewer than this value. If the value is not specified, a default value of
-            #     500 will be used. The maximum permitted value is 1000 and values greater
-            #     than 1000 will be coerced down to 1000.
+            #     Maximum number of workflows to return per call. The service might return
+            #     fewer than this value even if not at the end of the collection. If a value
+            #     is not specified, a default value of 500 is used. The maximum permitted
+            #     value is 1000 and values greater than 1000 are coerced down to 1000.
             #   @param page_token [::String]
             #     A page token, received from a previous `ListWorkflows` call.
             #     Provide this to retrieve the subsequent page.
@@ -194,11 +250,21 @@ module Google
             #     match the call that provided the page token.
             #   @param filter [::String]
             #     Filter to restrict results to specific workflows.
+            #     For details, see <a href="https://google.aip.dev/160"
+            #     class="external">AIP-160</a>.
+            #
+            #     For example, if you are using the Google APIs Explorer:
+            #
+            #     `state="SUCCEEDED"`
+            #
+            #     or
+            #
+            #     `createTime>"2023-08-01" AND state="FAILED"`
             #   @param order_by [::String]
-            #     Comma-separated list of fields that that specify the order of the results.
+            #     Comma-separated list of fields that specify the order of the results.
             #     Default sorting order for a field is ascending. To specify descending order
-            #     for a field, append a " desc" suffix.
-            #     If not specified, the results will be returned in an unspecified order.
+            #     for a field, append a "desc" suffix.
+            #     If not specified, the results are returned in an unspecified order.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Workflows::V1::Workflow>]
@@ -220,13 +286,11 @@ module Google
             #   # Call the list_workflows method.
             #   result = client.list_workflows request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Workflows::V1::Workflow.
-            #     p response
+            #     p item
             #   end
             #
             def list_workflows request, options = nil
@@ -240,10 +304,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_workflows.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -265,14 +330,14 @@ module Google
               @workflows_stub.call_rpc :list_workflows, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @workflows_stub, :list_workflows, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # Gets details of a single Workflow.
+            # Gets details of a single workflow.
             #
             # @overload get_workflow(request, options = nil)
             #   Pass arguments to `get_workflow` via a request object, either of type
@@ -284,14 +349,20 @@ module Google
             #   @param options [::Gapic::CallOptions, ::Hash]
             #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
             #
-            # @overload get_workflow(name: nil)
+            # @overload get_workflow(name: nil, revision_id: nil)
             #   Pass arguments to `get_workflow` via keyword arguments. Note that at
             #   least one keyword argument is required. To specify no parameters, or to keep all
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. Name of the workflow which information should be retrieved.
+            #     Required. Name of the workflow for which information should be retrieved.
             #     Format: projects/\\{project}/locations/\\{location}/workflows/\\{workflow}
+            #   @param revision_id [::String]
+            #     Optional. The revision of the workflow to retrieve. If the revision_id is
+            #     empty, the latest revision is retrieved.
+            #     The format is "000001-a4d", where the first six characters define
+            #     the zero-padded decimal revision number. They are followed by a hyphen and
+            #     three hexadecimal characters.
             #
             # @yield [response, operation] Access the result along with the RPC operation
             # @yieldparam response [::Google::Cloud::Workflows::V1::Workflow]
@@ -327,10 +398,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_workflow.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -351,7 +423,6 @@ module Google
 
               @workflows_stub.call_rpc :get_workflow, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -360,7 +431,7 @@ module Google
             ##
             # Creates a new workflow. If a workflow with the specified name already
             # exists in the specified project and location, the long running operation
-            # will return [ALREADY_EXISTS][google.rpc.Code.ALREADY_EXISTS] error.
+            # returns a [ALREADY_EXISTS][google.rpc.Code.ALREADY_EXISTS] error.
             #
             # @overload create_workflow(request, options = nil)
             #   Pass arguments to `create_workflow` via a request object, either of type
@@ -412,14 +483,14 @@ module Google
             #   # Call the create_workflow method.
             #   result = client.create_workflow request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def create_workflow request, options = nil
@@ -433,10 +504,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_workflow.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -458,7 +530,7 @@ module Google
               @workflows_stub.call_rpc :create_workflow, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -508,14 +580,14 @@ module Google
             #   # Call the delete_workflow method.
             #   result = client.delete_workflow request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def delete_workflow request, options = nil
@@ -529,10 +601,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_workflow.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -554,7 +627,7 @@ module Google
               @workflows_stub.call_rpc :delete_workflow, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -563,8 +636,8 @@ module Google
             ##
             # Updates an existing workflow.
             # Running this method has no impact on already running executions of the
-            # workflow. A new revision of the workflow may be created as a result of a
-            # successful update operation. In that case, such revision will be used
+            # workflow. A new revision of the workflow might be created as a result of a
+            # successful update operation. In that case, the new revision is used
             # in new workflow executions.
             #
             # @overload update_workflow(request, options = nil)
@@ -608,14 +681,14 @@ module Google
             #   # Call the update_workflow method.
             #   result = client.update_workflow request
             #
-            #   # The returned object is of type Gapic::Operation. You can use this
-            #   # object to check the status of an operation, cancel it, or wait
-            #   # for results. Here is how to block until completion:
+            #   # The returned object is of type Gapic::Operation. You can use it to
+            #   # check the status of an operation, cancel it, or wait for results.
+            #   # Here is how to wait for a response.
             #   result.wait_until_done! timeout: 60
             #   if result.response?
             #     p result.response
             #   else
-            #     puts "Error!"
+            #     puts "No response received."
             #   end
             #
             def update_workflow request, options = nil
@@ -629,10 +702,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_workflow.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -654,7 +728,106 @@ module Google
               @workflows_stub.call_rpc :update_workflow, request, options: options do |response, operation|
                 response = ::Gapic::Operation.new response, @operations_client, options: options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
+              end
+            rescue ::GRPC::BadStatus => e
+              raise ::Google::Cloud::Error.from_error(e)
+            end
+
+            ##
+            # Lists revisions for a given workflow.
+            #
+            # @overload list_workflow_revisions(request, options = nil)
+            #   Pass arguments to `list_workflow_revisions` via a request object, either of type
+            #   {::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest} or an equivalent Hash.
+            #
+            #   @param request [::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest, ::Hash]
+            #     A request object representing the call parameters. Required. To specify no
+            #     parameters, or to keep all the default parameter values, pass an empty Hash.
+            #   @param options [::Gapic::CallOptions, ::Hash]
+            #     Overrides the default settings for this call, e.g, timeout, retries, etc. Optional.
+            #
+            # @overload list_workflow_revisions(name: nil, page_size: nil, page_token: nil)
+            #   Pass arguments to `list_workflow_revisions` via keyword arguments. Note that at
+            #   least one keyword argument is required. To specify no parameters, or to keep all
+            #   the default parameter values, pass an empty Hash as a request object (see above).
+            #
+            #   @param name [::String]
+            #     Required. Workflow for which the revisions should be listed.
+            #     Format: projects/\\{project}/locations/\\{location}/workflows/\\{workflow}
+            #   @param page_size [::Integer]
+            #     The maximum number of revisions to return per page. If a value is not
+            #     specified, a default value of 20 is used. The maximum permitted value is
+            #     100. Values greater than 100 are coerced down to 100.
+            #   @param page_token [::String]
+            #     The page token, received from a previous ListWorkflowRevisions call.
+            #     Provide this to retrieve the subsequent page.
+            #
+            # @yield [response, operation] Access the result along with the RPC operation
+            # @yieldparam response [::Gapic::PagedEnumerable<::Google::Cloud::Workflows::V1::Workflow>]
+            # @yieldparam operation [::GRPC::ActiveCall::Operation]
+            #
+            # @return [::Gapic::PagedEnumerable<::Google::Cloud::Workflows::V1::Workflow>]
+            #
+            # @raise [::Google::Cloud::Error] if the RPC is aborted.
+            #
+            # @example Basic example
+            #   require "google/cloud/workflows/v1"
+            #
+            #   # Create a client object. The client can be reused for multiple calls.
+            #   client = Google::Cloud::Workflows::V1::Workflows::Client.new
+            #
+            #   # Create a request. To set request fields, pass in keyword arguments.
+            #   request = Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest.new
+            #
+            #   # Call the list_workflow_revisions method.
+            #   result = client.list_workflow_revisions request
+            #
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
+            #     # Each element is of type ::Google::Cloud::Workflows::V1::Workflow.
+            #     p item
+            #   end
+            #
+            def list_workflow_revisions request, options = nil
+              raise ::ArgumentError, "request must be provided" if request.nil?
+
+              request = ::Gapic::Protobuf.coerce request, to: ::Google::Cloud::Workflows::V1::ListWorkflowRevisionsRequest
+
+              # Converts hash and nil to an options object
+              options = ::Gapic::CallOptions.new(**options.to_h) if options.respond_to? :to_h
+
+              # Customize the options with defaults
+              metadata = @config.rpcs.list_workflow_revisions.metadata.to_h
+
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
+              metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
+                lib_name: @config.lib_name, lib_version: @config.lib_version,
+                gapic_version: ::Google::Cloud::Workflows::V1::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
+              metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
+
+              header_params = {}
+              if request.name
+                header_params["name"] = request.name
+              end
+
+              request_params_header = header_params.map { |k, v| "#{k}=#{v}" }.join("&")
+              metadata[:"x-goog-request-params"] ||= request_params_header
+
+              options.apply_defaults timeout:      @config.rpcs.list_workflow_revisions.timeout,
+                                     metadata:     metadata,
+                                     retry_policy: @config.rpcs.list_workflow_revisions.retry_policy
+
+              options.apply_defaults timeout:      @config.timeout,
+                                     metadata:     @config.metadata,
+                                     retry_policy: @config.retry_policy
+
+              @workflows_stub.call_rpc :list_workflow_revisions, request, options: options do |response, operation|
+                response = ::Gapic::PagedEnumerable.new @workflows_stub, :list_workflow_revisions, request, response, operation, options
+                yield response, operation if block_given?
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -690,20 +863,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"workflows.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -738,11 +918,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "workflows.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "workflows.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -757,6 +951,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -775,6 +971,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##
@@ -820,6 +1024,11 @@ module Google
                 # @return [::Gapic::Config::Method]
                 #
                 attr_reader :update_workflow
+                ##
+                # RPC-specific configuration for `list_workflow_revisions`
+                # @return [::Gapic::Config::Method]
+                #
+                attr_reader :list_workflow_revisions
 
                 # @private
                 def initialize parent_rpcs = nil
@@ -833,6 +1042,8 @@ module Google
                   @delete_workflow = ::Gapic::Config::Method.new delete_workflow_config
                   update_workflow_config = parent_rpcs.update_workflow if parent_rpcs.respond_to? :update_workflow
                   @update_workflow = ::Gapic::Config::Method.new update_workflow_config
+                  list_workflow_revisions_config = parent_rpcs.list_workflow_revisions if parent_rpcs.respond_to? :list_workflow_revisions
+                  @list_workflow_revisions = ::Gapic::Config::Method.new list_workflow_revisions_config
 
                   yield self if block_given?
                 end

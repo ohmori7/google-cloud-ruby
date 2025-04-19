@@ -1,13 +1,13 @@
-# Ruby Client for the Ceritificate Authority Service V1 API
+# Ruby Client for the Certificate Authority Service V1 API
 
-API Client library for the Ceritificate Authority Service V1 API
+The Certificate Authority Service API is a highly-available, scalable service that enables you to simplify and automate the management of private certificate authorities (CAs) while staying in control of your private keys.
 
 Certificate Authority Service is a highly available, scalable Google Cloud service that enables you to simplify, automate, and customize the deployment, management, and security of private certificate authorities (CA).
 
 https://github.com/googleapis/google-cloud-ruby
 
 This gem is a _versioned_ client. It provides basic client classes for a
-specific version of the Ceritificate Authority Service V1 API. Most users should consider using
+specific version of the Certificate Authority Service V1 API. Most users should consider using
 the main client gem,
 [google-cloud-security-private_ca](https://rubygems.org/gems/google-cloud-security-private_ca).
 See the section below titled *Which client should I use?* for more information.
@@ -30,7 +30,7 @@ In order to use this library, you first need to go through the following steps:
 ## Quick Start
 
 ```ruby
-require "google/cloud/location"
+require "google/cloud/security/private_ca/v1"
 
 client = ::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new
 request = ::Google::Cloud::Security::PrivateCA::V1::CreateCertificateRequest.new # (request fields as keyword arguments...)
@@ -43,42 +43,57 @@ for class and method documentation.
 See also the [Product Documentation](https://cloud.google.com/certificate-authority-service/)
 for general usage information.
 
-## Enabling Logging
+## Debug Logging
 
-To enable logging for this library, set the logger for the underlying [gRPC](https://github.com/grpc/grpc/tree/master/src/ruby) library.
-The logger that you set may be a Ruby stdlib [`Logger`](https://ruby-doc.org/stdlib/libdoc/logger/rdoc/Logger.html) as shown below,
-or a [`Google::Cloud::Logging::Logger`](https://googleapis.dev/ruby/google-cloud-logging/latest)
-that will write logs to [Cloud Logging](https://cloud.google.com/logging/). See [grpc/logconfig.rb](https://github.com/grpc/grpc/blob/master/src/ruby/lib/grpc/logconfig.rb)
-and the gRPC [spec_helper.rb](https://github.com/grpc/grpc/blob/master/src/ruby/spec/spec_helper.rb) for additional information.
+This library comes with opt-in Debug Logging that can help you troubleshoot
+your application's integration with the API. When logging is activated, key
+events such as requests and responses, along with data payloads and metadata
+such as headers and client configuration, are logged to the standard error
+stream.
 
-Configuring a Ruby stdlib logger:
+**WARNING:** Client Library Debug Logging includes your data payloads in
+plaintext, which could include sensitive data such as PII for yourself or your
+customers, private keys, or other security data that could be compromising if
+leaked. Always practice good data hygiene with your application logs, and follow
+the principle of least access. Google also recommends that Client Library Debug
+Logging be enabled only temporarily during active debugging, and not used
+permanently in production.
+
+To enable logging, set the environment variable `GOOGLE_SDK_RUBY_LOGGING_GEMS`
+to the value `all`. Alternatively, you can set the value to a comma-delimited
+list of client library gem names. This will select the default logging behavior,
+which writes logs to the standard error stream. On a local workstation, this may
+result in logs appearing on the console. When running on a Google Cloud hosting
+service such as [Google Cloud Run](https://cloud.google.com/run), this generally
+results in logs appearing alongside your application logs in the
+[Google Cloud Logging](https://cloud.google.com/logging/) service.
+
+You can customize logging by modifying the `logger` configuration when
+constructing a client object. For example:
 
 ```ruby
+require "google/cloud/security/private_ca/v1"
 require "logger"
 
-module MyLogger
-  LOGGER = Logger.new $stderr, level: Logger::WARN
-  def logger
-    LOGGER
-  end
-end
-
-# Define a gRPC module-level logger method before grpc/logconfig.rb loads.
-module GRPC
-  extend MyLogger
+client = ::Google::Cloud::Security::PrivateCA::V1::CertificateAuthorityService::Client.new do |config|
+  config.logger = Logger.new "my-app.log"
 end
 ```
 
+## Google Cloud Samples
+
+To browse ready to use code samples check [Google Cloud Samples](https://cloud.google.com/docs/samples).
+
 ## Supported Ruby Versions
 
-This library is supported on Ruby 2.5+.
+This library is supported on Ruby 3.0+.
 
 Google provides official support for Ruby versions that are actively supported
 by Ruby Core—that is, Ruby versions that are either in normal maintenance or
-in security maintenance, and not end of life. Currently, this means Ruby 2.5
-and later. Older versions of Ruby _may_ still work, but are unsupported and not
-recommended. See https://www.ruby-lang.org/en/downloads/branches/ for details
-about the Ruby support schedule.
+in security maintenance, and not end of life. Older versions of Ruby _may_
+still work, but are unsupported and not recommended. See
+https://www.ruby-lang.org/en/downloads/branches/ for details about the Ruby
+support schedule.
 
 ## Which client should I use?
 

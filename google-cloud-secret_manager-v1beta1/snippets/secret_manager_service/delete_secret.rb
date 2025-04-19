@@ -19,15 +19,29 @@
 # [START secretmanager_v1beta1_generated_SecretManagerService_DeleteSecret_sync]
 require "google/cloud/secret_manager/v1beta1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::SecretManager::V1beta1::SecretManagerService::Client.new
+##
+# Snippet for the delete_secret call in the SecretManagerService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::SecretManager::V1beta1::SecretManagerService::Client#delete_secret.
+#
+def delete_secret
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::SecretManager::V1beta1::SecretManagerService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::SecretManager::V1beta1::DeleteSecretRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::SecretManager::V1beta1::DeleteSecretRequest.new
 
-# Call the delete_secret method.
-result = client.delete_secret request
+  # Call the delete_secret method.
+  result = client.delete_secret request
 
-# The returned object is of type Google::Protobuf::Empty.
-p result
+  # The returned object is of type Google::Protobuf::Empty.
+  p result
+end
 # [END secretmanager_v1beta1_generated_SecretManagerService_DeleteSecret_sync]

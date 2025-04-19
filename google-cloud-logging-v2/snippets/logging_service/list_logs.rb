@@ -19,15 +19,29 @@
 # [START logging_v2_generated_LoggingService_ListLogs_sync]
 require "google/cloud/logging/v2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Logging::V2::LoggingService::Client.new
+##
+# Snippet for the list_logs call in the LoggingService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Logging::V2::LoggingService::Client#list_logs.
+#
+def list_logs
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Logging::V2::LoggingService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Logging::V2::ListLogsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Logging::V2::ListLogsRequest.new
 
-# Call the list_logs method.
-result = client.list_logs request
+  # Call the list_logs method.
+  result = client.list_logs request
 
-# The returned object is of type Google::Cloud::Logging::V2::ListLogsResponse.
-p result
+  # The returned object is of type Google::Cloud::Logging::V2::ListLogsResponse.
+  p result
+end
 # [END logging_v2_generated_LoggingService_ListLogs_sync]

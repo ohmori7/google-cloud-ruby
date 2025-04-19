@@ -29,7 +29,7 @@ require "google/cloud/config"
 
 # Set the default configuration
 ::Google::Cloud.configure.add_config! :access_approval do |config|
-  config.add_field! :endpoint,      "accessapproval.googleapis.com", match: ::String
+  config.add_field! :endpoint,      nil, match: ::String
   config.add_field! :credentials,   nil, match: [::String, ::Hash, ::Google::Auth::Credentials]
   config.add_field! :scope,         nil, match: [::Array, ::String]
   config.add_field! :lib_name,      nil, match: ::String
@@ -39,6 +39,7 @@ require "google/cloud/config"
   config.add_field! :metadata,      nil, match: ::Hash
   config.add_field! :retry_policy,  nil, match: [::Hash, ::Proc]
   config.add_field! :quota_project, nil, match: ::String
+  config.add_field! :universe_domain, nil, match: ::String
 end
 
 module Google
@@ -48,12 +49,19 @@ module Google
       # Create a new client object for AccessApproval.
       #
       # By default, this returns an instance of
-      # [Google::Cloud::AccessApproval::V1::AccessApproval::Client](https://googleapis.dev/ruby/google-cloud-access_approval-v1/latest/Google/Cloud/AccessApproval/V1/AccessApproval/Client.html)
-      # for version V1 of the API.
-      # However, you can specify specify a different API version by passing it in the
+      # [Google::Cloud::AccessApproval::V1::AccessApproval::Client](https://cloud.google.com/ruby/docs/reference/google-cloud-access_approval-v1/latest/Google-Cloud-AccessApproval-V1-AccessApproval-Client)
+      # for a gRPC client for version V1 of the API.
+      # However, you can specify a different API version by passing it in the
       # `version` parameter. If the AccessApproval service is
       # supported by that API version, and the corresponding gem is available, the
       # appropriate versioned client will be returned.
+      # You can also specify a different transport by passing `:rest` or `:grpc` in
+      # the `transport` parameter.
+      #
+      # Raises an exception if the currently installed versioned client gem for the
+      # given API version does not support the given transport of the AccessApproval service.
+      # You can determine whether the method will succeed by calling
+      # {Google::Cloud::AccessApproval.access_approval_available?}.
       #
       # ## About AccessApproval
       #
@@ -62,17 +70,17 @@ module Google
       #
       # - The API has a collection of
       #   ApprovalRequest
-      #   resources, named `approvalRequests/{approval_request_id}`
+      #   resources, named `approvalRequests/{approval_request}`
       # - The API has top-level settings per Project/Folder/Organization, named
       #   `accessApprovalSettings`
       #
       # The service also periodically emails a list of recipients, defined at the
       # Project/Folder/Organization level in the accessApprovalSettings, when there
       # is a pending ApprovalRequest for them to act on. The ApprovalRequests can
-      # also optionally be published to a Cloud Pub/Sub topic owned by the customer
-      # (for Beta, the Pub/Sub setup is managed manually).
+      # also optionally be published to a Pub/Sub topic owned by the customer
+      # (contact support if you would like to enable Pub/Sub notifications).
       #
-      # ApprovalRequests can be approved or dismissed. Google personel can only
+      # ApprovalRequests can be approved or dismissed. Google personnel can only
       # access the indicated resource or resources if the request is approved
       # (subject to some exclusions:
       # https://cloud.google.com/access-approval/docs/overview#exclusions).
@@ -93,17 +101,50 @@ module Google
       #
       # @param version [::String, ::Symbol] The API version to connect to. Optional.
       #   Defaults to `:v1`.
-      # @return [AccessApproval::Client] A client object for the specified version.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [::Object] A client object for the specified version.
       #
-      def self.access_approval version: :v1, &block
+      def self.access_approval version: :v1, transport: :grpc, &block
         require "google/cloud/access_approval/#{version.to_s.downcase}"
 
         package_name = Google::Cloud::AccessApproval
                        .constants
                        .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
                        .first
-        package_module = Google::Cloud::AccessApproval.const_get package_name
-        package_module.const_get(:AccessApproval).const_get(:Client).new(&block)
+        service_module = Google::Cloud::AccessApproval.const_get(package_name).const_get(:AccessApproval)
+        service_module = service_module.const_get(:Rest) if transport == :rest
+        service_module.const_get(:Client).new(&block)
+      end
+
+      ##
+      # Determines whether the AccessApproval service is supported by the current client.
+      # If true, you can retrieve a client object by calling {Google::Cloud::AccessApproval.access_approval}.
+      # If false, that method will raise an exception. This could happen if the given
+      # API version does not exist or does not support the AccessApproval service,
+      # or if the versioned client gem needs an update to support the AccessApproval service.
+      #
+      # @param version [::String, ::Symbol] The API version to connect to. Optional.
+      #   Defaults to `:v1`.
+      # @param transport [:grpc, :rest] The transport to use. Defaults to `:grpc`.
+      # @return [boolean] Whether the service is available.
+      #
+      def self.access_approval_available? version: :v1, transport: :grpc
+        require "google/cloud/access_approval/#{version.to_s.downcase}"
+        package_name = Google::Cloud::AccessApproval
+                       .constants
+                       .select { |sym| sym.to_s.downcase == version.to_s.downcase.tr("_", "") }
+                       .first
+        return false unless package_name
+        service_module = Google::Cloud::AccessApproval.const_get package_name
+        return false unless service_module.const_defined? :AccessApproval
+        service_module = service_module.const_get :AccessApproval
+        if transport == :rest
+          return false unless service_module.const_defined? :Rest
+          service_module = service_module.const_get :Rest
+        end
+        service_module.const_defined? :Client
+      rescue ::LoadError
+        false
       end
 
       ##
@@ -123,7 +164,7 @@ module Google
       # * `timeout` (*type:* `Numeric`) -
       #   Default timeout in seconds.
       # * `metadata` (*type:* `Hash{Symbol=>String}`) -
-      #   Additional gRPC headers to be sent with the call.
+      #   Additional headers to be sent with the call.
       # * `retry_policy` (*type:* `Hash`) -
       #   The retry policy. The value is a hash with the following keys:
       #     * `:initial_delay` (*type:* `Numeric`) - The initial delay in seconds.

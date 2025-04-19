@@ -23,9 +23,27 @@ require "gapic/grpc/service_stub"
 require "google/cloud/dialogflow/cx/v3/environments"
 
 class ::Google::Cloud::Dialogflow::CX::V3::Environments::ClientPathsTest < Minitest::Test
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+  
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
   def test_agent_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -37,7 +55,7 @@ class ::Google::Cloud::Dialogflow::CX::V3::Environments::ClientPathsTest < Minit
 
   def test_environment_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -47,9 +65,21 @@ class ::Google::Cloud::Dialogflow::CX::V3::Environments::ClientPathsTest < Minit
     end
   end
 
+  def test_service_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.service_path project: "value0", location: "value1", namespace: "value2", service: "value3"
+      assert_equal "projects/value0/locations/value1/namespaces/value2/services/value3", path
+    end
+  end
+
   def test_test_case_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
         config.credentials = grpc_channel
       end
@@ -61,13 +91,25 @@ class ::Google::Cloud::Dialogflow::CX::V3::Environments::ClientPathsTest < Minit
 
   def test_version_path
     grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-    ::Gapic::ServiceStub.stub :new, nil do
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
       client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
         config.credentials = grpc_channel
       end
 
       path = client.version_path project: "value0", location: "value1", agent: "value2", flow: "value3", version: "value4"
       assert_equal "projects/value0/locations/value1/agents/value2/flows/value3/versions/value4", path
+    end
+  end
+
+  def test_webhook_path
+    grpc_channel = ::GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
+    ::Gapic::ServiceStub.stub :new, DummyStub.new do
+      client = ::Google::Cloud::Dialogflow::CX::V3::Environments::Client.new do |config|
+        config.credentials = grpc_channel
+      end
+
+      path = client.webhook_path project: "value0", location: "value1", agent: "value2", webhook: "value3"
+      assert_equal "projects/value0/locations/value1/agents/value2/webhooks/value3", path
     end
   end
 end

@@ -184,11 +184,15 @@ module Google
           #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation].
           #     If `*` used as value for `method`, then ALL methods and permissions are
           #     allowed.
+          #
+          #     Note: The following fields are mutually exclusive: `method`, `permission`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] permission
           #   @return [::String]
           #     Value for `permission` should be a valid Cloud IAM permission for the
           #     corresponding `service_name` in [ApiOperation]
           #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation].
+          #
+          #     Note: The following fields are mutually exclusive: `permission`, `method`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class MethodSelector
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -240,6 +244,8 @@ module Google
           #     specified for `access_level`, then all [IngressSources]
           #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.IngressSource]
           #     will be allowed.
+          #
+          #     Note: The following fields are mutually exclusive: `access_level`, `resource`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] resource
           #   @return [::String]
           #     A Google Cloud resource that is allowed to ingress the perimeter.
@@ -249,45 +255,9 @@ module Google
           #     The project may be in any Google Cloud organization, not just the
           #     organization that the perimeter is defined in. `*` is not allowed, the
           #     case of allowing all Google Cloud resources only is not supported.
+          #
+          #     Note: The following fields are mutually exclusive: `resource`, `access_level`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class IngressSource
-            include ::Google::Protobuf::MessageExts
-            extend ::Google::Protobuf::MessageExts::ClassMethods
-          end
-
-          # Defines the conditions under which an [EgressPolicy]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressPolicy]
-          # matches a request. Conditions are based on information about the
-          # [ApiOperation]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation]
-          # intended to be performed on the `resources` specified. Note that if the
-          # destination of the request is also protected by a [ServicePerimeter]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeter], then that
-          # [ServicePerimeter]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeter] must have
-          # an [IngressPolicy]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.IngressPolicy]
-          # which allows access in order for this request to succeed. The request must
-          # match `operations` AND `resources` fields in order to be allowed egress out
-          # of the perimeter.
-          # @!attribute [rw] resources
-          #   @return [::Array<::String>]
-          #     A list of resources, currently only projects in the form
-          #     `projects/<projectnumber>`, that are allowed to be accessed by sources
-          #     defined in the corresponding [EgressFrom]
-          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressFrom].
-          #     A request matches if it contains a resource in this list.  If `*` is
-          #     specified for `resources`, then this [EgressTo]
-          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressTo]
-          #     rule will authorize access to all resources outside the perimeter.
-          # @!attribute [rw] operations
-          #   @return [::Array<::Google::Identity::AccessContextManager::V1::ServicePerimeterConfig::ApiOperation>]
-          #     A list of [ApiOperations]
-          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation]
-          #     allowed to be performed by the sources specified in the corresponding
-          #     [EgressFrom]
-          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressFrom].
-          #     A request matches if it uses an operation/service in this list.
-          class EgressTo
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
@@ -387,6 +357,78 @@ module Google
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
 
+          # Defines the conditions under which an [EgressPolicy]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressPolicy]
+          # matches a request. Conditions based on information about the source of the
+          # request. Note that if the destination of the request is also protected by a
+          # [ServicePerimeter]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeter], then that
+          # [ServicePerimeter]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeter] must have
+          # an [IngressPolicy]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.IngressPolicy]
+          # which allows access in order for this request to succeed.
+          # @!attribute [rw] identities
+          #   @return [::Array<::String>]
+          #     A list of identities that are allowed access through this [EgressPolicy].
+          #     Should be in the format of email address. The email address should
+          #     represent individual user or service account only.
+          # @!attribute [rw] identity_type
+          #   @return [::Google::Identity::AccessContextManager::V1::ServicePerimeterConfig::IdentityType]
+          #     Specifies the type of identities that are allowed access to outside the
+          #     perimeter. If left unspecified, then members of `identities` field will
+          #     be allowed access.
+          class EgressFrom
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
+          # Defines the conditions under which an [EgressPolicy]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressPolicy]
+          # matches a request. Conditions are based on information about the
+          # [ApiOperation]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation]
+          # intended to be performed on the `resources` specified. Note that if the
+          # destination of the request is also protected by a [ServicePerimeter]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeter], then that
+          # [ServicePerimeter]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeter] must have
+          # an [IngressPolicy]
+          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.IngressPolicy]
+          # which allows access in order for this request to succeed. The request must
+          # match `operations` AND `resources` fields in order to be allowed egress out
+          # of the perimeter.
+          # @!attribute [rw] resources
+          #   @return [::Array<::String>]
+          #     A list of resources, currently only projects in the form
+          #     `projects/<projectnumber>`, that are allowed to be accessed by sources
+          #     defined in the corresponding [EgressFrom]
+          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressFrom].
+          #     A request matches if it contains a resource in this list.  If `*` is
+          #     specified for `resources`, then this [EgressTo]
+          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressTo]
+          #     rule will authorize access to all resources outside the perimeter.
+          # @!attribute [rw] operations
+          #   @return [::Array<::Google::Identity::AccessContextManager::V1::ServicePerimeterConfig::ApiOperation>]
+          #     A list of [ApiOperations]
+          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.ApiOperation]
+          #     allowed to be performed by the sources specified in the corresponding
+          #     [EgressFrom]
+          #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressFrom].
+          #     A request matches if it uses an operation/service in this list.
+          # @!attribute [rw] external_resources
+          #   @return [::Array<::String>]
+          #     A list of external resources that are allowed to be accessed. Only AWS
+          #     and Azure resources are supported. For Amazon S3, the supported format is
+          #     s3://BUCKET_NAME. For Azure Storage, the supported format is
+          #     azure://myaccount.blob.core.windows.net/CONTAINER_NAME. A request matches
+          #     if it contains an external resource in this list (Example:
+          #     s3://bucket/path). Currently '*' is not allowed.
+          class EgressTo
+            include ::Google::Protobuf::MessageExts
+            extend ::Google::Protobuf::MessageExts::ClassMethods
+          end
+
           # Policy for egress from perimeter.
           #
           # [EgressPolicies]
@@ -428,32 +470,6 @@ module Google
           #     [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressPolicy]
           #     to apply.
           class EgressPolicy
-            include ::Google::Protobuf::MessageExts
-            extend ::Google::Protobuf::MessageExts::ClassMethods
-          end
-
-          # Defines the conditions under which an [EgressPolicy]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.EgressPolicy]
-          # matches a request. Conditions based on information about the source of the
-          # request. Note that if the destination of the request is also protected by a
-          # [ServicePerimeter]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeter], then that
-          # [ServicePerimeter]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeter] must have
-          # an [IngressPolicy]
-          # [google.identity.accesscontextmanager.v1.ServicePerimeterConfig.IngressPolicy]
-          # which allows access in order for this request to succeed.
-          # @!attribute [rw] identities
-          #   @return [::Array<::String>]
-          #     A list of identities that are allowed access through this [EgressPolicy].
-          #     Should be in the format of email address. The email address should
-          #     represent individual user or service account only.
-          # @!attribute [rw] identity_type
-          #   @return [::Google::Identity::AccessContextManager::V1::ServicePerimeterConfig::IdentityType]
-          #     Specifies the type of identities that are allowed access to outside the
-          #     perimeter. If left unspecified, then members of `identities` field will
-          #     be allowed access.
-          class EgressFrom
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end

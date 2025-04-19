@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/web_security_scanner"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::WebSecurityScanner::ClientConstructionMinitest < Minitest::Test
-  def test_web_security_scanner
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_web_security_scanner_grpc
+    skip unless Google::Cloud::WebSecurityScanner.web_security_scanner_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::WebSecurityScanner.web_security_scanner do |config|
+      client = Google::Cloud::WebSecurityScanner.web_security_scanner transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::WebSecurityScanner::V1::WebSecurityScanner::Client, client
+    end
+  end
+
+  def test_web_security_scanner_rest
+    skip unless Google::Cloud::WebSecurityScanner.web_security_scanner_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::WebSecurityScanner.web_security_scanner transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::WebSecurityScanner::V1::WebSecurityScanner::Rest::Client, client
     end
   end
 end

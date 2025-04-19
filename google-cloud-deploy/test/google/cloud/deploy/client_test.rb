@@ -20,15 +20,45 @@ require "helper"
 require "google/cloud/deploy"
 require "gapic/common"
 require "gapic/grpc"
+require "gapic/rest"
 
 class Google::Cloud::Deploy::ClientConstructionMinitest < Minitest::Test
-  def test_cloud_deploy
-    Gapic::ServiceStub.stub :new, :stub do
+  class DummyStub
+    def endpoint
+      "endpoint.example.com"
+    end
+
+    def universe_domain
+      "example.com"
+    end
+
+    def stub_logger
+      nil
+    end
+
+    def logger
+      nil
+    end
+  end
+
+  def test_cloud_deploy_grpc
+    skip unless Google::Cloud::Deploy.cloud_deploy_available? transport: :grpc
+    Gapic::ServiceStub.stub :new, DummyStub.new do
       grpc_channel = GRPC::Core::Channel.new "localhost:8888", nil, :this_channel_is_insecure
-      client = Google::Cloud::Deploy.cloud_deploy do |config|
+      client = Google::Cloud::Deploy.cloud_deploy transport: :grpc do |config|
         config.credentials = grpc_channel
       end
       assert_kind_of Google::Cloud::Deploy::V1::CloudDeploy::Client, client
+    end
+  end
+
+  def test_cloud_deploy_rest
+    skip unless Google::Cloud::Deploy.cloud_deploy_available? transport: :rest
+    Gapic::Rest::ClientStub.stub :new, DummyStub.new do
+      client = Google::Cloud::Deploy.cloud_deploy transport: :rest do |config|
+        config.credentials = :dummy_credentials
+      end
+      assert_kind_of Google::Cloud::Deploy::V1::CloudDeploy::Rest::Client, client
     end
   end
 end

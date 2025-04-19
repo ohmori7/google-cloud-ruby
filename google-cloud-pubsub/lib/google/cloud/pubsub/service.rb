@@ -37,14 +37,17 @@ module Google
         # value to be replaced for unit testing.
         attr_accessor :client_id
 
+        attr_reader :universe_domain
+
         ##
         # Creates a new Service instance.
-        def initialize project, credentials, host: nil, timeout: nil
+        def initialize project, credentials, host: nil, timeout: nil, universe_domain: nil
           @project = project
           @credentials = credentials
           @host = host
           @timeout = timeout
           @client_id = SecureRandom.uuid.freeze
+          @universe_domain = universe_domain || ENV["GOOGLE_CLOUD_UNIVERSE_DOMAIN"] || "googleapis.com"
         end
 
         def subscriber
@@ -53,6 +56,7 @@ module Google
             config.credentials = credentials if credentials
             override_client_config_timeouts config if timeout
             config.endpoint = host if host
+            config.universe_domain = universe_domain
             config.lib_name = "gccl"
             config.lib_version = Google::Cloud::PubSub::VERSION
             config.metadata = { "google-cloud-resource-prefix": "projects/#{@project}" }
@@ -66,6 +70,7 @@ module Google
             config.credentials = credentials if credentials
             override_client_config_timeouts config if timeout
             config.endpoint = host if host
+            config.universe_domain = universe_domain
             config.lib_name = "gccl"
             config.lib_version = Google::Cloud::PubSub::VERSION
             config.metadata = { "google-cloud-resource-prefix": "projects/#{@project}" }
@@ -75,13 +80,15 @@ module Google
 
         def iam
           return mocked_iam if mocked_iam
-          @iam ||= V1::IAMPolicy::Client.new do |config|
-            config.credentials = credentials if credentials
-            override_client_config_timeouts config if timeout
-            config.endpoint = host if host
-            config.lib_name = "gccl"
-            config.lib_version = Google::Cloud::PubSub::VERSION
-            config.metadata = { "google-cloud-resource-prefix": "projects/#{@project}" }
+          @iam ||= begin
+            iam = (@publisher || @subscriber || @schemas || subscriber).iam_policy_client
+            iam.configure do |config|
+              override_client_config_timeouts config if timeout
+              config.lib_name = "gccl"
+              config.lib_version = Google::Cloud::PubSub::VERSION
+              config.metadata = { "google-cloud-resource-prefix": "projects/#{@project}" }
+            end
+            iam
           end
         end
         attr_accessor :mocked_iam
@@ -92,6 +99,7 @@ module Google
             config.credentials = credentials if credentials
             override_client_config_timeouts config if timeout
             config.endpoint = host if host
+            config.universe_domain = universe_domain
             config.lib_name = "gccl"
             config.lib_version = Google::Cloud::PubSub::VERSION
             config.metadata = { "google-cloud-resource-prefix": "projects/#{@project}" }
@@ -128,6 +136,7 @@ module Google
                          schema_name: nil,
                          message_encoding: nil,
                          retention: nil,
+                         ingestion_data_source_settings: nil,
                          options: {}
           if persistence_regions
             message_storage_policy = Google::Cloud::PubSub::V1::MessageStoragePolicy.new(
@@ -146,12 +155,13 @@ module Google
           end
 
           publisher.create_topic \
-            name:                       topic_path(topic_name, options),
-            labels:                     labels,
-            kms_key_name:               kms_key_name,
-            message_storage_policy:     message_storage_policy,
-            schema_settings:            schema_settings,
-            message_retention_duration: Convert.number_to_duration(retention)
+            name: topic_path(topic_name, options),
+            labels: labels,
+            kms_key_name: kms_key_name,
+            message_storage_policy: message_storage_policy,
+            schema_settings: schema_settings,
+            message_retention_duration: Convert.number_to_duration(retention),
+            ingestion_data_source_settings: ingestion_data_source_settings
         end
 
         def update_topic topic_obj, *fields
@@ -173,8 +183,10 @@ module Google
         # Raises GRPC status code 5 if the topic does not exist.
         # The messages parameter is an array of arrays.
         # The first element is the data, second is attributes hash.
-        def publish topic, messages
-          publisher.publish topic: topic_path(topic), messages: messages
+        def publish topic, messages, compress: false
+          request = { topic: topic_path(topic), messages: messages }
+          compress_options = ::Gapic::CallOptions.new metadata: { "grpc-internal-encoding-request": "gzip" }
+          compress ? (publisher.publish request, compress_options) : (publisher.publish request)
         end
 
         ##
@@ -204,18 +216,8 @@ module Google
         ##
         # Creates a subscription on a given topic for a given subscriber.
         def create_subscription topic, subscription_name, options = {}
-          subscriber.create_subscription \
-            name:                       subscription_path(subscription_name, options),
-            topic:                      topic_path(topic),
-            push_config:                options[:push_config],
-            ack_deadline_seconds:       options[:deadline],
-            retain_acked_messages:      options[:retain_acked],
-            message_retention_duration: Convert.number_to_duration(options[:retention]),
-            labels:                     options[:labels],
-            enable_message_ordering:    options[:message_ordering],
-            filter:                     options[:filter],
-            dead_letter_policy:         dead_letter_policy(options),
-            retry_policy:               options[:retry_policy]
+          updated_option = construct_create_subscription_options topic, subscription_name, options
+          subscriber.create_subscription(**updated_option)
         end
 
         def update_subscription subscription_obj, *fields
@@ -248,8 +250,8 @@ module Google
                           return_immediately: return_immediately
         end
 
-        def streaming_pull request_enum
-          subscriber.streaming_pull request_enum
+        def streaming_pull request_enum, options = {}
+          subscriber.streaming_pull request_enum, options
         end
 
         ##
@@ -262,7 +264,7 @@ module Google
         # Modifies the PushConfig for a specified subscription.
         def modify_push_config subscription, endpoint, attributes
           # Convert attributes to strings to match the protobuf definition
-          attributes = Hash[attributes.map { |k, v| [String(k), String(v)] }]
+          attributes = attributes.to_h { |k, v| [String(k), String(v)] }
           push_config = Google::Cloud::PubSub::V1::PushConfig.new(
             push_endpoint: endpoint,
             attributes:    attributes
@@ -340,6 +342,21 @@ module Google
         end
 
         ##
+        # Lists all schema revisions for the named schema.
+        # @param name [String] The name of the schema to list revisions for.
+        # @param view [String, Symbol, nil] Possible values:
+        #   * `BASIC` - Include the name and type of the schema, but not the definition.
+        #   * `FULL` - Include all Schema object fields.
+        #
+        def list_schema_revisions name, view, page_size, page_token
+          schema_view = Google::Cloud::PubSub::V1::SchemaView.const_get view.to_s.upcase
+          schemas.list_schema_revisions name: name,
+                                        view: schema_view,
+                                        page_size: page_size,
+                                        page_token: page_token
+        end
+
+        ##
         # Creates a schema in the current (or given) project.
         def create_schema schema_id, type, definition, options = {}
           schema = Google::Cloud::PubSub::V1::Schema.new(
@@ -367,6 +384,31 @@ module Google
         # Delete a schema.
         def delete_schema schema_name
           schemas.delete_schema name: schema_path(schema_name)
+        end
+
+        ##
+        # Commits a new schema revision to an existing schema.
+        #
+        # @param name [String] The name of the schema to revision.
+        # @param definition [String] The definition of the schema. This should
+        #   contain a string representing the full definition of the schema that
+        #   is a valid schema definition of the type specified in `type`. See
+        #   https://cloud.google.com/pubsub/docs/schemas for details.
+        # @param type [String, Symbol] The type of the schema. Required. Possible
+        #   values are case-insensitive and include:
+        #
+        #     * `PROTOCOL_BUFFER` - A Protocol Buffer schema definition.
+        #     * `AVRO` - An Avro schema definition.
+        #
+        # @return [Google::Cloud::PubSub::V1::Schema]
+        #
+        def commit_schema name, definition, type
+          schema = Google::Cloud::PubSub::V1::Schema.new(
+            name: name,
+            definition: definition,
+            type: type
+          )
+          schemas.commit_schema name: name, schema: schema
         end
 
         ##
@@ -487,6 +529,30 @@ module Google
             policy.max_delivery_attempts = options[:dead_letter_max_delivery_attempts]
           end
           policy
+        end
+
+        private
+
+        def construct_create_subscription_options topic, subscription_name, options
+          excess_options = [:deadline,
+                            :retention,
+                            :retain_acked,
+                            :message_ordering,
+                            :endpoint,
+                            :dead_letter_topic_name,
+                            :dead_letter_max_delivery_attempts,
+                            :dead_letter_topic]
+
+          new_options = options.filter { |k, v| !v.nil? && !excess_options.include?(k) }
+          new_options[:name] = subscription_path subscription_name, options
+          new_options[:topic] = topic_path topic
+          new_options[:message_retention_duration] = Convert.number_to_duration options[:retention]
+          new_options[:dead_letter_policy] = dead_letter_policy options
+          new_options[:ack_deadline_seconds] = options[:deadline]
+          new_options[:retain_acked_messages] = options[:retain_acked]
+          new_options[:enable_message_ordering] = options[:message_ordering]
+
+          new_options.compact
         end
       end
     end

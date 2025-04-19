@@ -29,7 +29,7 @@ module Google
         # on the permissions needed to create or view tags.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The resource name of the tag in URL format where tag ID is a
+        #     Identifier. The resource name of the tag in URL format where tag ID is a
         #     system-generated identifier.
         #
         #     Note: The tag itself might not be stored in the location specified in its
@@ -53,11 +53,14 @@ module Google
         #     (`.`). Example: `column.nested_column`.
         # @!attribute [rw] fields
         #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::DataCatalog::V1::TagField}]
-        #     Required. Maps the ID of a tag field to its value and additional information
-        #     about that field.
+        #     Required. Maps the ID of a tag field to its value and additional
+        #     information about that field.
         #
         #     Tag template defines valid field IDs. A tag
         #     must have at least 1 field and at most 500 fields.
+        # @!attribute [r] dataplex_transfer_status
+        #   @return [::Google::Cloud::DataCatalog::V1::TagTemplate::DataplexTransferStatus]
+        #     Output only. Denotes the transfer status of the Tag Template.
         class Tag
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -80,22 +83,32 @@ module Google
         # @!attribute [rw] double_value
         #   @return [::Float]
         #     The value of a tag field with a double type.
+        #
+        #     Note: The following fields are mutually exclusive: `double_value`, `string_value`, `bool_value`, `timestamp_value`, `enum_value`, `richtext_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] string_value
         #   @return [::String]
         #     The value of a tag field with a string type.
         #
         #     The maximum length is 2000 UTF-8 characters.
+        #
+        #     Note: The following fields are mutually exclusive: `string_value`, `double_value`, `bool_value`, `timestamp_value`, `enum_value`, `richtext_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] bool_value
         #   @return [::Boolean]
         #     The value of a tag field with a boolean type.
+        #
+        #     Note: The following fields are mutually exclusive: `bool_value`, `double_value`, `string_value`, `timestamp_value`, `enum_value`, `richtext_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] timestamp_value
         #   @return [::Google::Protobuf::Timestamp]
         #     The value of a tag field with a timestamp type.
+        #
+        #     Note: The following fields are mutually exclusive: `timestamp_value`, `double_value`, `string_value`, `bool_value`, `enum_value`, `richtext_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] enum_value
         #   @return [::Google::Cloud::DataCatalog::V1::TagField::EnumValue]
         #     The value of a tag field with an enum type.
         #
         #     This value must be one of the allowed values listed in this enum.
+        #
+        #     Note: The following fields are mutually exclusive: `enum_value`, `double_value`, `string_value`, `bool_value`, `timestamp_value`, `richtext_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] richtext_value
         #   @return [::String]
         #     The value of a tag field with a rich text type.
@@ -103,10 +116,13 @@ module Google
         #     The maximum length is 10 MiB as this value holds HTML descriptions
         #     including encoded images. The maximum length of the text without images
         #     is 100 KiB.
+        #
+        #     Note: The following fields are mutually exclusive: `richtext_value`, `double_value`, `string_value`, `bool_value`, `timestamp_value`, `enum_value`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [r] order
         #   @return [::Integer]
-        #     Output only. The order of this field with respect to other fields in this tag. Can be
-        #     set by {::Google::Cloud::DataCatalog::V1::TagTemplateField#order Tag}.
+        #     Output only. The order of this field with respect to other fields in this
+        #     tag. Can be set by
+        #     {::Google::Cloud::DataCatalog::V1::TagTemplateField#order Tag}.
         #
         #     For example, a higher value can indicate a more important field.
         #     The value can be negative. Multiple fields can have the same order, and
@@ -127,8 +143,8 @@ module Google
 
         # A tag template defines a tag that can have one or more typed fields.
         #
-        # The template is used to create tags that are attached to GCP resources.
-        # [Tag template roles]
+        # The template is used to create tags that are attached to Google Cloud
+        #  resources. [Tag template roles]
         # (https://cloud.google.com/iam/docs/understanding-roles#data-catalog-roles)
         # provide permissions to create, edit, and use the template. For example,
         # see the [TagTemplate User]
@@ -136,7 +152,7 @@ module Google
         # that includes a permission to use the tag template to tag resources.
         # @!attribute [rw] name
         #   @return [::String]
-        #     The resource name of the tag template in URL format.
+        #     Identifier. The resource name of the tag template in URL format.
         #
         #     Note: The tag template itself and its child resources might not be
         #     stored in the location specified in its name.
@@ -149,33 +165,12 @@ module Google
         #     The maximum length is 200 characters.
         # @!attribute [rw] is_publicly_readable
         #   @return [::Boolean]
-        #     Indicates whether this is a public tag template.
+        #     Indicates whether tags created with this template are public. Public tags
+        #     do not require tag template access to appear in
+        #     {::Google::Cloud::DataCatalog::V1::DataCatalog::Client#list_tags ListTags} API response.
         #
-        #     Every user has view access to a *public* tag template by default.
-        #     This means that:
-        #
-        #       * Every user can use this tag template to tag an entry.
-        #       * If an entry is tagged using the tag template, the tag is always
-        #         shown in the response to ``ListTags`` called on the entry.
-        #       * To get the template using the GetTagTemplate method, you
-        #         need view access either on the project or the organization the tag
-        #         template resides in but no other permission is needed.
-        #       * Operations on the tag template other than viewing (for example,
-        #         editing IAM policies) follow standard IAM structures.
-        #
-        #     Tags created with a public tag template are referred to as public tags.
-        #
-        #     You can search for a public tag by value with a
-        #     simple search query instead of using a ``tag:`` predicate.
-        #
-        #     Public tag templates may not appear in search results depending on scope,
-        #     see:
-        #     {::Google::Cloud::DataCatalog::V1::SearchCatalogRequest::Scope#include_public_tag_templates include_public_tag_templates}
-        #
-        #     Note: If an [IAM domain
-        #     restriction](https://cloud.google.com/resource-manager/docs/organization-policy/restricting-domains)
-        #     is configured in the tag template's location, the public access will not be
-        #     enabled but the simple search for tag values will still work.
+        #     Additionally, you can search for a public tag by value with a
+        #     simple search query in addition to using a ``tag:`` predicate.
         # @!attribute [rw] fields
         #   @return [::Google::Protobuf::Map{::String => ::Google::Cloud::DataCatalog::V1::TagTemplateField}]
         #     Required. Map of tag template field IDs to the settings for the field.
@@ -189,6 +184,9 @@ module Google
         #       underscores (_).
         #     * Must be at least 1 character and at most 64 characters long.
         #     * Must start with a letter or underscore.
+        # @!attribute [rw] dataplex_transfer_status
+        #   @return [::Google::Cloud::DataCatalog::V1::TagTemplate::DataplexTransferStatus]
+        #     Optional. Transfer status of the TagTemplate
         class TagTemplate
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -201,12 +199,30 @@ module Google
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
           end
+
+          # This enum describes TagTemplate transfer status to Dataplex service.
+          module DataplexTransferStatus
+            # Default value. TagTemplate and its tags are only visible and editable in
+            # DataCatalog.
+            DATAPLEX_TRANSFER_STATUS_UNSPECIFIED = 0
+
+            # TagTemplate and its tags are auto-copied to Dataplex service.
+            # Visible in both services. Editable in DataCatalog, read-only in Dataplex.
+            # Deprecated: Individual TagTemplate migration is deprecated in favor of
+            # organization or project wide TagTemplate migration opt-in.
+            MIGRATED = 1
+
+            # TagTemplate and its tags are auto-copied to Dataplex service.
+            # Visible in both services. Editable in Dataplex, read-only in DataCatalog.
+            TRANSFERRED = 2
+          end
         end
 
         # The template for an individual field within a tag template.
-        # @!attribute [r] name
+        # @!attribute [rw] name
         #   @return [::String]
-        #     Output only. The resource name of the tag template field in URL format. Example:
+        #     Identifier. The resource name of the tag template field in URL format.
+        #     Example:
         #
         #     `projects/{PROJECT_ID}/locations/{LOCATION}/tagTemplates/{TAG_TEMPLATE}/fields/{FIELD}`
         #
@@ -248,9 +264,13 @@ module Google
         # @!attribute [rw] primitive_type
         #   @return [::Google::Cloud::DataCatalog::V1::FieldType::PrimitiveType]
         #     Primitive types, such as string, boolean, etc.
+        #
+        #     Note: The following fields are mutually exclusive: `primitive_type`, `enum_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         # @!attribute [rw] enum_type
         #   @return [::Google::Cloud::DataCatalog::V1::FieldType::EnumType]
         #     An enum type.
+        #
+        #     Note: The following fields are mutually exclusive: `enum_type`, `primitive_type`. If a field in that set is populated, all other fields in the set will automatically be cleared.
         class FieldType
           include ::Google::Protobuf::MessageExts
           extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -272,7 +292,8 @@ module Google
 
             # @!attribute [rw] display_name
             #   @return [::String]
-            #     Required. The display name of the enum value. Must not be an empty string.
+            #     Required. The display name of the enum value. Must not be an empty
+            #     string.
             #
             #     The name must contain only Unicode letters, numbers (0-9), underscores
             #     (_), dashes (-), spaces ( ), and can't start or end with spaces. The

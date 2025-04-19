@@ -19,24 +19,38 @@
 # [START firestore_v1_generated_Firestore_Write_sync]
 require "google/cloud/firestore/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Firestore::V1::Firestore::Client.new
+##
+# Snippet for the write call in the Firestore service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Firestore::V1::Firestore::Client#write.
+#
+def write
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Firestore::V1::Firestore::Client.new
 
-# Create an input stream
-input = Gapic::StreamInput.new
+  # Create an input stream.
+  input = Gapic::StreamInput.new
 
-# Call the write method to start streaming.
-output = client.write input
+  # Call the write method to start streaming.
+  output = client.write input
 
-# Send requests on the stream. For each request, pass in keyword
-# arguments to set fields. Be sure to close the stream when done.
-input << Google::Cloud::Firestore::V1::WriteRequest.new
-input << Google::Cloud::Firestore::V1::WriteRequest.new
-input.close
+  # Send requests on the stream. For each request object, set fields by
+  # passing keyword arguments. Be sure to close the stream when done.
+  input << Google::Cloud::Firestore::V1::WriteRequest.new
+  input << Google::Cloud::Firestore::V1::WriteRequest.new
+  input.close
 
-# Handle streamed responses. These may be interleaved with inputs.
-# Each response is of type ::Google::Cloud::Firestore::V1::WriteResponse.
-output.each do |response|
-  p response
+  # The returned object is a streamed enumerable yielding elements of type
+  # ::Google::Cloud::Firestore::V1::WriteResponse
+  output.each do |current_response|
+    p current_response
+  end
 end
 # [END firestore_v1_generated_Firestore_Write_sync]

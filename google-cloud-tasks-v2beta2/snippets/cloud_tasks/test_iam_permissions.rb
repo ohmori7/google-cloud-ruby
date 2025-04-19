@@ -19,15 +19,29 @@
 # [START cloudtasks_v2beta2_generated_CloudTasks_TestIamPermissions_sync]
 require "google/cloud/tasks/v2beta2"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Tasks::V2beta2::CloudTasks::Client.new
+##
+# Snippet for the test_iam_permissions call in the CloudTasks service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Tasks::V2beta2::CloudTasks::Client#test_iam_permissions.
+#
+def test_iam_permissions
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Tasks::V2beta2::CloudTasks::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Iam::V1::TestIamPermissionsRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Iam::V1::TestIamPermissionsRequest.new
 
-# Call the test_iam_permissions method.
-result = client.test_iam_permissions request
+  # Call the test_iam_permissions method.
+  result = client.test_iam_permissions request
 
-# The returned object is of type Google::Iam::V1::TestIamPermissionsResponse.
-p result
+  # The returned object is of type Google::Iam::V1::TestIamPermissionsResponse.
+  p result
+end
 # [END cloudtasks_v2beta2_generated_CloudTasks_TestIamPermissions_sync]

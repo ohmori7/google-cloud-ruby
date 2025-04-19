@@ -64,6 +64,31 @@ describe Google::Cloud::Bigquery::Dataset, :attributes, :mock_bigquery do
     mock.verify
   end
 
+  it "gets full data for storage_billing_model" do
+    mock = Minitest::Mock.new
+    bigquery.service.mocked_service = mock
+    mock.expect :get_dataset, dataset_full_gapi, [project, dataset_id]
+
+    _(dataset.storage_billing_model).must_be_nil
+
+    # A second call to attribute does not make a second HTTP API call
+    _(dataset.storage_billing_model).must_be_nil
+    mock.verify
+  end
+
+  it "gets full data for tags" do
+    mock = Minitest::Mock.new
+    bigquery.service.mocked_service = mock
+    mock.expect :get_dataset, dataset_full_gapi, [project, dataset_id]
+
+    _(dataset.tags).must_be_kind_of Array
+
+    # Subsequent calls to the method does not make a second HTTP API call
+    _(dataset.tags.first).must_be_kind_of Google::Cloud::Bigquery::Dataset::Tag
+    _(dataset.tags.first.tag_key).must_be_kind_of String
+    mock.verify
+  end
+
   def self.attr_test attr, val
     define_method "test_#{attr}" do
       mock = Minitest::Mock.new
@@ -82,6 +107,4 @@ describe Google::Cloud::Bigquery::Dataset, :attributes, :mock_bigquery do
   attr_test :default_expiration, 999
   attr_test :etag, "etag123456789"
   attr_test :api_url, "http://googleapi/bigquery/v2/projects/test-project/datasets/my_dataset"
-  attr_test :location, "US"
-
 end

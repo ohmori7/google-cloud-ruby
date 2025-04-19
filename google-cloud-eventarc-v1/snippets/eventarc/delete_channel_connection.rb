@@ -19,22 +19,36 @@
 # [START eventarc_v1_generated_Eventarc_DeleteChannelConnection_sync]
 require "google/cloud/eventarc/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Eventarc::V1::Eventarc::Client.new
+##
+# Snippet for the delete_channel_connection call in the Eventarc service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Eventarc::V1::Eventarc::Client#delete_channel_connection.
+#
+def delete_channel_connection
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Eventarc::V1::Eventarc::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Eventarc::V1::DeleteChannelConnectionRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Eventarc::V1::DeleteChannelConnectionRequest.new
 
-# Call the delete_channel_connection method.
-result = client.delete_channel_connection request
+  # Call the delete_channel_connection method.
+  result = client.delete_channel_connection request
 
-# The returned object is of type Gapic::Operation. You can use this
-# object to check the status of an operation, cancel it, or wait
-# for results. Here is how to block until completion:
-result.wait_until_done! timeout: 60
-if result.response?
-  p result.response
-else
-  puts "Error!"
+  # The returned object is of type Gapic::Operation. You can use it to
+  # check the status of an operation, cancel it, or wait for results.
+  # Here is how to wait for a response.
+  result.wait_until_done! timeout: 60
+  if result.response?
+    p result.response
+  else
+    puts "No response received."
+  end
 end
 # [END eventarc_v1_generated_Eventarc_DeleteChannelConnection_sync]

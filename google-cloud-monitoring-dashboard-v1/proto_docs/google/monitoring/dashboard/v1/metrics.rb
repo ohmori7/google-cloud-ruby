@@ -27,12 +27,23 @@ module Google
           # @!attribute [rw] time_series_filter
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::TimeSeriesFilter]
           #     Filter parameters to fetch time series.
+          #
+          #     Note: The following fields are mutually exclusive: `time_series_filter`, `time_series_filter_ratio`, `time_series_query_language`, `prometheus_query`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] time_series_filter_ratio
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::TimeSeriesFilterRatio]
           #     Parameters to fetch a ratio between two time series filters.
+          #
+          #     Note: The following fields are mutually exclusive: `time_series_filter_ratio`, `time_series_filter`, `time_series_query_language`, `prometheus_query`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] time_series_query_language
           #   @return [::String]
-          #     A query used to fetch time series.
+          #     A query used to fetch time series with MQL.
+          #
+          #     Note: The following fields are mutually exclusive: `time_series_query_language`, `time_series_filter`, `time_series_filter_ratio`, `prometheus_query`. If a field in that set is populated, all other fields in the set will automatically be cleared.
+          # @!attribute [rw] prometheus_query
+          #   @return [::String]
+          #     A query used to fetch time series with PromQL.
+          #
+          #     Note: The following fields are mutually exclusive: `prometheus_query`, `time_series_filter`, `time_series_filter_ratio`, `time_series_query_language`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] unit_override
           #   @return [::String]
           #     The unit of data contained in fetched time series. If non-empty, this
@@ -40,6 +51,15 @@ module Google
           #     the same as the
           #     [`unit`](https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors)
           #     field in `MetricDescriptor`.
+          # @!attribute [rw] output_full_duration
+          #   @return [::Boolean]
+          #     Optional. If set, Cloud Monitoring will treat the full query duration as
+          #     the alignment period so that there will be only 1 output value.
+          #
+          #     *Note: This could override the configured alignment period except for
+          #     the cases where a series of data points are expected, like
+          #       - XyChart
+          #       - Scorecard's spark chart
           class TimeSeriesQuery
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -51,8 +71,9 @@ module Google
           # method.
           # @!attribute [rw] filter
           #   @return [::String]
-          #     Required. The [monitoring filter](https://cloud.google.com/monitoring/api/v3/filters)
-          #     that identifies the metric types, resources, and projects to query.
+          #     Required. The [monitoring
+          #     filter](https://cloud.google.com/monitoring/api/v3/filters) that identifies
+          #     the metric types, resources, and projects to query.
           # @!attribute [rw] aggregation
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::Aggregation]
           #     By default, the raw time series data is returned.
@@ -64,10 +85,15 @@ module Google
           # @!attribute [rw] pick_time_series_filter
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::PickTimeSeriesFilter]
           #     Ranking based time series filter.
+          #
+          #     Note: The following fields are mutually exclusive: `pick_time_series_filter`, `statistical_time_series_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] statistical_time_series_filter
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::StatisticalTimeSeriesFilter]
           #     Statistics based time series filter.
           #     Note: This field is deprecated and completely ignored by the API.
+          #
+          #     Note: The following fields are mutually exclusive: `statistical_time_series_filter`, `pick_time_series_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class TimeSeriesFilter
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -88,10 +114,15 @@ module Google
           # @!attribute [rw] pick_time_series_filter
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::PickTimeSeriesFilter]
           #     Ranking based time series filter.
+          #
+          #     Note: The following fields are mutually exclusive: `pick_time_series_filter`, `statistical_time_series_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           # @!attribute [rw] statistical_time_series_filter
+          #   @deprecated This field is deprecated and may be removed in the next major version update.
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::StatisticalTimeSeriesFilter]
           #     Statistics based time series filter.
           #     Note: This field is deprecated and completely ignored by the API.
+          #
+          #     Note: The following fields are mutually exclusive: `statistical_time_series_filter`, `pick_time_series_filter`. If a field in that set is populated, all other fields in the set will automatically be cleared.
           class TimeSeriesFilterRatio
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -129,6 +160,10 @@ module Google
           #   @return [::Google::Cloud::Monitoring::Dashboard::V1::Threshold::Direction]
           #     The direction for the current threshold. Direction is not allowed in a
           #     XyChart.
+          # @!attribute [rw] target_axis
+          #   @return [::Google::Cloud::Monitoring::Dashboard::V1::Threshold::TargetAxis]
+          #     The target axis to use for plotting the threshold. Target axis is not
+          #     allowed in a Scorecard.
           class Threshold
             include ::Google::Protobuf::MessageExts
             extend ::Google::Protobuf::MessageExts::ClassMethods
@@ -160,6 +195,18 @@ module Google
               # The threshold will be considered crossed if the actual value is below
               # the threshold value.
               BELOW = 2
+            end
+
+            # An axis identifier.
+            module TargetAxis
+              # The target axis was not specified. Defaults to Y1.
+              TARGET_AXIS_UNSPECIFIED = 0
+
+              # The y_axis (the right axis of chart).
+              Y1 = 1
+
+              # The y2_axis (the left axis of chart).
+              Y2 = 2
             end
           end
 

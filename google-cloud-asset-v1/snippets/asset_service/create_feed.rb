@@ -19,15 +19,29 @@
 # [START cloudasset_v1_generated_AssetService_CreateFeed_sync]
 require "google/cloud/asset/v1"
 
-# Create a client object. The client can be reused for multiple calls.
-client = Google::Cloud::Asset::V1::AssetService::Client.new
+##
+# Snippet for the create_feed call in the AssetService service
+#
+# This snippet has been automatically generated and should be regarded as a code
+# template only. It will require modifications to work:
+# - It may require correct/in-range values for request initialization.
+# - It may require specifying regional endpoints when creating the service
+# client as shown in https://cloud.google.com/ruby/docs/reference.
+#
+# This is an auto-generated example demonstrating basic usage of
+# Google::Cloud::Asset::V1::AssetService::Client#create_feed.
+#
+def create_feed
+  # Create a client object. The client can be reused for multiple calls.
+  client = Google::Cloud::Asset::V1::AssetService::Client.new
 
-# Create a request. To set request fields, pass in keyword arguments.
-request = Google::Cloud::Asset::V1::CreateFeedRequest.new
+  # Create a request. To set request fields, pass in keyword arguments.
+  request = Google::Cloud::Asset::V1::CreateFeedRequest.new
 
-# Call the create_feed method.
-result = client.create_feed request
+  # Call the create_feed method.
+  result = client.create_feed request
 
-# The returned object is of type Google::Cloud::Asset::V1::Feed.
-p result
+  # The returned object is of type Google::Cloud::Asset::V1::Feed.
+  p result
+end
 # [END cloudasset_v1_generated_AssetService_CreateFeed_sync]

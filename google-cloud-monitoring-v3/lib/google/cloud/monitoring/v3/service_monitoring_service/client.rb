@@ -28,11 +28,17 @@ module Google
           # Client for the ServiceMonitoringService service.
           #
           # The Cloud Monitoring Service-Oriented Monitoring API has endpoints for
-          # managing and querying aspects of a workspace's services. These include the
-          # `Service`'s monitored resources, its Service-Level Objectives, and a taxonomy
-          # of categorized Health Metrics.
+          # managing and querying aspects of a Metrics Scope's services. These include
+          # the `Service`'s monitored resources, its Service-Level Objectives, and a
+          # taxonomy of categorized Health Metrics.
           #
           class Client
+            # @private
+            API_VERSION = ""
+
+            # @private
+            DEFAULT_ENDPOINT_TEMPLATE = "monitoring.$UNIVERSE_DOMAIN$"
+
             include Paths
 
             # @private
@@ -132,6 +138,15 @@ module Google
             end
 
             ##
+            # The effective universe domain
+            #
+            # @return [String]
+            #
+            def universe_domain
+              @service_monitoring_service_stub.universe_domain
+            end
+
+            ##
             # Create a new ServiceMonitoringService client object.
             #
             # @example
@@ -164,8 +179,9 @@ module Google
               credentials = @config.credentials
               # Use self-signed JWT if the endpoint is unchanged from default,
               # but only if the default endpoint does not have a region prefix.
-              enable_self_signed_jwt = @config.endpoint == Client.configure.endpoint &&
-                                       !@config.endpoint.split(".").first.include?("-")
+              enable_self_signed_jwt = @config.endpoint.nil? ||
+                                       (@config.endpoint == Configuration::DEFAULT_ENDPOINT &&
+                                       !@config.endpoint.split(".").first.include?("-"))
               credentials ||= Credentials.default scope: @config.scope,
                                                   enable_self_signed_jwt: enable_self_signed_jwt
               if credentials.is_a?(::String) || credentials.is_a?(::Hash)
@@ -176,11 +192,34 @@ module Google
 
               @service_monitoring_service_stub = ::Gapic::ServiceStub.new(
                 ::Google::Cloud::Monitoring::V3::ServiceMonitoringService::Stub,
-                credentials:  credentials,
-                endpoint:     @config.endpoint,
+                credentials: credentials,
+                endpoint: @config.endpoint,
+                endpoint_template: DEFAULT_ENDPOINT_TEMPLATE,
+                universe_domain: @config.universe_domain,
                 channel_args: @config.channel_args,
-                interceptors: @config.interceptors
+                interceptors: @config.interceptors,
+                channel_pool_config: @config.channel_pool,
+                logger: @config.logger
               )
+
+              @service_monitoring_service_stub.stub_logger&.info do |entry|
+                entry.set_system_name
+                entry.set_service
+                entry.message = "Created client for #{entry.service}"
+                entry.set_credentials_fields credentials
+                entry.set "customEndpoint", @config.endpoint if @config.endpoint
+                entry.set "defaultTimeout", @config.timeout if @config.timeout
+                entry.set "quotaProject", @quota_project_id if @quota_project_id
+              end
+            end
+
+            ##
+            # The logger used for request/response debug logging.
+            #
+            # @return [Logger]
+            #
+            def logger
+              @service_monitoring_service_stub.logger
             end
 
             # Service calls
@@ -204,8 +243,9 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. Resource [name](https://cloud.google.com/monitoring/api/v3#project_name) of
-            #     the parent workspace. The format is:
+            #     Required. Resource
+            #     [name](https://cloud.google.com/monitoring/api/v3#project_name) of the
+            #     parent Metrics Scope. The format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #   @param service_id [::String]
@@ -248,10 +288,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -272,7 +313,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :create_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -335,10 +375,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -359,14 +400,13 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :get_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
             end
 
             ##
-            # List `Service`s for this workspace.
+            # List `Service`s for this Metrics Scope.
             #
             # @overload list_services(request, options = nil)
             #   Pass arguments to `list_services` via a request object, either of type
@@ -384,32 +424,31 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param parent [::String]
-            #     Required. Resource name of the parent containing the listed services, either a
-            #     [project](https://cloud.google.com/monitoring/api/v3#project_name) or a
-            #     Monitoring Workspace. The formats are:
+            #     Required. Resource name of the parent containing the listed services,
+            #     either a [project](https://cloud.google.com/monitoring/api/v3#project_name)
+            #     or a Monitoring Metrics Scope. The formats are:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]
             #         workspaces/[HOST_PROJECT_ID_OR_NUMBER]
             #   @param filter [::String]
-            #     A filter specifying what `Service`s to return. The filter currently
-            #     supports the following fields:
+            #     A filter specifying what `Service`s to return. The filter supports
+            #     filtering on a particular service-identifier type or one of its attributes.
             #
-            #         - `identifier_case`
-            #         - `app_engine.module_id`
-            #         - `cloud_endpoints.service` (reserved for future use)
-            #         - `mesh_istio.mesh_uid`
-            #         - `mesh_istio.service_namespace`
-            #         - `mesh_istio.service_name`
-            #         - `cluster_istio.location` (deprecated)
-            #         - `cluster_istio.cluster_name` (deprecated)
-            #         - `cluster_istio.service_namespace` (deprecated)
-            #         - `cluster_istio.service_name` (deprecated)
+            #     To filter on a particular service-identifier type, the `identifier_case`
+            #     refers to which option in the `identifier` field is populated. For example,
+            #     the filter `identifier_case = "CUSTOM"` would match all services with a
+            #     value for the `custom` field. Valid options include "CUSTOM", "APP_ENGINE",
+            #     "MESH_ISTIO", and the other options listed at
+            #     https://cloud.google.com/monitoring/api/ref_v3/rest/v3/services#Service
             #
-            #     `identifier_case` refers to which option in the identifier oneof is
-            #     populated. For example, the filter `identifier_case = "CUSTOM"` would match
-            #     all services with a value for the `custom` field. Valid options are
-            #     "CUSTOM", "APP_ENGINE", "MESH_ISTIO", plus "CLUSTER_ISTIO" (deprecated)
-            #     and "CLOUD_ENDPOINTS" (reserved for future use).
+            #     To filter on an attribute of a service-identifier type, apply the filter
+            #     name by using the snake case of the service-identifier type and the
+            #     attribute of that service-identifier type, and join the two with a period.
+            #     For example, to filter by the `meshUid` field of the `MeshIstio`
+            #     service-identifier type, you must filter on `mesh_istio.mesh_uid =
+            #     "123"` to match all services with mesh UID "123". Service-identifier types
+            #     and their attributes are described at
+            #     https://cloud.google.com/monitoring/api/ref_v3/rest/v3/services#Service
             #   @param page_size [::Integer]
             #     A non-negative number that is the maximum number of results to return.
             #     When 0, use default page size.
@@ -438,13 +477,11 @@ module Google
             #   # Call the list_services method.
             #   result = client.list_services request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Monitoring::V3::Service.
-            #     p response
+            #     p item
             #   end
             #
             def list_services request, options = nil
@@ -458,10 +495,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_services.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -483,7 +521,7 @@ module Google
               @service_monitoring_service_stub.call_rpc :list_services, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @service_monitoring_service_stub, :list_services, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -547,10 +585,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -571,7 +610,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :update_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -634,10 +672,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_service.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -658,7 +697,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :delete_service, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -689,7 +727,7 @@ module Google
             #   @param service_level_objective_id [::String]
             #     Optional. The ServiceLevelObjective id to use for this
             #     ServiceLevelObjective. If omitted, an id will be generated instead. Must
-            #     match the pattern `[a-z0-9\-]+`
+            #     match the pattern `^[a-zA-Z0-9-_:.]+$`
             #   @param service_level_objective [::Google::Cloud::Monitoring::V3::ServiceLevelObjective, ::Hash]
             #     Required. The `ServiceLevelObjective` to create.
             #     The provided `name` will be respected if no `ServiceLevelObjective` exists
@@ -729,10 +767,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.create_service_level_objective.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -753,7 +792,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :create_service_level_objective, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -778,7 +816,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. Resource name of the `ServiceLevelObjective` to get. The format is:
+            #     Required. Resource name of the `ServiceLevelObjective` to get. The format
+            #     is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]/services/[SERVICE_ID]/serviceLevelObjectives/[SLO_NAME]
             #   @param view [::Google::Cloud::Monitoring::V3::ServiceLevelObjective::View]
@@ -821,10 +860,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.get_service_level_objective.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -845,7 +885,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :get_service_level_objective, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -871,7 +910,7 @@ module Google
             #
             #   @param parent [::String]
             #     Required. Resource name of the parent containing the listed SLOs, either a
-            #     project or a Monitoring Workspace. The formats are:
+            #     project or a Monitoring Metrics Scope. The formats are:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]/services/[SERVICE_ID]
             #         workspaces/[HOST_PROJECT_ID_OR_NUMBER]/services/-
@@ -910,13 +949,11 @@ module Google
             #   # Call the list_service_level_objectives method.
             #   result = client.list_service_level_objectives request
             #
-            #   # The returned object is of type Gapic::PagedEnumerable. You can
-            #   # iterate over all elements by calling #each, and the enumerable
-            #   # will lazily make API calls to fetch subsequent pages. Other
-            #   # methods are also available for managing paging directly.
-            #   result.each do |response|
+            #   # The returned object is of type Gapic::PagedEnumerable. You can iterate
+            #   # over elements, and API calls will be issued to fetch pages as needed.
+            #   result.each do |item|
             #     # Each element is of type ::Google::Cloud::Monitoring::V3::ServiceLevelObjective.
-            #     p response
+            #     p item
             #   end
             #
             def list_service_level_objectives request, options = nil
@@ -930,10 +967,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.list_service_level_objectives.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -955,7 +993,7 @@ module Google
               @service_monitoring_service_stub.call_rpc :list_service_level_objectives, request, options: options do |response, operation|
                 response = ::Gapic::PagedEnumerable.new @service_monitoring_service_stub, :list_service_level_objectives, request, response, operation, options
                 yield response, operation if block_given?
-                return response
+                throw :response, response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1019,10 +1057,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.update_service_level_objective.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1043,7 +1082,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :update_service_level_objective, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1068,7 +1106,8 @@ module Google
             #   the default parameter values, pass an empty Hash as a request object (see above).
             #
             #   @param name [::String]
-            #     Required. Resource name of the `ServiceLevelObjective` to delete. The format is:
+            #     Required. Resource name of the `ServiceLevelObjective` to delete. The
+            #     format is:
             #
             #         projects/[PROJECT_ID_OR_NUMBER]/services/[SERVICE_ID]/serviceLevelObjectives/[SLO_NAME]
             #
@@ -1106,10 +1145,11 @@ module Google
               # Customize the options with defaults
               metadata = @config.rpcs.delete_service_level_objective.metadata.to_h
 
-              # Set x-goog-api-client and x-goog-user-project headers
+              # Set x-goog-api-client, x-goog-user-project and x-goog-api-version headers
               metadata[:"x-goog-api-client"] ||= ::Gapic::Headers.x_goog_api_client \
                 lib_name: @config.lib_name, lib_version: @config.lib_version,
                 gapic_version: ::Google::Cloud::Monitoring::V3::VERSION
+              metadata[:"x-goog-api-version"] = API_VERSION unless API_VERSION.empty?
               metadata[:"x-goog-user-project"] = @quota_project_id if @quota_project_id
 
               header_params = {}
@@ -1130,7 +1170,6 @@ module Google
 
               @service_monitoring_service_stub.call_rpc :delete_service_level_objective, request, options: options do |response, operation|
                 yield response, operation if block_given?
-                return response
               end
             rescue ::GRPC::BadStatus => e
               raise ::Google::Cloud::Error.from_error(e)
@@ -1166,20 +1205,27 @@ module Google
             #   end
             #
             # @!attribute [rw] endpoint
-            #   The hostname or hostname:port of the service endpoint.
-            #   Defaults to `"monitoring.googleapis.com"`.
-            #   @return [::String]
+            #   A custom service endpoint, as a hostname or hostname:port. The default is
+            #   nil, indicating to use the default endpoint in the current universe domain.
+            #   @return [::String,nil]
             # @!attribute [rw] credentials
             #   Credentials to send with calls. You may provide any of the following types:
             #    *  (`String`) The path to a service account key file in JSON format
             #    *  (`Hash`) A service account key as a Hash
             #    *  (`Google::Auth::Credentials`) A googleauth credentials object
-            #       (see the [googleauth docs](https://googleapis.dev/ruby/googleauth/latest/index.html))
+            #       (see the [googleauth docs](https://rubydoc.info/gems/googleauth/Google/Auth/Credentials))
             #    *  (`Signet::OAuth2::Client`) A signet oauth2 client object
-            #       (see the [signet docs](https://googleapis.dev/ruby/signet/latest/Signet/OAuth2/Client.html))
+            #       (see the [signet docs](https://rubydoc.info/gems/signet/Signet/OAuth2/Client))
             #    *  (`GRPC::Core::Channel`) a gRPC channel with included credentials
             #    *  (`GRPC::Core::ChannelCredentials`) a gRPC credentails object
             #    *  (`nil`) indicating no credentials
+            #
+            #   Warning: If you accept a credential configuration (JSON file or Hash) from an
+            #   external source for authentication to Google Cloud, you must validate it before
+            #   providing it to a Google API client library. Providing an unvalidated credential
+            #   configuration to Google APIs can compromise the security of your systems and data.
+            #   For more information, refer to [Validate credential configurations from external
+            #   sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
             #   @return [::Object]
             # @!attribute [rw] scope
             #   The OAuth scopes
@@ -1214,11 +1260,25 @@ module Google
             # @!attribute [rw] quota_project
             #   A separate project against which to charge quota.
             #   @return [::String]
+            # @!attribute [rw] universe_domain
+            #   The universe domain within which to make requests. This determines the
+            #   default endpoint URL. The default value of nil uses the environment
+            #   universe (usually the default "googleapis.com" universe).
+            #   @return [::String,nil]
+            # @!attribute [rw] logger
+            #   A custom logger to use for request/response debug logging, or the value
+            #   `:default` (the default) to construct a default logger, or `nil` to
+            #   explicitly disable logging.
+            #   @return [::Logger,:default,nil]
             #
             class Configuration
               extend ::Gapic::Config
 
-              config_attr :endpoint,      "monitoring.googleapis.com", ::String
+              # @private
+              # The endpoint specific to the default "googleapis.com" universe. Deprecated.
+              DEFAULT_ENDPOINT = "monitoring.googleapis.com"
+
+              config_attr :endpoint,      nil, ::String, nil
               config_attr :credentials,   nil do |value|
                 allowed = [::String, ::Hash, ::Proc, ::Symbol, ::Google::Auth::Credentials, ::Signet::OAuth2::Client, nil]
                 allowed += [::GRPC::Core::Channel, ::GRPC::Core::ChannelCredentials] if defined? ::GRPC
@@ -1233,6 +1293,8 @@ module Google
               config_attr :metadata,      nil, ::Hash, nil
               config_attr :retry_policy,  nil, ::Hash, ::Proc, nil
               config_attr :quota_project, nil, ::String, nil
+              config_attr :universe_domain, nil, ::String, nil
+              config_attr :logger, :default, ::Logger, nil, :default
 
               # @private
               def initialize parent_config = nil
@@ -1251,6 +1313,14 @@ module Google
                   parent_rpcs = @parent_config.rpcs if defined?(@parent_config) && @parent_config.respond_to?(:rpcs)
                   Rpcs.new parent_rpcs
                 end
+              end
+
+              ##
+              # Configuration for the channel pool
+              # @return [::Gapic::ServiceStub::ChannelPool::Configuration]
+              #
+              def channel_pool
+                @channel_pool ||= ::Gapic::ServiceStub::ChannelPool::Configuration.new
               end
 
               ##

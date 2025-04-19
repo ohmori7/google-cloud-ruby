@@ -33,7 +33,7 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     updated_gapi = dataset_gapi.dup
     updated_gapi.friendly_name = new_dataset_name
     patch_dataset_gapi = Google::Apis::BigqueryV2::Dataset.new friendly_name: new_dataset_name, etag: dataset_gapi.etag
-    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_dataset_gapi, {options: {header: {"If-Match" => dataset_gapi.etag}}}]
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_dataset_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
 
     _(dataset.name).must_equal dataset_name
     _(dataset.description).must_equal description
@@ -55,7 +55,7 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     updated_gapi = dataset_gapi.dup
     updated_gapi.description = new_description
     patch_gapi = Google::Apis::BigqueryV2::Dataset.new description: new_description, etag: dataset_gapi.etag
-    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi, {options: {header: {"If-Match" => dataset_gapi.etag}}}]
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
 
     _(dataset.name).must_equal dataset_name
     _(dataset.description).must_equal description
@@ -77,7 +77,7 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     updated_gapi = dataset_gapi.dup
     updated_gapi.default_table_expiration_ms = new_default_expiration
     patch_gapi = Google::Apis::BigqueryV2::Dataset.new default_table_expiration_ms: new_default_expiration, etag: dataset_gapi.etag
-    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi, {options: {header: {"If-Match" => dataset_gapi.etag}}}]
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
 
     _(dataset.name).must_equal dataset_name
     _(dataset.description).must_equal description
@@ -99,7 +99,7 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     updated_gapi = dataset_gapi.dup
     updated_gapi.labels = new_labels
     patch_gapi = Google::Apis::BigqueryV2::Dataset.new labels: new_labels, etag: dataset_gapi.etag
-    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi, {options: {header: {"If-Match" => dataset_gapi.etag}}}]
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
 
     _(dataset.labels).must_equal labels
 
@@ -117,7 +117,7 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     updated_gapi = dataset_gapi.dup
     updated_gapi.default_encryption_configuration = Google::Apis::BigqueryV2::EncryptionConfiguration.new kms_key_name: kms_key
     patch_gapi = Google::Apis::BigqueryV2::Dataset.new default_encryption_configuration: updated_gapi.default_encryption_configuration, etag: dataset_gapi.etag
-    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi, {options: {header: {"If-Match" => dataset_gapi.etag}}}]
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
 
     _(dataset.default_encryption).must_be_nil
 
@@ -126,6 +126,24 @@ describe Google::Cloud::Bigquery::Dataset, :update, :mock_bigquery do
     _(dataset.default_encryption).must_be_kind_of Google::Cloud::Bigquery::EncryptionConfiguration
     _(dataset.default_encryption.kms_key).must_equal kms_key
     _(dataset.default_encryption).must_be :frozen?
+    mock.verify
+  end
+
+  it "updates its storage_billing_model" do
+    storage_billing_model = "LOGICAL"
+
+    mock = Minitest::Mock.new
+    bigquery.service.mocked_service = mock
+    updated_gapi = dataset_gapi.dup
+    updated_gapi.storage_billing_model = storage_billing_model
+    patch_gapi = Google::Apis::BigqueryV2::Dataset.new storage_billing_model: storage_billing_model, etag: dataset_gapi.etag
+    mock.expect :patch_dataset, updated_gapi, [project, dataset_id, patch_gapi], options: {header: {"If-Match" => dataset_gapi.etag}}
+
+    _(dataset.storage_billing_model).must_be_nil
+
+    dataset.storage_billing_model = storage_billing_model
+
+    _(dataset.storage_billing_model).must_equal storage_billing_model
     mock.verify
   end
 end
